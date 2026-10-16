@@ -583,6 +583,28 @@ if (DEBUG) {
     restart,
     switchMode,
     loadPuzzle,
+    /** Audio QA: peak/RMS of every sound effect rendered offline. */
+    async audioLevels() {
+      const out: Record<string, { peak: number; rms: number }> = {};
+      const cases: [string, (s: Sfx) => void][] = [
+        ['pick', (s) => s.pick()],
+        ['place', (s) => s.place(4)],
+        ['placeBig', (s) => s.place(9)],
+        ['seal', (s) => s.seal(6)],
+        ['invalid', (s) => s.invalid()],
+        ['capture', (s) => s.capture(1, 1, 0)],
+        ['captureBig', (s) => s.capture(12, 8, 0)],
+        ['cascade', (s) => [0, 1, 2].forEach((k) => s.capture(6, 4, k, k * 0.15))],
+        ['cleanReef', (s) => s.cleanReef()],
+        ['deal', (s) => s.deal()],
+        ['newBest', (s) => s.newBest()],
+        ['gameOver', (s) => s.gameOver()],
+        ['click', (s) => s.click()],
+      ];
+      for (const [k, f] of cases) out[k] = await sfx.measure(f);
+      return out;
+    },
+
     puzzleSolution: () =>
       PACK && mode === 'puzzle' ? (PACK[state.seed] as unknown as { solution: unknown }).solution : null,
 

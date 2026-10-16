@@ -9,7 +9,8 @@ export class Sfx {
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   enabled = true;
-  volume = 0.7;
+  /** Master gain; tuned with the offline audio QA (tests/e2e/audio.spec.ts → artifacts/audio-levels.json). */
+  volume = 2.1;
 
   /** Call from a user-gesture handler (pointerdown). Safe to call repeatedly. */
   unlock(): void {
@@ -34,6 +35,41 @@ export class Sfx {
       s = (s * 1103515245 + 12345) >>> 0;
       d[i] = (s / 2147483648 - 1) * (1 - i / len);
     }
+  }
+
+  /**
+   * Render one sound offline (for audio QA): returns peak and RMS of the result.
+   * Temporarily swaps in an OfflineAudioContext; never call during play.
+   */
+  async measure(play: (s: Sfx) => void, seconds = 1.2): Promise<{ peak: number; rms: number }> {
+    const saved = { ctx: this.ctx, master: this.master, noise: this.noise, enabled: this.enabled };
+    const off = new OfflineAudioContext(1, Math.ceil(44100 * seconds), 44100);
+    this.ctx = off as unknown as AudioContext;
+    this.master = off.createGain();
+    this.master.gain.value = this.volume;
+    const comp = off.createDynamicsCompressor();
+    this.master.connect(comp).connect(off.destination);
+    const len = Math.floor(off.sampleRate * 0.4);
+    this.noise = off.createBuffer(1, len, off.sampleRate);
+    const d = this.noise.getChannelData(0);
+    let s = 22222;
+    for (let i = 0; i < len; i++) {
+      s = (s * 1103515245 + 12345) >>> 0;
+      d[i] = (s / 2147483648 - 1) * (1 - i / len);
+    }
+    this.enabled = true;
+    play(this);
+    const buf = await off.startRendering();
+    Object.assign(this, saved);
+    const x = buf.getChannelData(0);
+    let peak = 0;
+    let sum = 0;
+    for (let i = 0; i < x.length; i++) {
+      const v = Math.abs(x[i]!);
+      if (v > peak) peak = v;
+      sum += v * v;
+    }
+    return { peak, rms: Math.sqrt(sum / x.length) };
   }
 
   suspend(): void {
@@ -86,7 +122,7 @@ export class Sfx {
   }
 
   pick(): void {
-    this.tone(660, 0, 0.05, 'sine', 0.05, 880);
+    this.tone(660, 0, 0.05, 'sine', 0.12, 880);
   }
 
   /** Stone "tok": low thump + short filtered tick. Bigger pieces are slightly lower. */
@@ -99,7 +135,7 @@ export class Sfx {
   /** Soft water drip when a drag would seal a lagoon; higher for bigger lagoons. */
   seal(area: number): void {
     const f = 900 + Math.min(area, 16) * 40;
-    this.tone(f, 0, 0.07, 'sine', 0.07, f * 1.5);
+    this.tone(f, 0, 0.07, 'sine', 0.16, f * 1.5);
   }
 
   invalid(): void {
@@ -114,7 +150,9 @@ export class Sfx {
     const deg = Math.min(streak, 10) + wave * 2;
     this.tone(this.note(deg), at + 0.04, 0.5, 'sine', 0.16);
     this.tone(this.note(deg + 2), at + 0.1, 0.45, 'sine', 0.1);
-    if (area >= 6) this.tone(this.note(deg + 4), at + 0.17, 0.6, 'triangle', 0.08);
+    if (area >= 6) this.tone(this.note(deg + 4), at + 0.17, 0.6, 'triangle', 0.1);
+    // body: big lagoons land with weight — first wave only, or cascades stack into clipping
+    if (area >= 6 && wave === 0) this.tone(120, at, 0.45, 'sine', 0.6, 70);
   }
 
   cleanReef(at = 0): void {
@@ -122,7 +160,7 @@ export class Sfx {
   }
 
   deal(): void {
-    this.hiss(0, 0.08, 4200, 2, 0.05);
+    this.hiss(0, 0.08, 3200, 1.5, 0.35);
   }
 
   newBest(): void {
@@ -134,6 +172,6 @@ export class Sfx {
   }
 
   click(): void {
-    this.tone(880, 0, 0.03, 'sine', 0.05);
+    this.tone(880, 0, 0.03, 'sine', 0.09);
   }
 }
