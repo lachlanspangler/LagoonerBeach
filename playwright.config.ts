@@ -9,9 +9,14 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://localhost:4317',
-    ...devices['Pixel 7'],
     trace: 'retain-on-failure',
   },
+  projects: [
+    { name: 'chromium', use: { ...devices['Pixel 7'] } },
+    // Safari engine: gameplay flows only (perf numbers are Chromium-specific via CDP)
+    { name: 'webkit', use: { ...devices['iPhone 15'] }, testMatch: ['e2e/gameplay.spec.ts'] },
+  ],
+
   webServer: {
     command: 'npx vite preview --port 4317 --strictPort',
     url: 'http://localhost:4317',
