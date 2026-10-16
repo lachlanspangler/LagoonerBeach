@@ -134,7 +134,7 @@ await render(
   `<div style="width:1024px;height:500px;display:flex;align-items:center;gap:48px;padding:0 70px;box-sizing:border-box;background:linear-gradient(120deg,#0B1622,#1B4E6B);font-family:ui-rounded,system-ui,sans-serif">
     ${sized(svg({ bg: false, rx: 0, scale: 1 }), 300, 300)}
     <div style="color:#E8EEF2"><div style="font-size:72px;font-weight:800;line-height:1">Lagooner Beach</div>
-    <div style="font-size:36px;font-weight:700;color:#9BF0FF;margin-top:18px">Close a loop. It fills and pops.</div></div></div>`,
+    <div style="font-size:36px;font-weight:700;color:#9BF0FF;margin-top:18px">Close a loop. Water fills it, the ring pops.</div></div></div>`,
   1024,
   500,
   'artifacts/store/play-feature-1024x500.png',

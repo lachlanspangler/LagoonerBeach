@@ -88,7 +88,7 @@ export const GEOM = {
 
 /** Lagoon size → callout word. Only big moments speak; small pops stay quiet. */
 export function calloutFor(area: number, waves: number, clean: boolean): string | null {
-  if (clean) return 'Clear reef';
+  if (clean) return 'Spotless!';
   if (waves >= 2) return `Ripple ×${waves}`;
   if (area >= 12) return 'Atoll!';
   if (area >= 6) return 'Lagoon';

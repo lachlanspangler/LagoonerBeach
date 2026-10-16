@@ -61,7 +61,7 @@ const shots: { name: string; caption: string; theme: 'light' | 'dark'; stage: (p
   },
   {
     name: '2-pop',
-    caption: 'It fills with water.\nIt pops.',
+    caption: 'Water fills it.\nThe ring pops.',
     theme: 'light',
     stage: async (p) => {
       await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);

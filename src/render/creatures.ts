@@ -164,31 +164,25 @@ const BODIES: Record<Species['body'], (P: Painter) => void> = {
   },
   flat: (P) => {
     const { g, s } = P;
-    // tail fan
+    // a flatfish lying on the sand: wide thin oval, one continuous fin rim, both eyes on top
     g.fillStyle = P.c2;
     g.beginPath();
-    g.moveTo(-s * 0.36, 0);
-    g.lineTo(-s * 0.52, -s * 0.13);
-    g.quadraticCurveTo(-s * 0.47, 0, -s * 0.52, s * 0.13);
+    g.moveTo(-s * 0.38, 0);
+    g.lineTo(-s * 0.52, -s * 0.09);
+    g.lineTo(-s * 0.52, s * 0.09);
     g.closePath();
     g.fill();
-    // fin fringe all round the body: scalloped edge
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2;
-      if (Math.abs(Math.cos(a)) > 0.92) continue;
-      g.beginPath();
-      g.ellipse(Math.cos(a) * s * 0.36, Math.sin(a) * s * 0.21, s * 0.055, s * 0.035, a, 0, Math.PI * 2);
-      g.fill();
-    }
-    fillBody(P, ellipse(s * 0.36, s * 0.2), s * 0.72, s * 0.4);
-    // both eyes on one side, close together, plus a little mouth
-    eyeAt(P, s * 0.2, -s * 0.07, s * 0.04);
-    eyeAt(P, s * 0.27, -s * 0.01, s * 0.04);
-    g.strokeStyle = P.eye;
-    g.lineWidth = s * 0.015;
+    g.fill(ellipse(s * 0.42, s * 0.19));
+    fillBody(P, ellipse(s * 0.36, s * 0.14), s * 0.72, s * 0.28);
+    // lateral line
+    g.strokeStyle = P.c2;
+    g.lineWidth = s * 0.012;
     g.beginPath();
-    g.arc(s * 0.33, s * 0.07, s * 0.03, 0.2, 1.6);
+    g.moveTo(-s * 0.3, 0);
+    g.quadraticCurveTo(0, -s * 0.03, s * 0.2, 0);
     g.stroke();
+    eyeAt(P, s * 0.2, -s * 0.11, s * 0.035);
+    eyeAt(P, s * 0.28, -s * 0.08, s * 0.035);
   },
   hermit: (P) => {
     const { g, s } = P;

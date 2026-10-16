@@ -1,7 +1,7 @@
 {
   "name": "Lagooner Beach",
   "short_name": "Lagooner",
-  "description": "Close a loop of blocks; it fills with water and pops.",
+  "description": "Close a loop. Water fills it, the ring pops.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

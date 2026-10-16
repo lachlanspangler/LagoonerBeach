@@ -165,7 +165,7 @@ export class Ui {
       [p.puzzle.solved.length, 'Reefs'],
     ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<h2>Lagooner Beach</h2>
-      <div class="sub">Close a loop. It fills with water and pops.</div>
+      <div class="sub">Close a loop. Water fills it, the ring pops.</div>
       ${stats.length ? `<div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>` : ''}`;
     if (canResume) card.append(this.button('', 'btn primary', 'Resume', 'Resume', () => this.h.onResume()));
     if (mode === 'puzzle') {
@@ -350,12 +350,26 @@ export class Ui {
     const card = document.createElement('div');
     card.className = 'card reefs';
     card.innerHTML = `<h2>Reefs</h2><div class="sub">${solved.length} of ${list.length} cleared${pure.length ? ' · ★ = no hints' : ''}</div>`;
+    const nextUp = list.findIndex((p) => !solved.includes(p.id));
+    // new players keep climbing the curve; the Reef of the day leads once they've found their feet
+    const climbing = nextUp >= 0 && solved.length < 20;
+    if (climbing) {
+      const c = this.button(
+        'reef-continue',
+        'btn primary',
+        `Continue · Reef ${nextUp + 1}`,
+        `Continue, reef ${nextUp + 1}`,
+        () => this.h.onPuzzlePick(nextUp),
+      );
+      c.style.marginBottom = '6px';
+      card.append(c);
+    }
     if (daily) {
       const tierName =
         { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' }[list[daily.index]?.tier ?? ''] ?? '';
       const b = this.button(
         'reef-of-day',
-        `btn ${daily.done ? '' : 'primary'}`,
+        `btn ${daily.done || climbing ? '' : 'primary'}`,
         `${daily.done ? '✓ ' : ''}Reef of the day · ${daily.index + 1} · ${tierName}`,
         `Reef of the day, reef ${daily.index + 1}${daily.done ? ', done' : ''}`,
         () => this.h.onPuzzlePick(daily.index),
@@ -366,7 +380,6 @@ export class Ui {
     const scroller = document.createElement('div');
     scroller.className = 'reef-scroll';
     const names: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
-    const nextUp = list.findIndex((p) => !solved.includes(p.id));
     let lastTier = '';
     let grid: HTMLElement | null = null;
     list.forEach((p, i) => {
