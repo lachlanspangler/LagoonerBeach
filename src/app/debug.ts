@@ -12,6 +12,7 @@ import type { Profile } from '../platform/storage.ts';
 import type { Scene } from '../render/scene.ts';
 import { lookFor } from '../render/skins.ts';
 import { BOTS, type BotName } from '../sim/bots.ts';
+import { Music } from '../audio/music.ts';
 
 export interface DebugDeps {
   state(): GameState;
@@ -120,6 +121,13 @@ export function installDebugApi(d: DebugDeps): void {
         ['click', (s) => s.click()],
       ];
       for (const [k, f] of cases) out[k] = await d.sfx.measure(f);
+      // 16 beats of music (day and night), rendered offline through the same master bus
+      for (const night of [false, true])
+        out[night ? 'musicNight' : 'music'] = await d.sfx.measure((s) => {
+          const m = new Music(() => s.graph());
+          m.night = night;
+          m.renderBeats(16);
+        }, 15);
       return out;
     },
   };

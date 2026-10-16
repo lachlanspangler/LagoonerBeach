@@ -19,7 +19,7 @@ export interface UiHandlers {
   onPuzzleRetry(): void;
   onPuzzleList(): void;
   onPuzzlePick(index: number): void;
-  onToggle(key: 'sound' | 'haptics' | 'reducedMotion'): void;
+  onToggle(key: 'sound' | 'music' | 'haptics' | 'reducedMotion'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
   onSettings(): void;
@@ -189,7 +189,7 @@ export class Ui {
     const s = p.settings;
     const rm = s.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
     const rows = document.createElement('div');
-    const sw = (label: string, on: boolean, key: 'sound' | 'haptics' | 'reducedMotion') => {
+    const sw = (label: string, on: boolean, key: 'sound' | 'music' | 'haptics' | 'reducedMotion') => {
       const r = document.createElement('div');
       r.className = 'row';
       r.innerHTML = `<span>${label}</span>`;
@@ -200,6 +200,7 @@ export class Ui {
       rows.append(r);
     };
     sw('Sound', s.sound, 'sound');
+    sw('Music', s.music, 'music');
     sw('Haptics', s.haptics, 'haptics');
     sw('Reduced motion', rm, 'reducedMotion');
     const tr = document.createElement('div');

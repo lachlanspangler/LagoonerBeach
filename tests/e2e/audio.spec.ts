@@ -18,4 +18,10 @@ test('sound effects: no clipping, audible, balanced', async ({ page }) => {
   expect(lv.captureBig!.rms).toBeGreaterThan(lv.place!.rms);
   expect(lv.click!.peak).toBeLessThan(lv.capture!.peak);
   expect(lv.captureBig!.rms).toBeGreaterThan(lv.capture!.rms * 1.3);
+  // music is a bed: present, but always well under the gameplay sounds
+  for (const m of ['music', 'musicNight']) {
+    expect(lv[m]!.rms, m).toBeGreaterThan(0.01);
+    expect(lv[m]!.rms, m).toBeLessThan(0.045);
+    expect(lv[m]!.peak, m).toBeLessThan(lv.capture!.peak * 0.6);
+  }
 });

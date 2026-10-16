@@ -16,6 +16,7 @@ import { N } from '../core/grid.ts';
 import { fitsAnywhere } from '../core/rules.ts';
 
 import { Sfx } from '../audio/sfx.ts';
+import { Music } from '../audio/music.ts';
 import { DragController } from '../input/drag.ts';
 import { Haptics } from '../platform/haptics.ts';
 import {
@@ -63,6 +64,12 @@ const scene = new Scene(canvas, ctx);
 const sfx = new Sfx();
 const haptics = new Haptics();
 const fx = new Fx(scene, sfx, haptics);
+const music = new Music(() => sfx.graph());
+/** Start music after the first gesture has unlocked audio (browsers require it). */
+function wakeAudio(): void {
+  sfx.unlock();
+  if (profile.settings.music && !document.hidden) music.start(freshSeed());
+}
 const profile: Profile = loadProfile();
 
 const freshSeed = (): number => envSeed(params);
@@ -148,6 +155,10 @@ function applyTheme(): void {
   scene.sprites.setLook(lookFor(profile.settings.skin));
   idle(() => scene.warmSprites());
   sfx.enabled = profile.settings.sound;
+  music.night = t === 'night';
+  music.enabled = profile.settings.music;
+  if (!music.enabled) music.stop();
+  else if (music.playing || sfx.graph()) wakeAudio();
   haptics.enabled = profile.settings.haptics;
   dirty = true;
 }
@@ -584,7 +595,7 @@ const ui = new Ui({
     else void navigator.clipboard?.writeText(text).then(() => ui.announce('Copied result'));
   },
   onClick: () => {
-    sfx.unlock();
+    wakeAudio();
     sfx.click();
   },
 });
@@ -597,7 +608,7 @@ const drag = new DragController(canvas, {
   state: () => state,
   enabled: () => !ui.open,
   onPick: () => {
-    sfx.unlock();
+    wakeAudio();
     sfx.pick();
     haptics.fire('tick');
     dirty = true;
@@ -646,7 +657,7 @@ const drag = new DragController(canvas, {
     scene.selected = slot;
     if (slot === null) scene.preview = null;
     else {
-      sfx.unlock();
+      wakeAudio();
       sfx.pick();
       haptics.fire('tick');
       ui.announce('Piece selected. Tap the board to preview, tap again to place.');
@@ -665,8 +676,12 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     persist();
     saveProfile(profile);
+    music.stop();
     sfx.suspend();
-  } else dirty = true;
+  } else {
+    dirty = true;
+    if (sfx.graph()) wakeAudio();
+  }
 });
 window.addEventListener('pagehide', () => {
   persist();

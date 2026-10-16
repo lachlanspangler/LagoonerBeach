@@ -10,6 +10,7 @@ export type ThemePref = 'auto' | 'day' | 'night';
 
 export interface Settings {
   sound: boolean;
+  music: boolean;
   haptics: boolean;
   reducedMotion: boolean | null; // null = follow OS
   theme: ThemePref;
@@ -44,7 +45,7 @@ export const DEFAULT_PROFILE: Profile = {
   v: 1,
   best: 0,
   firstRunDone: false,
-  settings: { sound: true, haptics: true, reducedMotion: null, theme: 'auto', skin: 'pebble' },
+  settings: { sound: true, music: true, haptics: true, reducedMotion: null, theme: 'auto', skin: 'pebble' },
   stats: { games: 0, captures: 0, bestPocket: 0, totalScore: 0, cascades: 0, cleanReefs: 0 },
   daily: NO_STREAK,
   dailyBest: {},
@@ -81,6 +82,7 @@ export function loadProfile(): Profile {
     firstRunDone: bool(o.firstRunDone, false),
     settings: {
       sound: bool(s.sound, d.settings.sound),
+      music: bool(s.music, d.settings.music),
       haptics: bool(s.haptics, d.settings.haptics),
       reducedMotion: typeof s.reducedMotion === 'boolean' ? s.reducedMotion : null,
       theme: s.theme === 'day' || s.theme === 'night' ? s.theme : 'auto',

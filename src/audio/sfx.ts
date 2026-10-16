@@ -81,6 +81,11 @@ export class Sfx {
     return { peak, rms: Math.sqrt(sum / x.length) };
   }
 
+  /** Shared graph for the music engine (null until the context exists). */
+  graph(): { ctx: AudioContext | BaseAudioContext; out: AudioNode; noise: AudioBuffer } | null {
+    return this.ctx && this.master && this.noise ? { ctx: this.ctx, out: this.master, noise: this.noise } : null;
+  }
+
   suspend(): void {
     if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend();
   }
