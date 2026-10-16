@@ -241,9 +241,9 @@ a {
 .icon-btn {
   pointer-events: auto;
   position: absolute;
-  top: calc(var(--safe-top) + 12px);
-  width: 44px;
-  height: 44px;
+  top: calc(var(--safe-top) + 10px);
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: none;
   padding: 0;
@@ -256,7 +256,7 @@ a {
   transition: transform var(--dur-press) var(--spring-press);
 }
 .icon-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
   transition-duration: var(--dur-instant);
   transition-timing-function: var(--ease-standard);
 }
