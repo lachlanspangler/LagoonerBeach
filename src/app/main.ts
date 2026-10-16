@@ -26,6 +26,7 @@ import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
 import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
 import { lookFor } from '../render/skins.ts';
+import { shareText, type LagoonShape } from '../meta/share.ts';
 
 const params = new URLSearchParams(location.search);
 const DEBUG = params.has('debug') || navigator.webdriver === true;
@@ -55,6 +56,8 @@ let dailyDate = today();
 let state: GameState = startState();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
+/** Biggest lagoon of the current game (for the daily share picture). */
+let bigLagoon: LagoonShape | null = null;
 
 function startState(): GameState {
   if (mode === 'daily') return loadDaily(dailyDate) ?? newGame(dailySeed(dailyDate), { mode: 'daily' });
@@ -133,6 +136,7 @@ function syncScene(): void {
   scene.drag = null;
   fx.reset();
   overShown = false;
+  if (state.moves === 0) bigLagoon = null;
   updateHint();
   updateMisfits();
   ui.setMode(mode, visibleStreak(profile.daily, dayIndex(today())));
@@ -183,6 +187,8 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
       if (e.waves.length > 1) profile.stats.cascades++;
       if (e.score.cleanBonus) profile.stats.cleanReefs++;
       profile.stats.bestPocket = Math.max(profile.stats.bestPocket, ...e.pockets.map((p) => p.cells.length));
+      for (const p of e.pockets)
+        if (!bigLagoon || p.cells.length > bigLagoon.cells.length) bigLagoon = { cells: p.cells, ring: p.ring };
       if (teaching) {
         teaching = false;
         profile.firstRunDone = true;
@@ -307,7 +313,14 @@ const ui = new Ui({
     ui.showMenu(profile, mode, !state.over);
   },
   onShare: () => {
-    const text = `Atoll daily ${dailyDate}: ${state.score} pts · biggest lagoon ${state.bestPocket} · streak ${profile.daily.current}`;
+    const text = shareText({
+      date: dailyDate,
+      score: state.score,
+      streak: profile.daily.current,
+      lagoon: bigLagoon,
+      bestPocket: state.bestPocket,
+    });
+
     if (navigator.share) void navigator.share({ text }).catch(() => undefined);
     else void navigator.clipboard?.writeText(text).then(() => ui.announce('Copied result'));
   },
