@@ -54,3 +54,13 @@ export function minPairDelta(hexes: readonly string[], kind?: keyof typeof CVD):
   for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) m = Math.min(m, deltaE(cs[i]!, cs[j]!));
   return m;
 }
+
+/** WCAG 2.x contrast ratio between two sRGB colors. */
+export function contrast(a: string, b: string): number {
+  const L = (hex: string) => {
+    const [r, g, bl] = hexToRgb(hex).map(toLin) as [number, number, number];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [x, y] = [L(a), L(b)].sort((p, q) => q - p) as [number, number];
+  return (x + 0.05) / (y + 0.05);
+}

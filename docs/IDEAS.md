@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**89 ideas** — chosen: 1 · built: 21 · prototyped: 4 · shortlisted: 0 · backlog: 14 · merged: 5 · rejected: 44
+**91 ideas** — chosen: 1 · built: 21 · prototyped: 4 · shortlisted: 0 · backlog: 16 · merged: 5 · rejected: 44
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -38,6 +38,7 @@
 | I-089 | backlog | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
 | I-092 | backlog | Goal levels | Short levels with a target: capture a 6-cell lagoon within 15 moves. | Block Blast adventure | 24 | ✗ | 5/4 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
+| I-097 | backlog | Large text | A setting that scales menus and canvas text. | OS dynamic type | 23 | ✗ | 5/3 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
@@ -48,6 +49,7 @@
 | I-039 | backlog | Echo | Every piece you place comes back two turns later. | Block Blast | 21 | ✗ | 4/2 | est |
 | I-049 | backlog | Level Ground | Each block raises the ground; flatten a row to clear it. | Terraforming sims | 21 | ✗ | 4/5 | est |
 | I-045 | backlog | Lasso | Draw a loop around blocks to clear them. | Two Dots squares, Qix | 20 | ✗ | 4/4 | est |
+| I-098 | backlog | Cell-cursor mode | Play with a keyboard/switch cursor over cells, with spoken previews. | Accessible board games | 20 | ✗ | 4/7 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
 | I-041 | merged | Flip Puzzle | Use these pieces to wipe the pattern clean. | Lights Out | 23 | ✗ | 6/3 | est |
 | I-084 | merged | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
@@ -348,6 +350,14 @@
 - **Value/effort:** 5/2
 - **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later.
 
+### I-097 — Large text (backlog)
+- **Pitch:** A setting that scales menus and canvas text.
+- **Closest existing:** OS dynamic type
+- **What's new:** Low-vision support.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 5/3
+- **Reason:** From the accessibility review.
+
 ### I-008 — Mirror (backlog)
 - **Pitch:** Everything you place is reflected across the mirror.
 - **Closest existing:** Block Blast
@@ -427,6 +437,14 @@
 - **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 1 2 1 1 → **20**/28, gates FAIL (est)
 - **Value/effort:** 4/4
 - **Reason:** Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb.
+
+### I-098 — Cell-cursor mode (backlog)
+- **Pitch:** Play with a keyboard/switch cursor over cells, with spoken previews.
+- **Closest existing:** Accessible board games
+- **What's new:** Screen-reader play.
+- **Scores (R1..R14):** 1 1 1 2 2 2 1 2 2 1 1 1 2 1 → **20**/28, gates FAIL (est)
+- **Value/effort:** 4/7
+- **Reason:** Big effort; only worth it with real demand.
 
 ### I-042 — Hollow Daily Puzzle (merged)
 - **Pitch:** Clear the whole board with today's pieces.

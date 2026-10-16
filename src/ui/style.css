@@ -3,7 +3,7 @@
   --panel: #fffaf2;
   --text: #3b3229;
   --dim: #8a7b69;
-  --accent: #3d9be9;
+  --accent: #2673bd;
   --water: #5cc8e0;
   --shadow: rgba(80, 55, 30, 0.18);
   --font: ui-rounded, 'SF Pro Rounded', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -17,7 +17,7 @@ html[data-theme='night'] {
   --panel: #142636;
   --text: #e8eef2;
   --dim: #7f95a6;
-  --accent: #5fb2f5;
+  --accent: #2a78c2;
   --water: #2fb8d8;
   --shadow: rgba(0, 0, 0, 0.45);
 }
@@ -198,7 +198,7 @@ body {
 }
 .toggle {
   min-width: 86px;
-  min-height: 40px;
+  min-height: 44px;
   border-radius: 20px;
   border: none;
   font: 800 14px var(--font);
@@ -304,21 +304,34 @@ body {
 .btn.ghost {
   background: transparent;
   color: var(--dim);
-  min-height: 44px;
+  min-height: 48px;
   font-size: 16px;
 }
 .switch {
+  /* 44px hit area; the 52×32 track is drawn by the inner <i> */
+  width: 56px;
+  height: 44px;
+  border: none;
+  padding: 6px 2px;
+  cursor: pointer;
+  background: transparent;
+  display: flex;
+  align-items: center;
+}
+.switch i {
+  position: relative;
+  display: block;
   width: 52px;
   height: 32px;
   border-radius: 16px;
-  border: none;
-  padding: 3px;
-  cursor: pointer;
   background: color-mix(in srgb, var(--text) 18%, transparent);
   transition: background 160ms ease;
-  display: flex;
 }
-.switch i {
+.switch i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
   width: 26px;
   height: 26px;
   border-radius: 13px;
@@ -326,10 +339,10 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   transition: transform 180ms cubic-bezier(0.3, 1.4, 0.5, 1);
 }
-.switch[aria-checked='true'] {
+.switch[aria-checked='true'] i {
   background: var(--water);
 }
-.switch[aria-checked='true'] i {
+.switch[aria-checked='true'] i::after {
   transform: translateX(20px);
 }
 .seg {
@@ -343,7 +356,7 @@ body {
   background: transparent;
   color: var(--text);
   font: 700 14px var(--font);
-  min-height: 34px;
+  min-height: 44px;
   padding: 0 12px;
   border-radius: 9px;
   cursor: pointer;

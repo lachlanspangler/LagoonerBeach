@@ -2607,6 +2607,64 @@
    "effort": 4,
    "status": "rejected",
    "reason": "Needs permissions and native plumbing; conflicts with the no-data, calm stance. Revisit only if the owner wants it."
+  },
+  {
+   "id": "I-097",
+   "kind": "feature",
+   "name": "Large text",
+   "pitch": "A setting that scales menus and canvas text.",
+   "closest": "OS dynamic type",
+   "new": "Low-vision support.",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 5,
+   "effort": 3,
+   "status": "backlog",
+   "reason": "From the accessibility review."
+  },
+  {
+   "id": "I-098",
+   "kind": "feature",
+   "name": "Cell-cursor mode",
+   "pitch": "Play with a keyboard/switch cursor over cells, with spoken previews.",
+   "closest": "Accessible board games",
+   "new": "Screen-reader play.",
+   "scores": [
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    1,
+    1,
+    1,
+    2,
+    1
+   ],
+   "basis": "est",
+   "value": 4,
+   "effort": 7,
+   "status": "backlog",
+   "reason": "Big effort; only worth it with real demand."
   }
  ]
 }

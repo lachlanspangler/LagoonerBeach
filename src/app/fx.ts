@@ -152,7 +152,8 @@ export class Fx {
                 .filter((c) => c.wave === k + 1)
                 .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
               const announced = new Set<string>();
-              caught.slice(0, 4).forEach((c, f) => {
+              // reduced motion: catches are still recorded and announced, just not animated
+              (sc.reducedMotion ? [] : caught.slice(0, 4)).forEach((c, f) => {
                 // only the first of a newly discovered species gets the "New!" treatment
                 const isNew =
                   (opts.newIds?.has(c.x.id) ?? false) && !announced.has(c.x.id) && !this.announced.has(c.x.id);
