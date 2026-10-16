@@ -9,8 +9,9 @@ setup:            ## install deps + browsers
 dev:              ## dev server on :5317
 	npm run dev
 
-build:            ## typecheck + production build into dist/
+build:            ## typecheck + production build into dist/ (+ bundle budget)
 	npm run build
+	npm run size
 
 test:             ## unit + property + balance tests
 	npm test
