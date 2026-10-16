@@ -7,7 +7,6 @@ import {
   isoWeek,
   parseBoard,
   resolveBoard,
-  sanitizeLbProfile,
   weekBoard,
 } from '../../src/meta/boards.ts';
 import { dailySeed } from '../../src/core/daily.ts';
@@ -139,17 +138,5 @@ describe('BoardTable', () => {
     expect(t.top('endless:all', 1).entries[0]).toMatchObject({ name: 'KELP', avatar: 'hermit' });
     t.deletePlayer('a');
     expect(t.top('endless:all', 1).total).toBe(0);
-  });
-});
-
-describe('profile fields', () => {
-  it('sanitizes install id and name', () => {
-    expect(sanitizeLbProfile(undefined)).toEqual({});
-    expect(sanitizeLbProfile({ installId: 'f'.repeat(32), name: 'coral' })).toEqual({
-      installId: 'f'.repeat(32),
-      name: 'CORAL',
-    });
-    expect(sanitizeLbProfile({ installId: 'nope', name: 'ADMIN' })).toEqual({});
-    expect(sanitizeLbProfile({ name: 7 })).toEqual({});
   });
 });

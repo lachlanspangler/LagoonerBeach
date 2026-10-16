@@ -10,6 +10,7 @@ import {
   saveDaily,
   saveGame,
   saveProfile,
+  sanitizeLbProfile,
 } from '../../src/platform/storage.ts';
 import { applyMove, legalMoves, newGame, type GameState } from '../../src/core/game.ts';
 import { encodeGame } from '../../src/core/serialize.ts';
@@ -57,8 +58,10 @@ describe('profile migration', () => {
     p.lb = { installId: 'ab'.repeat(16), name: 'CORAL' };
     saveProfile(p);
     expect(loadProfile().lb).toEqual({ installId: 'ab'.repeat(16), name: 'CORAL' });
-    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, lb: { installId: '<script>', name: 'ADMIN' } }));
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, lb: { installId: '<script>', name: 'coral 9' } }));
     expect(loadProfile().lb).toEqual({});
+    expect(sanitizeLbProfile(undefined)).toEqual({});
+    expect(sanitizeLbProfile({ name: 7, installId: 5 })).toEqual({});
   });
 });
 

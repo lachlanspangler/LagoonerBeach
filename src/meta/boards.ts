@@ -387,22 +387,3 @@ export class BoardTable {
     }
   }
 }
-
-// ── profile fields ─────────────────────────────────────────────────────────────────────────
-/** Leaderboard bits of the saved profile. Both are only created when the player first posts. */
-export interface LbProfile {
-  installId?: string;
-  name?: string;
-}
-
-export function sanitizeLbProfile(raw: unknown): LbProfile {
-  if (!raw || typeof raw !== 'object') return {};
-  const o = raw as Record<string, unknown>;
-  const out: LbProfile = {};
-  if (typeof o.installId === 'string' && INSTALL_ID_RE.test(o.installId)) out.installId = o.installId;
-  if (typeof o.name === 'string') {
-    const n = sanitizeNameInput(o.name);
-    if (n && validateName(n).ok) out.name = n;
-  }
-  return out;
-}

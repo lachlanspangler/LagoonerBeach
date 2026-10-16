@@ -6,7 +6,6 @@ import { NO_STREAK, type DailyStreak } from '../core/daily.ts';
 import { decodeGame, encodeGame } from '../core/serialize.ts';
 import type { GameState } from '../core/game.ts';
 import { MAX_REEF } from '../core/endless.ts';
-import { sanitizeLbProfile, type LbProfile } from '../meta/boards.ts';
 import { unpackMoves } from '../core/movelog.ts';
 
 export type ThemePref = 'auto' | 'day' | 'night';
@@ -47,6 +46,24 @@ export interface Profile {
   puzzle: { index: number; solved: string[]; pure?: string[]; hinted?: string[]; dailyDone?: string[] };
   /** Leaderboards: random install id + chosen name, both created only when the player first posts. */
   lb?: LbProfile;
+}
+
+/** Leaderboard bits of the profile. Both are created only when the player first posts a score. */
+export interface LbProfile {
+  /** Random 128-bit id (hex), no link to the device or the person. */
+  installId?: string;
+  /** Last chosen name (validated by meta/names.ts when chosen; the server re-checks it). */
+  name?: string;
+}
+
+/** Kept dependency-free so the eager bundle doesn't pull in the name filter. */
+export function sanitizeLbProfile(raw: unknown): LbProfile {
+  if (!raw || typeof raw !== 'object') return {};
+  const o = raw as Record<string, unknown>;
+  return {
+    ...(typeof o.installId === 'string' && /^[0-9a-f]{32}$/.test(o.installId) ? { installId: o.installId } : {}),
+    ...(typeof o.name === 'string' && /^[A-Z]{1,7}$/.test(o.name) ? { name: o.name } : {}),
+  };
 }
 
 export const DEFAULT_PROFILE: Profile = {
