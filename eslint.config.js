@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import globals from 'globals';
 
 export default tseslint.config(
   {
@@ -14,6 +15,7 @@ export default tseslint.config(
       eqeqeq: ['error', 'always'],
     },
   },
+  { files: ['public/sw.js'], languageOptions: { globals: globals.serviceworker } },
   {
     // test/tooling scripts poke at window globals inside page.evaluate
     files: ['scripts/**/*.ts', 'tests/e2e/**/*.ts', 'tests/perf/**/*.ts'],
