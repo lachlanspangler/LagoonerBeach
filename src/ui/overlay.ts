@@ -7,6 +7,7 @@ import { SKINS } from '../meta/unlocks.ts';
 import { HABITATS, SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
 import { drawCreature } from '../render/creatures.ts';
+import { buildReefList, type ReefListModel } from './reefList.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
@@ -339,83 +340,30 @@ export class Ui {
     this.show(card, true);
   }
 
-  /** Grid of every reef by tier; tap one to play it. Nothing is locked. */
-  showReefs(
-    list: readonly { id: string; tier?: string }[],
-    solved: readonly string[],
-    pure: readonly string[],
-    current: number,
-    daily?: { index: number; done: boolean },
-  ): void {
-    const card = document.createElement('div');
-    card.className = 'card reefs';
-    card.innerHTML = `<h2>Reefs</h2><div class="sub">${solved.length} of ${list.length} cleared${pure.length ? ' · ★ = no hints' : ''}</div>`;
-    const nextUp = list.findIndex((p) => !solved.includes(p.id));
-    // new players keep climbing the curve; the Reef of the day leads once they've found their feet
-    const climbing = nextUp >= 0 && solved.length < 20;
-    if (climbing) {
-      const c = this.button(
-        'reef-continue',
-        'btn primary',
-        `Continue · Reef ${nextUp + 1}`,
-        `Continue, reef ${nextUp + 1}`,
-        () => this.h.onPuzzlePick(nextUp),
-      );
-      c.style.marginBottom = '6px';
-      card.append(c);
-    }
-    if (daily) {
-      const tierName =
-        { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' }[list[daily.index]?.tier ?? ''] ?? '';
-      const b = this.button(
-        'reef-of-day',
-        `btn ${daily.done || climbing ? '' : 'primary'}`,
-        `${daily.done ? '✓ ' : ''}Reef of the day · ${daily.index + 1} · ${tierName}`,
-        `Reef of the day, reef ${daily.index + 1}${daily.done ? ', done' : ''}`,
-        () => this.h.onPuzzlePick(daily.index),
-      );
-      b.style.marginBottom = '6px';
-      card.append(b);
-    }
-    const scroller = document.createElement('div');
-    scroller.className = 'reef-scroll';
-    const names: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
-    let lastTier = '';
-    let grid: HTMLElement | null = null;
-    list.forEach((p, i) => {
-      const tier = p.tier ?? '';
-      if (tier !== lastTier) {
-        lastTier = tier;
-        const h = document.createElement('div');
-        h.className = 'tier';
-        h.textContent = names[tier] ?? tier;
-        grid = document.createElement('div');
-        grid.className = 'reef-grid';
-        scroller.append(h, grid);
-      }
-      const isPure = pure.includes(p.id);
-      const isSolved = solved.includes(p.id);
-      const isNext = !isSolved && i === nextUp;
-      const b = this.button(
-        '',
-        `reef t-${tier}${isSolved ? ' done' : ''}${isNext ? ' next' : ''}${i === current ? ' cur' : ''}`,
-        `${i + 1}${isPure ? '<sup>★</sup>' : ''}`,
-        `Reef ${i + 1}${isSolved ? ', cleared' : ''}`,
-        () => this.h.onPuzzlePick(i),
-      );
-      grid!.append(b);
-    });
-    card.append(scroller);
-    card.append(this.button('', 'btn', 'Close', 'Close', () => this.h.onResume()));
+  /** Reefs by chapter, shipped and endless (src/ui/reefList.ts); tap one to play it. */
+  showReefs(m: ReefListModel): void {
+    const card = buildReefList(
+      m,
+      (id, cls, html, label, fn) => this.button(id, cls, html, label, fn),
+      (i) => this.h.onPuzzlePick(i),
+      () => this.h.onResume(),
+    );
     this.show(card, true);
-    scroller.querySelector('.cur')?.scrollIntoView({ block: 'center' });
   }
 
-  showPuzzleResult(o: { solved: boolean; index: number; total: number; cleared: number; newIds?: string[] }): void {
+  showPuzzleResult(o: {
+    solved: boolean;
+    index: number;
+    total: number;
+    cleared: number;
+    newIds?: string[];
+    /** Replaces "N of M reefs cleared" (endless reefs: chapter progress). */
+    progress?: string;
+  }): void {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = o.solved
-      ? `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">Cleared</div><div class="sub">${o.cleared} of ${o.total} reefs cleared</div>`
+      ? `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">Cleared</div><div class="sub">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`
       : `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">So close</div><div class="sub">Every piece must be placed and every pebble popped.</div>`;
     if (o.newIds?.length) card.append(newSpeciesRow(o.newIds, () => this.h.onJournal()));
     if (o.solved) {

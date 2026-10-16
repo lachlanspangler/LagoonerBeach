@@ -14,6 +14,7 @@ import { trayCellFor } from '../render/layout.ts';
 import { lookFor } from '../render/skins.ts';
 import { BOTS, type BotName } from '../sim/bots.ts';
 import { Music } from '../audio/music.ts';
+import type { ReefSource } from './reefSource.ts';
 
 export interface DebugDeps {
   state(): GameState;
@@ -31,6 +32,7 @@ export interface DebugDeps {
   switchMode(m: 'classic' | 'daily' | 'puzzle'): void;
   loadPuzzle(i: number): void;
   puzzleSolution(): unknown;
+  reefSource(): ReefSource | null;
   journal(): unknown;
   /** Screenshots only: show a believable best score / a well-filled journal (not saved). */
   stageBest(n: number, score?: number): void;
@@ -80,8 +82,13 @@ export function installDebugApi(d: DebugDeps): void {
     },
     restart: d.restart,
     switchMode: d.switchMode,
+    /** Open reef at 0-based index i; endless reefs (i ≥ 360) arrive asynchronously from the worker. */
     loadPuzzle: d.loadPuzzle,
     puzzleSolution: d.puzzleSolution,
+    /** Endless-reef generation: counters, cached reef numbers, and a way to queue generation. */
+    reefStats: () => ({ ...d.reefSource()?.stats, cached: d.reefSource()?.cached() ?? [] }),
+    reefReady: (i: number) => d.reefSource()?.get(i) !== null && d.reefSource() !== null,
+    prefetchReefs: (i: number, count: number) => d.reefSource()?.prefetch(i - 1, count),
     journal: d.journal,
     stageBest: d.stageBest,
     stageJournal: d.stageJournal,
