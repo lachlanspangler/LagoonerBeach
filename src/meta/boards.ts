@@ -36,8 +36,15 @@ export const LB_LIMITS = {
   dailyLateMs: DAY + 14 * HOUR,
   /** Endless run tokens are single use and live this long. */
   runTokenMs: 72 * HOUR,
-  /** Below this average pace an Endless run is stored hidden (shadow), not rejected. */
+  /**
+   * Below this average pace, measured from the run's server-recorded start (`POST /v1/runs/:rid/start`,
+   * sent at the first move), an Endless run is stored hidden (shadow), not rejected.
+   */
   minMsPerMove: 250,
+  /** Distinct install ids one (salted) IP hash may use per UTC day, on runs and submissions. */
+  idsPerIpDay: 5,
+  /** Rows one (salted) IP hash may add to a single Daily board. */
+  dailyRowsPerIp: 3,
 };
 
 export const isDay = (s: unknown): s is string =>
@@ -141,6 +148,8 @@ export interface SubmitResponse {
 }
 
 export interface RunTicket {
+  /** The run id inside the token (for `POST /v1/runs/:runId/start`). */
+  readonly runId: string;
   readonly runToken: string;
   readonly seed: number;
   readonly issuedAt: number;
@@ -163,6 +172,7 @@ export type LbErrorCode =
   | 'seed_mismatch'
   | 'upgrade_required'
   | 'rate_limited'
+  | 'board_limit'
   | 'overloaded';
 
 export const ERROR_STATUS: Record<LbErrorCode, number> = {
@@ -181,6 +191,8 @@ export const ERROR_STATUS: Record<LbErrorCode, number> = {
   seed_mismatch: 422,
   upgrade_required: 426,
   rate_limited: 429,
+  /** Not retryable: this network already has its share of rows on that Daily board. */
+  board_limit: 429,
   overloaded: 503,
 };
 
@@ -194,6 +206,25 @@ export const RETRYABLE: ReadonlySet<string> = new Set([
 ]);
 
 export const INSTALL_ID_RE = /^[0-9a-f]{32}$/;
+
+/**
+ * The public claims of a run token (`base64url(JSON).signature`), read WITHOUT checking the
+ * signature: the client uses it to know a run's id and expiry (the server verifies for real).
+ */
+export function peekRunToken(token: string | undefined): { rid: string; iat: number; exp: number } | null {
+  const body = token?.split('.')[0];
+  if (!body || !/^[A-Za-z0-9_-]+$/.test(body)) return null;
+  try {
+    const c = JSON.parse(
+      atob(body.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (body.length % 4)) % 4)),
+    ) as Record<string, unknown>;
+    return typeof c.rid === 'string' && typeof c.iat === 'number' && typeof c.exp === 'number'
+      ? { rid: c.rid, iat: c.iat, exp: c.exp }
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 // ── submission checks ──────────────────────────────────────────────────────────────────────
 export type Checked =
@@ -256,7 +287,10 @@ export function checkSubmission(raw: unknown, now: number, rules: number): Check
   return { ok: true, sub, state: v.state };
 }
 
-/** The boards a verified submission lands on. Endless weeks come from `weekDay` (token issue day). */
+/**
+ * The boards a verified submission lands on. Endless weeks come from `weekDay`: the day the server
+ * received the submission (never the ticket's issue time, which can be days earlier).
+ */
 export function boardsFor(sub: Pick<ScoreSubmission, 'mode' | 'date'>, weekDay: string): BoardId[] {
   return sub.mode === 'daily' ? [dailyBoard(sub.date!)] : [ALL_TIME, weekBoard(weekDay)];
 }

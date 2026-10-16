@@ -61,3 +61,27 @@ test('keyboard: Escape closes dismissable dialogs, Tab stays inside', async ({ p
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('keyboard: the dialog Tab cycle skips inactive tabs (roving tabindex) and hidden controls', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Menu' }).focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Leaderboards' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('lb-board')).toBeVisible();
+  await expect(page.locator('.lb-row').first()).toBeVisible();
+  const seen: string[] = [];
+  for (let i = 0; i < 16; i++) {
+    await page.keyboard.press('Tab');
+    seen.push(
+      await page.evaluate(() => {
+        const a = document.activeElement as HTMLElement | null;
+        if (!a) return 'none';
+        return `${a.getAttribute('role') ?? a.tagName}:${a.getAttribute('aria-selected') ?? ''}:${a.tabIndex}`;
+      }),
+    );
+  }
+  expect(seen.filter((s) => s.startsWith('tab:'))).not.toHaveLength(0); // the selected tab is reachable
+  expect(seen.filter((s) => s.startsWith('tab:false'))).toEqual([]); // inactive tabs are arrow-key only
+  expect(seen.filter((s) => s.endsWith(':-1'))).toEqual([]);
+});

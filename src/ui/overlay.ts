@@ -52,6 +52,20 @@ const ICON_HINT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 // Daily: a sun coming up over a wave
 const ICON_DAILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14a5 5 0 0 1 10 0"/><path d="M12 5v2M5.5 8.5l1.4 1.4M18.5 8.5l-1.4 1.4"/><path d="M3 18c1.5 0 1.5-1.2 3-1.2S7.5 18 9 18s1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2"/></svg>`;
 
+/**
+ * What Tab should visit inside `root`, in order: enabled buttons, links and `tabindex="0"` elements
+ * that aren't roving-tabindex inactive (`tabindex="-1"`), hidden, inert or aria-hidden.
+ */
+export function tabbable(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex="0"]')].filter(
+    (el) =>
+      el.tabIndex >= 0 &&
+      !el.closest('[hidden], [inert], [aria-hidden="true"]') &&
+      el.getClientRects().length > 0 &&
+      getComputedStyle(el).visibility !== 'hidden',
+  );
+}
+
 export class Ui {
   private root: HTMLElement;
   private veil: HTMLElement | null = null;
@@ -155,8 +169,8 @@ export class Ui {
         e.preventDefault();
         onDismiss();
       } else if (e.key === 'Tab') {
-        // keep focus inside the dialog
-        const f = [...v.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex="0"]')];
+        // keep focus inside the dialog, on what Tab would really reach (not inactive tabs or hidden bits)
+        const f = tabbable(v);
         if (!f.length) return;
         const i = f.indexOf(document.activeElement as HTMLElement);
         const next = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : i === f.length - 1 ? 0 : i + 1;
@@ -374,6 +388,18 @@ export class Ui {
       () => this.h.onResume(),
     );
     this.show(card, true);
+  }
+
+  /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Classic. */
+  showReefError(index: number, retry: () => void): void {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-testid', 'reef-error');
+    card.innerHTML = `<h2>Reef ${index + 1}</h2><div class="sub">This reef couldn't be charted just now.</div>`;
+    card.append(this.button('retry-chart', 'btn primary', 'Try again', `Try charting reef ${index + 1} again`, retry));
+    card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    this.show(card, true);
+    this.announce(`Reef ${index + 1} couldn't be charted. Try again.`);
   }
 
   showPuzzleResult(o: {

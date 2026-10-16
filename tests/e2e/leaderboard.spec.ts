@@ -87,6 +87,52 @@ test('a classic game resumed after a reload can still be posted (move log saved 
   await expect(page.locator('.lb-row.me')).toContainText('KELP');
 });
 
+test('a Daily finished after local midnight opens (and labels) the board it was posted to', async ({ page }) => {
+  const day = new Date(2026, 9, 16, 23, 59, 0); // local time
+  await page.clock.install({ time: day });
+  await boot(page, 'mode=daily&fast=1');
+  await page.evaluate(() => (window as any).__atoll.autoplay('human', 3));
+  await page.clock.setSystemTime(new Date(2026, 9, 17, 0, 0, 30)); // past midnight, same game
+  await finishDaily(page);
+  await page.locator('#lb-open').click();
+  await page.keyboard.type('nemo');
+  await page.getByTestId('lb-post').click();
+  await expect(page.locator('.lb-row.me')).toContainText('NEMO'); // yesterday's board, where the score is
+  await expect(page.locator('.lb-foot')).toContainText('counts on: yesterday');
+  await page.getByRole('button', { name: 'Back to results' }).click();
+  await expect(page.locator('#lb-open')).toHaveText(/^Leaderboard · #\d+ yesterday$/);
+});
+
+test('"Choose a name" on the boards posts the game you just finished', async ({ page }) => {
+  await boot(page, 'mode=daily&fast=1');
+  const score = await finishDaily(page);
+  await page.evaluate(() => (window as any).__atoll.restart());
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Leaderboards' }).click();
+  await page.getByRole('tab', { name: 'Daily' }).click();
+  await page.getByRole('button', { name: 'Choose a name' }).click();
+  await page.keyboard.type('pearl');
+  await page.keyboard.press('Enter');
+  const me = page.locator('.lb-row.me');
+  await expect(me).toContainText('PEARL');
+  await expect(me.locator('.lb-sc')).toContainText(score.toLocaleString('en-US'));
+});
+
+test('"No thanks" declines that score: naming yourself later does not post it', async ({ page }) => {
+  await boot(page, 'mode=daily&fast=1');
+  await finishDaily(page);
+  await page.locator('#lb-open').click();
+  await page.getByRole('button', { name: 'No thanks' }).click();
+  await page.evaluate(() => (window as any).__atoll.restart());
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Leaderboards' }).click();
+  await page.getByRole('tab', { name: 'Daily' }).click();
+  await page.getByRole('button', { name: 'Choose a name' }).click();
+  await page.keyboard.type('kelp');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.lb-you-row')).toContainText('Finish today’s Daily to join');
+});
+
 test('leaderboards are reachable from the menu; tabs work by keyboard; Escape closes', async ({ page }) => {
   await boot(page);
   await page.getByRole('button', { name: 'Menu' }).click();

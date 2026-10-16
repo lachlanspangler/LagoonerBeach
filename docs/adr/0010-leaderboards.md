@@ -22,9 +22,11 @@ knows which backend it talks to.
 - `daily:YYYY-MM-DD`: the player's **local** date, the same key as the Daily seed (`today()` in
   `src/app/env.ts`, `dailySeed()` in `src/core/daily.ts`). The server accepts a date from 14 h before
   its UTC midnight to 14 h after its UTC end (about 52 h), which covers UTC+14…UTC−12 plus offline
-  grace; then the board is final (`410 board_closed`). **The first finish counts**: the Daily seed
-  is public, so grinding replays (or a solver) earns nothing.
-- `endless:all` and `endless:wYYYY-WW` (ISO week, UTC, of the run's start). Best score per player.
+  grace; then the board is final (`410 board_closed`). **The first finish counts** per install id,
+  and one salted IP hash may add at most 3 rows to a Daily board. This limits casual grinding; it
+  does not stop a determined cheater (see "Not stopped" below).
+- `endless:all` and `endless:wYYYY-WW` (ISO week, UTC, of the server's clock **when the score
+  arrives**, never the ticket's issue time). Best score per player.
 - Ranking: score desc, then the earlier submission, then insertion order. Exact ranks via an indexed
   `COUNT` of better rows, which reads O(rank) index entries. That's fine to roughly 100k DAU.
   **At scale:** keep a score histogram (16 buckets per power of two, research §7.4), count whole
@@ -37,8 +39,9 @@ knows which backend it talks to.
 interface LeaderboardBackend {
   readonly kind: 'mock' | 'http';
   startRun(installId: string | undefined, teach: boolean): Promise<RunTicket | null>;
+  markStarted(runId: string, runToken: string): Promise<void>;  // first move of a ticketed run
   submit(entry: ScoreSubmission): Promise<SubmitResponse>;     // → { verifiedScore, boards: Standing[] }
-  top(board: BoardRef, n: number): Promise<TopResponse>;
+  top(board: BoardRef, n: number, installId?: string): Promise<TopResponse>; // rows carry `me`
   around(board: BoardRef, installId: string, window: number): Promise<AroundResponse>; // me, above, rows
   myRank(board: BoardRef, installId: string): Promise<Standing | null>;
   deletePlayer(installId: string): Promise<void>;
@@ -70,15 +73,31 @@ views with an offline cache, Endless ticket prefetch and erase.
   (secret `RUN_TOKEN_SECRET`) binding seed, teach flag, rules, issue time and the install id when the
   player has one. Tokens are **single use** (`used_runs`; an identical retry is idempotent, anything
   else is `409 duplicate_run`) and expire after **72 h**. Players who haven't opted in get unbound
-  tickets (the first submitter claims them), rate-limited by a salted IP hash, so even a first-ever
-  Endless game can be ranked. The client keeps one spare ticket; a classic game started without one
-  (offline) plays normally and is shown as unranked.
-- **Too fast to be human** (less than 250 ms per move since the token was issued): stored as a
-  shadow row that only its owner sees, so cheaters don't learn the threshold.
-- Rate limits per install id (submit 10/min, reads 120/min, runs 30/h); `players.banned` refuses
-  submissions; moderators can hide rows (SQL in DEPLOY.md).
-- Not stopped: a patient bot playing at human speed. Accepted (research §6); App Attest / Play
-  Integrity can come later if boards get spammed.
+  tickets (the first submitter claims them), so even a first-ever Endless game can be ranked. When
+  online, a new classic game asks for a fresh ticket (2 s budget); the one spare ticket the client
+  keeps is the fallback, and a game started without either (offline) plays normally and is shown as
+  unranked. The ticket is saved with the game, so a reload before the first move keeps it ranked. A
+  run finished after its ticket expired is shown as "Unranked: this run's ticket expired" and is
+  never queued; queued posts whose ticket expires while waiting are dropped with a note.
+- **Too fast to be human**: at the first move the client sends `POST /v1/runs/:rid/start {runToken}`
+  (the first call wins; the token proves the caller holds the ticket). On submit, a run with a
+  recorded start and less than 250 ms per move since that start is stored as a shadow row that only
+  its owner sees, so cheaters don't learn the threshold. **What this checks:** that a run whose
+  client reported its start took a human amount of time from its first move. **What it doesn't:**
+  runs with no recorded start (an offline start, or a modified client that never calls it) are not
+  speed-checked at all, and the issue time is never used (tickets are prefetched hours ahead). It
+  is a tripwire for naive bots driving the stock client, not a defence against a modified one.
+- Rate limits: every limited route counts per install id **and** per salted IP hash (submit 10/min
+  per id, 30/min per IP hash; runs 30/h and 60/h; reads 120/min and 300/min; run starts 120/h per
+  IP hash), so rotating install ids doesn't escape the address limit. Runs and submissions also cap
+  the distinct install ids one IP hash may use per UTC day at 5. A Daily board takes at most 3 rows
+  per IP hash (`429 board_limit`, not retried). Shared addresses (carrier-grade NAT, schools) can
+  hit these caps; they are constants in `server/src/handler.ts` / `LB_LIMITS`.
+  `players.banned` refuses submissions; moderators can hide rows (SQL in DEPLOY.md).
+- **Not stopped:** a patient bot playing at human speed; a modified client (the Daily seed is
+  public, so it can play offline best-of-N with a solver and post only its best, and it can skip the
+  run-start call); many addresses (a botnet or a VPN pool passes every per-IP cap). Accepted
+  (research §6); App Attest / Play Integrity can come later if boards get spammed.
 
 ## Name policy (`src/meta/names.ts`, shared by client and server)
 - 1–7 letters A–Z, stored uppercase. Live input folds accents and full-width letters (JOSÉ → JOSE)
@@ -120,8 +139,11 @@ views with an offline cache, Endless ticket prefetch and erase.
 
 ## Privacy
 Only after the player posts: the name, score, moves count and avatar are public; the move log, seed,
-random install id and app version are not. No IP addresses are stored. Retention: dailies 30 days,
-weeks 8 weeks, all-time until deleted, spent tokens 72 h. **Erase all progress** wipes local data
+random install id and app version are not. No IP addresses are stored, only salted hashes (rate
+counters; per-network sets of salted install-id hashes). Retention (hourly cron, so each limit plus
+at most an hour): dailies 30 days, weeks 8 weeks, all-time until deleted, spent tokens and run
+starts 72 h, rate counters 1 h, per-network sets 24 h (Daily boards: until the Daily closes, ≤ 52 h).
+**Erase all progress** wipes local data
 and writes a one-id tombstone. The next launch sends `DELETE /v1/players/:id`, then drops the
 tombstone. Store labels for both build kinds are in `docs/store/LISTING.md`; the policy is in
 `docs/store/PRIVACY.md` and `public/privacy.html`.
@@ -155,3 +177,41 @@ pass. A hand-written filter is a floor, not moderation. Before the real backend 
 should add server-side moderation: a maintained third-party list or moderation API on submit, a
 report/ban path (the `banned` flag exists), and periodic review of the boards (DEPLOY.md lists the
 SQL). Names are A–Z ≤ 7, so the exposure is short strings only.
+
+## Review fixes (2026-10-16)
+A code review of the leaderboards + endless reefs merge found ten issues; all are fixed, each with a
+regression test (server: `server/test/handler.test.ts`, `schema.test.ts`; client:
+`tests/unit/lbclient.test.ts`, `reefSource.test.ts`; UI: `tests/e2e/leaderboard.spec.ts`, `a11y.spec.ts`).
+1. **Weekly board = submit week.** It used the ticket's issue time, so a spare ticket from Sunday
+   23:00 UTC posted on Monday landed on last week's board while the UI said "#N this week". The
+   server now uses its own clock at submission; the client prefers a fresh ticket at game start when
+   online; the results label and the boards sheet use the board ids the server returned.
+2. **Speed check from a server-recorded start** (`POST /v1/runs/:rid/start`, table `started_runs`),
+   not from the issue time that prefetched tickets made meaningless. Exactly what is and isn't
+   checked is in "Anti-cheat" above: offline starts are not speed-checked.
+3. **Rate limits were keyed on a caller-chosen install id** (100/100 tickets from one IP with
+   rotating ids). Every limited route now also counts per salted IP hash, and one IP hash may use at
+   most 5 install ids per UTC day (table `ip_sets`).
+4. **Daily "first finish counts" was bypassable by minting ids**: at most 3 rows per IP hash per Daily
+   board (`board_limit`). The ADR now says what is still possible (public seeds, offline best-of-N).
+5. **Expired Endless tickets** (a resumed game finished > 72 h after issue) said "This score
+   couldn't be verified". They are now detected on the device (the token's public `exp`), shown as
+   "Unranked: this run's ticket expired", never queued, and queued ones are dropped with a note on
+   the next board. Rejection texts are per reason (`rejectionText`).
+6. **Wrong row tagged "You"**: top was cached `public, max-age=30` and the client matched rows by
+   rank. `top?installId=` now tags the caller's row `me` and is `no-store`; the client uses only that.
+7. **schema.sql name CHECK** constrained only the first character: now
+   `name NOT GLOB '*[^A-Z]*' AND length(name) BETWEEN 1 AND 7`. No live D1 exists yet; on one that
+   already has the table, re-running the schema would not change the CHECK (it needs a table
+   rebuild). `src/ui/leaderboard.ts` puts every server-provided value in with `textContent` /
+   `setAttribute` (rows, target card, medals, notes), and formats numbers only if they are numbers.
+8. **Privacy text vs retention**: the cron is now hourly, rate counters are pruned once their 1 h
+   window passes, and `PRIVACY.md` / `privacy.html` give each limit (plus "within an hour").
+9. **Reef generation could hang** ("Charting…" forever) when the worker replied `{error}` and the
+   synchronous generator also threw: the fallback now uses try/finally, keeps pumping the queue,
+   rejects the waiter (a later `ensure()` asks again) and the UI shows a "Try again" card.
+10. (a) A Daily finished after local midnight opens the board of its own date (labelled
+   "yesterday"); (b) a ticket taken for a new game is saved with it before the first move;
+   (c) "Choose a name" on a boards sheet posts the last finished game unless the player declined it
+   with "No thanks"; (d) the dialog focus trap skips inactive tabs and hidden/inert controls;
+   (e) `version.ts` points at the fingerprint pin in `tests/unit/movelog.test.ts`.

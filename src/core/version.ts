@@ -5,7 +5,7 @@
  *
  * Bump it whenever the dealer ramp, scoring, the piece catalog, the teaching tray or the daily salt
  * change. `rulesFingerprint()` hashes all of those plus a few golden replays (catches code changes,
- * not just constants); tests/unit/version.test.ts pins fingerprint ↔ version, so forgetting the bump
+ * not just constants); tests/unit/movelog.test.ts pins fingerprint ↔ version, so forgetting the bump
  * fails `make check`.
  */
 import { DAILY_SALT, dailySeed } from './daily.ts';

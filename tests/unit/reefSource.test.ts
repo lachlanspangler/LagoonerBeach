@@ -86,7 +86,7 @@ describe('reef source', () => {
     afterEach(() => timers.forEach(clearTimeout));
 
     /** A fake worker running the real generator asynchronously (or failing to load). */
-    function fakeWorker(mode: 'ok' | 'broken' | 'garbage'): WorkerLike & { posted: number } {
+    function fakeWorker(mode: 'ok' | 'broken' | 'garbage' | 'error'): WorkerLike & { posted: number } {
       const listeners: Record<string, ((e: { data?: unknown }) => void)[]> = { message: [], error: [] };
       const w = {
         posted: 0,
@@ -96,6 +96,7 @@ describe('reef source', () => {
           timers.push(
             setTimeout(() => {
               if (mode === 'broken') listeners.error!.forEach((f) => f({}));
+              else if (mode === 'error') listeners.message!.forEach((f) => f({ data: { n, error: 'boom' } }));
               else {
                 const reef = mode === 'ok' ? generateReef(n) : { id: `g${n}`, board: 'x' };
                 listeners.message!.forEach((f) => f({ data: { n, reef, ms: 1 } }));
@@ -138,6 +139,26 @@ describe('reef source', () => {
       const r = await b.ensure(500);
       expect(validReef(r, 501)).toBe(true);
       expect(b.stats.fallback).toBe(1);
+    });
+
+    it('worker {error} + a throwing fallback rejects the waiter, keeps the queue moving, and can retry', async () => {
+      let broken = true;
+      const s = new ReefSource(PACK, {
+        storage: memStorage(),
+        createWorker: () => fakeWorker('error'),
+        defer: (fn) => void timers.push(setTimeout(fn, 0)),
+        generate: (n) => {
+          if (broken && n === 501) throw new Error('generator bug');
+          return generateReef(n);
+        },
+      });
+      const bad = s.ensure(500);
+      const next = s.ensure(501); // queued behind the failing one
+      await expect(bad).rejects.toThrow('generator bug');
+      expect((await next).id).toBe('g502');
+      expect(s.stats.failed).toBe(1);
+      broken = false;
+      expect((await s.ensure(500)).id).toBe('g501'); // a retry asks again instead of reusing the dead waiter
     });
   });
 });

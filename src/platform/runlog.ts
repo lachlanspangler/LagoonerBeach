@@ -76,8 +76,17 @@ export class RunLog {
         mode === 'classic' &&
         sameTray(before, newGame(before.seed, { teach: true })) &&
         !sameTray(before, newGame(before.seed));
-      const tok = mode === 'classic' && this.pending?.seed === before.seed ? this.pending.runToken : undefined;
-      if (tok) this.pending = null;
+      // the ticket handed out for this game, or (after a reload before the first move) the one saved with it
+      const prev = this.live[mode];
+      const tok =
+        mode !== 'classic'
+          ? undefined
+          : this.pending?.seed === before.seed
+            ? this.pending.runToken
+            : prev && prev.seed === before.seed && prev.moves.length === 0
+              ? prev.runToken
+              : undefined;
+      if (this.pending?.seed === before.seed) this.pending = null;
       this.live[mode] = {
         seed: before.seed,
         ...(mode === 'daily' ? { date } : {}),
@@ -95,10 +104,22 @@ export class RunLog {
     l.moves.push(m);
   }
 
-  /** The record to save alongside the game. */
-  get(mode: LogMode): RunRecord | null {
+  /**
+   * The record to save alongside the game `s`. A new classic game on a ticket has no moves yet, but
+   * its ticket is saved with it, so a reload before the first move keeps the game ranked.
+   */
+  get(mode: LogMode, s?: Pick<GameState, 'seed' | 'moves'>): RunRecord | null {
     const l = this.live[mode];
-    return l ? { moves: packMoves(l.moves), teach: l.teach, ...(l.runToken ? { runToken: l.runToken } : {}) } : null;
+    if (l) return { moves: packMoves(l.moves), teach: l.teach, ...(l.runToken ? { runToken: l.runToken } : {}) };
+    if (mode === 'classic' && this.pending && s && s.moves === 0 && s.seed === this.pending.seed)
+      return { moves: '', teach: false, runToken: this.pending.runToken };
+    return null;
+  }
+
+  /** Use a just-issued ticket for the next classic game (instead of the stored spare). */
+  useTicket(t: { seed: number; runToken: string }): number {
+    this.pending = { seed: t.seed, runToken: t.runToken };
+    return t.seed;
   }
 
   /** The finished run, if its log replays to exactly this final state. */

@@ -12,6 +12,7 @@
 import { RULES_VERSION } from '../core/version.ts';
 import {
   RETRYABLE,
+  peekRunToken,
   type AroundResponse,
   type BoardEntry,
   type BoardId,
@@ -24,7 +25,7 @@ import {
   type TopResponse,
 } from '../meta/boards.ts';
 import type { FinishedRun } from './runlog.ts';
-import { clearForget, readForget, readTicket, storeTicket } from './runlog.ts';
+import { clearForget, readForget, readTicket, storeTicket, type StoredTicket } from './runlog.ts';
 
 export type LbFailure = LbErrorCode | 'offline' | 'timeout';
 
@@ -44,8 +45,11 @@ export interface LeaderboardBackend {
   readonly kind: 'mock' | 'http';
   /** Endless: a server-signed seed for the next run (null if unsupported or offline). */
   startRun(installId: string | undefined, teach: boolean): Promise<RunTicket | null>;
+  /** Endless: tell the server a ticket's run has begun (its first move). Speed is measured from here. */
+  markStarted(runId: string, runToken: string): Promise<void>;
   submit(entry: ScoreSubmission): Promise<SubmitResponse>;
-  top(board: BoardRef, n: number): Promise<TopResponse>;
+  /** The first rows; with `installId`, your row is tagged `me` by the backend. */
+  top(board: BoardRef, n: number, installId?: string): Promise<TopResponse>;
   /** Your row, `window` rows above and below it, and the row just above you. */
   around(board: BoardRef, installId: string, window: number): Promise<AroundResponse>;
   myRank(board: BoardRef, installId: string): Promise<Standing | null>;
@@ -110,11 +114,17 @@ export class HttpBackend implements LeaderboardBackend {
       throw e;
     }
   }
+  async markStarted(runId: string, runToken: string): Promise<void> {
+    await this.req('POST', `/runs/${encodeURIComponent(runId)}/start`, { runToken });
+  }
   submit(entry: ScoreSubmission) {
     return this.req<SubmitResponse>('POST', '/scores', entry);
   }
-  top(board: BoardRef, n: number) {
-    return this.req<TopResponse>('GET', `/boards/${encodeURIComponent(board)}/top?limit=${n}`);
+  top(board: BoardRef, n: number, installId?: string) {
+    return this.req<TopResponse>(
+      'GET',
+      `/boards/${encodeURIComponent(board)}/top?limit=${n}${installId ? `&installId=${installId}` : ''}`,
+    );
   }
   around(board: BoardRef, installId: string, window: number) {
     return this.req<AroundResponse>(
@@ -167,6 +177,8 @@ export const localKv: Kv = {
 };
 
 export const K_QUEUE = 'atoll.v1.lbqueue';
+/** Count of queued scores dropped because their ticket expired, shown once on the next board. */
+export const K_DROPPED = 'atoll.v1.lbdropped';
 
 interface Queued {
   sub: ScoreSubmission;
@@ -276,13 +288,47 @@ export class LeaderboardClient {
 
   /** Queued submissions (for "posting when you're back online" rows). */
   pending(): readonly ScoreSubmission[] {
+    this.pruneExpired();
     return this.queue().map((q) => q.sub);
+  }
+
+  /**
+   * An Endless run whose ticket has expired can never be ranked (the server answers token_expired,
+   * forever). Read from the token's public claims; an unreadable token is left to the server.
+   */
+  expired(run: { mode: string; runToken?: string }): boolean {
+    const c = run.mode === 'endless' ? peekRunToken(run.runToken) : null;
+    return !!c && this.now() >= c.exp;
+  }
+
+  /** Drop queued Endless posts whose ticket expired while they waited, counting them for the UI. */
+  private pruneExpired(): void {
+    const q = this.queue();
+    const keep = q.filter((x) => !this.expired(x.sub));
+    if (keep.length === q.length) return;
+    this.setQueue(keep);
+    this.kv.set(K_DROPPED, String(this.droppedCount() + q.length - keep.length));
+  }
+
+  private droppedCount(): number {
+    const n = Number(this.kv.get(K_DROPPED) ?? 0);
+    return Number.isInteger(n) && n > 0 ? n : 0;
+  }
+
+  /** How many queued scores were dropped (expired tickets) since this was last asked; then forgets. */
+  takeExpiredDrops(): number {
+    this.pruneExpired();
+    const n = this.droppedCount();
+    if (n) this.kv.del(K_DROPPED);
+    return n;
   }
 
   /** Post a finished run under `name` (and remember the name). Never throws. */
   async post(run: FinishedRun, name: string): Promise<PostOutcome> {
     const installId = this.installId(true)!;
     if (name !== this.name) this.setName(name);
+    // never queue what can't be ranked: an expired ticket would be refused on every retry
+    if (this.expired(run)) return { status: 'rejected', reason: 'token_expired' };
     const avatar = this.d.avatar?.();
     const sub: ScoreSubmission = {
       name,
@@ -359,6 +405,7 @@ export class LeaderboardClient {
       try {
         const now = this.now();
         this.setQueue(this.queue().filter((x) => now - x.addedAt < MAX_AGE_MS));
+        this.pruneExpired();
         const posted: Standing[] = [];
         for (const it of this.queue()) {
           if (it.nextAt > now) continue;
@@ -380,7 +427,7 @@ export class LeaderboardClient {
     const id = this.installId();
     try {
       const [top, around] = await Promise.all([
-        this.backend.top(board, TOP_ROWS),
+        this.backend.top(board, TOP_ROWS, id),
         id ? this.backend.around(board, id, WINDOW) : Promise.resolve(null),
       ]);
       const me = around?.me ?? null;
@@ -388,7 +435,8 @@ export class LeaderboardClient {
       const v: BoardView = {
         board: top.board,
         total: Math.max(top.total, around?.total ?? 0),
-        top: top.entries.map((e) => (me && inTop && e.rank === me.rank ? { ...e, me: true } : e)),
+        // "You" is whichever row the backend tagged (never guessed from a rank: ties and caches lie)
+        top: top.entries.map(({ me: tagged, ...e }) => (tagged === true ? { ...e, me: true } : e)),
         window: me && !inTop ? (around?.entries ?? []) : [],
         me,
         above: around?.above ?? null,
@@ -407,6 +455,7 @@ export class LeaderboardClient {
   /** Erase all progress: forget queued scores and ask the server to delete this player. */
   forgetQueue(): void {
     this.kv.del(K_QUEUE);
+    this.kv.del(K_DROPPED);
     this.cache.clear();
   }
 
@@ -433,6 +482,32 @@ export class LeaderboardClient {
       if (t) storeTicket({ seed: t.seed, runToken: t.runToken, expiresAt: t.expiresAt });
     } catch {
       /* not now */
+    }
+  }
+
+  /**
+   * A ticket issued right now, for a classic game about to start (HTTP only). Preferred over the
+   * spare, whose clock has been running since it was fetched. Null when offline, refused or slow
+   * (the caller falls back to the spare, then to an unranked local seed).
+   */
+  async freshTicket(timeoutMs = 2000): Promise<StoredTicket | null> {
+    if (this.backend.kind !== 'http') return null;
+    const schedule = this.d.schedule ?? ((fn: () => void, ms: number) => setTimeout(fn, ms));
+    const t = await Promise.race([
+      this.backend.startRun(this.installId(), false).catch(() => null),
+      new Promise<null>((r) => void schedule(() => r(null), timeoutMs)),
+    ]);
+    return t ? { seed: t.seed, runToken: t.runToken, expiresAt: t.expiresAt } : null;
+  }
+
+  /** The first move of a ticketed run: let the server start its clock (best-effort; offline = unchecked). */
+  async markStarted(runToken: string): Promise<void> {
+    const c = peekRunToken(runToken);
+    if (!c || this.backend.kind !== 'http' || this.now() >= c.exp) return;
+    try {
+      await this.backend.markStarted(c.rid, runToken);
+    } catch {
+      /* offline or refused: the run just isn't speed-checked */
     }
   }
 }
