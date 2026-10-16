@@ -16,3 +16,16 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   read as a shark fin), pectoral moved behind the blush (it read as a second mouth).
 - Grade: B+. Still to improve: the pectoral's outline is a little busy at 54 px; the silver body
   is pale on the Day tile, carried by the outline and stripe.
+
+## barracuda
+- Size class: L. Feature: a long needle (84 × 36 with fins, ≈ 3 : 1 for the body alone) with a stepped, jutting underbite
+  chin, a crisp forked tail and six thin chevrons on the back (R18 bands).
+- Signature: lunges 10 units with a stretch (`surprised`), glides back, then tilts its nose up
+  6° with a smug `proud` face: "I meant to do that". Catch hook: a stretch and a tail sweep.
+- Rounds: 4. (1) the chevrons were heavy and dense (read as a tiger), box 87 wide. (2) chevrons
+  thinner, lighter and kept to the back; bigger eye (8) in a taller face zone. (3) a real step
+  under the snout so the underbite reads in the silhouette, not only in the mouth. (4) the test's
+  "mask is non-trivial" floor (> 25 % of the 24 px square) failed at 3 : 1, so the body got
+  thicker (±12.5) and the dorsal/anal fins taller; it still reads as the needle of the cast.
+- Grade: B. Still to improve: the `underbite` teeth scale with the mouth width, which R8 caps at
+  0.9 × eye width, so the two teeth are ≈ 1 px at tile size (kit limitation, noted in the report).
