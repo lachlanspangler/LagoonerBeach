@@ -19,6 +19,7 @@ test('daily: name entry strips invalid keys live, posts, and shows you with the 
   await expect(page.getByTestId('lb-name-entry')).toBeVisible();
   await expect(page.getByTestId('lb-post')).toBeDisabled();
   // digits and symbols are refused as they're typed; letters are uppercased
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('n3m0x!');
   await expect(slots(page)).toHaveAttribute('aria-valuetext', 'NMX');
   await expect(page.locator('#lb-name-hint')).toHaveText('Letters A–Z only');
@@ -58,10 +59,12 @@ test('blocked and reserved names are refused before posting', async ({ page }) =
   await finishDaily(page);
   await page.locator('#lb-open').click();
   await expect(page.getByTestId('lb-name-entry')).toBeVisible();
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type(rot13('SHPX'));
   await expect(page.locator('#lb-name-hint')).toHaveText("That name isn't allowed. Try another");
   await expect(page.getByTestId('lb-post')).toBeDisabled();
   for (let i = 0; i < 4; i++) await page.keyboard.press('Backspace');
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('admin');
   await expect(page.locator('#lb-name-hint')).toHaveText('That name is reserved. Try another');
   // "No thanks" goes back to the results
@@ -79,6 +82,7 @@ test('a classic game resumed after a reload can still be posted (move log saved 
   await expect(page.getByTestId('final-score')).toBeVisible({ timeout: 5000 });
   await page.locator('#lb-open').click();
   await expect(page.getByTestId('lb-name-entry')).toBeVisible();
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('kelp');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('tab', { name: 'This week' })).toHaveAttribute('aria-selected', 'true');
@@ -95,6 +99,7 @@ test('a Daily finished after local midnight opens (and labels) the board it was 
   await page.clock.setSystemTime(new Date(2026, 9, 17, 0, 0, 30)); // past midnight, same game
   await finishDaily(page);
   await page.locator('#lb-open').click();
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('nemo');
   await page.getByTestId('lb-post').click();
   await expect(page.locator('.lb-row.me')).toContainText('NEMO'); // yesterday's board, where the score is
@@ -111,6 +116,7 @@ test('"Choose a name" on the boards posts the game you just finished', async ({ 
   await page.getByRole('button', { name: 'Leaderboards' }).click();
   await page.getByRole('tab', { name: 'Daily' }).click();
   await page.getByRole('button', { name: 'Choose a name' }).click();
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('pearl');
   await page.keyboard.press('Enter');
   const me = page.locator('.lb-row.me');
@@ -128,6 +134,7 @@ test('"No thanks" declines that score: naming yourself later does not post it', 
   await page.getByRole('button', { name: 'Leaderboards' }).click();
   await page.getByRole('tab', { name: 'Daily' }).click();
   await page.getByRole('button', { name: 'Choose a name' }).click();
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('kelp');
   await page.keyboard.press('Enter');
   await expect(page.locator('.lb-you-row')).toContainText('Finish today’s Daily to join');
@@ -154,6 +161,7 @@ test('erase all progress removes your scores, the queue and your id', async ({ p
   await finishDaily(page);
   await page.locator('#lb-open').click();
   await expect(page.getByTestId('lb-name-entry')).toBeVisible();
+  await expect(page.getByTestId('lb-slots')).toBeVisible(); // the lazy sheet must exist before keys
   await page.keyboard.type('tide');
   await page.getByTestId('lb-post').click();
   await expect(page.locator('.lb-row.me')).toContainText('TIDE');
