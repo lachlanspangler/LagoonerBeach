@@ -218,6 +218,7 @@ export class Ui {
     mode: 'classic' | 'daily' | 'puzzle';
     dailyStreak: number;
     unlocked: string[];
+    shape?: { cells: readonly number[]; ring: readonly number[] } | null;
   }): void {
     const card = document.createElement('div');
     card.className = 'card';
@@ -229,7 +230,12 @@ export class Ui {
         <div><b>${o.moves}</b><span>Moves</span></div>
         <div><b>${o.lagoon}</b><span>Biggest lagoon</span></div>
         <div><b>${o.dailyStreak}</b><span>Daily streak</span></div>
-      </div>${o.unlocked.length ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
+      </div>${o.shape ? lagoonGrid(o.shape) : ''}
+${
+  o.unlocked.length
+    ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>`
+    : ''
+}`;
     if (o.mode === 'daily') {
       card.append(this.button('', 'btn primary', 'Share', 'Share result', () => this.h.onShare()));
       card.append(this.button('', 'btn', 'Play classic', 'Play classic', () => this.h.onClassic()));
@@ -249,4 +255,24 @@ function nearMiss(score: number, best: number): string {
   const gap = best - score;
   return `<div>Best ${best}${gap > 0 && pct >= 70 ? ` · just ${gap} short` : ''}</div>
     <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
+}
+
+/** Mini picture of a lagoon (water + its ring) in the game's own style. */
+function lagoonGrid(l: { cells: readonly number[]; ring: readonly number[] }): string {
+  const all = [...l.cells, ...l.ring];
+  const xs = all.map((c) => c % 8);
+  const ys = all.map((c) => Math.floor(c / 8));
+  const x0 = Math.min(...xs);
+  const y0 = Math.min(...ys);
+  const w = Math.max(...xs) - x0 + 1;
+  const h = Math.max(...ys) - y0 + 1;
+  const water = new Set(l.cells);
+  const ring = new Set(l.ring);
+  let cells = '';
+  for (let y = y0; y < y0 + h; y++)
+    for (let x = x0; x < x0 + w; x++) {
+      const c = y * 8 + x;
+      cells += `<i class="${water.has(c) ? 'w' : ring.has(c) ? 'r' : ''}"></i>`;
+    }
+  return `<div class="pic" role="img" aria-label="Your biggest lagoon: ${l.cells.length} cells" style="grid-template-columns:repeat(${w},14px)">${cells}</div>`;
 }

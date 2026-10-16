@@ -29,6 +29,7 @@ import { Ui } from '../ui/overlay.ts';
 import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
 import { lookFor } from '../render/skins.ts';
 import { shareText, type LagoonShape } from '../meta/share.ts';
+
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
 import { solve } from '../core/solver.ts';
 import { initNative } from '../platform/native.ts';
@@ -296,6 +297,7 @@ function finishGame(prevBest: number): void {
       mode,
       dailyStreak: visibleStreak(profile.daily, dayIndex(today())),
       unlocked: unlockedNow,
+      shape: bigLagoon && bigLagoon.cells.length >= 2 ? bigLagoon : null,
     });
   };
   setTimeout(show, DEBUG && params.has('fast') ? 0 : 1400);

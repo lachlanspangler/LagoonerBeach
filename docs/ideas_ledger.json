@@ -2227,7 +2227,7 @@
    "basis": "est",
    "value": 5,
    "effort": 1,
-   "status": "backlog",
+   "status": "built",
    "reason": "Small, nice."
   },
   {
@@ -2285,7 +2285,7 @@
    "basis": "est",
    "value": 5,
    "effort": 2,
-   "status": "backlog",
+   "status": "built",
    "reason": "Pairs with the share picture."
   }
  ]

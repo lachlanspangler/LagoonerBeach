@@ -140,7 +140,8 @@ export class Fx {
               }
               this.sfx.capture(area, e.streak, k);
 
-              this.haptics.fire(k > 0 || area >= 12 ? 'heavy' : 'medium');
+              // feel the streak: long streaks and big moments hit harder
+              this.haptics.fire(k > 0 || area >= 12 || e.streak >= 5 ? 'heavy' : 'medium');
             });
           });
           const last = now + flight + (e.waves.length - 1) * MOTION.waveGap;

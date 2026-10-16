@@ -236,3 +236,20 @@ body {
   background: var(--water);
   border-radius: 4px;
 }
+.pic {
+  display: grid;
+  gap: 3px;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+.pic i {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.pic i.w {
+  background: var(--water);
+}
+.pic i.r {
+  background: color-mix(in srgb, var(--text) 22%, transparent);
+}
