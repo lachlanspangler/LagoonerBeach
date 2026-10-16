@@ -42,7 +42,9 @@ interface Active {
 }
 
 /** Snap search radius in cells and hysteresis band. */
-const MAGNET = 0.62;
+// Generous: hovering ~¾ cell off over an occupied cell should still show the nearest legal ghost.
+const MAGNET = 0.95;
+
 const HYSTERESIS = 0.62;
 /** A press shorter/smaller than this on a tray piece is a tap (select), not a drag. */
 const TAP_MS = 280;

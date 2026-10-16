@@ -628,7 +628,7 @@ if (DEBUG) {
       const g = decodeGame({
         ...encodeGame(newGame(1)),
         board: board.replace(/\./g, '0'),
-        tray: tray.map((id, i) => (id ? { pieceId: id, color: (i % 6) + 1 } : null)),
+        tray: tray.map((id, i) => (id ? { pieceId: id, color: ((i + 3) % 6) + 1 } : null)),
       });
       if (!g) throw new Error('setup: invalid board/tray');
       state = g;
