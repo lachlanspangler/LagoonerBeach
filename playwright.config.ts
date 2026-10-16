@@ -31,6 +31,7 @@ export default defineConfig({
         'e2e/a11y.spec.ts',
         'e2e/leaderboard.spec.ts',
         'e2e/art.spec.ts',
+        'e2e/art-kit.spec.ts',
       ],
     },
   ],

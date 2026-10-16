@@ -79,7 +79,7 @@ test('every species draws in every expression, theme and mode', async ({ page })
     const c = document.createElement('canvas');
     c.width = c.height = 128;
     const g = c.getContext('2d')!;
-    const exprs = ['idle', 'blink', 'happy', 'surprised', 'proud', 'sleepy', 'shy'];
+    const exprs = ['idle', 'blink', 'happy', 'surprised', 'proud', 'sleepy', 'shy', 'drowsy'];
     for (const [id, art] of m.ART as Map<string, unknown>) {
       let min = Infinity;
       for (const night of [false, true])
