@@ -167,3 +167,15 @@ broke, what I decided and why.
   stable over 3 runs.
 - Fresh clone → `make setup && make check` green (one-command setup verified).
 - Refactor: debug hooks → `src/app/debug.ts`, env helpers → `src/app/env.ts`.
+
+## 2026-10-16 03:10 CDT — Coverage, input tests, latency
+- Coverage on pure layers: 99% lines / 92.7% branches; thresholds enforced in CI. Deleted a dead
+  `core/index.ts` barrel; added search-bot and solver-limit tests.
+- Input: pointercancel and blur mid-drag, rapid taps, off-board release (Chromium + WebKit), and a
+  real **touch** drag via CDP touch events.
+- **Latency measured:** first touch took 133 ms — constructing the AudioContext inside the gesture.
+  Now created suspended at idle; the gesture only resumes it (first pick ≤ 15 ms). Sprites
+  pre-warmed. Release → first placed frame: median ~2 ms, max ~20–35 ms at 4× throttle (vsync).
+- **Process slip:** I chained `git commit` after an edit that failed loudly, committing a broken
+  perf test (e2e isn't in pre-commit). Fixed in the next commit. Rule for myself: verify, then
+  commit as a separate step — never `&&` a commit onto a command whose failure I can't see.
