@@ -10,6 +10,9 @@ import { gzipSync } from 'node:zlib';
 const BUDGET_INITIAL_JS = 64 * 1024;
 const BUDGET_CSS = 6 * 1024;
 const BUDGET_PUZZLES = 30 * 1024; // lazy chunk
+// ADR 0011: kit runtime + every species' path data, lazy-loaded after first paint. 47 species at
+// ~0.6–0.9 KB gz each plus ~8 KB of kit ≈ 45 KB; the budget leaves room for richer legends.
+const BUDGET_ART = 60 * 1024;
 
 const html = readFileSync('dist/index.html', 'utf8');
 const initial = [...html.matchAll(/(?:src|href)="\.\/(assets\/[^"]+)"/g)].map((m) => m[1]!);
@@ -19,12 +22,20 @@ const css = initial.filter((f) => f.endsWith('.css')).reduce((a, f) => a + gz(f)
 const puzzles = readdirSync('dist/assets')
   .filter((f) => f.startsWith('puzzles') && f.endsWith('.js'))
   .reduce((a, f) => a + gz(`assets/${f}`), 0);
+const artFiles = readdirSync('dist/assets').filter((f) => f.startsWith('creature-art') && f.endsWith('.js'));
+const art = artFiles.reduce((a, f) => a + gz(`assets/${f}`), 0);
 const rows = [
   ['initial JS', js, BUDGET_INITIAL_JS],
   ['CSS', css, BUDGET_CSS],
   ['puzzles (lazy)', puzzles, BUDGET_PUZZLES],
+  ['creature art (lazy)', art, BUDGET_ART],
 ] as const;
 let ok = true;
+// the art must stay out of the initial bundle and exist as its own chunk
+if (!artFiles.length || initial.some((f) => f.includes('creature-art'))) {
+  console.log('✗ creature-art chunk missing or loaded up front');
+  ok = false;
+}
 for (const [name, size, budget] of rows) {
   const pass = size <= budget;
   ok &&= pass;
