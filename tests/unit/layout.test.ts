@@ -34,4 +34,36 @@ describe('layout', () => {
     expect(l.tray.y).toBeGreaterThan(l.board.y + l.board.h);
     expect(l.tray.y + l.tray.h).toBeLessThanOrEqual(h + 1);
   });
+  it.each(SIZES)('%ix%i: the strip sits between board and tray, room for a chip', (w, h) => {
+    const l = computeLayout(w, h);
+    expect(l.strip.y).toBe(l.board.y + l.board.h);
+    expect(l.strip.h).toBeGreaterThanOrEqual(l.cell * 0.85);
+    // it may reach into the tray's empty top band, never past the middle of the tray
+    expect(l.strip.y + l.strip.h).toBeLessThanOrEqual(l.tray.y + l.tray.h / 2);
+  });
+  it.each(SIZES)('%ix%i: no dead band under the hand (UI_DESIGN §9.1)', (w, h) => {
+    const l = computeLayout(w, h);
+    // empty sand below the tray block is at most ~1.25 cells (+ the margin)
+    expect(h - (l.tray.y + l.tray.h)).toBeLessThanOrEqual(l.cell * 1.25 + 16);
+    // the hand sits in the lower part of the screen (thumb zone)
+    expect(l.slots[0]!.cy / h).toBeGreaterThan(w > h ? 0.7 : 0.72);
+  });
+  it('notched phones: everything stays inside the safe area', () => {
+    const inset = { top: 59, right: 0, bottom: 34, left: 0 };
+    for (const [w, h] of [
+      [393, 852],
+      [430, 932],
+      [375, 812],
+    ] as const) {
+      const l = computeLayout(w, h, inset);
+      expect(l.hud.y).toBe(inset.top);
+      expect(l.tray.y + l.tray.h).toBeLessThanOrEqual(h - inset.bottom + 1);
+      expect(l.cell).toBeGreaterThanOrEqual(40);
+    }
+    // landscape phone with side notches
+    const l = computeLayout(852, 393, { top: 0, right: 59, bottom: 21, left: 59 });
+    expect(l.board.x).toBeGreaterThanOrEqual(59);
+    expect(l.board.x + l.board.w).toBeLessThanOrEqual(852 - 59);
+    expect(l.tray.y + l.tray.h).toBeLessThanOrEqual(393 - 21 + 1);
+  });
 });
