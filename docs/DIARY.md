@@ -330,3 +330,38 @@ moments, leaderboards with 7-letter names, endless reefs, top-chart aesthetics.
   arrow flew to the top-left corner. Own class now. Reef screen baseline updated (label only).
 - **Didn't do:** no de-duplication across generated reefs; `solved` keeps one id per reef (≈60 KB
   at 10 000 reefs); no per-device timing on a real phone (estimate 3–5× Node, still off-thread).
+
+## 2026-10-16 (session 3) — Leaderboards (ADR 0010)
+- **Plan:** name rules + filter (pure, shared) → packed move log, rules version, replay verifier in
+  core → board domain + Worker with an in-memory store → client (interface, mock, HTTP, queue) →
+  UI per UI_DESIGN §6.4–6.5 → privacy/store docs → e2e.
+- **Built:** `src/meta/names.ts` (A–Z ≤ 7, lookalike/collapse/reversed spellings, ROT13 list,
+  Scunthorpe allowlist, reserved names), `src/core/{movelog,verify,version}.ts`,
+  `src/meta/boards.ts`, `server/` (Cloudflare Worker + D1: pure `handle()`, HMAC single-use 72 h run
+  tokens, shadow rows for inhumanly fast runs, rate limits, cron retention), `src/platform/
+  {leaderboard,lbmock,runlog}.ts`, `src/ui/leaderboard.ts` + a delimited CSS section, small hooks
+  in main.ts/overlay.ts (`showGameOver({ leaderboard })`, `Ui.present`, menu "Leaderboards").
+  The move log is now saved inside the classic/daily save record (old saves still load).
+- **Filter tuning was data:** the first list blocked 323 of 57k dictionary words. The worst hits
+  were collapse and lookalike side effects: CUT (KUT), CANCER (KANKER), DICE (DYKE), KICKER (KIKE),
+  RAPPER (RAPE), FISTFUL (STFU), and NAGGING/BAGGING (a reversed root). Fixed by giving every
+  root its own safe spelling (collapsed / run-limited / exact). Blocks: 248 words (mostly real
+  offensive words and rare compounds); 1 of 1,175 first names (DICK, on purpose).
+- **Tests:** 22 name tests (each evasion family, allowlist, property tests on sanitize), 26 Worker
+  tests (forged score, tampered log, wrong daily seed, reused/forged/foreign/expired tokens, bad
+  names, ties, around, day/week partitioning, deletion, shadow rows, rate limits, CORS, 503), 17
+  client tests (mock ranking, offline queue backoff, HTTP error mapping, **the client against the
+  real handler as its fetch**, run log), save migrations. e2e on Chromium + WebKit: typed `n3m0x!`
+  shows NMX live, post a daily, see yourself and the row above, resumed classic posts, menu +
+  keyboard tabs, erase clears. The a11y sweep covers both sheets.
+- **Looked at it** (`scripts/lb-shots.ts`, day + night): the keypad reads like part of the game,
+  and the gradient hero name is the nicest thing on the screen. First run: hardware typing did
+  nothing, because the dialog (not the card) holds focus after a tap. Keys are now heard at document
+  level while the sheet is up. The target card ("58 to pass BODHI") is the motivating line, as the
+  research said.
+- **Decisions:** always offer (results button), auto-post once named; the Daily counts the first
+  finish; demo players labelled "Demo"; unbound tickets for not-yet-named players so their first
+  Endless game can be ranked; the lazy chunk (12.6 KB gz) loads only for opted-in players or on tap.
+  Initial JS is 50.1 KB gz.
+- **Not done / stubbed:** no live D1 (the SQL is untested without wrangler, see DEPLOY.md smoke
+  test), no admin endpoint, no histogram ranks, no Settings "name" row (rename lives on the board).
