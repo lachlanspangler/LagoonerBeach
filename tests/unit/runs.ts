@@ -6,13 +6,13 @@ import { greedyBot, randomBot } from '../../src/sim/bots.ts';
 /** Play a full game; returns its moves and final state. `quick` uses the random bot (short games). */
 export function playOut(
   seed: number,
-  opts: { mode?: 'daily' | 'classic'; teach?: boolean; quick?: boolean } = {},
+  opts: { mode?: 'daily' | 'classic'; teach?: boolean; quick?: boolean; salt?: number } = {},
 ): { moves: Move[]; state: GameState } {
   let s = newGame(seed, { mode: opts.mode, teach: opts.teach });
   const moves: Move[] = [];
   const bot = opts.quick ? randomBot : greedyBot;
   while (!s.over) {
-    const m = bot(s, new Rng(s.moves + 1));
+    const m = bot(s, new Rng(s.moves * 31 + 1 + (opts.salt ?? 0)));
     if (!m) break;
     moves.push(m);
     s = applyMove(s, m)!.state;
