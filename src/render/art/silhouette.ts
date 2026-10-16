@@ -18,7 +18,7 @@ export function silhouetteShapes(art: SpeciesArt): { shapes: Poly[][]; box: Box 
   for (const g of art.groups) {
     if (g.prop) continue;
     for (const p of g.parts) {
-      if ((p.kind ?? 'fill') !== 'fill') continue;
+      if ((p.kind ?? 'fill') !== 'fill' || p.outline === false) continue; // glow halos aren't silhouette
       const polys = flatten(p.d, 10);
       shapes.push(polys);
       if (!p.extra) box = unionBox(box, boundsOf(polys));
@@ -46,6 +46,51 @@ export function silhouetteMask(art: SpeciesArt): Float32Array {
   const cx = box.x + box.w / 2 - half + (sx / s) * cell;
   const cy = box.y + box.h / 2 - half + (sy / s) * cell;
   return rasterize(shapes, cx - half, cy - half, cell, SIL_GRID, 3);
+}
+
+/**
+ * Rest-pose tilt (CRITIQUE-1 #3): principal axis of the `body` group's fill mask, in degrees away
+ * from the nearest of horizontal/vertical (level fish and upright seahorses both measure ~0).
+ * Returns 0 for near-round bodies (axis ratio < 1.3), where tilt isn't visible.
+ */
+export function restTilt(art: SpeciesArt): number {
+  const body = art.groups.find((g) => g.id === 'body');
+  if (!body) return 0;
+  const shapes = body.parts
+    .filter((p) => (p.kind ?? 'fill') === 'fill' && !p.extra && p.outline !== false)
+    .map((p) => flatten(p.d, 10));
+  if (!shapes.length) return 0;
+  const box = shapes.map(boundsOf).reduce(unionBox);
+  const N = 40;
+  const cell = Math.max(box.w, box.h) / N;
+  const m = rasterize(shapes, box.x + box.w / 2 - (N / 2) * cell, box.y + box.h / 2 - (N / 2) * cell, cell, N, 2);
+  let s = 0,
+    sx = 0,
+    sy = 0;
+  for (let i = 0; i < N * N; i++) {
+    s += m[i]!;
+    sx += m[i]! * (i % N);
+    sy += m[i]! * Math.floor(i / N);
+  }
+  const cx = sx / s,
+    cy = sy / s;
+  let m20 = 0,
+    m02 = 0,
+    m11 = 0;
+  for (let i = 0; i < N * N; i++) {
+    const dx = (i % N) - cx,
+      dy = Math.floor(i / N) - cy;
+    m20 += m[i]! * dx * dx;
+    m02 += m[i]! * dy * dy;
+    m11 += m[i]! * dx * dy;
+  }
+  const tr = m20 + m02,
+    det = Math.sqrt((m20 - m02) ** 2 + 4 * m11 * m11);
+  const l1 = (tr + det) / 2,
+    l2 = Math.max(1e-9, (tr - det) / 2);
+  if (Math.sqrt(l1 / l2) < 1.3) return 0;
+  const deg = Math.abs((0.5 * Math.atan2(2 * m11, m20 - m02) * 180) / Math.PI) % 90;
+  return Math.min(deg, 90 - deg);
 }
 
 export interface PairScore {

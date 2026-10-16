@@ -36,6 +36,8 @@ export interface Pose {
   face: FaceState;
   /** Prop groups a performance is animating this frame (the only time props are drawn). */
   shown: Set<string>;
+  /** Colour-cycle step for `Part.cycle` (0 at rest). */
+  cycle: number;
 }
 
 export interface PoseOpts {
@@ -198,7 +200,12 @@ export function pose(art: SpeciesArt, o: PoseOpts = {}): Pose {
   } else if (o.signatureAt !== undefined) {
     perf = art.idle.signature;
     u = o.signatureAt;
-  } else if (t !== undefined && !o.still && !o.noSignature && (expr === 'idle' || expr === 'shy')) {
+  } else if (
+    t !== undefined &&
+    !o.still &&
+    !o.noSignature &&
+    (expr === 'idle' || expr === 'shy' || expr === 'drowsy')
+  ) {
     perf = art.idle.signature;
     u = signatureProgress(t, seed, perf.dur, art.idle.signature.every);
   }
@@ -239,6 +246,13 @@ export function pose(art: SpeciesArt, o: PoseOpts = {}): Pose {
       root.ty += 1;
       break;
   }
-  if (t !== undefined && (expr === 'idle' || expr === 'shy') && blinking(t, seed)) expr = 'blink';
-  return { root, groups, face: { expr, wink }, shown };
+  if (t !== undefined && (expr === 'idle' || expr === 'shy' || expr === 'drowsy') && blinking(t, seed)) expr = 'blink';
+  // colour cycles (Part.cycle): integer step, always or only while the signature plays
+  let cycle = 0;
+  if (art.cycle && t !== undefined && !o.still) {
+    const sig = perf === art.idle.signature && u >= 0;
+    if ((art.cycle.during ?? 'always') === 'always') cycle = Math.floor(t * art.cycle.rate);
+    else if (sig) cycle = Math.floor(u * perf!.dur * art.cycle.rate) + 1;
+  }
+  return { root, groups, face: { expr, wink }, shown, cycle };
 }
