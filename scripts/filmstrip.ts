@@ -27,7 +27,10 @@ const defaultAt = reveal
     ? '0,200,400,600,800,1000,1300'
     : '0,50,100,150,220,300,400,550,800';
 const at = arg('at', defaultAt).split(',').map(Number);
-const out = arg('out', `artifacts/film/${stage || reveal || (results ? 'results' : 'teach')}`);
+const out = arg(
+  'out',
+  `artifacts/film/${stage || reveal || (results ? 'results' : has('chapter') ? 'chapter' : 'teach')}`,
+);
 const full = has('full') || !!reveal || !!results;
 mkdirSync(out, { recursive: true });
 const b = await chromium.launch();
@@ -74,6 +77,19 @@ if (stage) {
     a.freezeNow();
     a.commitMove(m);
   }, s.move);
+  for (const t of at) {
+    await p.evaluate((t) => (window as any).__atoll.freeze(t), t);
+    await frames();
+    await shot(`t${String(t).padStart(4, '0')}`);
+  }
+} else if (has('chapter')) {
+  await p.evaluate(() => (window as any).__atoll.switchMode?.('puzzle'));
+  await p.waitForTimeout(900);
+  await p.evaluate(() => {
+    const a = (window as any).__atoll;
+    a.freezeNow();
+    a.chapterMoment(23, 'Heron Narrows');
+  });
   for (const t of at) {
     await p.evaluate((t) => (window as any).__atoll.freeze(t), t);
     await frames();

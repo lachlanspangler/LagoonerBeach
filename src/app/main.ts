@@ -563,7 +563,11 @@ function checkPuzzle(): void {
     const ch = chapterOf(i + 1).chapter;
     const done = chapterCleared(new Set(profile.puzzle.solved), ch);
     const progress = `${chapterName(ch)} · ${done}/${CHAPTER_SIZE} · ${cleared} reef${cleared === 1 ? '' : 's'} cleared`;
-    later(1300, () => ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress }));
+    const hold = chapterHold;
+    chapterHold = 0;
+    later(1300 + hold, () =>
+      ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress }),
+    );
   } else {
     const cleared = profile.puzzle.solved.length;
     later(700, () => ui.showPuzzleResult({ solved: false, index: i, total: MAX_REEF, cleared }));
@@ -689,15 +693,14 @@ function switchMode(m: Mode): void {
   syncScene();
 }
 
-// Chapter milestone: a chip + a sound for now; richer celebrations can listen to the same event.
+// Chapter milestone (ADR 0012): a screen-filling moment on the board; the reef card waits for it.
+/** Extra delay for the reef result card while a chapter moment plays (set by the listener). */
+let chapterHold = 0;
 reefEvents.addEventListener('chapterComplete', (e) => {
   const d = (e as CustomEvent<ChapterCompleteDetail>).detail;
-  later(900, () => {
-    scene.toast(`Chapter ${d.chapter} complete · ${d.name}`, performance.now(), 2200);
-    sfx.streakMilestone(40);
-    haptics.fire('heavy');
-    ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
-  });
+  const now = clock();
+  chapterHold = Math.max(0, fx.chapterComplete(now, d.chapter, d.name) - now - 1300 + 250);
+  ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
 });
 
 // ------------------------------------------------------------------ UI
@@ -1044,6 +1047,11 @@ if (DEBUG)
         dirty = true;
       },
       revealSpecies: (id, o) => reveal.enqueue([{ id, size: o?.size ?? 24.6, golden: o?.golden ?? false }], 0),
+      chapterMoment: (chapter, name) => {
+        lastDispatchAt = clock();
+        fx.chapterComplete(lastDispatchAt, chapter, name);
+        dirty = true;
+      },
       revealState: () => reveal.current(),
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),

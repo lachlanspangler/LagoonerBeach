@@ -85,6 +85,51 @@ export class Fx {
     this.settleAt = Math.max(this.settleAt, t + BEST_LIFE * 0.5);
   }
 
+  /**
+   * A reef chapter is complete (endless reefs, 20 per chapter): a screen-filling moment after the
+   * clear's own word has faded — tide wash, gold "Chapter N!" + its name, whoosh, fanfare.
+   * Returns when it has settled (the reef result card waits for it).
+   */
+  chapterComplete(now: number, chapter: number, name: string): number {
+    const sc = this.scene;
+    const l = sc.layout;
+    const cel = sc.celebrate;
+    const t = Math.max(now + 650, this.wordEnd + 60);
+    const life = 1500;
+    this.at(t, (t) => {
+      const b = l.board;
+      const ts = sc.textScale;
+      this.guard.claimWord(4, t, life);
+      cel.washAt = t;
+      sc.sweep = t + 200;
+      cel.showWord(
+        { text: `Chapter ${chapter}!`, style: 'gold', tier: 4, x: b.x + b.w / 2, y: b.y + b.h * 0.42, start: t, life },
+        l,
+        ts,
+      );
+      cel.showNumber({
+        text: name,
+        x: b.x + b.w / 2,
+        y: b.y + b.h * 0.42 + l.cell * 1.05 * ts,
+        size: l.cell * 0.5 * ts,
+        start: t + 120,
+        life: life - 120,
+        style: 'water',
+      });
+      if (!sc.reducedMotion)
+        for (let i = 0; i < 16; i++) {
+          const x = b.x + b.w * (0.1 + 0.8 * ((i * 0.618) % 1));
+          const y = b.y + b.h * (0.25 + 0.5 * ((i * 0.382) % 1));
+          sc.particles.burst(1, x, y, Kind.Spark, 0, l.cell * 2.4, l.cell * 0.16, MOTION.particleMax, sc.rand);
+        }
+      this.sfx.whoosh();
+      this.sfx.fanfare(0.12);
+      this.haptics.fire('heavy', t);
+    });
+    this.settleAt = Math.max(this.settleAt, t + life);
+    return t + life;
+  }
+
   dispatch(
     events: readonly GameEvent[],
     now: number,

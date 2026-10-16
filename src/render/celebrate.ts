@@ -177,6 +177,8 @@ interface NumShow {
   size: number;
   start: number;
   life: number;
+  /** Default 'points' (the +N); a subtitle line can use a word style. */
+  style?: TextStyle;
 }
 
 /** Word size by tier, as a share of a board cell. */
@@ -367,7 +369,7 @@ export class Celebrate {
       const k = now - n.start;
       if (k >= n.life) this.num = null;
       else if (k >= 0) {
-        const spr = this.sprites.get(n.text, n.size, 'points', night);
+        const spr = this.sprites.get(n.text, n.size, n.style ?? 'points', night);
         const out = clamp01((k - (n.life - 200)) / 200);
         const s = rm ? 1 : lerp(0.7, 1, spring(k, 260, 0.06));
         const rise = rm ? 0 : easeOutCubic(k / n.life) * l.cell * 0.3;

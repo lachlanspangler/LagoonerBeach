@@ -48,6 +48,8 @@ export interface DebugDeps {
     /** Set the stored best (so a capture crosses it, or the results show a record). */
     stageRecord(best: number): void;
     revealSpecies(id: string, o?: { golden?: boolean; size?: number }): void;
+    /** Play the chapter-complete moment now (relative times as after a move). */
+    chapterMoment(chapter: number, name: string): void;
     revealState(): { id: string; modal: boolean; settled: boolean } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;
