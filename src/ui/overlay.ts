@@ -4,6 +4,9 @@
  */
 import type { Profile, ThemePref } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
+import { HABITATS, SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
+import { found, type Journal } from '../meta/journal.ts';
+import { drawCreature } from '../render/creatures.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
@@ -20,6 +23,7 @@ export interface UiHandlers {
   onTheme(t: ThemePref): void;
   onSkin(): void;
   onSettings(): void;
+  onJournal(): void;
   onShare(): void;
   onClick(): void;
 }
@@ -139,7 +143,7 @@ export class Ui {
     (card.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
   }
 
-  showMenu(p: Profile, mode: 'classic' | 'daily' | 'puzzle', canResume: boolean): void {
+  showMenu(p: Profile, mode: 'classic' | 'daily' | 'puzzle', canResume: boolean, journalCount = 0): void {
     const card = document.createElement('div');
     card.className = 'card';
     const stats = [
@@ -169,6 +173,11 @@ export class Ui {
       );
       card.append(this.button('', 'btn', 'Reef puzzles', 'Reef puzzles', () => this.h.onPuzzles()));
     }
+    card.append(
+      this.button('', 'btn', `Beach Journal · ${journalCount}/${SPECIES.length}`, 'Beach Journal', () =>
+        this.h.onJournal(),
+      ),
+    );
     card.append(this.button('', 'btn ghost', 'Settings', 'Settings', () => this.h.onSettings()));
     this.show(card, canResume);
   }
@@ -241,6 +250,68 @@ export class Ui {
     this.show(card, true);
   }
 
+  /** The Beach Journal: every creature by habitat; found ones in colour, unknowns as silhouettes with a hint. */
+  showJournal(j: Journal): void {
+    const card = document.createElement('div');
+    card.className = 'card reefs journal';
+    const n = found(j);
+    card.innerHTML = `<h2>Beach Journal</h2><div class="sub">${n} of ${SPECIES.length} found${j.total ? ` · ${j.total} caught and released` : ''}</div>`;
+    const scroller = document.createElement('div');
+    scroller.className = 'reef-scroll';
+    const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
+    for (const h of HABITATS) {
+      const list = SPECIES.filter((sp) => sp.habitat === h.id);
+      const got = list.filter((sp) => j.entries[sp.id]).length;
+      const head = document.createElement('div');
+      head.className = 'tier';
+      head.textContent = `${h.name} · ${got}/${list.length}`;
+      const grid = document.createElement('div');
+      grid.className = 'j-grid';
+      for (const sp of list) {
+        const e = j.entries[sp.id];
+        const b = this.button(
+          '',
+          `j-tile${e ? ' got' : ''}`,
+          '',
+          e ? `${sp.name}, caught ${e.count}` : `Unknown creature. Hint: ${sp.hint}`,
+          () => this.showSpecies(sp, j),
+        );
+        b.append(creatureThumb(sp, 54, e ? undefined : ink, (e?.golden ?? 0) > 0));
+        const label = document.createElement('span');
+        label.textContent = e ? sp.name : '???';
+        b.append(label);
+        grid.append(b);
+      }
+      scroller.append(head, grid);
+    }
+    card.append(scroller);
+    card.append(this.button('', 'btn', 'Close', 'Close', () => this.h.onResume()));
+    this.show(card, true);
+  }
+
+  private showSpecies(sp: Species, j: Journal): void {
+    const e = j.entries[sp.id];
+    const card = document.createElement('div');
+    card.className = 'card';
+    const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
+    const rarity = sp.rarity[0]!.toUpperCase() + sp.rarity.slice(1);
+    card.innerHTML = `<h2>${e ? rarity : 'Not found yet'}</h2>`;
+    const art = creatureThumb(sp, 150, e ? undefined : ink, (e?.golden ?? 0) > 0);
+    art.style.margin = '6px auto';
+    art.style.display = 'block';
+    card.append(art);
+    const info = document.createElement('div');
+    const size = (cm: number) => (cm >= 100 ? `${(cm / 100).toFixed(1)} m` : `${cm} cm`);
+    info.innerHTML = e
+      ? `<div class="big" style="font-size:28px">${sp.name}</div><div class="sub">${sp.flavor}</div>
+         <div class="stats" style="grid-template-columns:repeat(${e.golden ? 3 : 2},1fr)"><div><b>${e.count}</b><span>Caught</span></div><div><b>${size(e.best)}</b><span>Biggest</span></div>${e.golden ? `<div><b>${e.golden}</b><span>Golden</span></div>` : ''}</div>
+         <div class="foot">First caught ${e.first}</div>`
+      : `<div class="big" style="font-size:28px">???</div><div class="sub">Hint: ${sp.hint}</div>`;
+    card.append(info);
+    card.append(this.button('', 'btn primary', 'Back', 'Back to journal', () => this.showJournal(j)));
+    this.show(card, true);
+  }
+
   /** Grid of every reef by tier; tap one to play it. Nothing is locked. */
   showReefs(
     list: readonly { id: string; tier?: string }[],
@@ -284,12 +355,13 @@ export class Ui {
     scroller.querySelector('.cur')?.scrollIntoView({ block: 'center' });
   }
 
-  showPuzzleResult(o: { solved: boolean; index: number; total: number; cleared: number }): void {
+  showPuzzleResult(o: { solved: boolean; index: number; total: number; cleared: number; newIds?: string[] }): void {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = o.solved
       ? `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">Cleared</div><div class="sub">${o.cleared} of ${o.total} reefs cleared</div>`
       : `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">So close</div><div class="sub">Every piece must be placed and every pebble popped.</div>`;
+    if (o.newIds?.length) card.append(newSpeciesRow(o.newIds));
     if (o.solved) {
       if (o.index + 1 < o.total)
         card.append(this.button('next-reef', 'btn primary', 'Next reef', 'Next reef', () => this.h.onPuzzleNext()));
@@ -312,23 +384,22 @@ export class Ui {
     dailyStreak: number;
     unlocked: string[];
     shape?: { cells: readonly number[]; ring: readonly number[] } | null;
+    caught?: { count: number; newIds: string[] };
   }): void {
     const card = document.createElement('div');
     card.className = 'card';
+    const stats = [
+      [o.moves, 'Moves'],
+      [o.lagoon, 'Top lagoon'],
+      [o.caught?.count ?? 0, 'Caught'],
+      [o.dailyStreak, 'Streak'],
+    ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<h2>${o.mode === 'daily' ? 'Daily complete' : 'No room left'}</h2>
       <div class="big" data-testid="final-score">${o.score}</div>
       <div class="sub">${o.newBest ? '<span class="best-flash">NEW BEST</span>' : nearMiss(o.score, o.best)}</div>
-
-      <div class="stats">
-        <div><b>${o.moves}</b><span>Moves</span></div>
-        <div><b>${o.lagoon}</b><span>Biggest lagoon</span></div>
-        <div><b>${o.dailyStreak}</b><span>Daily streak</span></div>
-      </div>${o.shape ? lagoonGrid(o.shape) : ''}
-${
-  o.unlocked.length
-    ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>`
-    : ''
-}`;
+      <div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+      ${o.unlocked.length ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
+    if (o.caught?.newIds.length) card.append(newSpeciesRow(o.caught.newIds));
     if (o.mode === 'daily') {
       card.append(this.button('', 'btn primary', 'Share', 'Share result', () => this.h.onShare()));
       card.append(this.button('', 'btn', 'Play classic', 'Play classic', () => this.h.onClassic()));
@@ -343,29 +414,45 @@ ${
 
 /** "Best 1200" plus a progress bar toward it — the pull of almost. */
 function nearMiss(score: number, best: number): string {
-  if (best <= 0) return '';
+  if (best <= 0 || score >= best) return '';
   const pct = Math.max(0, Math.min(100, Math.round((score / best) * 100)));
   const gap = best - score;
   return `<div>Best ${best}${gap > 0 && pct >= 70 ? ` · just ${gap} short` : ''}</div>
-    <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
+    <div class="bar-label">${pct}% of best</div><div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
 }
 
-/** Mini picture of a lagoon (water + its ring) in the game's own style. */
-function lagoonGrid(l: { cells: readonly number[]; ring: readonly number[] }): string {
-  const all = [...l.cells, ...l.ring];
-  const xs = all.map((c) => c % 8);
-  const ys = all.map((c) => Math.floor(c / 8));
-  const x0 = Math.min(...xs);
-  const y0 = Math.min(...ys);
-  const w = Math.max(...xs) - x0 + 1;
-  const h = Math.max(...ys) - y0 + 1;
-  const water = new Set(l.cells);
-  const ring = new Set(l.ring);
-  let cells = '';
-  for (let y = y0; y < y0 + h; y++)
-    for (let x = x0; x < x0 + w; x++) {
-      const c = y * 8 + x;
-      cells += `<i class="${water.has(c) ? 'w' : ring.has(c) ? 'r' : ''}"></i>`;
-    }
-  return `<div class="pic" role="img" aria-label="Your biggest lagoon: ${l.cells.length} cells" style="grid-template-columns:repeat(${w},14px)">${cells}</div>`;
+/** A crisp canvas thumbnail of a creature (or its silhouette). */
+export function creatureThumb(sp: Species, px: number, silhouette?: string, golden = false): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  c.width = Math.round(px * dpr);
+  c.height = Math.round(px * dpr);
+  c.style.width = `${px}px`;
+  c.style.height = `${px}px`;
+  const g = c.getContext('2d')!;
+  g.scale(dpr, dpr);
+  drawCreature(g, sp, px / 2, px / 2, px * 0.82, 0, { silhouette, golden });
+  return c;
+}
+
+/** "New in your journal" strip for end-of-game cards. */
+function newSpeciesRow(ids: readonly string[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'new-species';
+  wrap.innerHTML = '<div class="tier">New in your journal</div>';
+  const row = document.createElement('div');
+  row.className = 'ns-row';
+  for (const id of ids.slice(0, 6)) {
+    const sp = SPECIES_BY_ID.get(id);
+    if (!sp) continue;
+    const cell = document.createElement('div');
+    cell.className = 'ns';
+    cell.append(creatureThumb(sp, 52));
+    const n = document.createElement('span');
+    n.textContent = sp.name;
+    cell.append(n);
+    row.append(cell);
+  }
+  wrap.append(row);
+  return wrap;
 }

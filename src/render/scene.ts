@@ -11,6 +11,8 @@ import { SpriteCache } from './sprites.ts';
 import { DAY, GEOM, MOTION, type Palette } from './theme.ts';
 import { clamp01, easeInCubic, easeInOutSine, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
 import { STREAK_GRACE } from '../core/scoring.ts';
+import { SPECIES_BY_ID } from '../meta/creatures.ts';
+import { drawCreature } from './creatures.ts';
 
 export interface DragView {
   slot: number;
@@ -61,7 +63,7 @@ interface FloatText {
   /** How far it drifts up over its life, in cells (default 0.7; callouts 0.25). */
   rise?: number;
 }
-interface Fish {
+export interface Fish {
   x: number;
   y: number;
   vx: number;
@@ -69,6 +71,11 @@ interface Fish {
   start: number;
   size: number;
   hue: string;
+  /** The caught species (drawn with its own art); otherwise a generic fish. */
+  species?: string;
+  golden?: boolean;
+  /** First time this species was ever caught: sparkle ring + "New!" tag. */
+  isNew?: boolean;
 }
 interface TraySlot {
   t: TrayPiece | null;
@@ -649,10 +656,35 @@ export class Scene {
       const x = f.x + f.vx * t;
       const y = f.y + f.vy * t + 0.5 * 2600 * t * t;
       const ang = Math.atan2(f.vy + 2600 * t, f.vx);
+      const fade = t > 0.7 ? 1 - (t - 0.7) / 0.2 : 1;
+      const sp = f.species ? SPECIES_BY_ID.get(f.species) : undefined;
+      if (sp) {
+        if (f.isNew) {
+          g.globalAlpha = 0.55 * fade;
+          g.strokeStyle = '#FFE58A';
+          g.lineWidth = 2.5;
+          g.beginPath();
+          g.arc(x, y, f.size * 0.75 + Math.sin(t * 20) * 2, 0, Math.PI * 2);
+          g.stroke();
+        }
+        g.globalAlpha = fade;
+        drawCreature(g, sp, x, y, f.size * 1.6, f.vx < 0 ? Math.PI - ang : ang, { golden: f.golden });
+        if (f.isNew) {
+          g.font = `800 ${Math.round(f.size * 0.55)}px ${FONT}`;
+          g.textAlign = 'center';
+          g.lineWidth = 3;
+          g.strokeStyle = 'rgba(255,255,255,0.95)';
+          g.strokeText('New!', x, y - f.size * 1.05);
+          g.fillStyle = '#C98A12';
+          g.fillText('New!', x, y - f.size * 1.05);
+        }
+        g.globalAlpha = 1;
+        continue;
+      }
       g.save();
       g.translate(x, y);
       g.rotate(ang);
-      g.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.2 : 1;
+      g.globalAlpha = fade;
       const s = f.size;
       g.fillStyle = f.hue;
       g.beginPath();

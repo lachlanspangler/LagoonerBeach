@@ -164,3 +164,19 @@ export function saveDaily(date: string, s: GameState | null): void {
     /* best-effort */
   }
 }
+
+// ── Beach Journal ──────────────────────────────────────────────────────────────────────────
+import { sanitizeJournal, type Journal } from '../meta/journal.ts';
+const K_JOURNAL = 'atoll.v1.journal';
+
+export function loadJournal(): Journal {
+  return sanitizeJournal(safeParse(store()?.getItem(K_JOURNAL)));
+}
+
+export function saveJournal(j: Journal): void {
+  try {
+    store()?.setItem(K_JOURNAL, JSON.stringify(j));
+  } catch {
+    /* best-effort */
+  }
+}

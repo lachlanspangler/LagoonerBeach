@@ -119,7 +119,7 @@ export const humanBot: Bot = (s, rng) => {
   return rng.next() < 0.7 ? scored[0]!.m : scored[rng.int(Math.min(6, scored.length))]!.m;
 };
 
-export const BOTS = {
+export const BOTS: Record<'random' | 'firstFit' | 'greedy' | 'search' | 'human', Bot> = {
   random: randomBot,
   firstFit: firstFitBot,
   greedy: greedyBot,

@@ -29,6 +29,7 @@ export interface DebugDeps {
   switchMode(m: 'classic' | 'daily' | 'puzzle'): void;
   loadPuzzle(i: number): void;
   puzzleSolution(): unknown;
+  journal(): unknown;
 }
 
 export function installDebugApi(d: DebugDeps): void {
@@ -75,6 +76,7 @@ export function installDebugApi(d: DebugDeps): void {
     switchMode: d.switchMode,
     loadPuzzle: d.loadPuzzle,
     puzzleSolution: d.puzzleSolution,
+    journal: d.journal,
     /** Stage a board ("." or "0" empty, 1-6 colors; 64 chars) and tray piece ids. */
     setup(board: string, tray: (string | null)[]) {
       const g = decodeGame({

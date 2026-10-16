@@ -12,6 +12,7 @@ import type { Scene } from '../render/scene.ts';
 import { MOTION, calloutFor } from '../render/theme.ts';
 import type { Sfx } from '../audio/sfx.ts';
 import type { Haptics } from '../platform/haptics.ts';
+import type { LagoonCatch } from '../meta/catch.ts';
 
 interface Scheduled {
   at: number;
@@ -53,7 +54,7 @@ export class Fx {
     events: readonly GameEvent[],
     now: number,
     from: { x: number; y: number } | null,
-    opts: { firstCapture?: boolean } = {},
+    opts: { firstCapture?: boolean; catches?: readonly LagoonCatch[]; newIds?: ReadonlySet<string> } = {},
   ): void {
     const sc = this.scene;
     const l = sc.layout;
@@ -143,19 +144,28 @@ export class Fx {
                   const [x, y] = sc.cellCenter(c);
                   sc.particles.burst(1, x, y, Kind.Spark, 0, l.cell * 2.2, l.cell * 0.14, MOTION.particleMax, sc.rand);
                 }
-              const nFish = sc.reducedMotion || k > 0 ? 0 : tier === 3 ? 2 : tier === 2 ? 1 : 0;
-              for (let f = 0; f < nFish; f++) {
-                const dir = f % 2 ? -1 : 1;
+              // the catch: each creature leaps out of this wave's water and dives back to the sea
+              const caught = (opts.catches ?? [])
+                .filter((c) => c.wave === k + 1)
+                .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
+              caught.slice(0, 4).forEach((c, f) => {
+                const isNew = opts.newIds?.has(c.x.id) ?? false;
+                const [lx, ly] = sc.cellCenter(c.cells[Math.floor(c.cells.length / 2)]!);
+                const dir = (f + k) % 2 ? -1 : 1;
                 sc.fish.push({
-                  x: cx,
-                  y: cy,
-                  vx: dir * l.cell * (2.2 + sc.rand() * 1.5),
-                  vy: -l.cell * (13 + sc.rand() * 3),
-                  start: t0 + 100 + f * 90,
-                  size: l.cell * 0.3,
-                  hue: sc.palette.name === 'night' ? '#7DF9E8' : ['#FF8A3D', '#FFC23D'][f % 2]!,
+                  x: lx,
+                  y: ly,
+                  vx: dir * l.cell * (isNew ? 1.4 : 2 + sc.rand() * 1.5),
+                  vy: -l.cell * (isNew ? 17 : 12 + sc.rand() * 3),
+                  start: t0 + 90 + f * 110,
+                  size: l.cell * 0.34,
+                  hue: '#FF8A3D',
+                  species: c.x.id,
+                  golden: c.x.golden,
+                  isNew,
                 });
-              }
+              });
+              if (caught.some((c) => opts.newIds?.has(c.x.id))) this.at(t0 + 200, () => this.sfx.discovery());
               this.sfx.capture(area, e.streak, k);
               // feel the streak: long streaks and big moments hit harder
               this.haptics.fire(k > 0 || area >= 12 || e.streak >= 5 ? 'heavy' : 'medium');

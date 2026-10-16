@@ -164,6 +164,12 @@ export class Sfx {
     if (area >= 6 && wave === 0) this.tone(120, at, 0.45, 'sine', 0.6, 70);
   }
 
+  /** A new species for the journal: a bright little rising arpeggio with a sparkle on top. */
+  discovery(at = 0): void {
+    [0, 4, 7, 9].forEach((d, i) => this.tone(this.note(d, 1), at + i * 0.06, 0.4, 'triangle', 0.1));
+    this.tone(this.note(2, 2), at + 0.26, 0.6, 'sine', 0.07);
+  }
+
   cleanReef(at = 0): void {
     [0, 2, 4, 5, 7].forEach((d, i) => this.tone(this.note(d, 1), at + i * 0.07, 0.5, 'sine', 0.12));
   }

@@ -1,7 +1,15 @@
 /**
  * App entry: wires core ⇄ input ⇄ scene/fx ⇄ audio/haptics ⇄ storage ⇄ UI.
  */
-import { applyMove, newGame, previewMove, legalMoves, type GameState, type Move } from '../core/game.ts';
+import {
+  applyMove,
+  newGame,
+  previewMove,
+  legalMoves,
+  type GameEvent,
+  type GameState,
+  type Move,
+} from '../core/game.ts';
 import { dailySeed, dayIndex, recordDaily, visibleStreak } from '../core/daily.ts';
 import { pieceById } from '../core/pieces.ts';
 import { N } from '../core/grid.ts';
@@ -13,6 +21,8 @@ import { Haptics } from '../platform/haptics.ts';
 import {
   loadDaily,
   loadGame,
+  loadJournal,
+  saveJournal,
   loadProfile,
   saveDaily,
   saveGame,
@@ -30,6 +40,9 @@ import { shareText, type LagoonShape } from '../meta/share.ts';
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
 import { solve } from '../core/solver.ts';
 import { initNative } from '../platform/native.ts';
+import { catchCapture, type LagoonCatch } from '../meta/catch.ts';
+import { record, type Journal } from '../meta/journal.ts';
+import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import { installDebugApi } from './debug.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 
@@ -60,6 +73,47 @@ let state: GameState = startState();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
 let bestCelebrated = false;
+let journal: Journal = loadJournal();
+/** This game's catch, for the end-of-game card. */
+let gameCatch = { count: 0, newIds: [] as string[] };
+
+/** Roll and record the creatures caught by this move's captures (if any). */
+function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
+  lagoons: LagoonCatch[];
+  newIds: Set<string>;
+} {
+  const lagoons: LagoonCatch[] = [];
+  const newIds = new Set<string>();
+  for (const e of r.events) {
+    if (e.type !== 'captured') continue;
+    const env = {
+      gameSeed: r.state.seed,
+      move: r.state.moves,
+      night: scene.palette.name === 'night',
+      mode,
+      tier: mode === 'puzzle' && PACK ? PACK[r.state.seed]?.tier : undefined,
+      reefWin: mode === 'puzzle' && puzzleStatus(r.state) === 'solved',
+    };
+    const lc = catchCapture({ waves: e.waves, streak: e.streak, clean: e.score.cleanBonus > 0 }, env, {
+      has: (id) => !!journal.entries[id],
+      dry: journal.dry,
+    });
+    for (const l of lc) {
+      const rec = record(journal, l.catches, today());
+      journal = rec.journal;
+      gameCatch.count += l.catches.length;
+      for (const id of rec.newSpecies) {
+        newIds.add(id);
+        gameCatch.newIds.push(id);
+      }
+    }
+    lagoons.push(...lc);
+  }
+  if (lagoons.length) saveJournal(journal);
+  if (newIds.size)
+    ui.announce(`New in your journal: ${[...newIds].map((id) => SPECIES_BY_ID.get(id)?.name).join(', ')}`);
+  return { lagoons, newIds };
+}
 /** Biggest lagoon of the current game (for the daily share picture). */
 let bigLagoon: LagoonShape | null = null;
 
@@ -165,6 +219,7 @@ function syncScene(): void {
 
   if (state.moves === 0) {
     bestCelebrated = false;
+    gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
     puzzleMoves = [];
   }
@@ -256,7 +311,12 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
     });
   }
   persist();
-  fx.dispatch(r.events, performance.now(), from, { firstCapture: teaching });
+  const caught = catchFor(r);
+  fx.dispatch(r.events, performance.now(), from, {
+    firstCapture: teaching,
+    catches: caught.lagoons,
+    newIds: caught.newIds,
+  });
   scene.dry = state.dry;
   for (const e of r.events) {
     if (e.type === 'captured') {
@@ -334,6 +394,7 @@ function finishGame(prevBest: number): void {
     dailyStreak: visibleStreak(profile.daily, dayIndex(today())),
     unlocked: unlockedNow,
     shape: bigLagoon && bigLagoon.cells.length >= 2 ? bigLagoon : null,
+    caught: { ...gameCatch, newIds: [...gameCatch.newIds] },
   };
   later(DEBUG && params.has('fast') ? 0 : 1400, () => {
     if (overShown) return;
@@ -357,7 +418,8 @@ function checkPuzzle(): void {
     profile.puzzle.index = Math.min(PACK.length - 1, i + 1);
     saveProfile(profile);
     const cleared = profile.puzzle.solved.length;
-    later(1300, () => ui.showPuzzleResult({ solved: true, index: i, total: PACK!.length, cleared }));
+    const newIds = [...gameCatch.newIds];
+    later(1300, () => ui.showPuzzleResult({ solved: true, index: i, total: PACK!.length, cleared, newIds }));
   } else {
     const cleared = profile.puzzle.solved.length;
     later(700, () => ui.showPuzzleResult({ solved: false, index: i, total: PACK!.length, cleared }));
@@ -464,8 +526,9 @@ function switchMode(m: Mode): void {
 
 // ------------------------------------------------------------------ UI
 const ui = new Ui({
-  onOpenMenu: () => ui.showMenu(profile, mode, !state.over),
+  onOpenMenu: () => ui.showMenu(profile, mode, !state.over, Object.keys(journal.entries).length),
   onSettings: () => ui.showSettings(profile),
+  onJournal: () => ui.showJournal(journal),
   onResume: () => ui.close(),
   onNewGame: () => restart(),
   onDaily: () => (mode === 'puzzle' ? puzzleHint() : switchMode(mode === 'daily' ? 'classic' : 'daily')),
@@ -681,6 +744,7 @@ if (DEBUG)
     restart,
     switchMode,
     loadPuzzle,
+    journal: () => journal,
     puzzleSolution: () =>
       PACK && mode === 'puzzle' ? (PACK[state.seed] as unknown as { solution: unknown }).solution : null,
   });

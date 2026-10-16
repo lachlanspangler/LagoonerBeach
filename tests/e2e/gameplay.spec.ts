@@ -191,3 +191,21 @@ test('reef list: pick any reef', async ({ page }) => {
   await expect.poll(async () => (await state(page)).seed).toBe(4);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('catching: captures fill the Beach Journal; the journal opens and shows a species', async ({ page }) => {
+  await boot(page, 'seed=3&fast=1');
+  await page.evaluate(() => (window as any).__atoll.autoplay('human', 400));
+  const j = await page.evaluate(() => (window as any).__atoll.journal());
+  expect(Object.keys(j.entries).length).toBeGreaterThan(3);
+  expect(j.total).toBeGreaterThan(5);
+  await page.evaluate(() => (window as any).__atoll.restart());
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Beach Journal' }).click();
+  await page.locator('.j-tile.got').first().click();
+  await expect(page.getByRole('button', { name: 'Back to journal' })).toBeVisible();
+  // persisted across reloads
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__atoll);
+  const j2 = await page.evaluate(() => (window as any).__atoll.journal());
+  expect(j2.total).toBe(j.total);
+});
