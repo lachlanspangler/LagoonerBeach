@@ -17,6 +17,7 @@ entries of `docs/DIARY.md`, then `docs/WORKFLOW.md` (the loop to run).
 | `make check` | typecheck + lint + format + tests + ideas ledger sync — run before every commit |
 | `make e2e` | build, then Playwright (Chromium + WebKit): gameplay, visual baselines, layouts, perf, audio |
 | `make tune` | bot balance report → `artifacts/tune.json` |
+| `npm run coverage` | coverage of pure layers (core/sim/meta), thresholds enforced (≈99% lines) |
 | `make ideas` | regenerate `docs/IDEAS.md` from `docs/ideas_ledger.json` |
 | `npm run puzzles` | regenerate the 200-reef pack (deterministic; CI diffs it) |
 | `make ios-sim` | build + launch on an iPhone simulator, screenshot |

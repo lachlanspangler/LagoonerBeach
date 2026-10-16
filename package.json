@@ -11,6 +11,7 @@
     "@eslint/js": "9.39.5",
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
+    "@vitest/coverage-v8": "3.2.7",
     "eslint": "9.39.5",
     "fast-check": "4.10.2",
     "globals": "17.13.0",
@@ -21,7 +22,7 @@
     "vite": "7.3.7",
     "vitest": "3.2.7"
   },
-  "description": "Atoll — close a loop of blocks and everything inside it pops.",
+  "description": "Atoll \u2014 close a loop of blocks and everything inside it pops.",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -p . && vite build",
@@ -37,7 +38,8 @@
     "tune": "tsx scripts/tune.ts",
     "ideas": "tsx scripts/render-ideas.ts",
     "ideas:check": "tsx scripts/render-ideas.ts && git diff --exit-code docs/IDEAS.md",
-    "puzzles": "tsx scripts/gen-puzzles.ts --count 200"
+    "puzzles": "tsx scripts/gen-puzzles.ts --count 200",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@capacitor/android": "7.6.9",

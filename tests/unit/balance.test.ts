@@ -3,7 +3,7 @@
  * intentional, re-run `npm run tune`, update the bands, and log it in docs/DIARY.md.
  */
 import { describe, expect, it } from 'vitest';
-import { greedyBot, randomBot, firstFitBot, humanBot } from '../../src/sim/bots.ts';
+import { greedyBot, randomBot, firstFitBot, humanBot, searchBot } from '../../src/sim/bots.ts';
 
 import { median, playGame } from '../../src/sim/play.ts';
 
@@ -32,6 +32,12 @@ describe('balance bands', () => {
     const med = median(g.map((x) => x.moves));
     expect(med).toBeGreaterThanOrEqual(35);
     expect(med).toBeLessThanOrEqual(75);
+  });
+
+  it('search bot plays legal moves and out-scores greedy (planning matters)', () => {
+    const se = Array.from({ length: 4 }, (_, i) => playGame(searchBot, 7000 + i, 60).summary.score);
+    const gr = Array.from({ length: 4 }, (_, i) => playGame(greedyBot, 7000 + i, 60).summary.score);
+    expect(se.reduce((a, b) => a + b)).toBeGreaterThan(gr.reduce((a, b) => a + b));
   });
 
   it('no dominant trivial strategy: first-fit is far below greedy', () => {

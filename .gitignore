@@ -1,9 +1,9 @@
-node_modules/
-dist/
-coverage/
-test-results/
-playwright-report/
+.DS_Store
 .vite/
 *.log
-.DS_Store
 artifacts/
+coverage/
+dist/
+node_modules/
+playwright-report/
+test-results/

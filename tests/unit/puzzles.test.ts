@@ -96,3 +96,25 @@ describe('puzzle games', () => {
     expect(['failed', 'solved']).toContain(puzzleStatus(s));
   });
 });
+
+import { tierForRank } from '../../src/core/solver.ts';
+
+describe('solver limits and tiers', () => {
+  it('reports truncation when the node budget runs out', () => {
+    const p = (pack as P[])[pack.length - 1]!;
+    const r = solve(boardFromString(p.board), p.pieces, { nodeLimit: 3, countLimit: 999 });
+    expect(r.truncated).toBe(true);
+  });
+  it('tiers split the pack by rank', () => {
+    expect([0, 24, 25, 54, 55, 84, 85, 99].map((i) => tierForRank(i, 100))).toEqual([
+      'calm',
+      'calm',
+      'tricky',
+      'tricky',
+      'deep',
+      'deep',
+      'abyss',
+      'abyss',
+    ]);
+  });
+});

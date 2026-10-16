@@ -9,5 +9,10 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.ts'],
     environment: 'node',
     testTimeout: 30_000,
+    coverage: {
+      include: ['src/core/**', 'src/sim/**', 'src/meta/**', 'src/render/color.ts'],
+      reporter: ['text-summary', 'html'],
+      thresholds: { statements: 95, branches: 88, functions: 95, lines: 95 },
+    },
   },
 });
