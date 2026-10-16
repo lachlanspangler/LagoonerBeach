@@ -150,7 +150,7 @@ export class SpriteCache {
     }
     if (variant === 'lit') {
       g.strokeStyle = p.ringOutline;
-      g.lineWidth = Math.max(1.5, s * 0.07);
+      g.lineWidth = Math.max(2, s * 0.085);
       g.beginPath();
       g.roundRect(x + g.lineWidth / 2, y + g.lineWidth / 2, s - g.lineWidth, s * 0.9 - g.lineWidth, r);
       g.stroke();

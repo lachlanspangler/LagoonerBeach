@@ -70,7 +70,7 @@ export const MOTION = {
   particleMin: 450,
   particleMax: 700,
   scorePop: 650,
-  callout: 900,
+  callout: 760,
   dealIn: 220,
   dealStagger: 60,
   returnToTray: 180,
@@ -81,17 +81,16 @@ export const GEOM = {
   gutter: 0.06,
   cellRadius: 0.26,
   boardRadius: 0.05,
-  trayScale: 0.55,
+  trayScale: 0.66,
   liftCells: 1.4,
   touchSlop: 6,
 } as const;
 
-/** Lagoon size → callout word (no callout below 3 cells unless it's a cascade/clean reef). */
+/** Lagoon size → callout word. Only big moments speak; small pops stay quiet. */
 export function calloutFor(area: number, waves: number, clean: boolean): string | null {
   if (clean) return 'Clear reef';
   if (waves >= 2) return `Ripple ×${waves}`;
   if (area >= 12) return 'Atoll!';
   if (area >= 6) return 'Lagoon';
-  if (area >= 3) return 'Pool';
   return null;
 }

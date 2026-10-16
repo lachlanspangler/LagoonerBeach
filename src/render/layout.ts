@@ -32,10 +32,10 @@ export interface Layout {
 export function computeLayout(w: number, h: number, inset: Insets = { top: 0, right: 0, bottom: 0, left: 0 }): Layout {
   const usableW = w - inset.left - inset.right;
   const usableH = h - inset.top - inset.bottom;
-  const margin = Math.max(12, Math.round(usableW * 0.045));
-  const hudH = Math.min(120, Math.max(72, usableH * 0.12));
+  const margin = Math.max(10, Math.round(usableW * 0.03));
+  const hudH = Math.min(112, Math.max(70, usableH * 0.11));
   // stack = board + gap + tray block (≈3.4 cells); fit it, then center it in the space left
-  const TRAY_CELLS = 3.4;
+  const TRAY_CELLS = 3.6;
   const GAP_CELLS = 0.5;
   const maxBoardByW = usableW - margin * 2;
   const maxBoardByH = ((usableH - hudH - margin) * N) / (N + GAP_CELLS + TRAY_CELLS);
@@ -44,8 +44,10 @@ export function computeLayout(w: number, h: number, inset: Insets = { top: 0, ri
   const stackH = boardSize + cell * (GAP_CELLS + TRAY_CELLS);
   const slack = Math.max(0, usableH - hudH - margin - stackH);
   const bx = Math.round(inset.left + (usableW - boardSize) / 2);
-  const by = Math.round(inset.top + hudH + slack * 0.42);
-  const trayY = by + boardSize + Math.round(cell * GAP_CELLS);
+  // spare height: a little above the board (room for callouts), a little between board and tray,
+  // the rest below the tray (thumb zone / gesture bar). Was 42% above → dead band under the score.
+  const by = Math.round(inset.top + hudH + slack * 0.22);
+  const trayY = by + boardSize + Math.round(cell * GAP_CELLS + slack * 0.18);
   const trayH = cell * TRAY_CELLS;
   const trayCell = Math.round(cell * GEOM.trayScale);
   // tray spans the board (a little wider on phones for big hit areas), never the whole tablet

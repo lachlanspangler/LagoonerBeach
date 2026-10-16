@@ -111,9 +111,11 @@ export class Particles {
         g.arc(this.x[i]!, this.y[i]!, s * 0.5, 0, Math.PI * 2);
         g.stroke();
       } else {
+        // round droplets: soft like the pebbles they came from (squares read as pixel confetti)
         g.fillStyle = k === Kind.Spark ? foam : (colors[this.color[i]!] ?? foam);
-        const h = s * 0.5;
-        g.fillRect(this.x[i]! - h, this.y[i]! - h, s, s);
+        g.beginPath();
+        g.arc(this.x[i]!, this.y[i]!, s * 0.5, 0, Math.PI * 2);
+        g.fill();
       }
     }
     g.globalAlpha = 1;

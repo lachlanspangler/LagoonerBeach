@@ -9,7 +9,7 @@ import { computeLayout, type Insets, type Layout } from './layout.ts';
 import { Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, GEOM, MOTION, type Palette } from './theme.ts';
-import { clamp01, easeInCubic, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
+import { clamp01, easeInCubic, easeInOutSine, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
 import { STREAK_GRACE } from '../core/scoring.ts';
 
 export interface DragView {
@@ -56,6 +56,10 @@ interface FloatText {
   size: number;
   life: number;
   strong: boolean;
+  /** Points: lagoon-blue fill instead of white. */
+  accent?: boolean;
+  /** How far it drifts up over its life, in cells (default 0.7; callouts 0.25). */
+  rise?: number;
 }
 interface Fish {
   x: number;
@@ -115,7 +119,12 @@ export class Scene {
   dry = 0;
   streakPulse = -1e9;
   gameOverAt = -1;
-  hint: { cells: readonly number[]; start: number } | null = null;
+  hint: {
+    cells: readonly number[];
+    start: number;
+    /** First-run demo: a ghost of this tray piece glides to the hinted spot, on loop. */
+    demo?: { slot: number; ax: number; ay: number } | null;
+  } | null = null;
   /** Replaces the score HUD (puzzle mode). */
   hudLabel: { top: string; big: string; sub: string } | null = null;
 
@@ -287,28 +296,43 @@ export class Scene {
     return [l.board.x + xOf(i) * l.cell + (l.cell - s) / 2, l.board.y + yOf(i) * l.cell + (l.cell - s) / 2, s];
   }
 
+  /**
+   * One water cell: a soft vertical gradient (light surface → deeper water) plus a single diagonal
+   * sheen that sweeps across the whole board, so neighboring cells read as one body of water.
+   */
   private drawWaterCell(i: number, alpha: number, now: number): void {
     const g = this.g;
     const p = this.palette;
     const [x, y, s] = this.cellRect(i);
     const gut = s * GEOM.gutter;
+    const grad = g.createLinearGradient(x, y + gut, x, y + s - gut);
+    grad.addColorStop(0, p.waterHi);
+    grad.addColorStop(0.55, p.water);
+    grad.addColorStop(1, p.water);
     g.globalAlpha = alpha;
-    g.fillStyle = p.water;
+    g.fillStyle = grad;
     g.beginPath();
     g.roundRect(x + gut, y + gut, s - gut * 2, s - gut * 2, s * GEOM.cellRadius);
     g.fill();
-    // shimmer band
-    const phase = (now / 900 + xOf(i) * 0.17 + yOf(i) * 0.11) % 1;
-    g.globalAlpha = alpha * 0.55;
-    g.fillStyle = p.waterHi;
-    g.fillRect(x + gut * 2, y + gut + (s - gut * 2) * phase * 0.8, s - gut * 4, Math.max(1.5, s * 0.08));
+    // sheen: brightness from the distance between this cell's diagonal and a slowly moving line
+    const b = this.layout.board;
+    const span = b.w + b.h;
+    const sweep = ((now / 1400) % 1.6) * span - span * 0.3;
+    const d = Math.abs(x - b.x + (y - b.y) - sweep) / (s * 1.6);
+    if (d < 1) {
+      g.globalAlpha = alpha * 0.35 * (1 - d) * (1 - d);
+      g.fillStyle = '#FFFFFF';
+      g.beginPath();
+      g.roundRect(x + gut, y + gut, s - gut * 2, s - gut * 2, s * GEOM.cellRadius);
+      g.fill();
+    }
     g.globalAlpha = 1;
   }
 
   private drawPreviewWater(now: number): void {
     const pv = this.preview;
     if (!pv || pv.pocket.size === 0) return;
-    const a = 0.55 + 0.2 * Math.sin(now / 160);
+    const a = 0.72 + 0.12 * Math.sin(now / 160);
     for (const c of pv.pocket) this.drawWaterCell(c, a, now);
   }
 
@@ -434,6 +458,12 @@ export class Scene {
 
   private drawRipples(now: number): void {
     const g = this.g;
+    if (!this.ripples.length) return;
+    const b = this.layout.board;
+    g.save();
+    g.beginPath();
+    g.roundRect(b.x, b.y, b.w, b.h, b.w * GEOM.boardRadius);
+    g.clip();
     g.strokeStyle = this.palette.foam;
     for (const r of this.ripples) {
       const t = (now - r.start) / 700;
@@ -445,6 +475,7 @@ export class Scene {
       g.stroke();
     }
     g.globalAlpha = 1;
+    g.restore();
   }
 
   private drawPieceAt(p: Piece, color: number, x: number, y: number, cell: number, alpha = 1): void {
@@ -512,23 +543,65 @@ export class Scene {
       g.fill();
     }
     g.globalAlpha = 1;
-    this.drawPieceAt(p, slot.t.color, d.x, d.y, cell);
+    // cells of the held piece that will pop on release wear the same "lit" outline as the ring
+    const pv = this.preview;
+    const lit = pv && pv.ring.size ? (dx: number, dy: number) => pv.ring.has((pv.ay + dy) * N + pv.ax + dx) : null;
+    const normal = this.sprites.pebble(this.palette, slot.t.color, Math.round(cell));
+    const bright = lit ? this.sprites.pebble(this.palette, slot.t.color, Math.round(cell), 'lit') : normal;
+    for (const [dx, dy] of p.cells)
+      g.drawImage(lit?.(dx, dy) ? bright : normal, d.x + dx * cell, d.y + dy * cell, cell, cell);
   }
 
   private drawHint(now: number): void {
     const h = this.hint;
     if (!h) return;
     const g = this.g;
-    const a = 0.25 + 0.2 * Math.sin((now - h.start) / 220);
-    g.strokeStyle = this.palette.water;
-    g.lineWidth = 2.5;
+    const k = (now - h.start) / 1000;
+    // dashed lagoon-blue outline, pulsing clearly (was a faint 1.1:1 outline)
+    const a = this.reducedMotion ? 0.85 : 0.55 + 0.4 * (0.5 + 0.5 * Math.sin(k * Math.PI * 2));
+    g.strokeStyle = this.palette.name === 'night' ? this.palette.waterHi : '#1A86AC';
+    g.lineWidth = Math.max(2, this.layout.cell * 0.06);
+    g.setLineDash([this.layout.cell * 0.14, this.layout.cell * 0.1]);
+    g.lineDashOffset = this.reducedMotion ? 0 : -k * this.layout.cell * 0.5;
     g.globalAlpha = a;
     for (const c of h.cells) {
-      const [x, y, s] = this.cellRect(c, 0.86);
+      const [x, y, s] = this.cellRect(c, 0.84);
       g.beginPath();
       g.roundRect(x, y, s, s, s * GEOM.cellRadius);
       g.stroke();
     }
+    g.setLineDash([]);
+    g.globalAlpha = 1;
+    // demo: a ghost of the piece glides from the tray to the spot, with a fingertip
+    const d = h.demo;
+    const t = d ? this.tray[d.slot]?.t : null;
+    if (!d || !t || this.drag || this.reducedMotion) return;
+    const p = pieceById(t.pieceId);
+    const l = this.layout;
+    const cyc = (k % 2.2) / 2.2;
+    if (cyc > 0.86) return;
+    const travel = easeInOutSine(clamp01((cyc - 0.12) / 0.5));
+    const [ox, oy] = this.trayPieceOrigin(d.slot, p);
+    const tx = l.board.x + d.ax * l.cell;
+    const ty = l.board.y + d.ay * l.cell;
+    const cell = lerp(l.trayCell, l.cell, travel);
+    const x = lerp(ox, tx, travel);
+    const y = lerp(oy, ty, travel);
+    const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
+    this.drawPieceAt(p, t.color, x, y, cell, 0.5 * fade);
+    // fingertip under the first cell (where a thumb would hold it)
+    const [fx, fy] = p.cells[0]!;
+    g.globalAlpha = 0.35 * fade;
+    g.fillStyle = this.palette.text;
+    g.beginPath();
+    g.arc(
+      x + (fx + 0.5) * cell,
+      y + (fy + 0.5) * cell + l.lift * travel * 0.9 + cell * 0.2,
+      l.cell * 0.32,
+      0,
+      Math.PI * 2,
+    );
+    g.fill();
     g.globalAlpha = 1;
   }
 
@@ -576,22 +649,24 @@ export class Scene {
     for (const t of this.texts) {
       const k = (now - t.start) / t.life;
       if (k < 0 || k >= 1) continue;
-      const rise = easeOutCubic(k) * this.layout.cell * (t.strong ? 0.6 : 1.1);
+      const rise = easeOutCubic(k) * this.layout.cell * (t.rise ?? (t.strong ? 0.25 : 0.7));
       const pop = t.strong && !this.reducedMotion ? (k < 0.18 ? easeOutBack(k / 0.18, 2.5) : 1) : 1;
       g.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
       g.font = `800 ${Math.round(t.size * pop)}px ${FONT}`;
       g.lineWidth = Math.max(3, t.size * 0.16);
       const night = this.palette.name === 'night';
       g.lineJoin = 'round';
-      g.strokeStyle = t.strong
+      // callouts and points share one look: deep lagoon ink with a light halo (day), glow ink (night)
+      const ink = t.strong || t.accent;
+      g.strokeStyle = ink
         ? night
-          ? 'rgba(0,20,30,0.75)'
-          : '#FFFFFF'
+          ? 'rgba(0,20,30,0.8)'
+          : 'rgba(255,255,255,0.95)'
         : night
           ? 'rgba(0,0,0,0.55)'
           : 'rgba(59,50,41,0.6)';
       g.strokeText(t.text, t.x, t.y - rise);
-      g.fillStyle = t.strong ? (night ? this.palette.waterHi : '#1F8FB5') : '#FFFFFF';
+      g.fillStyle = ink ? (night ? this.palette.waterHi : '#1A86AC') : '#FFFFFF';
       g.fillText(t.text, t.x, t.y - rise);
     }
     g.globalAlpha = 1;

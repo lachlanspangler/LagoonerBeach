@@ -21,6 +21,8 @@ for (const scheme of ['light', 'dark'] as const) {
       viewport: { width: 390, height: 844 },
       deviceScaleFactor: 1,
       colorScheme: scheme,
+      // the first-run hint animates (ghost demo, marching dashes); reduced motion freezes it
+      reducedMotion: 'reduce',
     });
     const page = await ctx.newPage();
     await boot(page, 'seed=42');

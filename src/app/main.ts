@@ -206,7 +206,11 @@ function updateHint(): void {
     const cup = pieceById('cup-up');
     const slot = state.tray.findIndex((t) => t?.pieceId === 'cup-up');
     if (slot >= 0) {
-      scene.hint = { cells: cup.cells.map(([dx, dy]) => (4 + dy) * N + 2 + dx), start: performance.now() };
+      scene.hint = {
+        cells: cup.cells.map(([dx, dy]) => (4 + dy) * N + 2 + dx),
+        start: performance.now(),
+        demo: { slot, ax: 2, ay: 4 },
+      };
       return;
     }
   }
@@ -217,7 +221,11 @@ function updateHint(): void {
   }
   if (best) {
     const p = pieceById(state.tray[best.m.slot]!.pieceId);
-    scene.hint = { cells: p.cells.map(([dx, dy]) => (best!.m.y + dy) * N + best!.m.x + dx), start: performance.now() };
+    scene.hint = {
+      cells: p.cells.map(([dx, dy]) => (best!.m.y + dy) * N + best!.m.x + dx),
+      start: performance.now(),
+      demo: { slot: best.m.slot, ax: best.m.x, ay: best.m.y },
+    };
   } else scene.hint = null;
 }
 
@@ -248,7 +256,7 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
     });
   }
   persist();
-  fx.dispatch(r.events, performance.now(), from);
+  fx.dispatch(r.events, performance.now(), from, { firstCapture: teaching });
   scene.dry = state.dry;
   for (const e of r.events) {
     if (e.type === 'captured') {

@@ -49,7 +49,12 @@ export class Fx {
     this.queue = [];
   }
 
-  dispatch(events: readonly GameEvent[], now: number, from: { x: number; y: number } | null): void {
+  dispatch(
+    events: readonly GameEvent[],
+    now: number,
+    from: { x: number; y: number } | null,
+    opts: { firstCapture?: boolean } = {},
+  ): void {
     const sc = this.scene;
     const l = sc.layout;
     const flight = from ? MOTION.place * 0.8 : 0;
@@ -82,113 +87,129 @@ export class Fx {
         case 'captured': {
           // logical board is final now: remove cleared cells from the mirror, animate them as dying
           for (const c of e.cleared) sc.board[c.cell] = 0;
-          let maxArea = 0;
+          const maxArea = Math.max(...e.pockets.map((p) => p.cells.length));
+          const clean = e.score.cleanBonus > 0;
+          // how big a moment this is decides how much happens — small pops stay calm
+          const tier = maxArea >= 12 || e.waves.length > 1 || clean ? 3 : maxArea >= 6 ? 2 : maxArea >= 3 ? 1 : 0;
+          const perPebble = [2, 3, 3, 4][tier]!;
+          const budget = [16, 24, 28, 36][tier]!;
+          let spent = 0;
+          const board = l.board;
           e.waves.forEach((w, k) => {
             const t0 = now + flight + k * MOTION.waveGap;
             const area = w.pockets.reduce((a, p) => a + p.cells.length, 0);
-            maxArea = Math.max(maxArea, ...w.pockets.map((p) => p.cells.length));
             const lagoonCells = w.pockets.flatMap((p) => p.cells);
-            // centroid of this wave's lagoons
             let cx = 0;
             let cy = 0;
             for (const c of lagoonCells) {
               cx += xOf(c);
               cy += yOf(c);
             }
-            cx = l.board.x + (cx / lagoonCells.length + 0.5) * l.cell;
-            cy = l.board.y + (cy / lagoonCells.length + 0.5) * l.cell;
+            cx = board.x + (cx / lagoonCells.length + 0.5) * l.cell;
+            cy = board.y + (cy / lagoonCells.length + 0.5) * l.cell;
             sc.lagoons.push({ cells: lagoonCells, start: t0 });
+            // ring pebbles pop outward from the lagoon's center, each shedding a few droplets of its color
             for (const d of w.cleared) {
               const [x, y] = sc.cellCenter(d.cell);
               const dist = Math.hypot(x - cx, y - cy) / l.cell;
-              const st = t0 + MOTION.lagoonFill * 0.6 + dist * MOTION.ringStagger * 2;
+              const st = t0 + MOTION.lagoonFill + dist * MOTION.ringStagger * 2;
               sc.dying.push({ cell: d.cell, color: d.color, start: st });
-              this.at(st + 70, () => {
-                sc.particles.burst(
-                  5,
-                  x,
-                  y,
-                  Kind.Droplet,
-                  d.color,
-                  l.cell * 6,
-                  l.cell * 0.22,
-                  MOTION.particleMax,
-                  sc.rand,
+              const n = Math.min(perPebble, budget - spent);
+              spent += n;
+              if (n > 0)
+                this.at(st + 60, () =>
+                  sc.particles.burst(
+                    n,
+                    x,
+                    y,
+                    Kind.Droplet,
+                    d.color,
+                    l.cell * 3,
+                    l.cell * 0.2,
+                    MOTION.particleMin,
+                    sc.rand,
+                  ),
                 );
-                sc.particles.burst(2, x, y, Kind.Foam, 0, l.cell * 3, l.cell * 0.45, MOTION.particleMin, sc.rand);
-              });
             }
             this.at(t0, () => {
-              sc.ripples.push({ x: cx, y: cy, start: t0, r: l.cell * (1.2 + Math.sqrt(area) * 0.8) });
-              for (const c of lagoonCells) {
+              sc.ripples.push({ x: cx, y: cy, start: t0, r: l.cell * (0.9 + Math.sqrt(area) * 0.6) });
+              // a few bubbles rise out of the water
+              for (const c of lagoonCells.slice(0, 6)) {
                 const [x, y] = sc.cellCenter(c);
-                sc.particles.burst(2, x, y, Kind.Spark, 0, l.cell * 2.5, l.cell * 0.12, MOTION.particleMin, sc.rand);
+                sc.particles.burst(1, x, y, Kind.Foam, 0, l.cell * 1.2, l.cell * 0.3, MOTION.particleMin, sc.rand);
               }
-              const nFish = sc.reducedMotion ? 0 : Math.min(4, Math.floor(area / 3));
+              if (tier === 3)
+                for (const c of lagoonCells.slice(0, 12)) {
+                  const [x, y] = sc.cellCenter(c);
+                  sc.particles.burst(1, x, y, Kind.Spark, 0, l.cell * 2.2, l.cell * 0.14, MOTION.particleMax, sc.rand);
+                }
+              const nFish = sc.reducedMotion || k > 0 ? 0 : tier === 3 ? 2 : tier === 2 ? 1 : 0;
               for (let f = 0; f < nFish; f++) {
-                const dir = sc.rand() < 0.5 ? -1 : 1;
+                const dir = f % 2 ? -1 : 1;
                 sc.fish.push({
-                  x: cx + (sc.rand() - 0.5) * l.cell,
+                  x: cx,
                   y: cy,
-                  vx: dir * l.cell * (2 + sc.rand() * 2.5),
-                  vy: -l.cell * (14 + sc.rand() * 5),
-                  start: t0 + 80 + f * 70,
-                  size: l.cell * (0.28 + sc.rand() * 0.08),
-
-                  hue: sc.palette.name === 'night' ? '#7DF9E8' : ['#FF8A3D', '#FFC23D', '#FF6B8A'][f % 3]!,
+                  vx: dir * l.cell * (2.2 + sc.rand() * 1.5),
+                  vy: -l.cell * (13 + sc.rand() * 3),
+                  start: t0 + 100 + f * 90,
+                  size: l.cell * 0.3,
+                  hue: sc.palette.name === 'night' ? '#7DF9E8' : ['#FF8A3D', '#FFC23D'][f % 2]!,
                 });
               }
               this.sfx.capture(area, e.streak, k);
-
               // feel the streak: long streaks and big moments hit harder
               this.haptics.fire(k > 0 || area >= 12 || e.streak >= 5 ? 'heavy' : 'medium');
             });
           });
           const last = now + flight + (e.waves.length - 1) * MOTION.waveGap;
-          // points land with the burst: under the callout if there is one, else at the first lagoon
-          const first = e.waves[0]!.pockets.flatMap((p) => p.cells);
-          const [px, py] = sc.cellCenter(first[Math.floor(first.length / 2)]!);
           const pts = e.score.total;
-          const word = calloutFor(maxArea, e.waves.length, e.score.cleanBonus > 0);
-          const land = last + MOTION.lagoonFill + 60;
+          const word = opts.firstCapture ? 'Pop!' : calloutFor(maxArea, e.waves.length, clean);
+          const land = last + MOTION.lagoonFill + 80;
           this.at(land, () => {
             const t = performance.now();
             sc.score = sc.pendingScore ?? sc.score;
             if (word) {
-              const cy = l.board.y + l.board.h * 0.36;
+              // big moments: the word rides just above the board, points tucked under it
+              const cy = Math.max(l.hud.y + l.hud.h + l.cell * 0.05, board.y - l.cell * 0.2);
+              const big = tier === 3 && !opts.firstCapture;
               sc.texts.push({
                 text: word,
                 x: l.w / 2,
                 y: cy,
                 start: t,
-                size: l.cell * 0.95,
+                size: l.cell * (big ? 0.9 : 0.72),
                 life: MOTION.callout,
                 strong: true,
               });
               sc.texts.push({
                 text: `+${pts}`,
                 x: l.w / 2,
-                y: cy + l.cell * 0.85,
-                start: t + 60,
-                size: l.cell * 0.55,
-                life: MOTION.callout - 60,
+                y: cy + l.cell * (big ? 0.72 : 0.6),
+                start: t + 50,
+                size: l.cell * 0.46,
+                life: MOTION.callout - 50,
                 strong: false,
+                accent: true,
+                rise: 0.25,
               });
             } else {
+              const first = e.waves[0]!.pockets.flatMap((p) => p.cells);
+              const [px, py] = sc.cellCenter(first[Math.floor(first.length / 2)]!);
               sc.texts.push({
                 text: `+${pts}`,
                 x: px,
                 y: py,
                 start: t,
-                size: l.cell * (maxArea >= 3 ? 0.7 : 0.55),
+                size: l.cell * (tier >= 1 ? 0.6 : 0.5),
                 life: MOTION.scorePop,
                 strong: false,
+                accent: true,
               });
             }
           });
-          if (e.waves.length > 1 || maxArea >= 12) {
+          if (tier === 3) {
             this.at(now + flight + 40, () => {
-              sc.shake = { start: performance.now(), amp: Math.min(7, 2.5 + e.waves.length * 1.5) };
+              sc.shake = { start: performance.now(), amp: Math.min(6, 2 + e.waves.length * 1.2) };
             });
           }
           this.at(now + flight, () => {
