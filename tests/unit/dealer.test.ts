@@ -59,3 +59,71 @@ describe('teaching tray', () => {
     expect(found).toBe(true);
   });
 });
+
+import { applyMove, legalMoves, newGame } from '../../src/core/game.ts';
+import { trayClearable } from '../../src/core/dealer.ts';
+import fc from 'fast-check';
+
+/** Independent brute force: try all orders explicitly (no dedupe, no early tricks). */
+function bruteClearable(b: Uint8Array, ids: string[]): boolean {
+  if (!ids.length) return true;
+  return ids.some((id, i) =>
+    placements(b, pieceById(id)).some(([x, y]) =>
+      bruteClearable(
+        resolvePlacement(b, pieceById(id), x, y, 1).board,
+        ids.filter((_, j) => j !== i),
+      ),
+    ),
+  );
+}
+
+describe('always-a-solution guarantee', () => {
+  it('every tray dealt during random play can be fully placed (checked by independent brute force)', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 2 ** 31 }), (seed) => {
+        let s = newGame(seed);
+        const r = new Rng(seed);
+        for (let i = 0; i < 120 && !s.over; i++) {
+          const ms = legalMoves(s);
+          const res = applyMove(s, ms[r.int(ms.length)]!)!;
+          const dealt = res.events.find((e) => e.type === 'dealt');
+          if (dealt && dealt.type === 'dealt' && res.state.board.some((c) => c === 0))
+            expect(
+              bruteClearable(
+                res.state.board,
+                dealt.tray.map((t) => t.pieceId),
+              ),
+            ).toBe(true);
+          s = res.state;
+        }
+      }),
+      { numRuns: 25 },
+    );
+  });
+
+  it('the constructive fallback guarantees a tray on a nearly full board', () => {
+    const b = board(['#.######', '########', '######.#', '########', '###..###', '########', '#######.', '########']);
+    const r = new Rng(3);
+    for (let i = 0; i < 100; i++) {
+      const t = dealTray(r, b, 200);
+      expect(
+        trayClearable(
+          b,
+          t.map((x) => pieceById(x.pieceId)),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it('trayClearable agrees with brute force on random positions', () => {
+    const r = new Rng(77);
+    let s = newGame(77);
+    for (let i = 0; i < 40 && !s.over; i++) {
+      const ms = legalMoves(s);
+      s = applyMove(s, ms[r.int(ms.length)]!)!.state;
+      const ids = ['tri-h', 'square', 'cup-up', 'block', 'pent-v', 'dot'];
+      const pick = [ids[r.int(6)]!, ids[r.int(6)]!, ids[r.int(6)]!];
+      expect(trayClearable(s.board, pick.map(pieceById))).toBe(bruteClearable(s.board, pick));
+    }
+  });
+});

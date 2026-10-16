@@ -162,9 +162,9 @@ describe('determinism', () => {
     const { summary } = playGame(greedyBot, 1, 2000);
     expect({ moves: summary.moves, score: summary.score, captures: summary.captures }).toMatchInlineSnapshot(`
       {
-        "captures": 27,
-        "moves": 56,
-        "score": 1300,
+        "captures": 108,
+        "moves": 185,
+        "score": 11800,
       }
     `);
   });
