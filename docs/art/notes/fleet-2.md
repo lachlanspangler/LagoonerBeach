@@ -58,3 +58,21 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
 - Self-grade: B+. Gentle and dopey; the up-down fins make it nameable at 24 px.
 - Would improve: XL frame-breaking (R28) only happens in the leap; in the tile it fits. A sun
   sparkle prop during the sunbathe would sell the joke further.
+
+## urchin (Sea Urchin)
+- Size class S, object (front-facing). Feature: a halo of 12 long spines, each with a fat rounded
+  lighter tip (accent `#C8ACE9`), around a small ball.
+- Dark identity: `#5B3A7A` (L 0.42) lifted to `#8A68AE` (L 0.58; the guide says ≥ 0.45, the validator's
+  body floor is 0.55) plus a pale lavender face patch (belly, L 0.92) so the eyes and blush read on
+  both themes. Night rim visible.
+- Signature: the spine ripple. The spines are three interleaved groups (every third spine) that
+  swell 1.14× one after another, twice round the ring, with a `surprised` face, then `shy`.
+  Ambient: the three sets sway with a 0.25 s lag (a slow shimmer). Catch: the same wave, faster.
+- Rounds: 3.
+  1. Spines as `extra` (outside the body box): the ball drew at S size and the spines blew far past
+     the tile; it read as a large creature. IoU fine (0.59 vs sand dollar).
+  2. Spines counted in the box, ball 26: spines too short and stubby, it read as a gear/flower.
+  3. Ball 23, spines out to 41.6 (ratio 1.8): reads as an urchin, small and prickly, face still
+     readable at 54 px. IoU: sunfish 0.63, clownfish 0.62, sand dollar < 0.6.
+- Self-grade: A-. Charming, shy and instantly nameable.
+- Would improve: the face is small at 24 px (the price of long spines inside an 84 box).
