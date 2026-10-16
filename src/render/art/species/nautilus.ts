@@ -6,7 +6,7 @@
  * with a little bubble trail, then drifts back and settles with a polite blink.
  * Groups (back to front): tentacles, shell, body (hood and head; the face rides on it), bubbles (prop).
  */
-import { blob, capsule, circle, defineArt, ellipse, join, tube } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
 const shell = circle(-12, -2, 28);
 // tiger stripes on the back of the coil, fading out before the opening (R18 `bands`, hand placed)
@@ -64,7 +64,10 @@ const tentacles = join(
   capsule(27, 14, 3.4, 39, 20, 2.6),
   capsule(22, 18, 3.2, 31, 31, 2.6),
 );
-const bubbles = join(circle(38, -16, 3.4), circle(44, -26, 2.4), circle(36, -32, 1.8));
+// the whole nautilus hangs nose-down by 40°, the way a real one hovers with its opening forward
+// and down. It also keeps its silhouette apart from the cuttlefish, hermit crab and turtle (R12).
+const R = (d: string) => xform(d, { rot: 40, sx: 0.96, sy: 0.96 });
+const bubbles = join(circle(34, 14, 3.4), circle(40, 4, 2.4), circle(36, -4, 1.8));
 
 export default defineArt({
   id: 'nautilus',
@@ -74,34 +77,37 @@ export default defineArt({
   personality: ['ancient', 'polite', 'unhurried'],
   palette: { body: '#E9DCC4', accent: '#B5653A', belly: '#F0C7A8' },
   groups: [
-    { id: 'tentacles', pivot: [26, 8], parts: [{ d: tentacles, role: 'belly' }] },
+    { id: 'tentacles', pivot: [14, 22], parts: [{ d: R(tentacles), role: 'belly' }] },
     {
       id: 'shell',
-      pivot: [-12, -2],
+      pivot: [-8, -9],
       parts: [
-        { d: shell, role: 'body' },
-        { d: stripes, role: 'accent', kind: 'pattern' },
-        { d: whorl, role: 'ink', kind: 'line', w: 1.8, alpha: 0.5 },
+        { d: R(shell), role: 'body' },
+        { d: R(stripes), role: 'accent', kind: 'pattern' },
+        { d: R(whorl), role: 'ink', kind: 'line', w: 1.8, alpha: 0.5 },
       ],
     },
     {
       id: 'body',
-      pivot: [12, 4],
+      pivot: [6, 10],
       parts: [
-        { d: head, role: 'belly' },
-        { d: hood, role: 'accent', kind: 'pattern' },
+        { d: R(head), role: 'belly' },
+        { d: R(hood), role: 'accent', kind: 'pattern' },
       ],
     },
-    { id: 'bubbles', pivot: [38, -20], prop: true, parts: [{ d: bubbles, role: 'white' }] },
+    { id: 'bubbles', pivot: [36, 6], prop: true, parts: [{ d: bubbles, role: 'white' }] },
   ],
   shineOn: 'shell',
-  shine: ellipse(-20, -24, 10, 4.4, -35),
+  shine: ellipse(-2, -29, 10, 4.4, 5),
   face: {
-    eyes: [[15, 7]],
+    eyes: [[7, 14]],
     eye: 8.2,
-    zone: [4, -14, 36, 36],
-    mouth: { at: [26, 14], w: 5, shape: 'smile' },
+    zone: [-6, -6, 36, 36],
+    mouth: { at: [14, 24], w: 5, shape: 'smile' },
     sweet: true,
+  },
+  deviations: {
+    R7: 'the body hangs nose-down by 40°, so the eye on the head at the shell opening measures 41 % back along the tilted box',
   },
   idle: {
     ambient: [
@@ -120,6 +126,16 @@ export default defineArt({
             [0.1, 1.5],
             [0.24, -7],
             [0.7, -5],
+            [1, 0],
+          ],
+        },
+        {
+          p: 'ty',
+          k: [
+            [0, 0],
+            [0.1, 1],
+            [0.24, -5],
+            [0.7, -3.5],
             [1, 0],
           ],
         },

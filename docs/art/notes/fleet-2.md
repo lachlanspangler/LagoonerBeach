@@ -198,3 +198,16 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
   making it part of the silhouette.
 - Pectoral fins drawn as outlined ellipses next to a low-set profile eye read as a second mouth at
   54 px (puffer, boxfish); worth a line in the fleet brief's gotchas.
+
+## nautilus, round 4 (after the fleet merge)
+- With 38 species on main, the old nautilus (round coil + forward tentacle tuft, 84×64) scored
+  IoU 0.877 against the cuttlefish (oval mantle + arm tuft, 84×56). Grid search over shell size,
+  head height and tentacle fans was stuck between neighbours: wider/flatter hit the cuttle (≥ 0.77),
+  taller hit the hermit crab (0.78–0.81), head-high hit the turtle (0.78–0.83).
+- Fix: the whole nautilus now hangs **nose-down by 40°** (a single `xform` on every part, ×0.96), the
+  way a real nautilus hovers with its opening forward and down. Coil up and back, hooded head and
+  tentacles below-front. Face anchors, pivots, shine and bubbles were re-placed by hand; the jet now
+  goes up-and-back (tx −7, ty −5). R7 deviation: the eye sits 41 % back along the tilted box.
+- New closest pairs: hermit 0.70, combjelly 0.68 (cross-class, limit 0.80), cockle 0.66 (same class,
+  limit 0.70); cuttle dropped out of the top list. Every fish is ≤ 0.65 against it.
+- Self-grade stays B+: it reads as a little nautilus peering down, and the coil stripes still lead.
