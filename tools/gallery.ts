@@ -10,13 +10,16 @@ import { HABITATS, SPECIES, SPECIES_BY_ID, type Species } from '../src/meta/crea
 import { drawLegacy } from '../src/render/creatures.ts';
 import { ART, drawSpecies, renderCreature, type DrawOpts } from '../src/render/art/creature-art.ts';
 import { EXPRESSIONS, TILE_FILL, type SpeciesArt } from '../src/render/art/kit.ts';
-import { metrics, validateArt } from '../src/render/art/validate.ts';
+import { metrics, MINT, validateArt } from '../src/render/art/validate.ts';
 import { SHARED } from '../src/render/art/palette.ts';
 import { DISPLAY_FONT, FONT } from '../src/render/scene.ts';
 
 const q = new URLSearchParams(location.search);
-const DAY = { bg: '#F4EDE2', tile: SHARED.dayTile, text: '#3B3229', dim: '#8A7B69' };
-const NIGHT = { bg: '#0B1622', tile: SHARED.nightTile, text: '#E8EEF2', dim: '#7F95A6' };
+const DAY = { bg: '#F4EDE2', tile: SHARED.dayTile, text: '#3B3229', dim: '#8A7B69', night: false };
+const NIGHT = { bg: '#0B1622', tile: SHARED.nightTile, text: '#E8EEF2', dim: '#7F95A6', night: true };
+// the real journal tile for found species (.j-tile.got = water 16 % over the panel): CRITIQUE-1 asks every sheet to show it
+const MINT_DAY = { ...DAY, bg: '#FFFAF2', tile: MINT.day };
+const MINT_NIGHT = { ...NIGHT, bg: '#142636', tile: MINT.night };
 type Theme = typeof DAY;
 const DPR = Math.min(3, window.devicePixelRatio || 1);
 const root = document.getElementById('c') as HTMLCanvasElement;
@@ -66,19 +69,16 @@ function inTile(
   theme: Theme,
   o: DrawOpts,
 ): void {
+  // like the journal: no clip at the art box (XL fins break it, the tile canvas bleeds 8 px);
+  // XXL is cropped by the kit itself
   tile(g, x, y, s, theme);
-  g.save();
-  g.beginPath();
-  g.roundRect(x, y, s, s, s * 0.2);
-  g.clip();
   const art = ART.get(sp.id);
-  if (art) drawSpecies(g, sp, art, x + s / 2, y + s / 2, s, 0, { fit: 'tile', night: theme === NIGHT, ...o });
+  if (art) drawSpecies(g, sp, art, x + s / 2, y + s / 2, s, 0, { fit: 'tile', night: theme.night, ...o });
   else
     drawLegacy(g, sp, x + s / 2, y + s / 2, s * 0.82, 0, {
       silhouette: o.silhouette ? theme.dim : undefined,
       golden: o.golden,
     });
-  g.restore();
 }
 function old(g: CanvasRenderingContext2D, sp: Species, x: number, y: number, s: number, theme: Theme): void {
   tile(g, x, y, s, theme);
@@ -94,7 +94,7 @@ function art(
   theme: Theme,
   o: Partial<Parameters<typeof renderCreature>[4]> = {},
 ): void {
-  renderCreature(g, a, x, y, { size: px, night: theme === NIGHT, ...o });
+  renderCreature(g, a, x, y, { size: px, night: theme.night, ...o });
 }
 
 const ready = () => ((window as unknown as { __ready: boolean }).__ready = true);
@@ -162,7 +162,7 @@ function compare(): void {
   const g = sheet(W, H, theme);
   label(
     g,
-    `BEFORE → AFTER (${list.length} of ${SPECIES.length} species redrawn) · ${theme === NIGHT ? 'Night' : 'Day'}`,
+    `BEFORE → AFTER (${list.length} of ${SPECIES.length} species redrawn) · ${theme.night ? 'Night' : 'Day'}`,
     12,
     24,
     theme,
@@ -272,23 +272,34 @@ function speciesSheet(ids: string[]): void {
       'left',
       400,
     );
-    g.fillStyle = issues.length ? '#C0392B' : '#2E8B57';
+    // errors (fail make check) in red, CRITIQUE-1 warnings (docs/art/LINT.md) in amber
+    const fit = (s: string) => {
+      let t = s;
+      while (g.measureText(t).width > W - 32 && t.length > 8) t = t.slice(0, -2);
+      return t === s ? s : `${t}…`;
+    };
     g.font = `700 12px ${FONT}`;
     g.textAlign = 'left';
+    const errs = issues.filter((i) => i.level === 'error');
+    const warns = issues.filter((i) => i.level === 'warn');
+    g.fillStyle = errs.length ? '#C0392B' : '#2E8B57';
     g.fillText(
-      issues.length ? `✗ ${issues.map((i) => `${i.rule}: ${i.msg}`).join(' · ')}` : '✓ style-guide checks pass',
+      fit(errs.length ? `✗ ${errs.map((i) => `${i.rule}: ${i.msg}`).join(' · ')}` : '✓ no style-guide errors'),
       16,
       y0 + 82,
     );
+    g.fillStyle = '#B9770E';
+    g.font = `600 11px ${FONT}`;
+    if (warns.length) g.fillText(fit(`⚠ ${warns.map((i) => `${i.rule}: ${i.msg}`).join(' · ')}`), 16, y0 + 97);
 
-    // hero: detail size Day / Night / golden / locked Day / locked Night / old
-    const H = 160,
+    // hero: detail size on sand and on the real journal tile (mint), Day/Night, golden, locked, before
+    const H = 132,
       gap = 12;
     let x = 16;
-    const y1 = y0 + 96;
+    const y1 = y0 + 108;
     const hero = (t: Theme, o: DrawOpts, cap: string) => {
-      if (t === NIGHT) {
-        g.fillStyle = NIGHT.bg;
+      if (t.bg !== DAY.bg) {
+        g.fillStyle = t.bg;
         g.fillRect(x - gap / 2, y1 - 6, H + gap, H + 26);
       }
       tile(g, x, y1, H, t, 0.12);
@@ -296,13 +307,15 @@ function speciesSheet(ids: string[]): void {
       g.beginPath();
       g.roundRect(x, y1, H, H, H * 0.12);
       g.clip();
-      drawSpecies(g, sp, a, x + H / 2, y1 + H / 2, H, 0, { fit: 'detail', night: t === NIGHT, ...o });
+      drawSpecies(g, sp, a, x + H / 2, y1 + H / 2, H, 0, { fit: 'detail', night: t.night, ...o });
       g.restore();
       label(g, cap, x + H / 2, y1 + H + 14, t, 11);
       x += H + gap;
     };
     hero(DAY, {}, 'detail · Day');
     hero(NIGHT, {}, 'detail · Night');
+    hero(MINT_DAY, {}, 'journal mint · Day');
+    hero(MINT_NIGHT, {}, 'journal mint · Night');
     hero(DAY, { golden: true, expression: 'proud' }, 'golden · proud');
     hero(DAY, { silhouette: 'x' }, 'locked · Day');
     hero(NIGHT, { silhouette: 'x' }, 'locked · Night');
@@ -312,14 +325,14 @@ function speciesSheet(ids: string[]): void {
 
     // expressions (Day) at 84, then (Night) at 54
     const y2 = y1 + H + 30;
-    const E = 84;
+    const E = 76;
     EXPRESSIONS.forEach((e, i) => {
       const ex = 16 + i * (E + 8);
       tile(g, ex, y2, E, DAY);
       art(g, a, ex + E / 2, y2 + E / 2, E * 0.62, DAY, { expression: e });
       label(g, e, ex + E / 2, y2 + E + 13, DAY, 10);
     });
-    const xr = 16 + 7 * (E + 8) + 8;
+    const xr = 16 + EXPRESSIONS.length * (E + 8) + 8;
     g.fillStyle = NIGHT.bg;
     g.fillRect(xr - 6, y2 - 6, W - xr, E + 24);
     EXPRESSIONS.forEach((e, i) => {
@@ -332,7 +345,7 @@ function speciesSheet(ids: string[]): void {
     const y3 = y2 + E + 26;
     label(
       g,
-      'journal tile 54 · new D / N · 24 32 48 64 px · 24 px silhouette · lineup with the redrawn cast',
+      'journal tile 54 · sand D / N · mint D / N · 24 32 48 64 px · 24 px silhouette · lineup with the redrawn cast',
       16,
       y3 + 10,
       DAY,
@@ -348,6 +361,14 @@ function speciesSheet(ids: string[]): void {
     g.fillRect(x3 - 3, y3b - 3, 60, 60);
     inTile(g, sp, x3, y3b, 54, NIGHT, {});
     x3 += 66;
+    // the real journal tile (mint), Day and Night
+    for (const t of [MINT_DAY, MINT_NIGHT]) {
+      g.fillStyle = t.bg;
+      g.fillRect(x3 - 3, y3b - 3, 60, 60);
+      inTile(g, sp, x3, y3b, 54, t, {});
+      x3 += 60;
+    }
+    x3 += 6;
     for (const px of [24, 32, 48, 64]) {
       tile(g, x3, y3b, Math.max(54, px + 14), DAY);
       art(g, a, x3 + Math.max(54, px + 14) / 2, y3b + Math.max(54, px + 14) / 2, px, DAY);
@@ -418,7 +439,7 @@ function speciesSheet(ids: string[]): void {
         by = y6 + 18,
         bw = 570,
         bh = 150;
-      g.fillStyle = theme === DAY ? '#E3D6C2' : '#15293A';
+      g.fillStyle = theme.night ? '#15293A' : '#E3D6C2';
       g.beginPath();
       g.roundRect(bx, by, bw, bh, 12);
       g.fill();
@@ -437,7 +458,7 @@ function speciesSheet(ids: string[]): void {
         drawSpecies(g, sp, a, x, y, cell * 0.5 * 1.6, facing ? ang - Math.PI : ang, {
           fit: 'leap',
           flip: facing,
-          night: theme === NIGHT,
+          night: theme.night,
           t,
           expression: 'happy',
           action: t < T1 ? { kind: 'catch', u: t / T1 } : undefined,
@@ -450,6 +471,52 @@ function speciesSheet(ids: string[]): void {
 await Promise.all(
   ['600 12px "Lagoon Display"', '900 12px "Lagoon Display"', '400 12px "Lagoon UI"'].map((f) => document.fonts.load(f)),
 );
+/**
+ * ?cast[&night]: the whole cast as the journal shows it (mint tiles, size-class fill, resting faces),
+ * by habitat. Hand this to every artist before their last round: cohesion is judged in the lineup.
+ */
+function cast(): void {
+  const theme = q.has('night') ? MINT_NIGHT : MINT_DAY;
+  const T = 54,
+    cellW = 84,
+    rowH = 96,
+    per = 10;
+  const rows = HABITATS.reduce((n, h) => n + Math.ceil(SPECIES.filter((s) => s.habitat === h.id).length / per), 0);
+  const g = sheet(per * cellW + 140, 50 + rows * rowH + HABITATS.length * 8, theme);
+  label(
+    g,
+    `The cast on the journal tile · ${theme.night ? 'Night' : 'Day'} (resting faces, size-class fill)`,
+    12,
+    28,
+    theme,
+    15,
+    'left',
+    900,
+    true,
+  );
+  let y = 50;
+  for (const h of HABITATS) {
+    const list = SPECIES.filter((s) => s.habitat === h.id);
+    label(g, h.name, 12, y + T / 2 + 4, theme, 13, 'left', 600, true);
+    list.forEach((sp, i) => {
+      const x = 140 + (i % per) * cellW,
+        yy = y + Math.floor(i / per) * rowH;
+      inTile(g, sp, x + (cellW - T) / 2, yy + 4, T, theme, {});
+      label(
+        g,
+        sp.name.length > 13 ? `${sp.name.slice(0, 12)}…` : sp.name,
+        x + cellW / 2,
+        yy + T + 24,
+        theme,
+        10,
+        'center',
+        600,
+      );
+    });
+    y += Math.ceil(list.length / per) * rowH + 8;
+  }
+}
+
 const mode = q.has('sheet')
   ? 'sheet'
   : q.has('film')
@@ -458,8 +525,11 @@ const mode = q.has('sheet')
       ? 'compare'
       : q.has('sil')
         ? 'sil'
-        : 'all';
-if (mode === 'sheet') speciesSheet((q.get('sheet') || [...ART.keys()].join(',')).split(',').filter(Boolean));
+        : q.has('cast')
+          ? 'cast'
+          : 'all';
+if (mode === 'cast') cast();
+else if (mode === 'sheet') speciesSheet((q.get('sheet') || [...ART.keys()].join(',')).split(',').filter(Boolean));
 else if (mode === 'film') film(q.get('film')!);
 else if (mode === 'compare') compare();
 else if (mode === 'sil') silhouettes();

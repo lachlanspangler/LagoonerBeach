@@ -3,6 +3,7 @@
  *   gallery-all.png        every species: old vs new, Day/Night, 24 px, silhouette, locked, expressions, golden
  *   compare-day/night.png  BEFORE/AFTER for every species with new art
  *   silhouettes.png        24 px fill-only masks by habitat
+ *   cast-day/night.png     the whole cast on the real journal tile (mint), as the journal shows it
  *   film-<id>-<mode>.png   with --film <id> [--frames N] [--mode idle|signature|catch|release]
  */
 import { chromium } from '@playwright/test';
@@ -34,6 +35,8 @@ if (film) {
   await shot('compare', 'artifacts/art/compare-day.png');
   await shot('compare&night', 'artifacts/art/compare-night.png');
   await shot('sil', 'artifacts/art/silhouettes.png');
+  await shot('cast', 'artifacts/art/cast-day.png');
+  await shot('cast&night', 'artifacts/art/cast-night.png');
   for (const id of ['clownfish', 'octopus', 'sanddollar', 'hermit', 'turtle'])
     for (const mode of ['idle', 'signature'])
       await shot(`film=${id}&frames=10&mode=${mode}`, `artifacts/art/film-${id}-${mode}.png`);
