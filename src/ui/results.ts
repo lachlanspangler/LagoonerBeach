@@ -27,13 +27,14 @@ export const COUNT_MS = 800;
 export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void } {
   const el = document.createElement('div');
   el.className = 'res-hero';
-  el.innerHTML = `<div class="big res-score" data-testid="final-score">${o.reducedMotion ? o.score : 0}</div>
+  // the visible digits count up; the real value is always in the DOM (screen readers, tests)
+  el.innerHTML = `<div class="big res-score"><span class="res-count" aria-hidden="true">${o.reducedMotion ? o.score : 0}</span><span class="sr-only" data-testid="final-score">${o.score}</span></div>
     <div class="sub res-sub">${
       o.newBest
         ? `<div class="res-ribbon" data-testid="new-high-score">${CROWN}NEW HIGH SCORE</div>${o.prevBest > 0 ? `<div class="res-was">was <s>${o.prevBest}</s></div>` : ''}`
         : o.nearMiss
     }</div>`;
-  const scoreEl = el.querySelector('.res-score') as HTMLElement;
+  const scoreEl = el.querySelector('.res-count') as HTMLElement;
   let landed = false;
   const land = () => {
     if (landed || !o.newBest) return;
