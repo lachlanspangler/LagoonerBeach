@@ -8,8 +8,8 @@ import { blob, capsule, defineArt, ellipse, join, tube, wiggleTrack, within } fr
 
 // body: snout at +36, tail root at −32, belly a little deeper than the back (plump, R5 ≈ 1.5 : 1)
 const body = blob([
-  [37, 3],
-  [33, -11],
+  [37, 2],
+  [32.5, -12.5],
   [21, -20],
   [4, -23],
   [-14, -20],
@@ -20,7 +20,7 @@ const body = blob([
   [-12, 21],
   [6, 23],
   [24, 18],
-  [34, 11],
+  [33.5, 12],
 ]);
 const dorsal = blob([
   [14, -18],
