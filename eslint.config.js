@@ -15,6 +15,11 @@ export default tseslint.config(
     },
   },
   {
+    // test/tooling scripts poke at window globals inside page.evaluate
+    files: ['scripts/**/*.ts', 'tests/e2e/**/*.ts', 'tests/perf/**/*.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' },
+  },
+  {
     // The core must stay pure and deterministic: no DOM, no wall clock, no Math.random.
     files: ['src/core/**/*.ts', 'src/sim/**/*.ts'],
     languageOptions: { globals: {} },

@@ -5,7 +5,7 @@ setup:            ## install deps + browsers
 	npm ci || npm install
 	npx playwright install chromium
 
-dev:              ## dev server on :5173
+dev:              ## dev server on :5317
 	npm run dev
 
 build:            ## typecheck + production build into dist/
