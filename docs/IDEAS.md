@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**83 ideas** — chosen: 1 · built: 16 · prototyped: 4 · shortlisted: 0 · backlog: 16 · merged: 4 · rejected: 42
+**85 ideas** — chosen: 1 · built: 17 · prototyped: 4 · shortlisted: 0 · backlog: 17 · merged: 4 · rejected: 42
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -25,6 +25,7 @@
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-080 | built | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
 | I-090 | built | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
+| I-091 | built | Best-crossing moment | The instant you pass your best, a callout and chime — mid-game, once. | Block Blast | 23 | ✗ | 7/1 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
@@ -32,6 +33,7 @@
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
 | I-078 | backlog | Reef of the day | One shared reef puzzle per day with its own streak. | Queens daily | 24 | ✗ | 6/2 | est |
 | I-089 | backlog | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
+| I-092 | backlog | Goal levels | Short levels with a target: capture a 6-cell lagoon within 15 moves. | Block Blast adventure | 24 | ✗ | 5/4 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
 | I-084 | backlog | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
@@ -234,6 +236,14 @@
 - **Reason:** Colors are cosmetic, but piece identity still benefits.
 - **Data:** Pebble deutan min ΔE 3.9 (lagoon vs orchid) → 11.3 after darkening orchid; Glyph ≥16 under all CVDs.
 
+### I-091 — Best-crossing moment (built)
+- **Pitch:** The instant you pass your best, a callout and chime — mid-game, once.
+- **Closest existing:** Block Blast
+- **What's new:** Rewards the chase at the moment it happens.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** Proven retention beat; cheap.
+
 ### I-005 — Overgrowth (growing tray) (prototyped)
 - **Pitch:** Every piece you skip grows one block.
 - **Closest existing:** Block Blast
@@ -293,6 +303,14 @@
 - **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
 - **Value/effort:** 5/2
 - **Reason:** Depends on real-player data showing people stay with pinches.
+
+### I-092 — Goal levels (backlog)
+- **Pitch:** Short levels with a target: capture a 6-cell lagoon within 15 moves.
+- **Closest existing:** Block Blast adventure
+- **What's new:** Finite goals using our rule.
+- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/4
+- **Reason:** Reef puzzles already cover finite play; revisit if retention data asks for it.
 
 ### I-015 — Square Pop (backlog)
 - **Pitch:** Any filled square, 3×3 or bigger, pops.

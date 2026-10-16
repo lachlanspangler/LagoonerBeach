@@ -59,6 +59,7 @@ let dailyDate = today();
 let state: GameState = startState();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
+let bestCelebrated = false;
 /** Biggest lagoon of the current game (for the daily share picture). */
 let bigLagoon: LagoonShape | null = null;
 
@@ -159,6 +160,7 @@ function syncScene(): void {
   overShown = false;
 
   if (state.moves === 0) {
+    bestCelebrated = false;
     bigLagoon = null;
     puzzleMoves = [];
   }
@@ -220,7 +222,27 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
   const r = applyMove(state, m);
   if (!r) return false;
   const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
+  const prevScore = state.score;
   state = r.state;
+  // the moment you pass your best, mid-game (once per game)
+  if (mode !== 'puzzle' && prevBest > 0 && prevScore <= prevBest && state.score > prevBest && !bestCelebrated) {
+    bestCelebrated = true;
+    later(650, () => {
+      const l = scene.layout;
+      scene.texts.push({
+        text: 'New best!',
+        x: l.w / 2,
+        y: l.board.y + l.board.h * 0.2,
+        start: performance.now(),
+        size: l.cell * 0.8,
+        life: 1100,
+        strong: true,
+      });
+      sfx.newBest();
+      haptics.fire('heavy');
+      dirty = true;
+    });
+  }
   persist();
   fx.dispatch(r.events, performance.now(), from);
   scene.dry = state.dry;
@@ -304,7 +326,7 @@ function finishGame(prevBest: number): void {
   later(DEBUG && params.has('fast') ? 0 : 1400, () => {
     if (overShown) return;
     overShown = true;
-    if (card.newBest) sfx.newBest();
+    if (card.newBest && !bestCelebrated) sfx.newBest();
     ui.showGameOver(card);
   });
 }
