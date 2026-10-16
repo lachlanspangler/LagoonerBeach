@@ -1,66 +1,96 @@
 # Status
 
-## Milestone summary (M4: wrap-up) — 2026-10-16 03:30 CDT
-- **Core idea:** *Close a loop of blocks and everything inside it pops.* (**Atoll**: in every other
-  block puzzle holes kill you; here holes are how you score.)
-- **Playable:** `make setup && make dev` → http://localhost:5317. Classic (endless, about 3 min
-  median sessions), Daily (shared seed, streak, share card), Reef puzzles (200 solver-verified,
-  graded reefs, 27 needing cascades, reef grid, solver hints, no-hint marks), 7 cosmetic skins incl.
-  high-contrast Glyph, Day/Night, drag or tap-to-place, teaching tray, points peek, tide dots,
-  best-crossing moment, fish, near-miss bar. PWA + iOS Simulator app.
-- **State of the tree:** everything is committed and green. 76 unit/property/balance tests (99%
-  line coverage on pure layers), 55 browser tests on Chromium + WebKit (gameplay, input incl. real
-  touch, visual baselines, layouts, perf, latency, soak, audio QA). Bundle is 26 KB gz.
-- **Next (from the last UX critique, not done yet):**
-  1. Calm the capture moment: round droplets, cap particle counts, fish only on Lagoon+, move the
-     callout to the dead space above the board.
-  2. Lagoon preview fill: gradient + soft sweep instead of stripes; outline the dragged piece's
-     cells that will pop too.
-  3. Stronger first-run cue (dashed pulsing outline, ghost demo) and say "Pop!" not "Clear reef"
-     on the teaching capture.
-  4. Layout: less dead space above the board, tray pieces about 0.68 scale.
-  5. "≈ ×2" → "Streak ×2" pill; Night pebble glow (promised in ADR 0003); daily icon (smiley →
-     sun/calendar); game-over card labels and a "% of best" label on the bar.
-  6. Regenerate store screenshots (`npx tsx scripts/store-shots.ts`): captions on top, a believable
-     best score.
+## Milestone summary (v1.0.0 candidate) — 2026-10-16 04:50 CDT
+**Lagooner Beach** — *Close a loop. Water fills it, the ring pops.* Every lagoon catches a beach
+creature for your Beach Journal.
+
+**Done (session 2):**
+- **Game:** Classic (endless; every dealt tray is guaranteed placeable, the late ramp is retuned
+  so it still ends), Daily (shared seed, streaks, spoiler-free share card), **360 Reef puzzles**
+  (solver-verified, graded Calm → Abyss, 3 hand-made openers, 56 needing cascades, Reef of the day,
+  hints, ★ for no-hint clears).
+- **Catch layer (ADR 0007):** 47 species tied to lagoon shapes and conditions, golden variants,
+  size records and a pity timer. Per-species odds are generated from simulated play (median 43/47
+  by day 35). Creatures leap out and swim into ≡, so the board stays clean. Every lagoon has an
+  everyday species, so rare ones are never handed out by default.
+- **Feel and juice:**
+  - Capture moments: a tiered capture with one feedback channel, cascades, the jackpot sweep, and
+    streak milestones.
+  - Drag and placement: the magnet lean on drag, night glow with plankton, and tap-to-place.
+  - Sound: generative synthesized music with its own toggle, plus synthesized SFX and haptics.
+- **Retention without clutter:** journal with hints, daily streak with a once-per-launch
+  welcome-back chip, Reef of the day, skins unlocked by play, "New best" peak, near-miss bar.
+- **Accessibility:**
+  - Visual: Glyph style (a shape on every colour), CVD and WCAG contrast tests, Larger text,
+    reduced motion.
+  - Interaction: every control ≥ 44 px and named (automated sweep), keyboard focus handling.
+  - Details in `docs/store/ACCESSIBILITY.md`.
+- **Store-ready:**
+  - Listing copy for both stores (`docs/store/LISTING.md`).
+  - Six composed screenshots and the Play feature graphic and icon (`npx tsx scripts/store-shots.ts`, `native-assets.ts` → `artifacts/store/`).
+  - Every iOS and Android icon and splash.
+  - Privacy policy (`public/privacy.html`; no data collected).
+  - Monetization ADR 0008: free, no ads in v1, optional one-time "supporter" unlock later.
+- **Builds:**
+  - iOS Simulator build (`make ios-sim`).
+  - Android debug APK on a headless emulator (`make android-emu`).
+  - Signed release AAB/APK verified with a throwaway key (`make android-release`).
+- **Reviews this session:** three fresh-agent UX reviews (all must-fixes done) and one bug review
+  (10 of 12 fixed; see the diary).
+- **Tree:** all committed and green. `make check`: 121 unit/property/balance/a11y tests. `make e2e`:
+  66 browser tests on Chromium and WebKit. Initial JS is 41.6 KB gz (budget 64 KB).
+
+**Placeholders (deliberate, need your input):**
+- `com.example.atoll` app id.
+- The contact email and URL in the privacy policy.
+- No signing keystore is checked in (`android/keystore.properties` is gitignored).
 
 ## What I need from you
-1. **Name check:** is "Atoll" free on the App Store / Google Play / trademarks? (I couldn't verify.)
-2. **Bundle id + accounts:** replace the placeholder `com.example.atoll` in `capacitor.config.ts`;
-   Apple/Google developer accounts and signing for store builds.
-3. **A real phone session:** play 10 minutes on a mid-range phone and tell me how drag latency,
-   haptics and sounds feel. All my verification is headless browsers + the iOS Simulator.
-4. **Android:** this machine has no Android SDK, so the Android project is generated but never
-   built. Either install Android Studio or OK me installing the command-line SDK (~2 GB).
-5. **Remote:** push when you're ready (`git remote add origin …`). I never pushed.
+1. **Name check:** is "Lagooner Beach" free on the App Store, Google Play and trademarks? I can't verify this.
+2. **Bundle id:** replace `com.example.atoll` in `capacitor.config.ts`. Changing it after a
+   store release is painful.
+3. **Accounts and signing:**
+   - Apple Developer: team id and signing in Xcode.
+   - Play Console.
+   - An upload keystore. Create `android/keystore.properties`; the format is in `android/app/build.gradle`.
+4. **Privacy URL and contact email:** host `public/privacy.html` (any static host or GitHub Pages)
+   and fill in the email. Both stores require it.
+5. **A real phone session:** 10 minutes on a mid-range phone covering drag latency, haptics,
+   music level and text size. All my verification ran in headless browsers, the iOS Simulator and
+   the Android emulator.
+6. **CI:** push, then check the GitHub Actions run. The e2e job had failed only on GitHub; I hardened
+   it (retries, 2 workers, ×3 perf budgets, GitHub annotations) but couldn't see the logs (they need
+   repo admin). If it still fails, paste the annotation text.
+7. **Monetization:** confirm ADR 0008 (no ads; a later one-time supporter unlock) or tell me otherwise.
+
+## What I'd do next
+- Re-tune `DEFAULT_RAMP` and catch odds from real play data instead of the bot model. The tools
+  exist: `make tune` and `scripts/catch-sim.ts`.
+- A cell-cursor mode so screen readers can play (the only accessibility gap left).
+- Localization. Strings are short and centralized in `src/ui/overlay.ts`.
+- Known low-impact gaps:
+  - A second open tab can re-save after Erase all progress.
+  - Replaying a reef re-records its catches (counts only).
 
 ## What works
 | Area | State | Evidence |
 |---|---|---|
 | Rules (pockets, 8-ring, cascades, scoring, streaks) | ✅ | unit + property tests |
-| Dealer (ramp, fairness, teaching tray) | ✅ tuned | random 20 · human-like 50 · greedy 56 · search 86 median moves |
-| Determinism (seeded, replay, golden game) | ✅ | `game.test.ts` |
-| Save/load (validated) | ✅ | round-trip property + corruption tests, e2e reload |
-| Reef puzzles | ✅ | every shipped reef re-verified by solver in `puzzles.test.ts`; e2e clears one with drags |
-| Rendering (Canvas2D, sprites, particles, themes, skins) | ✅ | e2e screenshots, 5 sizes × 2 themes; skins grid |
-| Input (drag: lift, grab offset, magnet snap, hysteresis, cancel; tap-to-place) | ✅ | e2e on Chromium + WebKit |
-| Audio (synth) | ✅ | offline loudness QA (`tests/e2e/audio.spec.ts`) |
-| Haptics | ✅ web (Android) / ✅ native bridge (iOS via Capacitor) | not verified on a device |
-| Daily + streak + share | ✅ | unit + e2e |
-| PWA (manifest, icons, offline SW) | ✅ | — |
-| iOS shell | ✅ builds & launches in Simulator | `make ios-sim` |
-| Android shell | ⚠️ generated, not built | needs Android SDK |
-| Perf | ✅ | draw p95 ≈ 1 ms, pick latency ≤ 1 frame, 400-move soak flat heap (4× throttle) |
-
-## Test inventory
-`make check`: 76 unit/property/balance/a11y tests, coverage thresholds via `npm run coverage`.
-`make e2e`: 55 browser tests (Chromium + WebKit). `make ios-sim`: Simulator build + screenshot.
-
-## Known risks
-- Perf test measures our draw call only (not GPU compositing); real-device profiling still needed.
-- Human sessions estimated with a bot model; real playtests should re-tune `DEFAULT_RAMP`.
+| Dealer (ramp, every tray placeable) | ✅ tuned | independent brute-force check; human-like bot median ~50 moves |
+| Determinism / saves / replay | ✅ | golden game, round-trip + corruption tests, e2e reload |
+| Reef puzzles (360) | ✅ | every reef re-verified by the solver in `puzzles.test.ts` |
+| Catch layer + journal | ✅ | coverage, determinism, rarity and sanitize tests; e2e journal; `catch-sim` |
+| Rendering / skins / themes | ✅ | pixel baselines (reduced motion), 5 sizes × 2 themes |
+| Input (drag + tap-to-place) | ✅ | e2e on Chromium + WebKit, CDP touch |
+| Audio (SFX + music) | ✅ | offline loudness QA: music under SFX |
+| Accessibility | ✅ (except screen-reader play) | a11y sweep, contrast and CVD tests |
+| PWA | ✅ | manifest, offline SW |
+| iOS | ✅ Simulator | `make ios-sim` |
+| Android | ✅ emulator, signed AAB | `make android-emu`, `make android-release` |
+| Perf | ✅ | draw p95 ≈ 1 ms, pick/drop latency ≤ 1 frame, soak flat heap |
 
 ## Previous milestones
+- **M4 (2026-10-16 03:30):** session-1 wrap-up (200 reefs, 7 skins, native shells).
 - **M3 (2026-10-16 01:55):** native shells, WebKit e2e, audio QA, tap-to-place, review fixes.
 - **M2 (2026-10-16 01:00):** Reef puzzles, skins, daily share, seal tick, misfit fading, fish.
 - **M1 (2026-10-16 00:05):** playable classic + daily, renderer, input, audio, saves, e2e + perf.
