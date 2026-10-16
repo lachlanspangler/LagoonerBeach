@@ -1,0 +1,75 @@
+/**
+ * Kit-level rules from the art director's CRITIQUE-1 (docs/art/CRITIQUE-1.md): resting faces, the
+ * new sleepy, Night blush, the eye floor, tilt, frame-break and the contrast-waiver split.
+ */
+import { describe, expect, it } from 'vitest';
+import { SPECIES_BY_ID } from '../../src/meta/creatures.ts';
+import { ART } from '../../src/render/art/species/index.ts';
+import { metrics, validateArt } from '../../src/render/art/validate.ts';
+import { restingFace } from '../../src/render/art/creature-art.ts';
+import { blushStyle, mouthFor, NIGHT_BLUSH } from '../../src/render/art/face.ts';
+import { restTilt } from '../../src/render/art/silhouette.ts';
+import { eyeFloorUnits, TILE_FILL, xform } from '../../src/render/art/kit.ts';
+import { pose } from '../../src/render/art/motion.ts';
+
+const fish = ART.get('clownfish')!;
+const sp = (id: string) => SPECIES_BY_ID.get(id)!;
+
+describe('CRITIQUE-1 kit rules', () => {
+  it('resting face: sleepy off-theme, the rest expression when awake, neverSleepy always awake', () => {
+    expect(restingFace(fish, sp('clownfish'), true)).toBe('sleepy');
+    expect(restingFace(fish, sp('clownfish'), false)).toBe('idle');
+    expect(restingFace({ ...fish, restExpression: 'drowsy' }, sp('clownfish'), false)).toBe('drowsy');
+    expect(restingFace({ ...fish, neverSleepy: true }, sp('clownfish'), true)).toBe('idle');
+    expect(restingFace(ART.get('kraken')!, sp('kraken'), false)).not.toBe('sleepy');
+    expect(restingFace(ART.get('kraken')!, sp('kraken'), true)).not.toBe('sleepy');
+  });
+  it('sleepy is contented: blush capped at 0.25 and a soft mouth; the flat line is drowsy only', () => {
+    const [, a] = blushStyle(fish.face, 'sleepy', { night: false, bodyL: 0.7 });
+    expect(a).toBeLessThanOrEqual(0.25);
+    expect(a).toBeGreaterThan(0);
+    expect(mouthFor('sleepy', 'smile')).toBe('smile');
+    expect(mouthFor('sleepy', 'flat')).toBe('smile');
+    expect(mouthFor('drowsy', 'smile')).toBe('flat');
+  });
+  it('Night blush is brighter on darker bodies; a per-species override wins', () => {
+    expect(blushStyle(fish.face, 'happy', { night: true, bodyL: 0.5 })[0]).toBe(NIGHT_BLUSH.color);
+    expect(blushStyle(fish.face, 'happy', { night: true, bodyL: 0.8 })[0]).not.toBe(NIGHT_BLUSH.color);
+    const sun = { ...fish.face, blush: { color: '#FFB3A0', alpha: 0.5, always: true } };
+    expect(blushStyle(sun, 'idle', { night: false, bodyL: 0.8 })).toEqual(['#FFB3A0', 0.5]);
+  });
+  it('eye floor: ≥ 4 CSS px in a 54 px tile and ≥ 9 % of the body-box height', () => {
+    const u = eyeFloorUnits('S', 84, 60);
+    expect(u * ((TILE_FILL.S * 54) / 84)).toBeCloseTo(4, 5);
+    expect(eyeFloorUnits('XL', 84, 84)).toBeGreaterThanOrEqual(0.09 * 84);
+  });
+  it('tilt: a level fish measures < 10°, the same fish rotated 30° is flagged', () => {
+    expect(restTilt(fish)).toBeLessThan(10);
+    const rot = {
+      ...fish,
+      groups: fish.groups.map((g) => ({
+        ...g,
+        parts: g.parts.map((p) => ({ ...p, d: xform(p.d, { sx: 1.8, rot: 30 }) })),
+      })),
+    };
+    expect(restTilt(rot)).toBeGreaterThan(22);
+    expect(validateArt(rot).some((i) => i.rule === 'R5T' && i.level === 'warn')).toBe(true);
+  });
+  it('frame-break is measured past the 54 px art box and flagged for XL outside 2–4 px', () => {
+    const xl = { ...fish, size: 'XL' as const };
+    const m = metrics(xl);
+    expect(validateArt(xl).some((i) => i.rule === 'R28')).toBe(m.overhang < 1.75 || m.overhang > 4.25);
+  });
+  it('a dark-identity deviation (R16) allows L ≥ 0.45 but never waives L < 0.45 or contrast (R16K)', () => {
+    const tooDark = { ...fish, palette: { body: '#3B3240' }, deviations: { R16: 'dark identity' } };
+    expect(validateArt(tooDark).some((i) => i.rule === 'R16L' && i.level === 'error')).toBe(true);
+    const lifted = { ...fish, palette: { body: '#6A5A7A' }, deviations: { R16: 'dark identity' } };
+    expect(validateArt(lifted).some((i) => i.rule === 'R16L')).toBe(false);
+  });
+  it('colour cycles step only while the signature plays when `during: signature`', () => {
+    const art = { ...fish, cycle: { rate: 6, during: 'signature' as const } };
+    expect(pose(art, { t: 0.5, noSignature: true }).cycle).toBe(0);
+    expect(pose(art, { t: 0.001, signatureAt: 0.5 }).cycle).toBeGreaterThan(0);
+    expect(pose({ ...fish, cycle: { rate: 4 } }, { t: 2 }).cycle).toBe(8);
+  });
+});

@@ -90,6 +90,7 @@ export default defineArt({
   personality: ['adorable', 'menacing-ish', 'babyish'],
   palette: { body: '#714B99', accent: '#F2C14E', belly: '#F2A5CF' },
   nocturnal: true,
+  neverSleepy: true, // CRITIQUE-1: the kraken is never sleepy (its brief), on either theme
   groups: [
     {
       id: 'armsL',

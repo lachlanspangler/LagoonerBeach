@@ -89,6 +89,7 @@ const saddles = join(
 export default defineArt({
   id: 'grouper',
   klass: 'fish',
+  restExpression: 'drowsy', // CRITIQUE-1: the half-lid is its personality, its awake resting face
   size: 'L',
   feature: 'a front-heavy wedge: massive head, big downturned lips, rounded fan tail',
   personality: ['unbothered', 'enormous', 'grumpy-sweet'],

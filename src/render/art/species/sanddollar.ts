@@ -27,7 +27,7 @@ export default defineArt({
       parts: [
         { d: disc, role: 'body' },
         { d: flower, role: 'accent', kind: 'pattern' },
-        { d: circle(0, -13, 2.2), role: 'accent', kind: 'pattern' },
+        { d: circle(0, -13, 3), role: 'accent', kind: 'pattern' },
         // a soft inner rim, like the edge of a coin
         { d: ellipse(0, 0, 34, 28), role: 'ink', kind: 'line', w: 1.4, alpha: 0.28 },
       ],
@@ -35,6 +35,10 @@ export default defineArt({
   ],
   shine: ellipse(-18, -18, 10, 4.6, -32),
   shade: ellipse(0, 33, 38, 8),
+  deviations: {
+    R16S: 'a bleached coin is the identity (graded A in CRITIQUE-1); the ink outline carries it on Day',
+    R16M: 'pale on the mint tile by nature; outline + flower keep it readable (checked on the mint sheet)',
+  },
   face: {
     eyes: [
       [-12, 7],

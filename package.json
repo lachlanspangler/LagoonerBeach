@@ -40,7 +40,8 @@
     "ideas:check": "tsx scripts/render-ideas.ts && git diff --exit-code docs/IDEAS.md",
     "puzzles": "tsx scripts/gen-puzzles.ts --count 360",
     "coverage": "vitest run --coverage",
-    "size": "tsx scripts/size-check.ts"
+    "size": "tsx scripts/size-check.ts",
+    "art:lint": "ART_LINT_WRITE=1 vitest run tests/unit/art-lint.test.ts && prettier --write docs/art/LINT.md"
   },
   "dependencies": {
     "@capacitor/android": "7.6.9",

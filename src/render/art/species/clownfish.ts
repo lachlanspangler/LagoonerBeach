@@ -107,7 +107,7 @@ export default defineArt({
         { d: headBar, role: 'white', kind: 'pattern' },
         { d: midBar, role: 'white', kind: 'pattern' },
         { d: tailBar, role: 'white', kind: 'pattern' },
-        { d: join(headBar, midBar, tailBar), role: 'ink', kind: 'line', w: 1.8 },
+        { d: join(headBar, midBar, tailBar), role: 'ink', kind: 'line', w: 3 },
       ],
     },
     { id: 'finA', pivot: [-3, 8], parts: [{ d: pectoral, role: 'body' }] },

@@ -21,6 +21,14 @@ one should feel like opening a present.
    | small creature with a shell/home (snail, nautilus, clam, cockle, limpet) | `species/hermit.ts` |
    | star, urchin, dollar-like objects | `species/sanddollar.ts` |
    | turtle, ray, anything with a separate head | `species/turtle.ts` |
+4. **Redo rounds:** read **`docs/art/CRITIQUE-1.md`**: the systemic section and your species' entry
+   (its numbers are the brief: colours, units, ratios). The A-grade exemplars are the bar: **octopus,
+   clownfish, puffer, whaleshark, turtle** (runners-up sanddollar, starfish, moonjelly, seasparkle).
+   Then find your species in **`docs/art/LINT.md`**: every warning there is something the art director
+   saw. Fix it, or add a one-line deviation the critique itself would accept.
+5. Render the **whole cast** before you start and again before your last round:
+   `npx tsx scripts/gallery.ts` → `artifacts/art/cast-{day,night}.png` (every species as the journal
+   shows it, on the real mint tile). Cohesion is judged in the lineup, not in your sheet.
 
 ## 1. Setup (worktree)
 ```
@@ -100,21 +108,42 @@ export default defineArt({
   performance. Signature dur must be 0.6–1.5 s.
 - **Deviations**: `deviations: { R7: 'one-line reason' }` waives that rule's checks for your species.
   Use it only when the guide's own words allow it (the turtle's eye on a separate head is the example).
+  `R16` waives lightness/chroma/accent (dark identities may go to L 0.45 with a note), but never the
+  contrast checks (`R16K`).
+- **Options added after CRITIQUE-1** (ADR 0011, Amendment 1):
+  | option | where | what it's for |
+  |---|---|---|
+  | `face.eye` (now optional) | Face | default 22 % of the zone for profile fish, 18 % otherwise; the kit never draws below the absolute floor (4 px in the tile) |
+  | `face.pupil: 'w'` | Face | cuttlefish W pupil |
+  | `face.profile: true` | Face | two eyes in profile (hammerhead tips) |
+  | `face.blush: { color, alpha, always }` | Face | e.g. the sunfish's always-on sun-blush |
+  | `restExpression: 'drowsy'` | species | awake resting face (the grouper's half-lid personality); `sleepy` is the theme's job |
+  | `neverSleepy: true` | species | never `sleepy` on either theme (kraken) |
+  | `outline: false` | Part | glow halos / soft light: no outline, not in the silhouette or body box |
+  | `cycle: [...]`, `cycleOffset` + `cycle: { rate, during }` | Part + species | animated colour (comb-jelly rib ripple, cuttle bands); static tiles show step 0 |
+  | `scaleSteps: [1.2, 1.4]` | Group | inflate/grow without thickening the outline (puffer) |
+  | `seamless: true` | Group | segmented eels/tentacles: one outline pass behind all fills, no seams |
+  | `followRoot: true` | prop Group | a prop that moves with the creature (a bubble it carries) |
+  | `leap: { point: false, hide: ['mound'] }` | species | lean instead of point in the leap; drop groups in the leap (garden eel's mound) |
+  | `crop: 'center'` | species (XXL) | crop both ends evenly instead of keeping the head |
 
 ## 3. The loop (repeat ≥ 3 rounds; the pilots took 3–4)
 1. **Silhouette first (R11).** Block the fill parts only. Aim for the appendix's 24 px feature, one
    dominant primitive (R4), and the R5 proportions (plump, big face zone, stubby limbs as filled
    capsules ≥ 5 units, never strokes).
 2. **Render the sheet**: `npx tsx scripts/art-sheet.ts <id>` → `artifacts/art/sheet-<id>.png`. Read
-   the PNG. The sheet shows the checks at the top (red = fix), the detail view Day/Night/golden/locked,
-   the old art, all 7 expressions, the journal tile and 24–64 px, the silhouette, a lineup with every
+   the PNG. The sheet shows the checks at the top (red = errors, amber = CRITIQUE-1 warnings), the
+   detail view Day/Night, **on the real journal tile (mint)**, golden, locked, the old art, all 8
+   expressions, the journal tile on sand and mint and 24–64 px, the silhouette, a lineup with every
    redrawn species, ambient and signature frames, the catch/release hooks, and the leap exactly as the
    game draws it.
 3. **Face, palette, pattern, shine.** Then motion: ambient first (always on), then the signature from
    the appendix, then a catch hook if the default wiggle doesn't suit it.
 4. **Test**: `npx vitest run tests/unit/art.test.ts` (style-guide checks for every species, plus the R12
    silhouette IoU matrix: < 0.80 for every pair, < 0.70 within a body class). It prints the closest
-   pairs. If your species collides, change **your** silhouette, never someone else's.
+   pairs. If your species collides, change **your** silhouette, never someone else's. Then
+   `npm run art:lint` regenerates `docs/art/LINT.md`: your row should read ✓ (warnings become errors
+   after the redo). Don't commit LINT.md from a fleet branch (it's shared; the lead regenerates it).
 5. **See it in the game**: `npx tsx scripts/art-journal.ts <id>` → `artifacts/art/journal-{day,night}.png`
    and `species-{day,night}.png`. `npx tsx scripts/gallery.ts` → `compare-*.png` and `silhouettes.png`.
 6. **Self-critique in writing** (in your report, one paragraph per round): answer the questions in §5
@@ -127,12 +156,23 @@ export default defineArt({
 - [ ] R3: no sharp corners anywhere (spines and teeth have rounded tips).
 - [ ] R6–R9: eyes are the rig's (never draw your own eyes), low-set, 14–24 % of the face zone (XS: 24 %),
       mouth tiny, blush where the personality says "sweet" (`blushInk` on pink/red bodies).
+- [ ] **R7F eye floor**: the authored eye is at least the floor (≥ 4 CSS px in the 54 px tile, ≥ 9 % of
+      the body-box height; LINT.md prints yours). Profile fish: 22 % of the zone. Small heads may exceed
+      24 % to reach it.
+- [ ] **R5T level**: fish, sharks, eels and seahorses rest level/upright (≤ 10°). Tilt only in a signature.
+- [ ] **R28 size**: the new fill table (XS 0.50 … XL 0.95) is applied by the kit. XL must break the art
+      box by 2–4 px with fins/tips; XXL is cropped head-first.
+- [ ] **R18E / R18W**: no eye-coloured (ink/near-black) pattern within 1.5 eye-widths of the eye;
+      pattern strokes ≥ 4 units, dots ≥ 6 units; detail lines ≥ 3 units (R2L).
+- [ ] **R16S / R16M**: body chroma ≥ 0.08 (browns stop sinking into sand); the body reads on the **mint**
+      journal tile, Day and Night (it's on your sheet).
 - [ ] R12: `tests/unit/art.test.ts` passes. You can name your species from its silhouette sheet alone.
 - [ ] R16: ≤ 3 authored colours, accent differs by ΔL ≥ 0.15 or Δhue ≥ 60°, contrast checks pass on
       both themes (the validator prints the numbers).
 - [ ] R18: patterns are placed by hand (never hashed); 3–9 spots of ≥ 6 units; ribs as 3–5 ridges.
 - [ ] R19–R21: every expression reads on the sheet (happy `^ ^`, surprised whites, proud smug, sleepy
-      lids, shy eyes down) and none changes the silhouette.
+      closed ‿ with a soft smile, shy eyes down, drowsy half-lid) and none changes the silhouette. Half
+      the journal shows `sleepy` on the off theme: check your Night tile looks contented, not grumpy.
 - [ ] R22–R24: an ambient idle that is alive but calm, plus a signature that is *funny or sweet*, not
       just "moves". Big species drift, small ones fidget (the kit scales tempo, so author at size M).
 - [ ] Night: reads on the navy tile (rim visible); night-habitat species set `light` parts for glow.
@@ -166,3 +206,23 @@ Look at the sheet at 100 % and at the 54 px tile, then answer:
   on the full body box including the tail).
 - The validator is a floor, not the bar. Passing it is round zero; each pilot still needed 2–3 rounds
   of looking (lumpy rims, a fin crossing a bar, front arms that read as clasped hands, a claw over the face).
+
+## 7. What the first fleet learned (CRITIQUE-1 and the fleet reports)
+- **An outlined pectoral fin right under a low-set eye reads as a second mouth.** Put the pectoral
+  behind the gill line, tip it back, or drop its outline weight; check the 54 px tile, not the detail view.
+- **Get the full cast before your last round** (`cast-{day,night}.png`). Several C grades were fine
+  alone and wrong in the lineup: the same template as a neighbour (nautilus ≈ hermit, kraken ≈ octopus),
+  M/L/XL that look the same size, a "brown cluster" melting into sand and mint.
+- **Tilted bodies + fat head / thin tail = drumsticks and tadpoles** (blenny, lanternfish, sandeel,
+  butterfly). Rest level; get movement from the idle, not the pose.
+- **Long and profile bodies got 2–3 px faces.** Size the eye for the 54 px tile first (the floor), then
+  make the head big enough to carry it.
+- **Signature traits invisible at tile size are not traits** (flounder's stacked eyes, lanternfish
+  photophores, comb-jelly ribs, parrot beak): exaggerate 1.5–2× until they read at 54 px.
+- **Ink spots near the eye kill the face** (boxfish polka dots, flounder spots); hairline patterns read
+  as scribbles (barracuda chevrons, giant-clam "teeth"). Use the body's own darker tone, keep 1.5
+  eye-widths clear, 4+ unit strokes.
+- **Iconic shapes have neighbours outside the game too**: a spiked turtle shell read as a famous
+  video-game villain. Original everything (CLAUDE.md): rounded jewels, not spikes.
+- **Things that fly in the leap must make sense flying**: the garden eel's sand mound looked like a
+  plunger (`leap.hide`).

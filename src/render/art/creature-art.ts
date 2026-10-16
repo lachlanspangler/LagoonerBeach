@@ -37,10 +37,15 @@ export interface DrawOpts {
 
 const SWIMMERS: ReadonlySet<SpeciesArt['klass']> = new Set(['fish', 'shark', 'long', 'wing', 'horse']);
 
-/** R32: day species doze on Night, night species doze on Day. */
+/**
+ * R32: day species doze on Night, night species doze on Day; awake, a species shows its
+ * `restExpression` (default idle). `neverSleepy` species (the kraken) are always awake.
+ */
 export function restingFace(art: SpeciesArt, sp: Species, night: boolean): Expression {
   const nocturnal = art.nocturnal ?? sp.habitat === 'night';
-  return night !== nocturnal ? 'sleepy' : 'idle';
+  const rest = art.restExpression ?? 'idle';
+  if (art.neverSleepy) return rest;
+  return night !== nocturnal ? 'sleepy' : rest;
 }
 
 /** Long side of the body box in px for a `drawCreature` call. */
@@ -68,12 +73,39 @@ export function drawSpecies(
 ): void {
   const framed = o.fit === 'tile' || o.fit === 'detail' || o.fit === 'avatar';
   const long = spanFor(art, s, o.fit);
-  // XXL bleeds out of the tile: keep the head in frame, crop the tail (R27)
-  if (framed && long > s) x -= (long - s) / 2;
+  // XXL doesn't fit (R27): cropped by the art box; keep the head in frame unless `crop: 'center'`
+  const cropped = framed && long > s;
+  if (cropped) {
+    g.save();
+    g.beginPath();
+    g.roundRect(x - s / 2, y - s / 2, s, s, s * 0.16);
+    g.clip();
+    if (art.crop !== 'center') x -= (long - s) / 2;
+  }
   const night = !!o.night;
   const facing = o.flip ? -1 : 1;
   // swimmers point along their path; crabs, octopuses and coins only lean into it
-  if (o.fit === 'leap' && !SWIMMERS.has(art.klass)) angle *= 0.3;
+  const leap = o.fit === 'leap';
+  if (leap && !(art.leap?.point ?? SWIMMERS.has(art.klass))) angle *= 0.3;
+  const hide = leap ? art.leap?.hide : undefined;
+  drawArt(g, sp, art, x, y, long, angle, facing, framed, night, hide, o);
+  if (cropped) g.restore();
+}
+
+function drawArt(
+  g: CanvasRenderingContext2D,
+  sp: Species,
+  art: SpeciesArt,
+  x: number,
+  y: number,
+  long: number,
+  angle: number,
+  facing: 1 | -1,
+  framed: boolean,
+  night: boolean,
+  hide: readonly string[] | undefined,
+  o: DrawOpts,
+): void {
   if (o.silhouette) {
     renderCreature(g, art, x, y, {
       size: long,
@@ -95,5 +127,7 @@ export function drawSpecies(
     still: o.still,
     action: o.action,
     signatureAt: o.signatureAt,
+    hide,
+    zzz: o.fit === 'detail',
   });
 }

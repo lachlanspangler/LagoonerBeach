@@ -26,16 +26,19 @@ const stripes = join(
   'M-38 -24C-28 -40 -8 -40 2 -30L-2 -25C-10 -33 -26 -33 -33 -21Z',
   'M-39 2C-34 14 -16 18 -4 12L-6 7C-16 12 -30 9 -35 -1Z',
 );
+// CRITIQUE-1 (B): the claw hid the face → head a little taller, eyes up 4, claw down 6
 const crab = blob([
-  [-2, -6],
-  [12, -8],
-  [26, -4],
-  [32, 8],
-  [28, 20],
+  [-3, -10],
+  [12, -13],
+  [27, -8],
+  [33, 6],
+  [29, 20],
   [14, 24],
   [0, 22],
-  [-6, 10],
+  [-7, 8],
 ]);
+// the warmer face patch the critique asked for (#F2A27E), behind the eyes
+const facePatch = ellipse(15, 5, 15, 11);
 const legs = join(
   capsule(4, 20, 4.4, -2, 30, 3.4),
   capsule(14, 22, 4.4, 12, 32, 3.4),
@@ -43,15 +46,15 @@ const legs = join(
 );
 const smallClaw = ellipse(-1, 18, 6, 4.6, -20);
 const claw = blob([
-  [25, 13],
-  [34, 9],
-  [42, 14],
-  [43, 22],
-  [38, 23],
-  [40, 28],
-  [34, 33],
-  [24, 31],
-  [21, 23],
+  [25, 19],
+  [34, 15],
+  [42, 20],
+  [43, 28],
+  [38, 29],
+  [40, 34],
+  [34, 39],
+  [24, 37],
+  [21, 29],
 ]);
 
 export default defineArt({
@@ -60,7 +63,7 @@ export default defineArt({
   size: 'XS',
   feature: 'one oversized claw and a borrowed spiral shell',
   personality: ['brave', 'borrowed', 'cocky'],
-  palette: { body: '#E0784E', accent: '#F7D26E' },
+  palette: { body: '#E0784E', accent: '#F7D26E', belly: '#F2A27E' },
   groups: [
     {
       id: 'shell',
@@ -68,7 +71,7 @@ export default defineArt({
       parts: [
         { d: shell, role: 'accent' },
         { d: stripes, role: 'body', kind: 'pattern' },
-        { d: whorl, role: 'ink', kind: 'line', w: 2.4 },
+        { d: whorl, role: 'ink', kind: 'line', w: 3 },
       ],
     },
     {
@@ -78,21 +81,23 @@ export default defineArt({
         { d: legs, role: 'body' },
         { d: smallClaw, role: 'body' },
         { d: crab, role: 'body' },
+        { d: facePatch, role: 'belly', kind: 'pattern' },
         { d: ellipse(14, 22, 16, 6), role: 'belly', kind: 'pattern' },
       ],
     },
-    { id: 'claw', pivot: [24, 21], parts: [{ d: claw, role: 'body' }] },
+    { id: 'claw', pivot: [24, 27], parts: [{ d: claw, role: 'body' }] },
   ],
   shineOn: 'shell',
   shine: ellipse(-24, -28, 9, 4.5, -25),
   face: {
+    // eye at the absolute floor (XS: 4 px in the tile ⇒ 12 u), spaced 1.7 eye-widths
     eyes: [
-      [10, 6],
-      [22, 6],
+      [7, 2],
+      [24.5, 2],
     ],
-    eye: 7.2,
-    zone: [-2, -11, 34, 30],
-    mouth: { at: [16, 13], w: 5, shape: 'smile' },
+    eye: 12,
+    zone: [-3, -15, 36, 30],
+    mouth: { at: [16, 11], w: 5, shape: 'smile' },
     front: true,
   },
   idle: {
