@@ -1,6 +1,18 @@
 # Status
 
+## Milestone summary (M2: modes + progression) — 2026-10-16 01:00 CDT
+- **Core idea:** *Close a loop of blocks and everything inside it pops.* (**Atoll**)
+- **Playable:** Classic (endless, ramped), Daily (shared seed, streaks, emoji share), **Reef
+  puzzles** (120 solver-verified, graded Calm → Abyss), 7 unlockable cosmetic skins incl. a
+  high-contrast Glyph skin, Day/Night, teaching tray, seal tick, misfit fading, near-miss bar,
+  leaping fish, cascades.
+- **Placeholder:** native store wrappers (Capacitor not yet added), sound is synthesized first-pass,
+  no music, store name unverified.
+- **Next:** Capacitor scaffolding + native haptics bridge, puzzle hint button (solver-backed),
+  tap-to-place accessibility input, sound pass, more puzzle tiers/packs.
+
 ## Milestone summary (M1: playable core) — 2026-10-16 00:05 CDT
+
 - **Core idea:** *Close a loop of blocks and everything inside it pops.* (Working title **Atoll**.)
 - **Playable now:** full classic game in the browser (`make dev` → http://localhost:5317): drag
   pieces from a tray of 3 onto an 8×8 board; sealed pockets fill with water and the surrounding

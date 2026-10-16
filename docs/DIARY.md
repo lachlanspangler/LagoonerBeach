@@ -83,3 +83,30 @@ broke, what I decided and why.
 - **Broke:** menu toggle re-render left two dialogs during the fade (strict-mode locator caught it).
   Fixed by replacing an open dialog instantly.
 - Perf at 4× CPU throttle, 1083 frames of heavy play: draw p50 0.4 ms, p95 1.0, max 3.8 ms.
+
+## 2026-10-16 00:20 CDT — Feel loop 1
+- Built `scripts/filmstrip.ts` + `scripts/montage.py` to review an effect frame by frame.
+  Found: score ticked up ~100 ms *before* anything popped, and the score pop collided with the
+  callout. Fixed: points land with the burst; when there's a callout the points sit under it.
+- Added a pre-commit hook (`make check`) after a formatting slip got committed.
+
+## 2026-10-16 00:35 CDT — Skins, polish batch
+- 7 cosmetic skins incl. **Glyph** (Okabe–Ito colors + one shape per color), never gated.
+  Review grid caught: Lantern invisible on Night, Moonstone washed out, Glyph black-on-blue.
+- **Broke (silently):** a Python string-replace edit didn't apply because Prettier had reformatted
+  the file; the skin colors never changed and I chased "rendering" for 3 iterations. **Fix:**
+  `scripts/sub.py` — replace that fails loudly when the old text is missing. All edits use it now.
+- Built from the ledger: seal tick (I-069), fade pieces that fit nowhere (I-071), near-miss bar on
+  game over (I-066), daily share with an emoji lagoon picture (I-065), leaping fish (I-072).
+
+## 2026-10-16 00:55 CDT — Reef puzzles (ADR 0004)
+- Second mode: fixed reef + 2–3 pieces; place all so the board ends empty.
+- Generator: lagoons → rings → carve catalog pieces → rest is the starting reef. Solver: DFS over
+  order × placement, dead-state memo. 120 shipped puzzles in ~21 s.
+- First grading metric (safe first moves over *all* placements) called tiny puzzles "abyss" because
+  open-water placements dominate. Switched to *plausible* first moves (touching the reef) + solution
+  count + cascade bonus; tiers by rank.
+- My own unit test was wrong ("a single dot can't solve the cup") — the solver was right: the dot
+  seals the 1-cell lagoon and the 8-ring takes everything. Good sign the solver beats intuition.
+- Played the hardest reef by hand (on paper): the obvious lagoon is a trap; the solution joins two
+  clusters into two lagoons with one piece. That's the Meowdoku-style "aha" — keep.
