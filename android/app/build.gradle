@@ -16,8 +16,25 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing: put your upload key in android/keystore.properties (gitignored):
+    //   storeFile=/abs/path/upload.jks  storePassword=…  keyAlias=upload  keyPassword=…
+    // Without it, release builds are produced unsigned.
+    def ksFile = rootProject.file('keystore.properties')
+    signingConfigs {
+        if (ksFile.exists()) {
+            def ks = new Properties()
+            ks.load(new FileInputStream(ksFile))
+            release {
+                storeFile file(ks['storeFile'])
+                storePassword ks['storePassword']
+                keyAlias ks['keyAlias']
+                keyPassword ks['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (ksFile.exists()) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

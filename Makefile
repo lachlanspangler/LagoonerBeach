@@ -40,3 +40,8 @@ ios-sim: build     ## build web, sync, build+launch on an iPhone simulator, scre
 
 android-emu: build  ## build debug APK, run on a headless Android emulator, screenshot
 	./scripts/android-emu.sh
+
+android-release: build  ## signed release AAB + APK (needs android/keystore.properties; unsigned otherwise)
+	npx cap sync android
+	cd android && ./gradlew bundleRelease assembleRelease
+	@echo "AAB: android/app/build/outputs/bundle/release/app-release.aab"
