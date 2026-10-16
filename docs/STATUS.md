@@ -1,49 +1,49 @@
 # Status
 
-## Milestone summary (M2: modes + progression) — 2026-10-16 01:00 CDT
-- **Core idea:** *Close a loop of blocks and everything inside it pops.* (**Atoll**)
-- **Playable:** Classic (endless, ramped), Daily (shared seed, streaks, emoji share), **Reef
-  puzzles** (120 solver-verified, graded Calm → Abyss), 7 unlockable cosmetic skins incl. a
-  high-contrast Glyph skin, Day/Night, teaching tray, seal tick, misfit fading, near-miss bar,
-  leaping fish, cascades.
-- **Placeholder:** native store wrappers (Capacitor not yet added), sound is synthesized first-pass,
-  no music, store name unverified.
-- **Next:** Capacitor scaffolding + native haptics bridge, puzzle hint button (solver-backed),
-  tap-to-place accessibility input, sound pass, more puzzle tiers/packs.
-
-## Milestone summary (M1: playable core) — 2026-10-16 00:05 CDT
-
-- **Core idea:** *Close a loop of blocks and everything inside it pops.* (Working title **Atoll**.)
-- **Playable now:** full classic game in the browser (`make dev` → http://localhost:5317): drag
-  pieces from a tray of 3 onto an 8×8 board; sealed pockets fill with water and the surrounding
-  pebbles burst; cascades through thick walls; streak multiplier; game over + play again; daily
-  challenge (same seed for everyone per date) with streaks; menu with sound/haptics/theme/reduced
-  motion; Day/Night themes; first-run teaching tray with a pulsing hint; save on every move.
-- **Placeholder / missing:** app icon PNGs (only SVG), unlockable skins (designed, not built),
-  native wrappers (Capacitor not yet added), share card is text-only, sound design is first-pass.
-- **Next:** polish feel (place/capture timing, sound pass, invalid-drop feedback), unlockable
-  themes, Capacitor scaffolding, PNG icons, more ideation loops.
+## Milestone summary (M3: shippable-shaped) — 2026-10-16 01:55 CDT
+- **Core idea:** *Close a loop of blocks and everything inside it pops.* (**Atoll**: in every other
+  block puzzle holes kill you; here holes are how you score.)
+- **Playable:** Classic (endless, ramped to ~3 min median sessions), Daily (shared seed, streak,
+  share card), Reef puzzles (120 solver-verified and graded reefs, hints, no-hint marks), 7 cosmetic
+  skins incl. high-contrast Glyph, Day/Night, tap-to-place, teaching tray, cascades, fish, near-miss
+  bar, biggest-lagoon picture. Runs as a PWA and as an iOS Simulator app.
+- **Placeholder:** bundle id `com.example.atoll`, store name unverified, Android never built (no
+  SDK here), no music, sounds are synthesized first-pass (level-balanced, not "designed" by ear).
+- **Next:** points peek (I-076), real-device feel pass (needs a phone), store listing art, Android build.
 
 ## What works
 | Area | State | Evidence |
 |---|---|---|
-| Rules engine (pockets, 8-ring, cascades, scoring, streaks) | ✅ | 54 unit/property tests |
-| Dealer (ramp, fairness, teaching tray) | ✅ tuned | `make tune`: random 23 / greedy 74 / search ~200 median moves |
+| Rules (pockets, 8-ring, cascades, scoring, streaks) | ✅ | unit + property tests |
+| Dealer (ramp, fairness, teaching tray) | ✅ tuned | random 20 · human-like 50 · greedy 56 · search 86 median moves |
 | Determinism (seeded, replay, golden game) | ✅ | `game.test.ts` |
 | Save/load (validated) | ✅ | round-trip property + corruption tests, e2e reload |
-| Rendering (Canvas2D, sprites, particles, themes) | ✅ | e2e screenshots on 5 sizes × 2 themes |
-| Input (lift, grab offset, magnet snap, hysteresis, cancel) | ✅ | e2e real-drag play-throughs |
-| Audio (synth) / haptics (Vibration API) | ✅ first pass | manual; iOS haptics need Capacitor |
-| Daily + streak | ✅ | unit + e2e (same tray across contexts) |
-| PWA (manifest, offline SW) | ✅ basic | — |
-| Perf | ✅ | draw p95 1.0 ms at 4× CPU throttle (`artifacts/perf.json`) |
+| Reef puzzles | ✅ | every shipped reef re-verified by solver in `puzzles.test.ts`; e2e clears one with drags |
+| Rendering (Canvas2D, sprites, particles, themes, skins) | ✅ | e2e screenshots, 5 sizes × 2 themes; skins grid |
+| Input (drag: lift, grab offset, magnet snap, hysteresis, cancel; tap-to-place) | ✅ | e2e on Chromium + WebKit |
+| Audio (synth) | ✅ | offline loudness QA (`tests/e2e/audio.spec.ts`) |
+| Haptics | ✅ web (Android) / ✅ native bridge (iOS via Capacitor) | not verified on a device |
+| Daily + streak + share | ✅ | unit + e2e |
+| PWA (manifest, icons, offline SW) | ✅ | — |
+| iOS shell | ✅ builds & launches in Simulator | `make ios-sim` |
+| Android shell | ⚠️ generated, not built | needs Android SDK |
+| Perf | ✅ | draw p95 ≈ 1 ms at 4× CPU throttle (`artifacts/perf.json`) |
 
-## Known issues / risks
-- Store name "Atoll" not checked for trademark/App Store conflicts — **needs the user**.
-- Perf test measures our draw call; GPU raster/compositing isn't captured. Real-device profiling
-  still needed (needs a device — user).
-- Greedy-bot session ≈ 74 moves (~4–5 min); the rubric target is a ~3 min median. Real humans
-  probably sit below greedy; revisit with real play data.
+## Test inventory
+`make check`: 68 unit/property/balance tests (~5 s). `make e2e`: 32 browser tests (Chromium +
+WebKit gameplay, layouts, perf budget, audio QA) (~50 s).
 
-## How to verify quickly
-`make check && make e2e` — then look at `artifacts/shots/e2e-*.png`.
+## Needs the user
+- Choose the real app name / check "Atoll" for store & trademark conflicts.
+- Apple/Google developer accounts, bundle id, signing.
+- A real mid-range phone for a hands-on feel pass (latency, haptics, audio).
+- Push to a remote (I never push).
+
+## Known risks
+- Perf test measures our draw call only (not GPU compositing); real-device profiling still needed.
+- Human sessions estimated with a bot model; real playtests should re-tune `DEFAULT_RAMP`.
+
+## Previous milestones
+- **M2 (2026-10-16 01:00):** Reef puzzles, skins, daily share, seal tick, misfit fading, fish.
+- **M1 (2026-10-16 00:05):** playable classic + daily, renderer, input, audio, saves, e2e + perf.
+- **M0 (2026-10-15 23:31):** research, 60 ideas, bot prototypes, ADR 0001 picks Hollow → Atoll.
