@@ -29,6 +29,15 @@ import { Ui } from '../ui/overlay.ts';
 import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
 import { lookFor } from '../render/skins.ts';
 import { shareText, type LagoonShape } from '../meta/share.ts';
+import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
+
+type Mode = 'classic' | 'daily' | 'puzzle';
+let PACK: (PuzzleDef & { tier?: string })[] | null = null;
+async function loadPack(): Promise<NonNullable<typeof PACK>> {
+  PACK ??= (await import('../content/puzzles.json')).default as NonNullable<typeof PACK>;
+  return PACK;
+}
+const TIER_LABEL: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
 
 const params = new URLSearchParams(location.search);
 const DEBUG = params.has('debug') || navigator.webdriver === true;
@@ -53,7 +62,7 @@ function freshSeed(): number {
   return a[0]!;
 }
 
-let mode: 'classic' | 'daily' = params.get('mode') === 'daily' ? 'daily' : 'classic';
+let mode: Mode = params.get('mode') === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
 let state: GameState = startState();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
@@ -62,6 +71,10 @@ let overShown = false;
 let bigLagoon: LagoonShape | null = null;
 
 function startState(): GameState {
+  if (mode === 'puzzle' && PACK) {
+    const i = Math.min(profile.puzzle.index, PACK.length - 1);
+    return newPuzzleGame(PACK[i]!, i);
+  }
   if (mode === 'daily') return loadDaily(dailyDate) ?? newGame(dailySeed(dailyDate), { mode: 'daily' });
   if (params.has('seed')) return newGame(freshSeed(), { teach: !profile.firstRunDone });
   return loadGame() ?? newGame(freshSeed(), { teach: !profile.firstRunDone });
@@ -141,6 +154,17 @@ function syncScene(): void {
   if (state.moves === 0) bigLagoon = null;
   updateHint();
   updateMisfits();
+  scene.hudLabel = null;
+  if (mode === 'puzzle' && PACK) {
+    const i = state.seed;
+    const p = PACK[i]!;
+    const solved = profile.puzzle.solved.includes(p.id);
+    scene.hudLabel = {
+      top: `REEF ${i + 1} OF ${PACK.length}`,
+      big: TIER_LABEL[p.tier ?? ''] ?? 'Reef',
+      sub: solved ? '✓ cleared' : 'clear every pebble',
+    };
+  }
   ui.setMode(mode, visibleStreak(profile.daily, dayIndex(today())));
   dirty = true;
 }
@@ -200,7 +224,8 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
       );
     }
   }
-  if (state.over) finishGame(prevBest);
+  if (mode === 'puzzle') checkPuzzle();
+  else if (state.over) finishGame(prevBest);
   saveProfile(profile);
   updateHint();
   updateMisfits();
@@ -209,6 +234,7 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
 }
 
 function persist(): void {
+  if (mode === 'puzzle') return; // puzzles are short; progress is the solved list
   if (mode === 'daily') saveDaily(dailyDate, state);
   else saveGame(state);
 }
@@ -261,8 +287,42 @@ function finishGame(prevBest: number): void {
   setTimeout(show, DEBUG && params.has('fast') ? 0 : 1400);
 }
 
+function checkPuzzle(): void {
+  const st = puzzleStatus(state);
+  if (st === 'playing' || !PACK) return;
+  const i = state.seed;
+  const p = PACK[i]!;
+  if (st === 'solved') {
+    const first = !profile.puzzle.solved.includes(p.id);
+    if (first) profile.puzzle.solved.push(p.id);
+    profile.puzzle.index = Math.min(PACK.length - 1, i + 1);
+    saveProfile(profile);
+    setTimeout(
+      () => ui.showPuzzleResult({ solved: true, index: i, total: PACK!.length, cleared: profile.puzzle.solved.length }),
+      1300,
+    );
+  } else {
+    setTimeout(
+      () =>
+        ui.showPuzzleResult({ solved: false, index: i, total: PACK!.length, cleared: profile.puzzle.solved.length }),
+      700,
+    );
+  }
+}
+
+function loadPuzzle(i: number): void {
+  if (!PACK) return;
+  ui.close();
+  const k = Math.max(0, Math.min(PACK.length - 1, i));
+  profile.puzzle.index = k;
+  saveProfile(profile);
+  state = newPuzzleGame(PACK[k]!, k);
+  syncScene();
+}
+
 function restart(): void {
   ui.close();
+  if (mode === 'puzzle') return loadPuzzle(state.seed);
   if (mode === 'daily') {
     // the daily is one seed per day; replay keeps the best score
     dailyDate = today();
@@ -275,10 +335,15 @@ function restart(): void {
   syncScene();
 }
 
-function switchMode(m: 'classic' | 'daily'): void {
+function switchMode(m: Mode): void {
+  if (m === 'puzzle' && !PACK) {
+    void loadPack().then(() => switchMode('puzzle'));
+    return;
+  }
   ui.close();
   persist();
   mode = m;
+
   dailyDate = today();
   state = startState();
   teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
@@ -292,6 +357,10 @@ const ui = new Ui({
   onNewGame: () => restart(),
   onDaily: () => switchMode(mode === 'daily' ? 'classic' : 'daily'),
   onClassic: () => switchMode('classic'),
+  onPuzzles: () => switchMode('puzzle'),
+  onPuzzleNext: () => loadPuzzle(state.seed + 1),
+  onPuzzleRetry: () => loadPuzzle(state.seed),
+
   onToggle: (k) => {
     if (k === 'reducedMotion')
       profile.settings.reducedMotion = !(profile.settings.reducedMotion ?? motionQuery.matches);
@@ -473,6 +542,10 @@ if (DEBUG) {
     },
     restart,
     switchMode,
+    loadPuzzle,
+    puzzleSolution: () =>
+      PACK && mode === 'puzzle' ? (PACK[state.seed] as unknown as { solution: unknown }).solution : null,
+
     /** Debug only: stage a board ("." empty, 1-6 colors; 64 chars) and tray piece ids. */
     setup(board: string, tray: (string | null)[]) {
       const g = decodeGame({

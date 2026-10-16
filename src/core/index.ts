@@ -8,3 +8,6 @@ export * from './game.ts';
 export * from './serialize.ts';
 export * from './replay.ts';
 export * from './daily.ts';
+export * from './solver.ts';
+export * from './puzzlegen.ts';
+export * from './puzzle.ts';

@@ -4,24 +4,24 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**72 ideas** — chosen: 1 · built: 2 · prototyped: 4 · shortlisted: 0 · backlog: 20 · merged: 4 · rejected: 41
+**72 ideas** — chosen: 1 · built: 8 · prototyped: 4 · shortlisted: 0 · backlog: 14 · merged: 4 · rejected: 41
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
 | I-001 | chosen | Hollow (loop clear) | Close a loop of blocks and everything inside it pops. | Block Blast + Go capture + Two Dots squares | 27 | ✓ | 10/4 | meas |
+| I-069 | built | Seal tick | A tiny haptic+sound the moment your drag would seal a lagoon. | — | 27 | ✓ | 8/1 | est |
+| I-074 | built | Clear-the-reef puzzles | Hand-checked daily puzzle: clear a set board with fixed pieces. | Meowdoku levels | 27 | ✓ | 8/5 | est |
+| I-072 | built | Lagoon fish | Big lagoons get a little fish that leaps out when they pop. | Meowdoku cats | 26 | ✓ | 7/3 | est |
 | I-061 | built | Teaching tray | The very first tray always lets you close a loop in two moves. | Tutorial-less onboarding (Threes) | 25 | ✗ | 9/2 | est |
+| I-065 | built | Daily share grid | Share your daily as a tiny emoji picture of your biggest lagoon. | Wordle share grid | 25 | ✓ | 7/2 | est |
+| I-066 | built | Near-miss bar | Game-over card shows how close you got to your best. | Block Blast best line | 24 | ✗ | 6/1 | est |
+| I-071 | built | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
-| I-069 | backlog | Seal tick | A tiny haptic+sound the moment your drag would seal a lagoon. | — | 27 | ✓ | 8/1 | est |
-| I-074 | backlog | Clear-the-reef puzzles | Hand-checked daily puzzle: clear a set board with fixed pieces. | Meowdoku levels | 27 | ✓ | 8/5 | est |
-| I-072 | backlog | Lagoon fish | Big lagoons get a little fish that leaps out when they pop. | Meowdoku cats | 26 | ✓ | 7/3 | est |
-| I-065 | backlog | Daily share grid | Share your daily as a tiny emoji picture of your biggest lagoon. | Wordle share grid | 25 | ✓ | 7/2 | est |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
-| I-066 | backlog | Near-miss bar | Game-over card shows how close you got to your best. | Block Blast best line | 24 | ✗ | 6/1 | est |
-| I-071 | backlog | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
 | I-073 | backlog | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
@@ -92,6 +92,31 @@
 - **Reason:** Chosen (ADR 0001). Only candidate passing every gate on measured data; huge planning headroom; big loops form a visible jackpot.
 - **Data:** hollow8-ramp2: median moves random/firstFit/greedy/search 17/27/80/488; score skill 53.7×; firstFit÷search 0.03, greedy÷search 0.12; 2.2 moves/clear; median best pocket 19 cells. R4=1: greedy sessions too long until ramp is tuned. R2 needs a scripted first tray (pocket in 2 moves).
 
+### I-069 — Seal tick (built)
+- **Pitch:** A tiny haptic+sound the moment your drag would seal a lagoon.
+- **Closest existing:** —
+- **What's new:** The preview is felt, not just seen.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 1 2 2 2 2 2 → **27**/28, gates pass (est)
+- **Value/effort:** 8/1
+- **Reason:** Highest value/effort polish: teaches the rule through the finger.
+
+### I-074 — Clear-the-reef puzzles (built)
+- **Pitch:** Hand-checked daily puzzle: clear a set board with fixed pieces.
+- **Closest existing:** Meowdoku levels
+- **What's new:** Finite, solver-graded puzzles from our rule.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 2 1 2 2 2 → **27**/28, gates pass (est)
+- **Value/effort:** 8/5
+- **Reason:** Second mode with Meowdoku-style completion; merges I-042.
+- **Data:** 120 solver-verified reefs (~0.18 s each to generate+grade); hardest needs merging two clusters into two lagoons with one piece.
+
+### I-072 — Lagoon fish (built)
+- **Pitch:** Big lagoons get a little fish that leaps out when they pop.
+- **Closest existing:** Meowdoku cats
+- **What's new:** A face for the reward.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 2 1 2 2 2 → **26**/28, gates pass (est)
+- **Value/effort:** 7/3
+- **Reason:** Charm; scales with lagoon size so big loops feel alive.
+
 ### I-061 — Teaching tray (built)
 - **Pitch:** The very first tray always lets you close a loop in two moves.
 - **Closest existing:** Tutorial-less onboarding (Threes)
@@ -99,6 +124,30 @@
 - **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 2 1 2 2 → **25**/28, gates FAIL (est)
 - **Value/effort:** 9/2
 - **Reason:** Required for Hollow's R2 (learn in one move).
+
+### I-065 — Daily share grid (built)
+- **Pitch:** Share your daily as a tiny emoji picture of your biggest lagoon.
+- **Closest existing:** Wordle share grid
+- **What's new:** Spoiler-free social proof shaped by our mechanic.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 2 1 1 2 2 → **25**/28, gates pass (est)
+- **Value/effort:** 7/2
+- **Reason:** Wordle-style virality; the lagoon shape is unique per player.
+
+### I-066 — Near-miss bar (built)
+- **Pitch:** Game-over card shows how close you got to your best.
+- **Closest existing:** Block Blast best line
+- **What's new:** Keeps 'one more round' pull.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** Cheap and proven retention lever.
+
+### I-071 — Dim misfits (built)
+- **Pitch:** Tray pieces that fit nowhere fade out.
+- **Closest existing:** Block Blast
+- **What's new:** Shows doom coming = fairness.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** Makes the fail state foreseeable (R13).
 
 ### I-062 — Difficulty ramp (built)
 - **Pitch:** Pieces get chunkier the longer you survive.
@@ -145,38 +194,6 @@
 - **Reason:** Rejected after prototype: shallow ceiling (search survives 25 moves), and deaths happen with half the board empty because big pieces cannot reach open space — feels unfair.
 - **Data:** skid: 11/13/17/25 moves; skill 3.6×; ≤4-cell variant 13/14/20/29.
 
-### I-069 — Seal tick (backlog)
-- **Pitch:** A tiny haptic+sound the moment your drag would seal a lagoon.
-- **Closest existing:** —
-- **What's new:** The preview is felt, not just seen.
-- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 1 2 2 2 2 2 → **27**/28, gates pass (est)
-- **Value/effort:** 8/1
-- **Reason:** Highest value/effort polish: teaches the rule through the finger.
-
-### I-074 — Clear-the-reef puzzles (backlog)
-- **Pitch:** Hand-checked daily puzzle: clear a set board with fixed pieces.
-- **Closest existing:** Meowdoku levels
-- **What's new:** Finite, solver-graded puzzles from our rule.
-- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 2 1 2 2 2 → **27**/28, gates pass (est)
-- **Value/effort:** 8/5
-- **Reason:** Second mode with Meowdoku-style completion; merges I-042.
-
-### I-072 — Lagoon fish (backlog)
-- **Pitch:** Big lagoons get a little fish that leaps out when they pop.
-- **Closest existing:** Meowdoku cats
-- **What's new:** A face for the reward.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 2 1 2 2 2 → **26**/28, gates pass (est)
-- **Value/effort:** 7/3
-- **Reason:** Charm; scales with lagoon size so big loops feel alive.
-
-### I-065 — Daily share grid (backlog)
-- **Pitch:** Share your daily as a tiny emoji picture of your biggest lagoon.
-- **Closest existing:** Wordle share grid
-- **What's new:** Spoiler-free social proof shaped by our mechanic.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 2 1 1 2 2 → **25**/28, gates pass (est)
-- **Value/effort:** 7/2
-- **Reason:** Wordle-style virality; the lagoon shape is unique per player.
-
 ### I-026 — Loop Pipes (backlog)
 - **Pitch:** Lay pipe tiles; any closed loop vanishes.
 - **Closest existing:** Pipe Mania, Tsuro
@@ -184,22 +201,6 @@
 - **Scores (R1..R14):** 2 1 2 1 2 2 2 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
 - **Value/effort:** 5/4
 - **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
-
-### I-066 — Near-miss bar (backlog)
-- **Pitch:** Game-over card shows how close you got to your best.
-- **Closest existing:** Block Blast best line
-- **What's new:** Keeps 'one more round' pull.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 6/1
-- **Reason:** Cheap and proven retention lever.
-
-### I-071 — Dim misfits (backlog)
-- **Pitch:** Tray pieces that fit nowhere fade out.
-- **Closest existing:** Block Blast
-- **What's new:** Shows doom coming = fairness.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 8/1
-- **Reason:** Makes the fail state foreseeable (R13).
 
 ### I-073 — Tap-to-place (backlog)
 - **Pitch:** Tap a piece, then tap a cell, as an alternative to dragging.

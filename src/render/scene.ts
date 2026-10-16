@@ -111,6 +111,9 @@ export class Scene {
   streakPulse = -1e9;
   gameOverAt = -1;
   hint: { cells: readonly number[]; start: number } | null = null;
+  /** Replaces the score HUD (puzzle mode). */
+  hudLabel: { top: string; big: string; sub: string } | null = null;
+
   /** Tray slots whose piece fits nowhere on the current board (drawn faded). */
   misfit: boolean[] = [false, false, false];
 
@@ -546,6 +549,18 @@ export class Scene {
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
     const big = Math.round(Math.min(56, l.hud.h * 0.48));
+    if (this.hudLabel) {
+      g.fillStyle = p.textDim;
+      g.font = `700 ${Math.round(big * 0.3)}px ${FONT}`;
+      g.fillText(this.hudLabel.top, cx, l.hud.y + l.hud.h * 0.24);
+      g.fillStyle = p.text;
+      g.font = `800 ${big}px ${FONT}`;
+      g.fillText(this.hudLabel.big, cx, l.hud.y + l.hud.h * 0.7);
+      g.font = `700 ${Math.round(big * 0.28)}px ${FONT}`;
+      g.fillStyle = p.water;
+      g.fillText(this.hudLabel.sub, cx, l.hud.y + l.hud.h * 0.95);
+      return;
+    }
     g.fillStyle = p.text;
     g.font = `800 ${big}px ${FONT}`;
     g.fillText(String(Math.round(this.shownScore)), cx, l.hud.y + l.hud.h * 0.7);

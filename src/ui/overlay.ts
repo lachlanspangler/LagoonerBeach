@@ -11,6 +11,9 @@ export interface UiHandlers {
   onNewGame(): void;
   onDaily(): void;
   onClassic(): void;
+  onPuzzles(): void;
+  onPuzzleNext(): void;
+  onPuzzleRetry(): void;
   onToggle(key: 'sound' | 'haptics' | 'reducedMotion'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
@@ -63,8 +66,8 @@ export class Ui {
     this.sr.textContent = text;
   }
 
-  setMode(mode: 'classic' | 'daily', streak: number): void {
-    this.modeTag.textContent = mode === 'daily' ? 'Daily' : '';
+  setMode(mode: 'classic' | 'daily' | 'puzzle', streak: number): void {
+    this.modeTag.textContent = mode === 'daily' ? 'Daily' : mode === 'puzzle' ? 'Reef puzzles' : '';
     (this.dailyBtn.querySelector('.badge') as HTMLElement).textContent = streak > 0 ? String(streak) : '';
     this.dailyBtn.setAttribute(
       'aria-label',
@@ -106,7 +109,7 @@ export class Ui {
     (card.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
   }
 
-  showMenu(p: Profile, mode: 'classic' | 'daily', canResume: boolean): void {
+  showMenu(p: Profile, mode: 'classic' | 'daily' | 'puzzle', canResume: boolean): void {
     const card = document.createElement('div');
     card.className = 'card';
     const s = p.settings;
@@ -119,12 +122,27 @@ export class Ui {
         <div><b>${p.daily.current}</b><span>Daily streak</span></div>
       </div>`;
     if (canResume) card.append(this.button('', 'btn primary', 'Resume', 'Resume', () => this.h.onResume()));
-    card.append(this.button('', canResume ? 'btn' : 'btn primary', 'New game', 'New game', () => this.h.onNewGame()));
-    card.append(
-      mode === 'daily'
-        ? this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic())
-        : this.button('', 'btn', 'Daily challenge', 'Daily challenge', () => this.h.onDaily()),
-    );
+    if (mode === 'puzzle') {
+      card.append(
+        this.button('', canResume ? 'btn' : 'btn primary', 'Restart reef', 'Restart reef', () =>
+          this.h.onPuzzleRetry(),
+        ),
+      );
+      card.append(this.button('', 'btn', 'Skip to next reef', 'Skip to next reef', () => this.h.onPuzzleNext()));
+      card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    } else {
+      card.append(this.button('', canResume ? 'btn' : 'btn primary', 'New game', 'New game', () => this.h.onNewGame()));
+      card.append(
+        mode === 'daily'
+          ? this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic())
+          : this.button('', 'btn', 'Daily challenge', 'Daily challenge', () => this.h.onDaily()),
+      );
+      card.append(
+        this.button('', 'btn', `Reef puzzles · ${p.puzzle.solved.length} cleared`, 'Reef puzzles', () =>
+          this.h.onPuzzles(),
+        ),
+      );
+    }
     const rows = document.createElement('div');
     rows.style.marginTop = '10px';
     const toggle = (label: string, on: boolean, key: 'sound' | 'haptics' | 'reducedMotion') => {
@@ -167,13 +185,31 @@ export class Ui {
     this.show(card, canResume);
   }
 
+  showPuzzleResult(o: { solved: boolean; index: number; total: number; cleared: number }): void {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = o.solved
+      ? `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">Cleared</div><div class="sub">${o.cleared} of ${o.total} reefs cleared</div>`
+      : `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">So close</div><div class="sub">Every piece must be placed and every pebble popped.</div>`;
+    if (o.solved) {
+      if (o.index + 1 < o.total)
+        card.append(this.button('next-reef', 'btn primary', 'Next reef', 'Next reef', () => this.h.onPuzzleNext()));
+      card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    } else {
+      card.append(this.button('retry-reef', 'btn primary', 'Try again', 'Try again', () => this.h.onPuzzleRetry()));
+      card.append(this.button('', 'btn', 'Skip', 'Skip to next reef', () => this.h.onPuzzleNext()));
+    }
+    this.show(card, false);
+    this.announce(o.solved ? `Reef ${o.index + 1} cleared` : 'Not cleared. Try again.');
+  }
+
   showGameOver(o: {
     score: number;
     best: number;
     newBest: boolean;
     moves: number;
     lagoon: number;
-    mode: 'classic' | 'daily';
+    mode: 'classic' | 'daily' | 'puzzle';
     dailyStreak: number;
     unlocked: string[];
   }): void {

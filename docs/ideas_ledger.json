@@ -1907,7 +1907,7 @@
    "basis": "est",
    "value": 7,
    "effort": 2,
-   "status": "backlog",
+   "status": "built",
    "reason": "Wordle-style virality; the lagoon shape is unique per player."
   },
   {
@@ -1936,7 +1936,7 @@
    "basis": "est",
    "value": 6,
    "effort": 1,
-   "status": "backlog",
+   "status": "built",
    "reason": "Cheap and proven retention lever."
   },
   {
@@ -1965,7 +1965,7 @@
    "basis": "est",
    "value": 8,
    "effort": 1,
-   "status": "backlog",
+   "status": "built",
    "reason": "Highest value/effort polish: teaches the rule through the finger."
   },
   {
@@ -1994,7 +1994,7 @@
    "basis": "est",
    "value": 8,
    "effort": 1,
-   "status": "backlog",
+   "status": "built",
    "reason": "Makes the fail state foreseeable (R13)."
   },
   {
@@ -2023,7 +2023,7 @@
    "basis": "est",
    "value": 7,
    "effort": 3,
-   "status": "backlog",
+   "status": "built",
    "reason": "Charm; scales with lagoon size so big loops feel alive."
   },
   {
@@ -2081,8 +2081,9 @@
    "basis": "est",
    "value": 8,
    "effort": 5,
-   "status": "backlog",
-   "reason": "Second mode with Meowdoku-style completion; merges I-042."
+   "status": "built",
+   "reason": "Second mode with Meowdoku-style completion; merges I-042.",
+   "data": "120 solver-verified reefs (~0.18 s each to generate+grade); hardest needs merging two clusters into two lagoons with one piece."
   },
   {
    "id": "I-075",

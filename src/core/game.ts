@@ -15,7 +15,7 @@ export interface CapturedWave {
 }
 import { nextStreak, scoreMove, type ScoreBreakdown } from './scoring.ts';
 
-export type Mode = 'classic' | 'daily';
+export type Mode = 'classic' | 'daily' | 'puzzle';
 
 export interface GameState {
   readonly v: 1;
@@ -162,7 +162,7 @@ export function applyMove(s: GameState, m: Move, opts: ApplyOptions = {}): MoveR
   let rng = s.rng;
   let trays = s.trays;
   const moves = s.moves + 1;
-  if (!opts.noRefill && tray.every((x) => x === null)) {
+  if (!opts.noRefill && s.mode !== 'puzzle' && tray.every((x) => x === null)) {
     const r = new Rng(rng);
     tray = dealTray(r, res.board, moves, opts.ramp ?? DEFAULT_RAMP);
     rng = r.state;

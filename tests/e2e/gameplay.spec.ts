@@ -106,3 +106,21 @@ test('daily is the same for everyone on a date', async ({ browser }) => {
   }
   expect(trays[0]).toEqual(trays[1]);
 });
+
+test('reef puzzle: playing the stored solution with real drags clears it', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  const solution = await page.evaluate(() => (window as any).__atoll.puzzleSolution());
+  for (const m of solution) {
+    const path = await page.evaluate((mv) => (window as any).__atoll.pathFor({ slot: mv.piece, x: mv.x, y: mv.y }), m);
+    await page.mouse.move(path.down.x, path.down.y);
+    await page.mouse.down();
+    await page.mouse.move(path.up.x, path.up.y, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+  }
+  await expect(page.getByTestId('puzzle-result')).toHaveText('Cleared');
+  await page.locator('#next-reef').click();
+  expect(await page.evaluate(() => (window as any).__atoll.state().seed)).toBe(1);
+});

@@ -34,6 +34,7 @@ export interface Profile {
   daily: DailyStreak;
   dailyBest: Record<string, number>;
   unlocked: string[];
+  puzzle: { index: number; solved: string[] };
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -45,6 +46,7 @@ export const DEFAULT_PROFILE: Profile = {
   daily: NO_STREAK,
   dailyBest: {},
   unlocked: ['pebble'],
+  puzzle: { index: 0, solved: [] },
 };
 
 const K_PROFILE = 'atoll.v1.profile';
@@ -101,6 +103,10 @@ export function loadProfile(): Profile {
           )
         : {},
     unlocked: Array.isArray(o.unlocked) ? o.unlocked.filter((x): x is string => typeof x === 'string') : ['pebble'],
+    puzzle: {
+      index: num(o.puzzle?.index, 0),
+      solved: Array.isArray(o.puzzle?.solved) ? o.puzzle.solved.filter((x): x is string => typeof x === 'string') : [],
+    },
   };
 }
 

@@ -50,7 +50,7 @@ export function decodeGame(raw: unknown): GameState | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const o = raw as Record<string, unknown>;
   if (o.v !== 1) return null;
-  if (o.mode !== 'classic' && o.mode !== 'daily') return null;
+  if (o.mode !== 'classic' && o.mode !== 'daily' && o.mode !== 'puzzle') return null;
   for (const k of ['seed', 'rng', 'moves', 'trays', 'score', 'streak', 'dry', 'captures', 'bestPocket'] as const)
     if (!isUint(o[k])) return null;
   if (typeof o.over !== 'boolean') return null;
@@ -71,9 +71,11 @@ export function decodeGame(raw: unknown): GameState | null {
     if (!isUint(tp.color) || tp.color < 1 || tp.color > COLORS) return null;
     tray.push({ pieceId: tp.pieceId, color: tp.color });
   }
-  if (tray.every((t) => t === null) && !o.over) return null; // a live game always has a piece to place
+  // a live classic/daily game always has a piece to place (puzzles end with an empty tray)
+  if (tray.every((t) => t === null) && !o.over && o.mode !== 'puzzle') return null;
   const over = o.over;
-  if (!over && !anyMoveLeft(board, tray)) return null;
+  if (!over && o.mode !== 'puzzle' && !anyMoveLeft(board, tray)) return null;
+
   return {
     v: 1,
     mode: o.mode,
