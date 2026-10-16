@@ -24,7 +24,9 @@ export type Body =
   | 'flat'
   | 'squid'
   | 'dollar'
-  | 'otter';
+  | 'otter'
+  | 'mola'
+  | 'dragon';
 export type Pattern = 'plain' | 'stripes' | 'spots' | 'bands';
 
 /** Shape of a captured lagoon (see catch.ts:classify). */
@@ -661,7 +663,7 @@ export const SPECIES: readonly Species[] = [
     name: 'Ocean Sunfish',
     habitat: 'deep',
     rarity: 'rare',
-    body: 'flat',
+    body: 'mola',
     colors: ['#B7C3CF', '#E8EEF2'],
     pattern: 'plain',
     size: [100, 300],
@@ -704,7 +706,7 @@ export const SPECIES: readonly Species[] = [
     name: 'Leafy Sea Dragon',
     habitat: 'legend',
     rarity: 'legendary',
-    body: 'horse',
+    body: 'dragon',
     colors: ['#C9A53B', '#8AB17D'],
     pattern: 'stripes',
     size: [20, 35],
