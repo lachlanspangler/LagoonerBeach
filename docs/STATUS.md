@@ -79,6 +79,7 @@ creature for your Beach Journal.
 | Dealer (ramp, every tray placeable) | ✅ tuned | independent brute-force check; human-like bot median ~50 moves |
 | Determinism / saves / replay | ✅ | golden game, round-trip + corruption tests, e2e reload |
 | Reef puzzles (360) | ✅ | every reef re-verified by the solver in `puzzles.test.ts` |
+| Endless reefs (361+, ADR 0009) | ✅ | golden 361–370, 211-reef solvability sample to 100 000, worker e2e + frame budget |
 | Catch layer + journal | ✅ | coverage, determinism, rarity and sanitize tests; e2e journal; `catch-sim` |
 | Rendering / skins / themes | ✅ | pixel baselines (reduced motion), 5 sizes × 2 themes |
 | Input (drag + tap-to-place) | ✅ | e2e on Chromium + WebKit, CDP touch |
