@@ -5,7 +5,7 @@ mkdirSync('artifacts/film/reefs', { recursive: true });
 const idx = (process.argv[2] ?? '0,20,50,80,110,119').split(',').map(Number);
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
-await p.goto('http://localhost:5317/?debug=1');
+await p.goto(`${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1`);
 await p.waitForFunction(() => (window as any).__atoll);
 await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
 await p.waitForTimeout(500);

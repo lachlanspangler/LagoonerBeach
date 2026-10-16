@@ -9,7 +9,7 @@ import { mkdirSync } from 'node:fs';
 const label = process.argv[2] ?? 'now';
 const dir = `artifacts/ux/${label}`;
 mkdirSync(dir, { recursive: true });
-const URL = 'http://localhost:5317/?debug=1&seed=42';
+const URL = `${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1&seed=42`;
 const b = await chromium.launch();
 const page = async (scheme: 'light' | 'dark') => {
   const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: scheme });

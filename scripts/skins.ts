@@ -6,7 +6,7 @@ mkdirSync('artifacts/film/skins', { recursive: true });
 const b = await chromium.launch();
 for (const theme of ['light', 'dark'] as const) {
   const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, colorScheme: theme });
-  await p.goto('http://localhost:5317/?debug=1&seed=5');
+  await p.goto(`${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1&seed=5`);
   await p.waitForFunction(() => (window as any).__atoll);
   await p.evaluate(() => (window as any).__atoll.autoplay('random', 9));
   for (const id of ids) {

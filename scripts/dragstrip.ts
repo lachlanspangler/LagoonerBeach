@@ -5,7 +5,7 @@ const out = 'artifacts/film/drag';
 mkdirSync(out, { recursive: true });
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
-await p.goto('http://localhost:5317/?debug=1&seed=42');
+await p.goto(`${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1&seed=42`);
 await p.waitForFunction(() => (window as any).__atoll);
 await p.waitForTimeout(400);
 // stage a cup so the tri-h can seal it

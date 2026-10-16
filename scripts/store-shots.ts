@@ -10,7 +10,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 mkdirSync('artifacts/store/raw', { recursive: true });
 const W = 430;
 const H = 932;
-const URL = 'http://localhost:5317/?debug=1&seed=42';
+const URL = `${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1&seed=42`;
 const b = await chromium.launch();
 
 async function open(theme: 'light' | 'dark'): Promise<Page> {

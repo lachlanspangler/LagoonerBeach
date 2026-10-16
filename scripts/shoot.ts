@@ -11,7 +11,7 @@ const arg = (k: string, d: string) => {
   const i = process.argv.indexOf(`--${k}`);
   return i >= 0 ? process.argv[i + 1]! : d;
 };
-const url = arg('url', 'http://localhost:5317');
+const url = arg('url', process.env.LB_URL ?? 'http://localhost:5317');
 const moves = Number(arg('moves', '12'));
 const out = arg('out', 'artifacts/shots/play');
 const theme = arg('theme', 'day');

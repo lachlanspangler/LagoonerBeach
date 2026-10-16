@@ -5,7 +5,7 @@ mkdirSync('artifacts/ux/journal', { recursive: true });
 const b = await chromium.launch();
 for (const scheme of ['light', 'dark'] as const) {
   const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: scheme });
-  await p.goto('http://localhost:5317/?debug=1&seed=3&fast=1');
+  await p.goto(`${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1&seed=3&fast=1`);
   await p.waitForFunction(() => (window as any).__atoll);
   for (let g = 0; g < 4; g++) {
     await p.evaluate(() => {

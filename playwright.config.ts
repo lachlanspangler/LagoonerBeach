@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// PW_PORT lets parallel worktrees run e2e side by side without fighting over :4317
+const PORT = Number(process.env.PW_PORT ?? 4317);
+
 export default defineConfig({
   testDir: 'tests',
   testMatch: ['e2e/**/*.spec.ts', 'perf/**/*.spec.ts'],
@@ -13,7 +16,7 @@ export default defineConfig({
     ? [['list'], ['github'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:4317',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -27,8 +30,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npx vite preview --port 4317 --strictPort',
-    url: 'http://localhost:4317',
+    command: `npx vite preview --port ${PORT} --strictPort`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 mkdirSync('artifacts/audio', { recursive: true });
 const b = await chromium.launch();
 const p = await b.newPage();
-await p.goto('http://localhost:5317/?debug=1');
+await p.goto(`${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1`);
 await p.waitForFunction(() => (window as any).__atoll);
 for (const night of [false, true]) {
   const wav: number[] = await p.evaluate(async (n) => {

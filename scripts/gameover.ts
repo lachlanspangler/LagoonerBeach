@@ -6,7 +6,7 @@ const p = await b.newPage({
   deviceScaleFactor: 2,
   colorScheme: (process.argv[2] as 'light' | 'dark') ?? 'light',
 });
-await p.goto('http://localhost:5317/?debug=1&seed=8&fast=1');
+await p.goto(`${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1&seed=8&fast=1`);
 await p.waitForFunction(() => (window as any).__atoll);
 await p.evaluate(() => (window as any).__atoll.autoplay('greedy', 400));
 await p.waitForTimeout(300);
