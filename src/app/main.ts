@@ -6,10 +6,7 @@ import { dailySeed, dayIndex, recordDaily, visibleStreak } from '../core/daily.t
 import { pieceById } from '../core/pieces.ts';
 import { N } from '../core/grid.ts';
 import { fitsAnywhere } from '../core/rules.ts';
-import { decodeGame, encodeGame } from '../core/serialize.ts';
 
-import { Rng } from '../core/rng.ts';
-import { BOTS, type BotName } from '../sim/bots.ts';
 import { Sfx } from '../audio/sfx.ts';
 import { DragController } from '../input/drag.ts';
 import { Haptics } from '../platform/haptics.ts';
@@ -33,6 +30,8 @@ import { shareText, type LagoonShape } from '../meta/share.ts';
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
 import { solve } from '../core/solver.ts';
 import { initNative } from '../platform/native.ts';
+import { installDebugApi } from './debug.ts';
+import { freshSeed as envSeed, today } from './env.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -53,17 +52,7 @@ const haptics = new Haptics();
 const fx = new Fx(scene, sfx, haptics);
 const profile: Profile = loadProfile();
 
-const today = (): string => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
-function freshSeed(): number {
-  if (params.has('seed')) return Number(params.get('seed')) >>> 0;
-  const a = new Uint32Array(1);
-  crypto.getRandomValues(a);
-  return a[0]!;
-}
+const freshSeed = (): number => envSeed(params);
 
 let mode: Mode = params.get('mode') === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
@@ -620,90 +609,23 @@ if (!DEBUG && 'serviceWorker' in navigator && import.meta.env.PROD) {
 }
 
 // ------------------------------------------------------------------ debug / test hooks
-if (DEBUG) {
-  const api = {
+if (DEBUG)
+  installDebugApi({
     state: () => state,
+    setState: (g) => {
+      state = g;
+      syncScene();
+    },
     mode: () => mode,
     profile: () => profile,
-    frameTimes: () => frameTimes.slice(),
-    drawTimes: () => drawTimes.slice(),
-    clearFrames: () => {
-      frameTimes.length = 0;
-      drawTimes.length = 0;
-    },
-    /** Pointer path (CSS px) that makes the drag controller produce the bot's next move. */
-    plan(bot: BotName = 'greedy') {
-      if (state.over) return null;
-      const m = BOTS[bot](state, new Rng(state.moves + 7));
-      if (!m) return null;
-      return api.pathFor(m);
-    },
-    pathFor(m: Move) {
-      const l = scene.layout;
-      const p = pieceById(state.tray[m.slot]!.pieceId);
-      const [cx, cy] = p.cells[0]!;
-      const [ox, oy] = scene.trayPieceOrigin(m.slot, p);
-      const down = { x: ox + (cx + 0.5) * l.trayCell, y: oy + (cy + 0.5) * l.trayCell };
-      const up = { x: l.board.x + (m.x + cx + 0.5) * l.cell, y: l.board.y + (m.y + cy + 0.5) * l.cell + l.lift };
-      return { move: m, down, up };
-    },
-    /** Apply bot moves directly (no input) — for fast state setup in tests. */
-    autoplay(bot: BotName = 'greedy', moves = 10) {
-      for (let i = 0; i < moves && !state.over; i++) {
-        const m = BOTS[bot](state, new Rng(state.moves + 7));
-        if (!m) break;
-        commit(m, null);
-      }
-      return state.moves;
-    },
+    scene,
+    sfx,
+    frameTimes,
+    drawTimes,
+    commit,
     restart,
     switchMode,
     loadPuzzle,
-    /** Audio QA: peak/RMS of every sound effect rendered offline. */
-    async audioLevels() {
-      const out: Record<string, { peak: number; rms: number }> = {};
-      const cases: [string, (s: Sfx) => void][] = [
-        ['pick', (s) => s.pick()],
-        ['place', (s) => s.place(4)],
-        ['placeBig', (s) => s.place(9)],
-        ['seal', (s) => s.seal(6)],
-        ['invalid', (s) => s.invalid()],
-        ['capture', (s) => s.capture(1, 1, 0)],
-        ['captureBig', (s) => s.capture(12, 8, 0)],
-        ['cascade', (s) => [0, 1, 2].forEach((k) => s.capture(6, 4, k, k * 0.15))],
-        ['cleanReef', (s) => s.cleanReef()],
-        ['deal', (s) => s.deal()],
-        ['newBest', (s) => s.newBest()],
-        ['gameOver', (s) => s.gameOver()],
-        ['click', (s) => s.click()],
-      ];
-      for (const [k, f] of cases) out[k] = await sfx.measure(f);
-      return out;
-    },
-
     puzzleSolution: () =>
       PACK && mode === 'puzzle' ? (PACK[state.seed] as unknown as { solution: unknown }).solution : null,
-
-    /** Debug only: stage a board ("." empty, 1-6 colors; 64 chars) and tray piece ids. */
-    setup(board: string, tray: (string | null)[]) {
-      const g = decodeGame({
-        ...encodeGame(newGame(1)),
-        board: board.replace(/\./g, '0'),
-        tray: tray.map((id, i) => (id ? { pieceId: id, color: ((i + 3) % 6) + 1 } : null)),
-      });
-      if (!g) throw new Error('setup: invalid board/tray');
-      state = g;
-      syncScene();
-      return true;
-    },
-    /** Debug only: force a skin (bypasses unlocks, not persisted as unlocked). */
-    debugSkin(id: string) {
-      profile.settings.skin = id;
-      if (!profile.unlocked.includes(id)) profile.unlocked = [...profile.unlocked, id];
-      applyTheme();
-      syncScene();
-    },
-    layout: () => scene.layout,
-  };
-  (window as unknown as { __atoll: typeof api }).__atoll = api;
-}
+  });
