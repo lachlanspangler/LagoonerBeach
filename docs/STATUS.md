@@ -4,7 +4,7 @@
 - **Core idea:** *Close a loop of blocks and everything inside it pops.* (**Atoll**: in every other
   block puzzle holes kill you; here holes are how you score.)
 - **Playable:** Classic (endless, ramped to ~3 min median sessions), Daily (shared seed, streak,
-  share card), Reef puzzles (120 solver-verified and graded reefs, hints, no-hint marks), 7 cosmetic
+  share card), Reef puzzles (200 solver-verified and graded reefs, 27 with cascades, reef grid, hints, no-hint marks), 7 cosmetic
   skins incl. high-contrast Glyph, Day/Night, tap-to-place, teaching tray, cascades, fish, near-miss
   bar, biggest-lagoon picture. Runs as a PWA and as an iOS Simulator app.
 - **Placeholder:** bundle id `com.example.atoll`, store name unverified, Android never built (no

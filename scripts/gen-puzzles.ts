@@ -12,11 +12,13 @@ const pool: Puzzle[] = [];
 const seen = new Set<string>();
 const t0 = Date.now();
 const mix = [
-  { lagoons: 1, pieces: 2 },
-  { lagoons: 1, pieces: 3 },
-  { lagoons: 2, pieces: 2 },
-  { lagoons: 2, pieces: 3 },
-  { lagoons: 3, pieces: 3 },
+  { lagoons: 1, pieces: 2, minPebbles: 6 },
+  { lagoons: 1, pieces: 3, minPebbles: 6 },
+  { lagoons: 2, pieces: 2, minPebbles: 6 },
+  { lagoons: 2, pieces: 3, minPebbles: 6 },
+  { lagoons: 3, pieces: 3, minPebbles: 6 },
+  { lagoons: 1, pieces: 2, thick: true, minPebbles: 8 },
+  { lagoons: 1, pieces: 3, thick: true, minPebbles: 8 },
 ];
 for (let seed = 1; pool.length < count * 2.5 && seed < 200000; seed++) {
   const params = mix[seed % mix.length]!;

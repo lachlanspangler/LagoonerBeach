@@ -53,10 +53,10 @@ await shot('3-night', 'Calm by day. Glowing by night.', 'dark', async (p) => {
   await p.evaluate(() => (window as any).__atoll.autoplay('random', 11));
   await p.waitForTimeout(1800);
 });
-await shot('4-reef', '120 reef puzzles. Every one solvable.', 'light', async (p) => {
+await shot('4-reef', '200 reef puzzles. Every one solvable.', 'light', async (p) => {
   await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
   await p.waitForTimeout(400);
-  await p.evaluate(() => (window as any).__atoll.loadPuzzle(119));
+  await p.evaluate(() => (window as any).__atoll.loadPuzzle(199));
   await p.waitForTimeout(500);
 });
 await shot('5-glyph', 'Made for every eye.', 'light', async (p) => {

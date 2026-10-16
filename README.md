@@ -8,7 +8,7 @@ other block puzzle, holes kill you. Here, holes are how you score.
 
 - **Classic**: endless, gently ramping, one-more-round.
 - **Daily**: the same deal for everyone each day, with streaks and an emoji share card.
-- **Reef puzzles**: 120 hand-checked-by-solver puzzles. Place every piece so the board ends empty.
+- **Reef puzzles**: 200 solver-verified puzzles. Place every piece so the board ends empty.
 
 ## Quick start
 ```sh
