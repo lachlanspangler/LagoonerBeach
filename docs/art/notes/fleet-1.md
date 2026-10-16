@@ -73,3 +73,18 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   and bigger accent tips so the upright posture shows.
 - Grade: B. Still to improve: the sail and anal fin merge into the body in the same blue (no
   interior line); a slightly lighter fin colour would help but costs the third authored colour.
+
+## lionfish
+- Size class: M. Feature: a small striped body inside a huge fan: five plump dorsal spines
+  radiating up and five pectoral rays fanning down and back, all filled tapered capsules with
+  round cream tips (R3: the danger is played as fabulous). The gaps between the rays are its 24 px
+  signature; four thin cream bands on the body.
+- Signature: the peacock: anticipation (everything tucks), then the fan swings open and
+  scales up 1.1×, the spines rise 1.12×, the chin tips up 6° and it holds a `proud` face. The fan
+  and spines also sway gently, phase-lagged, in the ambient idle. Catch: a smaller fan-flash, `proud`.
+- Rounds: 4. (1) too tall (91 units). (2) shortened rays; the pectoral rays sat in front of the
+  body from one point and read as a hand clutching the fish, covering the face. (3) the fan moved
+  behind the body and spread over 100°; the bottom rays read as legs. (4) the fan now points back
+  (180°–100°), and the bands got thinner and more numerous so it doesn't read as a red clownfish.
+- Grade: B+. Still to improve: at 24 px it can read as a little sea urchin or bug; a translucent
+  membrane between rays would say "fin", but it would fill the gaps that make the silhouette.
