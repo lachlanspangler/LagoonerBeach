@@ -78,3 +78,17 @@ ff÷s and g÷s are dominance probes (want low: planning should beat simple rules
 | I-002 Skid | 21 | R13 fairness 0; R10 partial |
 | I-003 Flip | 21 | R6 fails (no planning depth) |
 | I-004 Exact | 21 | R6 fails; R4 0 (endless) |
+
+## Production re-measurement (2026-10-16, real core, `make tune`)
+The shipped rules differ from the prototype (41-piece catalog with "cups", fairness guard, cascades,
+ramp 8→45). Measured on the production core:
+
+| bot | median moves | notes |
+|---|---|---|
+| random | 20 | first capture by ~move 8 even at random |
+| firstFit | 31 | dominance probe: 5% of search's score |
+| human-like (greedy 70%, else top-6) | 50 | ≈ 3 min at ~3.5 s/move (rubric R4 ✓) |
+| greedy | 56 | 26% of search's score → lookahead matters |
+| search (beam 10, full tray) | 86 | median best lagoon 12 cells |
+
+Skill gradient (search ÷ random score) 35×. Every rubric gate passes on measured data.
