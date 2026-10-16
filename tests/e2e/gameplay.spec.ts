@@ -216,8 +216,12 @@ test('reef of the day: shown in the reef grid and opens a reef', async ({ page }
   await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: 'All reefs' }).click();
+  // a new player is pointed at the next reef on the curve; the daily reef is secondary
+  await expect(page.locator('#reef-continue')).toHaveClass(/primary/);
+  await expect(page.locator('#reef-continue')).toHaveText(/Continue · Reef 1/);
   const btn = page.locator('#reef-of-day');
   await expect(btn).toBeVisible();
+  await expect(btn).not.toHaveClass(/primary/);
   await btn.click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
