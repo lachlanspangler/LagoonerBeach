@@ -90,6 +90,7 @@ function applyTheme(): void {
   scene.particles.budget = rm ? 0.3 : 1;
   if (!profile.unlocked.includes(profile.settings.skin)) profile.settings.skin = 'pebble';
   scene.sprites.setLook(lookFor(profile.settings.skin));
+  idle(() => scene.warmSprites());
   sfx.enabled = profile.settings.sound;
   haptics.enabled = profile.settings.haptics;
   dirty = true;
@@ -121,6 +122,7 @@ function resize(): void {
   const ins = insets();
   // keep the HUD clear of the menu buttons
   scene.resize(w, h, Math.min(3, window.devicePixelRatio || 1), { ...ins, top: ins.top + 6 });
+  idle(() => scene.warmSprites());
   dirty = true;
 }
 window.addEventListener('resize', resize);
@@ -601,17 +603,21 @@ let dirty = true;
 let last = performance.now();
 const frameTimes: number[] = [];
 const drawTimes: number[] = [];
+/** When the first frame showing a freshly picked piece finished drawing (latency tests). */
+const pickDrawnAt: number[] = [];
 function frame(): void {
   // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
   const now = performance.now();
   const dt = now - last;
   last = now;
   fx.tick(now);
+  const wasDragging = scene.drag !== null;
   scene.drag = drag.view(now);
   if (dirty || scene.busy(now) || fx.pending) {
     const t0 = performance.now();
     scene.draw(now, dt);
     drawTimes.push(performance.now() - t0);
+    if (!wasDragging && scene.drag) pickDrawnAt.push(performance.now());
     dirty = false;
     frameTimes.push(dt);
     if (frameTimes.length > 1200) frameTimes.shift();
@@ -621,6 +627,14 @@ function frame(): void {
 }
 
 void initNative();
+// warm up audio off the input path (see Sfx.prepare)
+const idle =
+  (globalThis as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ??
+  ((cb: () => void) => setTimeout(cb, 300));
+idle(() => {
+  sfx.prepare();
+  scene.warmSprites();
+});
 resize();
 applyTheme();
 syncScene();
@@ -644,6 +658,7 @@ if (DEBUG)
     sfx,
     frameTimes,
     drawTimes,
+    pickDrawnAt,
     commit,
     restart,
     switchMode,

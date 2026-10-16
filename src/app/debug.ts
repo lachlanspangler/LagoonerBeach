@@ -22,6 +22,7 @@ export interface DebugDeps {
   sfx: Sfx;
   frameTimes: number[];
   drawTimes: number[];
+  pickDrawnAt: number[];
   commit(m: Move, from: { x: number; y: number } | null): boolean;
   restart(): void;
   switchMode(m: 'classic' | 'daily' | 'puzzle'): void;
@@ -37,6 +38,7 @@ export function installDebugApi(d: DebugDeps): void {
     layout: () => d.scene.layout,
     frameTimes: () => d.frameTimes.slice(),
     drawTimes: () => d.drawTimes.slice(),
+    pickDrawnAt: () => d.pickDrawnAt.slice(),
     clearFrames: () => {
       d.frameTimes.length = 0;
       d.drawTimes.length = 0;

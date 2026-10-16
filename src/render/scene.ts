@@ -152,6 +152,16 @@ export class Scene {
     this.panel = null;
   }
 
+  /** Pre-render every pebble sprite the current layout can need, so first use never stalls. */
+  warmSprites(): void {
+    const sizes = [Math.round(this.layout.cell), Math.round(this.layout.trayCell)];
+    for (let c = 1; c <= 6; c++)
+      for (const s of sizes) {
+        this.sprites.pebble(this.palette, c, s, 'normal');
+        this.sprites.pebble(this.palette, c, s, 'lit');
+      }
+  }
+
   setPalette(p: Palette): void {
     this.palette = p;
     this.panel = null;

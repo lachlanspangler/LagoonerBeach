@@ -29,3 +29,36 @@ test('draw cost p95 under budget at 4× CPU throttle', async ({ page }) => {
   expect(draws.length).toBeGreaterThan(100);
   expect(report.p95).toBeLessThan(8);
 });
+
+test('input → first acknowledging frame latency (4× throttle)', async ({ page }) => {
+  await boot(page, 'seed=11');
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => {
+    (window as any).__downs = [];
+    document
+      .getElementById('game')!
+      .addEventListener('pointerdown', () => (window as any).__downs.push(performance.now()), { capture: true });
+  });
+  const lat: number[] = [];
+  for (let i = 0; i < 12; i++) {
+    const plan = await page.evaluate(() => (window as any).__atoll.plan('greedy'));
+    if (!plan) break;
+    await page.mouse.move(plan.down.x, plan.down.y);
+    await page.mouse.down();
+    await page.waitForTimeout(60);
+    await page.mouse.move(plan.up.x, plan.up.y, { steps: 3 });
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+    const [downs, drawn] = await page.evaluate(() => [(window as any).__downs, (window as any).__atoll.pickDrawnAt()]);
+    const d = downs[downs.length - 1];
+    const f = drawn.find((t: number) => t >= d);
+    if (d && f) lat.push(f - d);
+  }
+  console.log('pick latency ms (in order)', lat.map((x) => x.toFixed(1)).join(' '));
+  lat.sort((a, b) => a - b);
+  expect(lat.length).toBeGreaterThan(8);
+  // every pick (including the very first, which used to build the AudioContext: 133 ms) is
+  // acknowledged within ≤ 2 frames at 60 Hz, even under 4× throttle
+  expect(lat[lat.length - 1]!).toBeLessThan(34);
+});

@@ -12,12 +12,21 @@ export class Sfx {
   /** Master gain; tuned with the offline audio QA (tests/e2e/audio.spec.ts → artifacts/audio-levels.json). */
   volume = 2.1;
 
+  /**
+   * Create the (suspended) context ahead of time — construction costs ~100+ ms on some devices, too
+   * slow to do inside the first touch. Call when idle after boot; unlock() then only resumes.
+   */
+  prepare(): void {
+    if (!this.ctx) this.create();
+  }
+
   /** Call from a user-gesture handler (pointerdown). Safe to call repeatedly. */
   unlock(): void {
-    if (this.ctx) {
-      if (this.ctx.state === 'suspended') void this.ctx.resume();
-      return;
-    }
+    if (!this.ctx) this.create();
+    if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume();
+  }
+
+  private create(): void {
     const AC =
       (globalThis as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext })
         .AudioContext ?? (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
