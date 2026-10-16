@@ -22,6 +22,7 @@ export interface UiHandlers {
 }
 
 const ICON_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>`;
+const ICON_HINT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>`;
 const ICON_DAILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 13.5c1.2 1.3 5.8 1.3 7 0M9 10h.01M15 10h.01"/></svg>`;
 
 export class Ui {
@@ -67,8 +68,13 @@ export class Ui {
   }
 
   setMode(mode: 'classic' | 'daily' | 'puzzle', streak: number): void {
+    this.dailyBtn.innerHTML = (mode === 'puzzle' ? ICON_HINT : ICON_DAILY) + '<span class="badge"></span>';
     this.modeTag.textContent = mode === 'daily' ? 'Daily' : mode === 'puzzle' ? 'Reef puzzles' : '';
     (this.dailyBtn.querySelector('.badge') as HTMLElement).textContent = streak > 0 ? String(streak) : '';
+    if (mode === 'puzzle') {
+      this.dailyBtn.setAttribute('aria-label', 'Hint');
+      return;
+    }
     this.dailyBtn.setAttribute(
       'aria-label',
       mode === 'daily' ? 'Back to classic' : `Daily challenge${streak ? `, streak ${streak}` : ''}`,

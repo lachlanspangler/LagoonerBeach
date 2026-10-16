@@ -30,6 +30,7 @@ import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
 import { lookFor } from '../render/skins.ts';
 import { shareText, type LagoonShape } from '../meta/share.ts';
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
+import { solve } from '../core/solver.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -175,6 +176,10 @@ function updateMisfits(): void {
 
 // ------------------------------------------------------------------ teaching hint
 function updateHint(): void {
+  if (mode === 'puzzle') {
+    scene.hint = null; // puzzle hints are on demand only
+    return;
+  }
   if (!teaching || state.over) {
     scene.hint = null;
     return;
@@ -310,6 +315,37 @@ function checkPuzzle(): void {
   }
 }
 
+/** Solver-backed hint: outline one placement that still leads to a clear (or say it's a dead end). */
+function puzzleHint(): void {
+  if (mode !== 'puzzle' || puzzleStatus(state) !== 'playing') return;
+  const slots = state.tray.map((t, i) => (t ? i : -1)).filter((i) => i >= 0);
+  const res = solve(
+    state.board,
+    slots.map((i) => state.tray[i]!.pieceId),
+  );
+  const l = scene.layout;
+  if (!res.first || !res.first.length) {
+    scene.texts.push({
+      text: 'Dead end — restart',
+      x: l.w / 2,
+      y: l.board.y + l.board.h * 0.4,
+      start: performance.now(),
+      size: l.cell * 0.6,
+      life: 1600,
+      strong: true,
+    });
+    ui.announce('Dead end. Restart the reef.');
+    haptics.fire('fail');
+  } else {
+    const m = res.first[0]!;
+    const p = pieceById(state.tray[slots[m.piece]!]!.pieceId);
+    scene.hint = { cells: p.cells.map(([dx, dy]) => (m.y + dy) * N + m.x + dx), start: performance.now() };
+    profile.stats.hints = (profile.stats.hints ?? 0) + 1;
+    ui.announce('Hint shown on the board.');
+  }
+  dirty = true;
+}
+
 function loadPuzzle(i: number): void {
   if (!PACK) return;
   ui.close();
@@ -355,7 +391,7 @@ const ui = new Ui({
   onOpenMenu: () => ui.showMenu(profile, mode, !state.over),
   onResume: () => ui.close(),
   onNewGame: () => restart(),
-  onDaily: () => switchMode(mode === 'daily' ? 'classic' : 'daily'),
+  onDaily: () => (mode === 'puzzle' ? puzzleHint() : switchMode(mode === 'daily' ? 'classic' : 'daily')),
   onClassic: () => switchMode('classic'),
   onPuzzles: () => switchMode('puzzle'),
   onPuzzleNext: () => loadPuzzle(state.seed + 1),

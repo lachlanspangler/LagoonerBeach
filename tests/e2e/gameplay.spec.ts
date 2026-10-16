@@ -124,3 +124,11 @@ test('reef puzzle: playing the stored solution with real drags clears it', async
   await page.locator('#next-reef').click();
   expect(await page.evaluate(() => (window as any).__atoll.state().seed)).toBe(1);
 });
+
+test('reef puzzle hint points at a winning move', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.getByRole('button', { name: 'Hint' }).click();
+  await expect(page.locator('#sr')).toHaveText('Hint shown on the board.');
+});

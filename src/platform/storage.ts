@@ -23,6 +23,7 @@ export interface Stats {
   totalScore: number;
   cascades: number;
   cleanReefs: number;
+  hints?: number;
 }
 
 export interface Profile {
