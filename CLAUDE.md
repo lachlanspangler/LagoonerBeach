@@ -18,6 +18,10 @@ entries of `docs/DIARY.md`, then `docs/WORKFLOW.md` (the loop to run).
 | `make e2e` | build, then Playwright: gameplay flows, screenshots, perf budget |
 | `make tune` | bot balance report → `artifacts/tune.json` |
 | `make ideas` | regenerate `docs/IDEAS.md` from `docs/ideas_ledger.json` |
+| `npm run puzzles` | regenerate the 200-reef pack (deterministic; CI diffs it) |
+| `make ios-sim` | build + launch on an iPhone simulator, screenshot |
+
+Review/play tools are listed in `docs/WORKFLOW.md` → "Review tools".
 
 Node 20.19+ (`.nvmrc`). The repo pins the public npm registry in `.npmrc` (the machine default
 registry fails TLS). Vite 7 / Vitest 3 are pinned because newer majors need Node 22.
@@ -35,6 +39,10 @@ src/core/      PURE game logic. No DOM, no clock, no Math.random (ESLint-enforce
   serialize.ts   versioned, validating save format
   replay.ts      seed + move log → state
   daily.ts       daily seed, streak math
+  solver.ts      reef-puzzle solver + grader      puzzlegen.ts  constructive reef generator
+  puzzle.ts      puzzle games (no refills, win = empty board)
+src/meta/      pure meta-progression: unlocks (skins), share text
+src/content/   generated data (puzzles.json) — never hand-edit
 src/sim/       bots (random/firstFit/greedy/search) + playGame; used by tests, tuning, autoplay
 src/render/    Canvas2D renderer, theme tokens, sprites, particles, tweens (no rules here)
 src/input/     pointer drag model (grab offset, lift, snap, hysteresis, cancel)
@@ -66,4 +74,12 @@ persistence. The renderer animates events; the logical state is already final.
 
 ## Debug hooks
 `window.__atoll` (only with `?debug=1` or in tests): `state()`, `autoplay(bot, moves)`,
-`plan(bot)` → pointer path for a bot's next move (used by e2e to drive real drags), `fps()`.
+`plan(bot)` → pointer path for a bot's next move (used by e2e to drive real drags),
+`pathFor(move)`, `setup(board64, trayIds)` to stage a board, `switchMode`, `loadPuzzle(i)`,
+`puzzleSolution()`, `debugSkin(id)`, `drawTimes()`, `audioLevels()`.
+
+## Gotchas learned the hard way
+- Port 5173 is used by another project on this machine → dev is :5317, preview :4317.
+- Prettier reformats files; string-replace edits must assert (use `scripts/sub.py`).
+- Delayed UI must go through `later()` (bound to `gameToken`) or it can fire on the next game.
+- iOS WKWebView settles safe-area insets after first layout → the persistent probe in main.ts.
