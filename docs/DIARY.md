@@ -273,3 +273,29 @@ broke, what I decided and why.
   hidden; stale drag frame on tap-to-place; music fade-in jump; leftover fish/chips on New game;
   dry counters disagreed. Left as known: another open tab can re-save after Erase; replaying a reef
   re-records the same catches (counts only).
+
+## 2026-10-16 (session 3) — Quality leap: research, fleets, fonts
+Owner brief: creatures "app used by millions" level, Block Blast-grade celebrations, discovery
+moments, leaderboards with 7-letter names, endless reefs, top-chart aesthetics.
+- **Research (4 parallel agents, docs/research/):** HUNGRY_STUDIO.md (Block Blast keeps a combo
+  alive if 1 of every 3 placements clears — the same as our STREAK_GRACE = 3; voiced praise ladder
+  by lines cleared), CREATURE_ART.md (style guide R1–R39; audit found 11 fish with pixel-identical
+  silhouettes and no size variety), UI_DESIGN.md (Fraunces display + Nunito UI, both OFL),
+  LEADERBOARDS.md (Cloudflare Workers + D1 with replay verification; Game Center can't show our
+  7-letter names, has no PWA support, and splits iOS/Android).
+- **Combo decision (data):** combo = our existing streak. `scripts/combo-sim.ts` (40 games): greedy
+  median 3470 pts / max combo 25; a "farmer" that always takes the cheapest capture to keep the
+  combo alive scores 1657 (max combo 26) — keeping the combo is not enough, planning big lagoons
+  is what pays. Multiplier is ~55–60% of score. No scoring change → dailies and golden tests stay.
+- **Overrode the Block Blast study's §6 where it was calmer than the owner's brief:** the brief asks
+  for "COMBO ×N", praise words and a real NEW HIGH SCORE moment, so we show those; we keep the study's
+  guardrails (1 word + 1 badge + 1 number max, particle and shake caps, no bright flashes, reduced
+  motion variants, input never blocked).
+- **Fonts shipped:** `scripts/fonts.sh` instances Fraunces (SOFT 100, 900 + 600) and subsets
+  Nunito → 64 KB woff2 total in public/fonts with the OFL texts. Canvas FONT now leads with
+  "Lagoon UI" so Android no longer falls back to Roboto; DISPLAY_FONT is for words, never numbers
+  (Fraunces digits are proportional).
+- **Parallel builds (worktrees, own ports via PW_PORT/LB_URL):** endless reefs; leaderboards +
+  names + Cloudflare Worker; creature-art pipeline + 5 pilot species (then a fleet for the other
+  42); combo/celebration/discovery. The worktrees sit in `.claude/` inside the repo, so lint and
+  prettier picked them up — now ignored.
