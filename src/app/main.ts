@@ -645,7 +645,10 @@ function loadPuzzle(i: number): void {
   if (!reef) {
     // not generated yet (prefetch normally runs ahead): open it when the worker delivers
     ui.announce(`Charting reef ${k + 1}…`);
-    void reefs.ensure(k).then(() => mode === 'puzzle' && reefWanted === k && loadPuzzle(k));
+    void reefs.ensure(k).then(
+      () => mode === 'puzzle' && reefWanted === k && loadPuzzle(k),
+      () => mode === 'puzzle' && reefWanted === k && ui.showReefError(k, () => loadPuzzle(k)),
+    );
     return;
   }
   ui.close();
@@ -679,8 +682,20 @@ function switchMode(m: Mode): void {
     // only honor the pack (or endless reef) load if the player still wants puzzles when it arrives
     void loadPack()
       .then(() => reefs!.ensure(profile.puzzle.index))
-      .catch(() => (profile.puzzle.index = 0))
-      .then(() => wantedMode === 'puzzle' && switchMode('puzzle'));
+      .then(
+        () => wantedMode === 'puzzle' && switchMode('puzzle'),
+        // the pack chunk didn't load, or the reef couldn't be generated: say so and offer a retry
+        // (never "Charting…" forever, and the player's place is kept)
+        () => {
+          if (wantedMode !== 'puzzle') return;
+          const i = profile.puzzle.index;
+          if (!Number.isInteger(i) || i < 0 || i >= MAX_REEF) {
+            profile.puzzle.index = 0; // not a reef at all: start from the first one
+            return switchMode('puzzle');
+          }
+          ui.showReefError(i, () => switchMode('puzzle'));
+        },
+      );
     return;
   }
   ui.close();

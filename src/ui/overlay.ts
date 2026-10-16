@@ -390,6 +390,18 @@ export class Ui {
     this.show(card, true);
   }
 
+  /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Classic. */
+  showReefError(index: number, retry: () => void): void {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-testid', 'reef-error');
+    card.innerHTML = `<h2>Reef ${index + 1}</h2><div class="sub">This reef couldn't be charted just now.</div>`;
+    card.append(this.button('retry-chart', 'btn primary', 'Try again', `Try charting reef ${index + 1} again`, retry));
+    card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    this.show(card, true);
+    this.announce(`Reef ${index + 1} couldn't be charted. Try again.`);
+  }
+
   showPuzzleResult(o: {
     solved: boolean;
     index: number;

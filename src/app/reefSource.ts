@@ -36,6 +36,8 @@ export interface ReefSourceOptions {
   cacheSize?: number;
   /** How fallback generation is scheduled (default: a macrotask, never inside an input handler). */
   defer?: (fn: () => void) => void;
+  /** The synchronous generator used by the fallback (tests inject a failing one). */
+  generate?: (n: number) => ReefDef;
 }
 
 export const CACHE_KEY = 'atoll.v1.reefcache';
@@ -83,10 +85,13 @@ function compact(r: ReefDef): ReefDef {
 }
 
 export class ReefSource {
-  readonly stats = { worker: false, generated: 0, fromCache: 0, fallback: 0, lastMs: 0 };
+  readonly stats = { worker: false, generated: 0, fromCache: 0, fallback: 0, failed: 0, lastMs: 0 };
   private readonly mem = new Map<number, ReefDef>();
   private order: number[] = [];
-  private readonly waiting = new Map<number, { promise: Promise<ReefDef>; resolve: (r: ReefDef) => void }>();
+  private readonly waiting = new Map<
+    number,
+    { promise: Promise<ReefDef>; resolve: (r: ReefDef) => void; reject: (e: unknown) => void }
+  >();
   private worker: WorkerLike | null | undefined; // undefined = not created yet
   private fallbackQueue: number[] = [];
   private fallbackBusy = false;
@@ -120,8 +125,9 @@ export class ReefSource {
     const w = this.waiting.get(n);
     if (w) return w.promise;
     let resolve!: (r: ReefDef) => void;
-    const promise = new Promise<ReefDef>((res) => (resolve = res));
-    this.waiting.set(n, { promise, resolve });
+    let reject!: (e: unknown) => void;
+    const promise = new Promise<ReefDef>((res, rej) => ((resolve = res), (reject = rej)));
+    this.waiting.set(n, { promise, resolve, reject });
     this.request(n);
     return promise;
   }
@@ -136,7 +142,7 @@ export class ReefSource {
     for (let k = 1; k <= count; k++) {
       const j = i + k;
       if (j + 1 > MAX_REEF) break;
-      if (!this.get(j)) void this.ensure(j);
+      if (!this.get(j)) this.ensure(j).catch(() => undefined); // a failed prefetch is retried on demand
     }
   }
 
@@ -193,16 +199,30 @@ export class ReefSource {
       this.fallbackBusy = false;
       const n = this.fallbackQueue.shift();
       if (n === undefined) return;
-      if (!this.mem.has(n)) {
-        const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
-        const r = generateReef(n);
-        this.stats.fallback++;
-        this.stats.generated++;
-        this.stats.lastMs = (typeof performance !== 'undefined' ? performance.now() : 0) - t0;
-        this.store(n, r);
+      try {
+        if (!this.mem.has(n)) {
+          const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
+          const r = (this.opts.generate ?? generateReef)(n);
+          this.stats.fallback++;
+          this.stats.generated++;
+          this.stats.lastMs = (typeof performance !== 'undefined' ? performance.now() : 0) - t0;
+          this.store(n, r);
+        }
+      } catch (e) {
+        // the last resort failed too: settle the waiter (the UI offers a retry) instead of hanging
+        this.stats.failed++;
+        this.fail(n, e);
+      } finally {
+        if (this.fallbackQueue.length) this.pumpFallback();
       }
-      if (this.fallbackQueue.length) this.pumpFallback();
     });
+  }
+
+  private fail(n: number, e: unknown): void {
+    const w = this.waiting.get(n);
+    if (!w) return;
+    this.waiting.delete(n); // a later ensure() asks again
+    w.reject(e instanceof Error ? e : new Error(`reef ${n} failed`));
   }
 
   // ── cache ────────────────────────────────────────────────────────────────────────────────
