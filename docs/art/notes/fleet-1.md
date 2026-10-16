@@ -88,3 +88,19 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   (180°–100°), and the bands got thinner and more numerous so it doesn't read as a red clownfish.
 - Grade: B+. Still to improve: at 24 px it can read as a little sea urchin or bug; a translucent
   membrane between rays would say "fin", but it would fill the gaps that make the silhouette.
+
+## grouper
+- Size class: L. Feature: a long, low, front-heavy wedge (84 × 48): a massive blunt head and jowls
+  narrowing to a thin tail root, a rounded fan tail, and a big jutting, downturned lower lip; tan
+  saddle blotches on a lifted brown.
+- Signature: the slow yawn: the lower lip (its own `jaw` group) drops 34° and swells while the head
+  tips back and the face goes `happy` (open mouth), then it settles into heavy `sleepy` half-lids,
+  its personality. Ambient: slow bob plus a breathe; the slowest fish in the batch.
+- Rounds: 5. (1) a plump body with two lip ellipses: IoU 0.87 vs clownfish, and the lips read as a
+  donut. (2) a stronger wedge and one jutting lower lip: 0.77. (3) taller forehead, thinner tail
+  root, shorter dorsal: 0.74. (4) the whole fish flattened top-to-bottom (SY 0.74) into a long, low
+  wedge: 0.68, and it finally looks "unbothered" rather than "plump". (5) a fatter, shorter lip (it
+  read as a cigar) and a bigger yawn.
+- Grade: B−. Still to improve: the lip still reads a little like something held in the mouth; the
+  massive-head idea is weaker after flattening. The clownfish margin (0.69) is the tightest in the
+  batch.
