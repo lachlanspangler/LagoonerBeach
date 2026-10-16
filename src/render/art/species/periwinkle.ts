@@ -1,0 +1,161 @@
+/**
+ * Periwinkle — SNAIL class (profile, facing right), size XS.
+ * Silhouette: a big round spiral shell riding on a long cream foot, a round head in front with two
+ * short eye-stalks; the eyes sit on the stalk tips (appendix). R10: the stalks and the round shell.
+ * Personality: slow, content, homebody. Signature: the eye-stalks stretch up and bob, then it slides
+ * forward a little (2 units, squash-and-creep) and settles happy.
+ * Groups (back to front): body (foot and head), shell, stalks (the face rides on them).
+ */
+import { blob, capsule, circle, defineArt, ellipse, join } from '../kit.ts';
+
+const SX = -13,
+  SY = -9;
+const shell = circle(SX, SY, 26);
+// a semicircle spiral: three cream rings winding into the apex (R18 `rings`)
+const spiral =
+  `M${SX + 22} ${SY}A22 22 0 0 0 ${SX - 20} ${SY}A18 18 0 0 0 ${SX + 16} ${SY}` +
+  `A13 13 0 0 0 ${SX - 10} ${SY}A8 8 0 0 0 ${SX + 6} ${SY}`;
+const foot = blob([
+  [-40, 28],
+  [-30, 23],
+  [-10, 21],
+  [16, 18],
+  [25, 2],
+  [34, -2],
+  [41, 6],
+  [40, 22],
+  [26, 29],
+  [-10, 31],
+]);
+const stalks = join(capsule(26, 2, 3.2, 24, -17, 2.8), capsule(35, 2, 3.2, 36, -17, 2.8));
+const knobs = join(circle(24, -19, 5.4), circle(36, -19, 5.4));
+
+export default defineArt({
+  id: 'periwinkle',
+  klass: 'snail',
+  size: 'XS',
+  feature: 'a round spiral shell on a long foot, two eye-stalks',
+  personality: ['slow', 'content', 'homebody'],
+  palette: { body: '#9A7357', accent: '#F1E2C6', belly: '#F2E4CB' },
+  groups: [
+    {
+      id: 'body',
+      parts: [
+        { d: foot, role: 'belly' },
+        { d: 'M-34 27C-20 25 10 25 28 24', role: 'ink', kind: 'line', w: 1.4, alpha: 0.3 },
+      ],
+    },
+    {
+      id: 'shell',
+      pivot: [SX, 18],
+      parts: [
+        { d: shell, role: 'body' },
+        { d: spiral, role: 'accent', kind: 'line', w: 3.6 },
+      ],
+    },
+    {
+      id: 'stalks',
+      pivot: [30, 2],
+      parts: [
+        { d: stalks, role: 'belly' },
+        { d: knobs, role: 'belly' },
+      ],
+    },
+  ],
+  shineOn: 'shell',
+  shine: ellipse(-25, -23, 8, 4, -35),
+  face: {
+    g: 'stalks',
+    eyes: [
+      [24, -19],
+      [36, -19],
+    ],
+    eye: 7.4,
+    zone: [16, -37, 30, 32],
+    mouth: { at: [36, 10], w: 5, shape: 'smile' },
+    front: true,
+    sweet: true,
+    lid: 'belly',
+  },
+  idle: {
+    ambient: [
+      { m: 'breathe', amp: 0.015, period: 3.6 },
+      { m: 'bob', g: 'stalks', amp: 2, period: 1.4 },
+      { m: 'sway', g: 'stalks', amp: 4, period: 2.8, phase: 0.3 },
+    ],
+    signature: {
+      dur: 1.2,
+      tracks: [
+        {
+          g: 'stalks',
+          p: 'sy',
+          k: [
+            [0, 1],
+            [0.15, 1.14],
+            [0.3, 0.94],
+            [0.45, 1.08],
+            [0.6, 1],
+          ],
+        },
+        {
+          p: 'tx',
+          k: [
+            [0.45, 0],
+            [0.6, 0.4],
+            [0.85, 3],
+            [1, 3],
+          ],
+        },
+        {
+          p: 'sx',
+          k: [
+            [0.45, 1],
+            [0.6, 1.06],
+            [0.78, 0.97],
+            [0.9, 1],
+          ],
+        },
+        {
+          g: 'shell',
+          p: 'rot',
+          k: [
+            [0.55, 0],
+            [0.7, 4],
+            [0.86, -2],
+            [1, 0],
+          ],
+        },
+      ],
+      face: [
+        [0.1, 0.45, 'surprised'],
+        [0.75, 1, 'happy'],
+      ],
+    },
+  },
+  catch: {
+    dur: 0.5,
+    tracks: [
+      {
+        g: 'stalks',
+        p: 'sy',
+        k: [
+          [0, 1],
+          [0.25, 1.2],
+          [0.6, 0.9],
+          [1, 1],
+        ],
+      },
+      {
+        p: 'sy',
+        k: [
+          [0, 1],
+          [0.2, 0.86],
+          [0.45, 1.12],
+          [1, 1],
+        ],
+      },
+    ],
+    face: [[0, 1, 'happy']],
+  },
+  ground: true,
+});

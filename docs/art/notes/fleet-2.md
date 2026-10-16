@@ -114,3 +114,19 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
   collided with the sand dollar.
 - Would improve: a true side-view heart would need a silhouette metric that rewards interior notches;
   with centroid IoU the cheapest distinctness lever was the triangle.
+
+## periwinkle (Periwinkle)
+- Size class XS, snail (profile, facing right). Feature: a round brown spiral shell (one cream
+  semicircle spiral = 3 `rings`) perched high on a long tapered cream foot, a neck rising in front with
+  two eye-stalks; the eyes sit on the stalk tips (appendix), mouth on the neck.
+- Signature: the stalks stretch up (1.14×) and bob with a `surprised` face, then it creeps forward
+  3 units (squash-and-creep, shell wobble) and settles `happy`. Ambient: stalk bob ±2 at 1.4 s plus a
+  slow sway (R23 snail row). `ground: true` so squashes sit on the foot.
+- Rounds: 3.
+  1. Big shell sitting on the foot, short stalks: box 85 wide (R1) and IoU vs sand dollar 0.75 (fail).
+  2. Taller stalks, tapered tail, five-arc spiral simplified to four: still 0.75.
+  3. Shell moved back and up so a clear notch opens between shell and neck; thinner foot: 0.66.
+- Self-grade: B+. Reads instantly as a little snail at 24 px; content and slow.
+- Would improve: blush lands on the stalk knobs (the rig puts it under the eyes); a "blush on the
+  head, eyes on stalks" option would read sweeter. It's also a touch "garden snail"; a real periwinkle
+  is rounder with a lower spire.
