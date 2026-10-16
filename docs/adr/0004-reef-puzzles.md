@@ -31,3 +31,12 @@ cascades included). No new mechanic, so it teaches classic play (and vice versa)
 Exhaustive grading costs ~0.1–2 s per puzzle in Node; on a phone it would stall input. Offline packs
 are deterministic, reviewable and testable. (The generator is pure, so runtime generation is a later
 option.)
+
+## Update 2026-10-16 (session 2)
+- Pack grew 120 → 200 → **360** reefs. Pack analysis found zero cascade reefs and 14 tiny ones, so
+  the generator gained a double-wall construction and a minimum reef size (56 cascade reefs now,
+  introduced mid-pack), plus translation-invariant de-duplication.
+- Three **hand-made openers** (one lid; two cups; a first cascade) come first. They go through the
+  same solver; it rejected two of my first drafts as unsolvable, which is the point.
+- **Reef of the day** (one Tricky/Deep reef per date) lives in the reef grid and counts for the
+  daily streak. Hints follow the stored solution while on-path (no main-thread solve).
