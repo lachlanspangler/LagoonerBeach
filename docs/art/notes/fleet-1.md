@@ -104,3 +104,18 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
 - Grade: B−. Still to improve: the lip still reads a little like something held in the mouth; the
   massive-head idea is weaker after flattening. The clownfish margin (0.69) is the tightest in the
   batch.
+
+## parrot
+- Size class: M. Feature: a chunky body with a bumped, steep forehead over a big rounded beak
+  (lighter belly tone, its own group) and a tall crescent tail whose two horns curve back; two pink
+  stripes along the side, pink horn tips.
+- Signature: the crunch: the beak chomps twice with a little nudge forward and a `happy` face, then
+  a puff of three sand grains (prop) drifts down from the beak while it looks `proud`. Catch: a
+  beak chomp and a tail flick.
+- Rounds: 5. (1) chunky oval, dorsal + anal, small crescent: IoU 0.77 vs clownfish, 0.70 vs
+  grouper. (2) taller horns: 0.73. (3) no dorsal/anal: clownfish fine but 0.71 vs minnow. (4) a
+  bumphead forehead and a lower, bigger beak, which makes the front profile unique: 0.69–0.70.
+  (5) taller horns, thinner tail root, removed the leftover fin-edge accent and moved the pectoral
+  back: 0.69 / 0.68, and it reads as a happy bumphead.
+- Grade: B. Still to improve: the crescent horns are thin; without a dorsal the back is a little
+  bare; margins vs clownfish and grouper are tight (0.69 / 0.68).
