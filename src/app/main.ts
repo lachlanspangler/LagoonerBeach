@@ -22,7 +22,9 @@ import { DragController } from '../input/drag.ts';
 import { Haptics } from '../platform/haptics.ts';
 import {
   loadDaily,
+  loadDailyRun,
   loadGame,
+  loadGameRun,
   loadJournal,
   saveJournal,
   eraseAll,
@@ -51,6 +53,8 @@ import { ReefSource } from './reefSource.ts';
 import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } from './reefProgress.ts';
 import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf } from '../core/endless.ts';
 import { freshSeed as envSeed, today } from './env.ts';
+import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
+import type { LeaderboardUi } from '../ui/leaderboard.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -84,6 +88,11 @@ function wakeAudio(): void {
 const profile: Profile = loadProfile();
 
 const freshSeed = (): number => envSeed(params);
+/** Move logs of the live Classic/Daily games, saved with them (leaderboards replay them). */
+const runLog = new RunLog();
+/** A new classic game's seed: a prefetched server seed if one is stored (a ranked Endless run). */
+const classicSeed = (): number =>
+  (!params.has('seed') && profile.firstRunDone ? runLog.ticketSeed() : null) ?? freshSeed();
 
 let mode: Mode = params.get('mode') === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
@@ -143,9 +152,16 @@ function startState(): GameState {
     const i = reefAt(want) ? want : Math.min(want, PACK.length - 1);
     return newPuzzleGame(reefAt(i)!, i);
   }
-  if (mode === 'daily') return loadDaily(dailyDate) ?? newGame(dailySeed(dailyDate), { mode: 'daily' });
+  if (mode === 'daily') {
+    const g = loadDaily(dailyDate);
+    return (
+      runLog.resume('daily', g, g && loadDailyRun(dailyDate, g), dailyDate) ??
+      newGame(dailySeed(dailyDate), { mode: 'daily' })
+    );
+  }
   if (params.has('seed')) return newGame(freshSeed(), { teach: !profile.firstRunDone });
-  return loadGame() ?? newGame(freshSeed(), { teach: !profile.firstRunDone });
+  const g = loadGame();
+  return runLog.resume('classic', g, g && loadGameRun(g)) ?? newGame(classicSeed(), { teach: !profile.firstRunDone });
 }
 
 // ------------------------------------------------------------------ theme & motion
@@ -329,6 +345,7 @@ function updateHint(): void {
 function commit(m: Move, from: { x: number; y: number } | null): boolean {
   const r = applyMove(state, m);
   if (!r) return false;
+  if (mode !== 'puzzle') runLog.record(state, m, mode, dailyDate);
   const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   const prevScore = state.score;
   state = r.state;
@@ -393,8 +410,8 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
 
 function persist(): void {
   if (mode === 'puzzle') return; // puzzles are short; progress is the solved list
-  if (mode === 'daily') saveDaily(dailyDate, state);
-  else saveGame(state);
+  if (mode === 'daily') saveDaily(dailyDate, state, runLog.get('daily'));
+  else saveGame(state, runLog.get('classic'));
 }
 
 function snapshot(): ProgressSnapshot {
@@ -439,6 +456,8 @@ function finishGame(prevBest: number): void {
     unlocked: unlockedNow,
     shape: bigLagoon && bigLagoon.cells.length >= 2 ? bigLagoon : null,
     caught: { ...gameCatch, newIds: [...gameCatch.newIds] },
+    // starts posting now (if the player has a name) so the rank is ready when the card shows
+    leaderboard: mode === 'puzzle' ? undefined : lbResult(runLog.finish(state, mode), mode),
   };
   later(DEBUG && params.has('fast') ? 0 : 1400, () => {
     if (overShown) return;
@@ -446,9 +465,45 @@ function finishGame(prevBest: number): void {
     if (card.newBest && !bestCelebrated) sfx.newBest();
     // freeze the score behind the card at the final value (no mid-count-up mismatch)
     scene.score = scene.shownScore = card.score;
-    ui.showGameOver(card);
+    resultCard = ui.showGameOver(card);
   });
 }
+
+// ------------------------------------------------------------------ leaderboards (lazy: ui/leaderboard.ts)
+const LB_URL = (import.meta.env.VITE_LB_URL as string | undefined) || undefined;
+let lbMod: Promise<LeaderboardUi> | null = null;
+/** The last results card, so leaderboard sheets opened from it can go back to it. */
+let resultCard: HTMLElement | null = null;
+function lbui(): Promise<LeaderboardUi> {
+  lbMod ??= import('../ui/leaderboard.ts').then((m) =>
+    m.createLeaderboardUi({
+      ui,
+      url: LB_URL,
+      profile,
+      save: () => saveProfile(profile),
+      journal: () => journal,
+      clientVersion: __APP_VERSION__,
+      playDaily: () => (mode === 'daily' ? restart() : switchMode('daily')),
+      playEndless: () => (mode === 'classic' ? restart() : switchMode('classic')),
+      offline: DEBUG && params.has('lboffline'),
+      click: () => (wakeAudio(), sfx.click()),
+      reducedMotion: () => scene.reducedMotion,
+    }),
+  );
+  return lbMod;
+}
+/** Results-card hook: Leaderboard button (name entry → board), auto-post when already named. */
+function lbResult(run: FinishedRun | null, m: 'classic' | 'daily') {
+  const h = lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false)));
+  return {
+    label: profile.lb?.name ? 'Leaderboard' : 'Post your score',
+    open: () => void h.then((x) => x.open()),
+    mount: (b: HTMLButtonElement) => void h.then((x) => x.mount(b)),
+  };
+}
+/** Queued scores, pending deletions, a spare Endless seed: only touches the network when needed. */
+const lbBackground = () => (LB_URL || hasPendingLbWork()) && void lbui().then((l) => l.background());
+addEventListener('online', lbBackground);
 
 function checkPuzzle(): void {
   const st = puzzleStatus(state);
@@ -574,8 +629,9 @@ function restart(): void {
     dailyDate = today();
     state = newGame(dailySeed(dailyDate), { mode: 'daily' });
   } else {
-    state = newGame(freshSeed(), { teach: !profile.firstRunDone });
+    state = newGame(classicSeed(), { teach: !profile.firstRunDone });
     teaching = !profile.firstRunDone;
+    lbBackground(); // fetch the next spare server seed
   }
   persist();
   syncScene();
@@ -618,9 +674,12 @@ const ui = new Ui({
   onOpenMenu: () => ui.showMenu(profile, mode, !state.over, Object.keys(journal.entries).length),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
+  onLeaderboards: () => void lbui().then((l) => l.showBoards(mode === 'daily' ? 'daily' : 'week')),
   onErase: () => {
     erasing = true; // don't let the unload handlers write it all back
+    const lbId = profile.lb?.installId;
     eraseAll();
+    if (lbId) markForget(lbId); // the next launch asks the server to delete this player (then forgets the id)
     location.reload();
   },
   onResume: () => ui.close(),
@@ -840,6 +899,7 @@ const idle =
 idle(() => {
   sfx.prepare();
   scene.warmSprites();
+  lbBackground();
 });
 resize();
 applyTheme();

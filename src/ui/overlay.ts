@@ -25,6 +25,7 @@ export interface UiHandlers {
   onSkin(): void;
   onSettings(): void;
   onJournal(): void;
+  onLeaderboards(): void;
   onErase(): void;
   onShare(): void;
   onClick(): void;
@@ -117,7 +118,14 @@ export class Ui {
 
   private returnFocus: HTMLElement | null = null;
 
-  private show(card: HTMLElement, dismissable: boolean): void {
+  /** Show a card built elsewhere (leaderboard sheets). `dismiss`: true = Resume, or a custom action. */
+  present(card: HTMLElement, dismiss: boolean | (() => void)): void {
+    this.show(card, dismiss);
+  }
+
+  private show(card: HTMLElement, dismiss: boolean | (() => void)): void {
+    const dismissable = dismiss !== false;
+    const onDismiss = typeof dismiss === 'function' ? dismiss : () => this.h.onResume();
     const replacing = this.veil !== null;
     if (!replacing) this.returnFocus = document.activeElement as HTMLElement | null;
     this.close(true);
@@ -128,15 +136,15 @@ export class Ui {
     v.append(card);
     if (dismissable)
       v.addEventListener('click', (e) => {
-        if (e.target === v) this.h.onResume();
+        if (e.target === v) onDismiss();
       });
     v.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && dismissable) {
         e.preventDefault();
-        this.h.onResume();
+        onDismiss();
       } else if (e.key === 'Tab') {
         // keep focus inside the dialog
-        const f = [...v.querySelectorAll<HTMLElement>('button')];
+        const f = [...v.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex="0"]')];
         if (!f.length) return;
         const i = f.indexOf(document.activeElement as HTMLElement);
         const next = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : i === f.length - 1 ? 0 : i + 1;
@@ -191,6 +199,7 @@ export class Ui {
         this.h.onJournal(),
       ),
     );
+    card.append(this.button('menu-lb', 'btn', 'Leaderboards', 'Leaderboards', () => this.h.onLeaderboards()));
     card.append(this.button('', 'btn ghost', 'Settings', 'Settings', () => this.h.onSettings()));
     this.show(card, canResume);
   }
@@ -389,7 +398,10 @@ export class Ui {
     unlocked: string[];
     shape?: { cells: readonly number[]; ring: readonly number[] } | null;
     caught?: { count: number; newIds: string[] };
-  }): void {
+    /** Leaderboard hook (Daily/Classic): a button that opens name entry → board; `mount` lets the
+     *  leaderboard module update its label (e.g. "#37 this week") when a result arrives. */
+    leaderboard?: { label: string; open(): void; mount?(b: HTMLButtonElement): void };
+  }): HTMLElement {
     const card = document.createElement('div');
     card.className = 'card';
     const stats = [
@@ -411,8 +423,15 @@ export class Ui {
       card.append(this.button('play-again', 'btn primary', 'Play again', 'Play again', () => this.h.onNewGame()));
       card.append(this.button('', 'btn', 'Daily challenge', 'Daily challenge', () => this.h.onDaily()));
     }
+    if (o.leaderboard) {
+      const lb = o.leaderboard;
+      const b = this.button('lb-open', 'btn', lb.label, lb.label, () => lb.open());
+      card.querySelector('.btn.primary')!.after(b);
+      lb.mount?.(b);
+    }
     this.show(card, false);
     this.announce(`Game over. Score ${o.score}.${o.newBest ? ' New best!' : ''}`);
+    return card;
   }
 }
 
