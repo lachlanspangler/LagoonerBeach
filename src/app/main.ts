@@ -830,7 +830,10 @@ if (DEBUG)
     journal: () => journal,
     stageBest: (n, score) => {
       scene.best = n;
-      if (score !== undefined) scene.score = scene.shownScore = score;
+      if (score !== undefined) {
+        state = { ...state, score }; // so the next capture adds to the staged score
+        scene.score = scene.shownScore = score;
+      }
       dirty = true;
     },
     stageJournal: (ids) => {

@@ -19,7 +19,7 @@ HIG / Material touch-target guidance.
 | **Motion** | ✅ | Follows `prefers-reduced-motion`, plus an in-game toggle: no shake, ~30% particles, no creature leaps or hint demo, static dashes. |
 | **Audio / haptics** | ✅ | Separate Sound, Music and Haptics switches; nothing is communicated only by sound. |
 | **Seizure safety** | ✅ | No flashing above 3 Hz; the jackpot sweep is a single soft band. |
-| **Text size** | ⚠️ | Canvas text scales with the board, not with OS text size. Menus use fixed px. Acceptable for v1; a "Large text" setting is in the ideas ledger. |
+| **Text size** | ✅ (added) | Settings → **Larger text** scales every canvas label and the menus (×1.2). OS dynamic type is not read inside the canvas. |
 | **Language** | ✅ | Almost text-free play; menus are short English strings (localization-ready, not yet translated). |
 
 ## Known gaps (and why)

@@ -47,6 +47,13 @@ const row = (r: string) => r.replace(/\./g, '0');
 const BOARD = ['........', '.5...5..', '.5...5.2', '.5...5.2', '.55555..', '......14', '33....14', '3.66..44']
   .map(row)
   .join('');
+// night: a wide 4×2 lagoon; glyph: an irregular one, so no two shots share a board
+const NIGHT = ['........', '.33...3.', '.3....3.', '.3....3.', '.333333.', '........', '22....55', '2..11.55']
+  .map(row)
+  .join('');
+const GLYPH = ['1......2', '1......2', '..5...5.', '..5..65.', '..5...5.', '..55555.', '33......', '3..44...']
+  .map(row)
+  .join('');
 
 const shots: { name: string; caption: string; theme: 'light' | 'dark'; stage: (p: Page) => Promise<void> }[] = [
   {
@@ -117,9 +124,9 @@ const shots: { name: string; caption: string; theme: 'light' | 'dark'; stage: (p
     caption: 'Calm by day.\nGlowing by night.',
     theme: 'dark',
     stage: async (p) => {
-      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'cup-up', 'square']), NIGHT);
       await p.evaluate(() => (window as any).__atoll.stageBest(12480, 4316));
-      await hold(p, 0, 2, 0);
+      await hold(p, 0, 3, 1);
     },
   },
   {
@@ -129,16 +136,11 @@ const shots: { name: string; caption: string; theme: 'light' | 'dark'; stage: (p
     stage: async (p) => {
       await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
       await p.waitForTimeout(400);
-      await p.evaluate(() => (window as any).__atoll.loadPuzzle(180));
+      await p.evaluate(() => (window as any).__atoll.loadPuzzle(185));
       await p.waitForTimeout(500);
+      // the first move of a fresh reef: full tray, the plan still to find
       const sol = await p.evaluate(() => (window as any).__atoll.puzzleSolution());
-      const last = sol[sol.length - 1];
-      for (const m of sol.slice(0, -1)) {
-        await hold(p, m.piece, m.x, m.y);
-        await p.mouse.up();
-        await p.waitForTimeout(900);
-      }
-      await hold(p, last.piece, last.x, last.y);
+      await hold(p, sol[0].piece, sol[0].x, sol[0].y);
     },
   },
   {
@@ -147,9 +149,9 @@ const shots: { name: string; caption: string; theme: 'light' | 'dark'; stage: (p
     theme: 'light',
     stage: async (p) => {
       await p.evaluate(() => (window as any).__atoll.debugSkin('glyph'));
-      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), GLYPH);
       await p.evaluate(() => (window as any).__atoll.stageBest(12480, 4316));
-      await hold(p, 0, 2, 0);
+      await hold(p, 0, 3, 2);
     },
   },
 ];
