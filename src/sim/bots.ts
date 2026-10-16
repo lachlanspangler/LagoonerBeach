@@ -104,5 +104,27 @@ export function makeSearchBot(beam = 10): Bot {
 
 export const searchBot: Bot = makeSearchBot(10);
 
-export const BOTS = { random: randomBot, firstFit: firstFitBot, greedy: greedyBot, search: searchBot } as const;
+/**
+ * Rough model of a casual human: usually picks the greedy-best move, but 30% of the time picks
+ * one of the top 6 at random (misreads, impatience). Used to estimate session length.
+ */
+export const humanBot: Bot = (s, rng) => {
+  const scored: { m: Move; v: number }[] = [];
+  for (const m of legalMoves(s)) {
+    const r = applyMove(s, m, { noRefill: true })!;
+    scored.push({ m, v: r.state.score - s.score + evaluate(r.state.board) });
+  }
+  if (!scored.length) return null;
+  scored.sort((a, b) => b.v - a.v);
+  return rng.next() < 0.7 ? scored[0]!.m : scored[rng.int(Math.min(6, scored.length))]!.m;
+};
+
+export const BOTS = {
+  random: randomBot,
+  firstFit: firstFitBot,
+  greedy: greedyBot,
+  search: searchBot,
+  human: humanBot,
+} as const;
+
 export type BotName = keyof typeof BOTS;

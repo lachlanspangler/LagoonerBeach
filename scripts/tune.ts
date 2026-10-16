@@ -31,7 +31,8 @@ const games = Number(arg('games', '120'));
 const bots = arg('bots', 'random,greedy,search').split(',');
 const ramp = arg('ramp', '{}');
 const cap = arg('cap', '500');
-const per: Record<string, number> = { random: 1, firstFit: 1, greedy: 0.5, search: 0.35 };
+const per: Record<string, number> = { random: 1, firstFit: 1, greedy: 0.5, search: 0.35, human: 0.5 };
+
 const workers = Math.max(2, cpus().length - 2);
 const self = fileURLToPath(import.meta.url);
 const { median, mean } = await import('../src/sim/play.ts');

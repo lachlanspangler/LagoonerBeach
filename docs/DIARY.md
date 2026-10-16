@@ -132,3 +132,12 @@ broke, what I decided and why.
   had the closing piece. That hope is the "one more round" hook.
 - Risk noted: players may think diagonal gaps leak. They don't (4-connectivity); the live water
   preview teaches it on the first try. Keep the preview prominent.
+
+## 2026-10-16 01:35 CDT — Tap-to-place, session length retune
+- Tap-to-place (I-073): tap piece → tap board previews → tap again places. Works on WebKit.
+- Added a **human-like bot** (greedy 70%, otherwise a random top-6 move). With ramp end 60 it
+  played 62 moves median (~3.6 min at ~3.5 s/move) — over the rubric's ~3 min. Ramp end 60 → 45:
+  random 20, human 50 (~3 min), greedy 56, search 86 (median). Skill 35×, firstFit÷search 0.05,
+  greedy÷search 0.26. Golden snapshot updated deliberately.
+- Trade-off logged: experts now average ~5 min games instead of ~11. If real players find the late
+  game too harsh, raise `late.huge` less steeply rather than moving `end`.

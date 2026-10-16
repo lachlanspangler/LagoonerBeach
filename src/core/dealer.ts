@@ -30,13 +30,14 @@ export interface RampConfig {
 }
 
 /**
- * Tuned with scripts/tune.ts (see docs/DIARY.md 2026-10-16): random bot ≈ 23 moves, greedy ≈ 74,
- * search ≈ 194 (median). Changing these numbers changes the daily challenge for everyone, and the
+ * Tuned with scripts/tune.ts (see docs/DIARY.md 2026-10-16): random ≈ 20 moves, human-like ≈ 50
+ * (~3 min), greedy ≈ 56 (median). Changing these numbers changes the daily challenge for everyone, and the
  * bot regression bands in tests/unit/balance.test.ts will flag it.
  */
 export const DEFAULT_RAMP: RampConfig = {
   start: 8,
-  end: 60,
+  end: 45,
+
   early: { tiny: 0.9, small: 1.6, medium: 3.2, large: 1.6, huge: 0.25 },
   late: { tiny: 0.05, small: 0.3, medium: 1.5, large: 3.2, huge: 1.8 },
   dotFactor: 0.45,
