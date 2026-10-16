@@ -4,10 +4,24 @@
     <meta charset="utf-8" />
     <title>creature gallery (dev only)</title>
     <style>
+      @font-face {
+        font-family: 'Lagoon UI';
+        src: url('/fonts/lagoon-ui.woff2') format('woff2');
+        font-weight: 200 1000;
+      }
+      @font-face {
+        font-family: 'Lagoon Display';
+        src: url('/fonts/lagoon-display-900.woff2') format('woff2');
+        font-weight: 900;
+      }
+      @font-face {
+        font-family: 'Lagoon Display';
+        src: url('/fonts/lagoon-display-600.woff2') format('woff2');
+        font-weight: 600;
+      }
       body {
         margin: 0;
         background: #f4ede2;
-        font: 12px system-ui;
       }
       canvas {
         display: block;
@@ -15,6 +29,7 @@
     </style>
   </head>
   <body>
+    <!-- modes: see tools/gallery.ts (?compare, ?sheet=id, ?film=id, ?sil) -->
     <canvas id="c"></canvas>
     <script type="module" src="./gallery.ts"></script>
   </body>
