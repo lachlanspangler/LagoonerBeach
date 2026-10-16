@@ -46,3 +46,40 @@ broke, what I decided and why.
   Visual identity: calm sea palette, sand/coral blocks; a sealed pocket fills with lagoon light and
   the ring bursts into foam. Dark mode = night reef with bioluminescence. Name availability on the
   stores is **not verified** (needs the user; noted in STATUS).
+
+## 2026-10-15 23:35 CDT — Production core
+- Wrote `src/core` from scratch (prototype code not reused): rng, grid, pieces (41 incl. 4 "cups"
+  — the natural loop builders), rules, scoring, dealer, game, serialize, replay, daily.
+- First tune on the production catalog: **greedy survived 311 moves** (way too easy — cups and the
+  fairness guard help a lot). Swept ramps; chose start 8 → end 60 with chunkier late weights:
+  random 23, firstFit 29, greedy 74, search 194 (median). Skill 53×, firstFit÷search 0.02,
+  greedy÷search 0.16.
+- **Broke (test):** fairness test showed only 8/200 trays had a fitting piece on a near-full board —
+  rejection sampling can't find rare fitting pieces. **Root-cause fix:** if retries fail, force one
+  slot to a weighted pick among pieces that fit.
+- **Broke (property test):** "no pockets after a move" failed. Clearing a ring inside a *thick* wall
+  leaves a bigger empty region that is still enclosed. **Decision: cascade** — keep capturing in
+  waves until no pocket remains; wave k scores ×k. Keeps the one rule always true and creates a
+  jackpot (thick walls collapse inward-out). Balance unchanged (bots rarely build thick walls).
+
+## 2026-10-15 23:50 CDT — Presentation layer
+- Renderer (Canvas2D, pre-rendered pebble sprites, pooled particles), drag controller, synth SFX,
+  haptics, storage, DOM menus, effects choreography driven by domain events.
+- **Broke:** `__atoll` hook missing in Playwright → port 5173 was already serving *another
+  project's* Vite app on this machine. Moved Atoll to :5317 / :4317 (strictPort).
+- Played via `scripts/shoot.ts` (real pointer drags chosen by a bot), looked at screenshots:
+  - Good: pebbles read as objects; the lagoon water + ring outline preview is very legible; the
+    "Pool"/"+69" pop with foam rings feels lively; teaching hint clearly says "put the cup here".
+  - Bad → fixed: dead space above/below the board on tall phones (centered the board+tray stack,
+    biased toward the thumb); tray stretched across tablets (now spans the board); Night board
+    nearly invisible against background (raised contrast).
+  - Noted: teaching capture also triggers "Clear reef" (+300) on move 2 — a big first-game wow, but
+    inflates the first score. Kept for now; revisit.
+
+## 2026-10-16 00:05 CDT — e2e + perf
+- 18 Playwright tests: boot, 30-move real-drag play, illegal drop, reload persistence, game over →
+  play again, menu toggles persist, daily identical across contexts, 10 layout/screenshot cases,
+  perf budget.
+- **Broke:** menu toggle re-render left two dialogs during the fade (strict-mode locator caught it).
+  Fixed by replacing an open dialog instantly.
+- Perf at 4× CPU throttle, 1083 frames of heavy play: draw p50 0.4 ms, p95 1.0, max 3.8 ms.
