@@ -98,7 +98,9 @@ interface Placing {
 /** Seconds a leaping creature stays on screen. */
 const FISH_LIFE = 0.95;
 
-export const FONT = `ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif`;
+export const FONT = `"Lagoon UI", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif`;
+/** Display voice (callouts, names, titles). Never for numbers: its digits are proportional. */
+export const DISPLAY_FONT = `"Lagoon Display", "Iowan Old Style", Georgia, serif`;
 
 export class Scene {
   palette: Palette = DAY;

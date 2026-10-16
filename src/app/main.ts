@@ -802,6 +802,9 @@ resize();
 applyTheme();
 syncScene();
 requestAnimationFrame(frame);
+// bundled fonts arrive after first paint (font-display: swap): redraw once they're in
+document.fonts?.addEventListener?.('loadingdone', () => (dirty = true));
+void document.fonts?.load?.('800 16px "Lagoon UI"').then(() => (dirty = true));
 
 if (!DEBUG && 'serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));

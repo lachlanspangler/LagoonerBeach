@@ -1,3 +1,23 @@
+/* Fonts (SIL OFL 1.1, bundled; see public/fonts/OFL-*.txt and scripts/fonts.sh).
+   Display = Fraunces SOFT 100 ("Lagoon Display"), UI + every number = Nunito ("Lagoon UI"). */
+@font-face {
+  font-family: 'Lagoon UI';
+  src: url('/fonts/lagoon-ui.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Lagoon Display';
+  src: url('/fonts/lagoon-display-900.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Lagoon Display';
+  src: url('/fonts/lagoon-display-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
 :root {
   --bg: #f4ede2;
   --panel: #fffaf2;
@@ -6,7 +26,8 @@
   --accent: #2673bd;
   --water: #5cc8e0;
   --shadow: rgba(80, 55, 30, 0.18);
-  --font: ui-rounded, 'SF Pro Rounded', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font: 'Lagoon UI', ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Lagoon Display', 'Iowan Old Style', Georgia, serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
