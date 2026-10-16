@@ -365,3 +365,32 @@ moments, leaderboards with 7-letter names, endless reefs, top-chart aesthetics.
   Initial JS is 50.1 KB gz.
 - **Not done / stubbed:** no live D1 (the SQL is untested without wrangler, see DEPLOY.md smoke
   test), no admin endpoint, no histogram ranks, no Settings "name" row (rename lives on the board).
+
+## 2026-10-16 (session 3) — Creature art pipeline + 5 pilot species (ADR 0011)
+Plan: (1) kit per CREATURE_ART.md §5 "B": path data → Path2D layers, shared face rig, outline,
+palette, motion, caches, lazy chunk; (2) machine checks for the guide + R12 silhouettes; (3) review
+tooling; (4) five pilots, ≥ 3 rounds each; (5) integrate leap + journal; (6) fleet brief.
+- **Kit (`src/render/art/`):** species are data files (`species/<id>.ts`, auto-registered via
+  `import.meta.glob`, so fleet agents never share a list). Outline is a same-hue ink stroke drawn
+  *behind* the fills (`destination-over`), so joins vanish; Night rim behind that; patterns clip with
+  `source-atop`. Face rig, 7 expressions + wink, blink/signature schedulers, keyframe tracks, size-scaled
+  tempo, props (anemone, ink heart). `drawCreature` is still the API; legacy art is the fallback.
+- **Numbers:** initial JS 41.9 KB gz (+0.3); art chunk 12.7 KB gz with 5 species (kit ≈ 8 KB, ≈ 0.7–1.1
+  KB/species → ≈ 45–52 KB for 47; budget 60, enforced). 4× throttle: 0.026 ms mean per animated
+  creature (budget 0.12), 6 leapers p95 0.7 ms, zero rasters after warm-up. WebKit Path2D(string) parity
+  with the Canvas-free rasteriser within 8 %; closest silhouettes clownfish/turtle 0.75 (< 0.80).
+- **Pilots, what the rounds fixed:** clownfish — validator bugs first (segments counted per joined
+  path, patterns counted against the artboard), then a pectoral fin crossing the head bar, a tail tip
+  clipped away (patterns clip to their own group). Octopus — box 89 × 87 and front arms meeting like
+  clasped hands; separated them. Sand dollar — notched rim read as a lumpy potato; a clean, slightly
+  wide coin also drops its IoU vs the octopus from 0.75 to 0.69. Hermit — crab drawn behind the shell
+  hid its own eyes; moved in front, claw lowered off the face. Turtle — box 88 wide; and in the leap
+  strip it stood upright. Kit fix: non-swimmers lean 30 % into the arc instead of pointing along it.
+- **Felt good:** the faces (low solid eyes + blush) carry the charm at 54 px; peekaboo-wink, coin spin,
+  anemone dive and head-tuck all read in single frames. Golden as a real remap looks like a prize.
+- **Felt off / open:** the hermit (XS, fill 0.38) is honestly small in its journal tile, which is the
+  guide's intent but costs readability. The mixed old/new journal looks inconsistent until the fleet
+  lands. The catch roll can't be steered for a screenshot, so the in-game leap was verified with
+  legacy species plus the sheet's "leap as in game" strip (the same call as scene.ts).
+- Not done (guide items for later): rarity frames/pips (R29), the bubble-pearl present (R30), XS
+  double-hop / XXL breach (R26), the species-page size line (R28).

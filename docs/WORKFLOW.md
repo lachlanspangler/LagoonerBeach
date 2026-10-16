@@ -50,6 +50,7 @@ Run this forever. Each pass should end with a commit and an updated diary/status
 | `scripts/dragstrip.ts` | slow drag: lift, ghost, snap, seal preview |
 | `scripts/play-cli.ts <seed> "s,x,y …"` | text play for design review |
 | `scripts/skins.ts`, `scripts/reefs.ts`, `scripts/gameover.ts` | review grids |
+| `scripts/art-sheet.ts <id>` / `scripts/gallery.ts` / `scripts/art-journal.ts` | creature art: per-species review sheet; before/after, silhouettes, filmstrips; the real journal (ADR 0011, `docs/art/FLEET_BRIEF.md`) |
 | `scripts/store-shots.ts` | App Store screenshots |
 | `scripts/tune.ts` / `make tune` | bot balance report |
 | `scripts/sub.py` | asserting search/replace for edits (never silent no-ops) |
