@@ -123,3 +123,17 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   back: 0.69 / 0.68, and it reads as a happy bumphead.
 - Grade: B. Still to improve: the crescent horns are thin; without a dorsal the back is a little
   bare; margins vs clownfish and grouper are tight (0.69 / 0.68).
+
+## blenny
+- Size class: S. Feature: a big blunt round head with two plump upright eyebrow tufts (cirri, own
+  group), tapering like a tadpole into a slim body with one thin dorsal ribbon and a little round
+  tail; propped nose-up at 20° (looking at you: nosy). Five darker olive spots.
+- Signature: the peek: it ducks 34 units down out of the tile, hangs there, pops back up
+  `surprised`, waggles its eyebrows (`waveTrack` on the tufts) `happy`, and ends on a wink. The
+  tufts sway in the ambient idle too. Catch: an eyebrow waggle and a squash.
+- Rounds: 4. (1) level tadpole with tufts: IoU 0.80 vs the flounder (its eye turrets sit where
+  the tufts do). (2) a 12° nose-up prop: 0.76. (3) a stronger taper and a thinner dorsal (the
+  ribbon was filling the back in): 0.71. (4) 20° nose-up: 0.65 vs flounder, 0.68 vs limpet
+  (cross-class); the pectoral moved back (it read as a second mouth by the real one).
+- Grade: B+. Still to improve: the tufts read a little like bunny ears (charming, not quite
+  "eyebrows"); a fringe tip on each would say cirri.
