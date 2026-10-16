@@ -169,6 +169,10 @@ export class MockBackend implements LeaderboardBackend {
     return null; // on-device seeds: nothing to sign
   }
 
+  async markStarted(): Promise<void> {
+    /* no tickets, nothing to time */
+  }
+
   async submit(entry: ScoreSubmission): Promise<SubmitResponse> {
     await this.tick();
     const c = checkSubmission(entry, this.now(), RULES_VERSION);
@@ -197,9 +201,9 @@ export class MockBackend implements LeaderboardBackend {
     return { verifiedScore: state.score, boards: out };
   }
 
-  async top(board: BoardRef, n: number) {
+  async top(board: BoardRef, n: number, installId?: string) {
     await this.tick();
-    return this.table.top(this.resolve(board), n);
+    return this.table.top(this.resolve(board), n, installId);
   }
 
   async around(board: BoardRef, installId: string, window: number) {

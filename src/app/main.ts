@@ -102,6 +102,12 @@ const classicSeed = (): number =>
 let mode: Mode = params.get('mode') === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
 let state: GameState = startState();
+/** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
+function saveIfTicketed(): void {
+  const rec = mode === 'classic' && state.moves === 0 ? runLog.get('classic', state) : null;
+  if (rec?.runToken) saveGame(state, rec);
+}
+saveIfTicketed();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
@@ -363,10 +369,16 @@ function updateHint(): void {
 // ------------------------------------------------------------------ moves
 /** `quiet`: bot autoplay (tests) records discoveries without staging their reveals. */
 function commit(m: Move, from: { x: number; y: number } | null, quiet = false): boolean {
+  if (startWaiting) return false; // the next game is being dealt
   const t0 = performance.now();
   const r = applyMove(state, m);
   if (!r) return false;
   if (mode !== 'puzzle') runLog.record(state, m, mode, dailyDate);
+  if (mode === 'classic' && state.moves === 0 && LB_ON && LB_URL) {
+    // a ticketed run starts its server clock at the first move (offline: the run isn't speed-checked)
+    const tok = runLog.get('classic')?.runToken;
+    if (tok) void lbui().then((l) => l.client.markStarted(tok));
+  }
   const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   const prevScore = state.score;
   state = r.state;
@@ -425,7 +437,7 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
 function persist(): void {
   if (mode === 'puzzle') return; // puzzles are short; progress is the solved list
   if (mode === 'daily') saveDaily(dailyDate, state, runLog.get('daily'));
-  else saveGame(state, runLog.get('classic'));
+  else saveGame(state, runLog.get('classic', state));
 }
 
 function snapshot(): ProgressSnapshot {
@@ -507,6 +519,7 @@ function lbui(): Promise<LeaderboardUi> {
       playDaily: () => (mode === 'daily' ? restart() : switchMode('daily')),
       playEndless: () => (mode === 'classic' ? restart() : switchMode('classic')),
       offline: DEBUG && params.has('lboffline'),
+      lastRun: () => lastFinished,
       click: () => (wakeAudio(), sfx.click()),
       reducedMotion: () => scene.reducedMotion,
     }),
@@ -514,7 +527,10 @@ function lbui(): Promise<LeaderboardUi> {
   return lbMod;
 }
 /** Results-card hook: Leaderboard button (name entry → board), auto-post when already named. */
+/** The last finished run ("Choose a name" on a boards sheet posts it if it wasn't posted or declined). */
+let lastFinished: FinishedRun | null = null;
 function lbResult(run: FinishedRun | null, m: 'classic' | 'daily') {
+  lastFinished = run;
   type Hook = ReturnType<LeaderboardUi['forResult']>;
   let hook: Promise<Hook> | null = null;
   let btn: HTMLButtonElement | null = null;
@@ -666,12 +682,33 @@ function restart(): void {
     // the daily is one seed per day; replay keeps the best score
     dailyDate = today();
     state = newGame(dailySeed(dailyDate), { mode: 'daily' });
-  } else {
-    state = newGame(classicSeed(), { teach: !profile.firstRunDone });
-    teaching = !profile.firstRunDone;
-    lbBackground(); // fetch the next spare server seed
-  }
+  } else if (LB_ON && LB_URL && profile.firstRunDone && !params.has('seed') && navigator.onLine) {
+    // online with the real server: prefer a ticket issued now (the spare's clock has been running
+    // since it was fetched); the spare, then a local unranked seed, are the fallbacks
+    const tok = ++startToken;
+    startWaiting = true;
+    void lbui()
+      .then((l) => l.client.freshTicket())
+      .catch(() => null)
+      .then((t) => {
+        if (tok !== startToken || mode !== 'classic') return;
+        startWaiting = false;
+        newClassic(t ? runLog.useTicket(t) : classicSeed());
+      });
+    return;
+  } else return newClassic(classicSeed());
   persist();
+  syncScene();
+}
+
+/** A classic game is waiting for a fresh ticket (moves on the old board are ignored meanwhile). */
+let startWaiting = false;
+let startToken = 0;
+function newClassic(seed: number): void {
+  state = newGame(seed, { teach: !profile.firstRunDone });
+  teaching = !profile.firstRunDone;
+  lbBackground(); // fetch the next spare server seed
+  persist(); // saves the ticket with the game, so a reload before the first move stays ranked
   syncScene();
 }
 
@@ -701,9 +738,12 @@ function switchMode(m: Mode): void {
   ui.close();
   persist();
   mode = m;
+  startToken++; // a fresh-ticket start still in flight is for a game the player has left
+  startWaiting = false;
 
   dailyDate = today();
   state = startState();
+  saveIfTicketed();
   teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
   syncScene();
 }

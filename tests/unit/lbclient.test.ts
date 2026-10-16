@@ -28,6 +28,7 @@ import { validateName } from '../../src/meta/names.ts';
 import { weekBoard, type ScoreSubmission } from '../../src/meta/boards.ts';
 import { handle } from '../../server/src/handler.ts';
 import { MemoryStore } from '../../server/src/store.ts';
+import { signRun } from '../../server/src/token.ts';
 import { playOut } from './runs.ts';
 import { freshLocalStorage } from './memstorage.ts';
 
@@ -380,5 +381,130 @@ describe('submission shape', () => {
       clientVersion: 'test',
       avatar: 'hermit',
     });
+  });
+});
+
+describe('review fixes (client)', () => {
+  /** An Endless run on a token signed with the given expiry. */
+  async function ticketed(exp: number, seed = 41) {
+    const runToken = await signRun(
+      { v: 1, rid: 'r'.repeat(32), pid: '', seed, teach: false, rules: RULES_VERSION, iat: exp - 72 * 3_600_000, exp },
+      's',
+    );
+    return { ...endlessFinished(seed), runToken };
+  }
+  const fakeBackend = (over: Partial<LeaderboardBackend>): LeaderboardBackend => ({
+    kind: 'http',
+    startRun: async () => null,
+    markStarted: async () => undefined,
+    submit: async () => ({ verifiedScore: 0, boards: [] }),
+    top: async (b) => ({ board: b as 'endless:all', total: 0, entries: [] }),
+    around: async (b) => ({ board: b as 'endless:all', total: 0, me: null, above: null, entries: [] }),
+    myRank: async () => null,
+    deletePlayer: async () => undefined,
+    ...over,
+  });
+
+  it('"You" is the row the backend tagged, never the row that happens to share my rank', async () => {
+    lb.installId = 'a'.repeat(32);
+    // a cached/stale top where rank 2 is someone else; around (fresh) says I'm #2
+    const c = client(
+      fakeBackend({
+        top: async () => ({
+          board: 'endless:all',
+          total: 3,
+          entries: [
+            { rank: 1, name: 'CORAL', score: 900, moves: 40 },
+            { rank: 2, name: 'KELP', score: 800, moves: 40 },
+            { rank: 3, name: 'TIDE', score: 700, moves: 40, me: true },
+          ],
+        }),
+        around: async () => ({
+          board: 'endless:all',
+          total: 3,
+          me: { rank: 2, name: 'TIDE', score: 850, moves: 40, me: true },
+          above: null,
+          entries: [],
+        }),
+      }),
+    );
+    const v = await c.view('endless:all');
+    expect(v.top.filter((e) => e.me).map((e) => e.name)).toEqual(['TIDE']);
+    // and against the real Worker: the personalised top tags exactly my row, even in a tie
+    const store = new MemoryStore();
+    const http = new HttpBackend('https://lb.test', (u, i) =>
+      handle(new Request(u, i), { store, secret: 's', now: () => clock }),
+    );
+    const run = dailyFinished();
+    lb.installId = undefined;
+    await client(http).post(run, 'CORAL');
+    const first = lb.installId!;
+    lb.installId = undefined;
+    clock += 1000;
+    const c2 = client(http);
+    await c2.post(run, 'KELP'); // same score: ranks below CORAL
+    const v2 = await c2.view(`daily:${DAY}`);
+    expect(v2.top.map((e) => [e.name, !!e.me])).toEqual([
+      ['CORAL', false],
+      ['KELP', true],
+    ]);
+    expect(first).not.toBe(lb.installId);
+  });
+
+  it('a run whose ticket expired is never queued; queued ones that expire are dropped with a count', async () => {
+    const offline = fakeBackend({
+      submit: async () => {
+        throw new LbError('offline');
+      },
+    });
+    const c = client(offline);
+    expect(await c.post(await ticketed(T0 - 1), 'TIDE')).toEqual({ status: 'rejected', reason: 'token_expired' });
+    expect(c.pending()).toHaveLength(0);
+    expect((await c.post(await ticketed(T0 + 3_600_000), 'TIDE')).status).toBe('queued');
+    expect(c.pending()).toHaveLength(1);
+    clock += 2 * 3_600_000; // still offline when the ticket runs out
+    await c.flush();
+    expect(c.pending()).toHaveLength(0);
+    expect(c.takeExpiredDrops()).toBe(1); // shown once on the next board…
+    expect(c.takeExpiredDrops()).toBe(0); // …then forgotten
+    expect(c.expired(dailyFinished())).toBe(false);
+  });
+
+  it('fresh tickets and the run start reach the server (the speed clock starts at the first move)', async () => {
+    const store = new MemoryStore();
+    const http = new HttpBackend('https://lb.test', (u, i) =>
+      handle(new Request(u, i), { store, secret: 's', now: () => clock }),
+    );
+    const c = client(http);
+    const t = (await c.freshTicket())!;
+    expect(t.seed).toBeTypeOf('number');
+    expect(readTicket(clock)).toBeNull(); // used now, not stored as the spare
+    await c.markStarted(t.runToken);
+    expect([...store.starts.values()]).toEqual([clock]);
+    expect(await client(new MockBackend({ kv, latencyMs: 0 })).freshTicket()).toBeNull();
+  });
+
+  it('a ticket taken for a new game is saved with it, so a reload before the first move stays ranked', () => {
+    storeTicket({ seed: 77, runToken: 'tok.sig', expiresAt: T0 + 72 * 3_600_000 });
+    const log = new RunLog();
+    const seed = log.ticketSeed(T0)!;
+    const s0 = newGame(seed);
+    const rec = log.get('classic', s0)!;
+    expect(rec).toEqual({ moves: '', teach: false, runToken: 'tok.sig' });
+    // reload: a new RunLog adopts the saved record, and the first move keeps the token
+    const log2 = new RunLog();
+    log2.resume('classic', s0, rec);
+    const g = playOut(seed, { quick: true });
+    let s = s0;
+    for (const m of g.moves) {
+      log2.record(s, m, 'classic', DAY);
+      s = applyMove(s, m)!.state;
+    }
+    expect(log2.finish(s, 'classic')?.runToken).toBe('tok.sig');
+    // a fresh ticket from the server is used the same way
+    const log3 = new RunLog();
+    expect(log3.useTicket({ seed: 5, runToken: 'fresh' })).toBe(5);
+    expect(log3.get('classic', newGame(5))?.runToken).toBe('fresh');
+    expect(log3.get('classic', newGame(6))).toBeNull();
   });
 });
