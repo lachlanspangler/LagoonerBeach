@@ -23,6 +23,8 @@ import { Scene } from '../render/scene.ts';
 import { DAY, NIGHT } from '../render/theme.ts';
 import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
+import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
+import { lookFor } from '../render/skins.ts';
 
 const params = new URLSearchParams(location.search);
 const DEBUG = params.has('debug') || navigator.webdriver === true;
@@ -74,6 +76,8 @@ function applyTheme(): void {
   const rm = profile.settings.reducedMotion ?? motionQuery.matches;
   scene.reducedMotion = rm;
   scene.particles.budget = rm ? 0.3 : 1;
+  if (!profile.unlocked.includes(profile.settings.skin)) profile.settings.skin = 'pebble';
+  scene.sprites.setLook(lookFor(profile.settings.skin));
   sfx.enabled = profile.settings.sound;
   haptics.enabled = profile.settings.haptics;
   dirty = true;
@@ -194,6 +198,26 @@ function persist(): void {
   else saveGame(state);
 }
 
+function snapshot(): ProgressSnapshot {
+  return {
+    best: Math.max(profile.best, ...Object.values(profile.dailyBest), 0),
+    bestPocket: profile.stats.bestPocket,
+    cascades: profile.stats.cascades,
+    cleanReefs: profile.stats.cleanReefs,
+    games: profile.stats.games,
+    captures: profile.stats.captures,
+    dailyLongest: profile.daily.longest,
+  };
+}
+
+/** Recompute unlocks; returns display names of skins unlocked just now. */
+function refreshUnlocks(): string[] {
+  const ids = unlockedIds(snapshot());
+  const fresh = ids.filter((id) => !profile.unlocked.includes(id));
+  profile.unlocked = ids;
+  return fresh.map((id) => SKINS.find((k) => k.id === id)!.name);
+}
+
 function finishGame(prevBest: number): void {
   profile.stats.games++;
   profile.stats.totalScore += state.score;
@@ -202,6 +226,7 @@ function finishGame(prevBest: number): void {
     profile.dailyBest[dailyDate] = Math.max(prevBest, state.score);
     profile.daily = recordDaily(profile.daily, dayIndex(dailyDate));
   } else if (newBest) profile.best = state.score;
+  const unlockedNow = refreshUnlocks();
   saveProfile(profile);
   const show = () => {
     if (overShown) return;
@@ -215,6 +240,7 @@ function finishGame(prevBest: number): void {
       lagoon: state.bestPocket,
       mode,
       dailyStreak: visibleStreak(profile.daily, dayIndex(today())),
+      unlocked: unlockedNow,
     });
   };
   setTimeout(show, DEBUG && params.has('fast') ? 0 : 1400);
@@ -257,6 +283,14 @@ const ui = new Ui({
     else profile.settings[k] = !profile.settings[k];
     saveProfile(profile);
     applyTheme();
+    ui.showMenu(profile, mode, !state.over);
+  },
+  onSkin: () => {
+    const ids = profile.unlocked;
+    profile.settings.skin = ids[(ids.indexOf(profile.settings.skin) + 1) % ids.length] ?? 'pebble';
+    saveProfile(profile);
+    applyTheme();
+    syncScene();
     ui.showMenu(profile, mode, !state.over);
   },
   onTheme: (t) => {
@@ -407,6 +441,13 @@ if (DEBUG) {
     },
     restart,
     switchMode,
+    /** Debug only: force a skin (bypasses unlocks, not persisted as unlocked). */
+    debugSkin(id: string) {
+      profile.settings.skin = id;
+      if (!profile.unlocked.includes(id)) profile.unlocked = [...profile.unlocked, id];
+      applyTheme();
+      syncScene();
+    },
     layout: () => scene.layout,
   };
   (window as unknown as { __atoll: typeof api }).__atoll = api;

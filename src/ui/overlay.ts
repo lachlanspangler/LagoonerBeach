@@ -3,6 +3,7 @@
  * accessible (focus, screen readers) and crisp. Kept tiny: the board is the interface.
  */
 import type { Profile, ThemePref } from '../platform/storage.ts';
+import { SKINS } from '../meta/unlocks.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
@@ -12,6 +13,7 @@ export interface UiHandlers {
   onClassic(): void;
   onToggle(key: 'sound' | 'haptics' | 'reducedMotion'): void;
   onTheme(t: ThemePref): void;
+  onSkin(): void;
   onShare(): void;
   onClick(): void;
 }
@@ -144,7 +146,20 @@ export class Ui {
     const label: Record<ThemePref, string> = { auto: 'Auto', day: 'Day', night: 'Night' };
     tr.append(this.button('', 'toggle', label[s.theme], 'Theme', () => this.h.onTheme(next[s.theme])));
     rows.append(tr);
+    const sk = document.createElement('div');
+    sk.className = 'row';
+    const locked = SKINS.filter((k) => !p.unlocked.includes(k.id));
+    sk.innerHTML = `<span>Pebbles</span>`;
+    const cur = SKINS.find((k) => k.id === p.settings.skin)?.name ?? 'Pebble';
+    sk.append(this.button('', 'toggle', cur.replace(' (high contrast)', ''), `Pebbles: ${cur}`, () => this.h.onSkin()));
+    rows.append(sk);
     card.append(rows);
+    if (locked.length) {
+      const hint = document.createElement('div');
+      hint.className = 'foot';
+      hint.textContent = `${locked.length} to discover · next: ${locked[0]!.hint}`;
+      card.append(hint);
+    }
     const foot = document.createElement('div');
     foot.className = 'foot';
     foot.textContent = `${p.stats.games} games · ${p.stats.captures} lagoons captured`;
@@ -160,6 +175,7 @@ export class Ui {
     lagoon: number;
     mode: 'classic' | 'daily';
     dailyStreak: number;
+    unlocked: string[];
   }): void {
     const card = document.createElement('div');
     card.className = 'card';
@@ -170,7 +186,7 @@ export class Ui {
         <div><b>${o.moves}</b><span>Moves</span></div>
         <div><b>${o.lagoon}</b><span>Biggest lagoon</span></div>
         <div><b>${o.dailyStreak}</b><span>Daily streak</span></div>
-      </div>`;
+      </div>${o.unlocked.length ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
     if (o.mode === 'daily') {
       card.append(this.button('', 'btn primary', 'Share', 'Share result', () => this.h.onShare()));
       card.append(this.button('', 'btn', 'Play classic', 'Play classic', () => this.h.onClassic()));

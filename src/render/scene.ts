@@ -198,7 +198,7 @@ export class Scene {
     this.drawHint(now);
     this.drawTray(now);
     this.drawDrag();
-    this.particles.draw(g, p.pebbles, p.foam);
+    this.particles.draw(g, this.sprites.look.colors, p.foam);
     this.drawTexts(now);
     this.drawHud(now);
     this.gc(now);
