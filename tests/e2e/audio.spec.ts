@@ -18,6 +18,23 @@ test('sound effects: no clipping, audible, balanced', async ({ page }) => {
   expect(lv.captureBig!.rms).toBeGreaterThan(lv.place!.rms);
   expect(lv.click!.peak).toBeLessThan(lv.capture!.peak);
   expect(lv.captureBig!.rms).toBeGreaterThan(lv.capture!.rms * 1.3);
+  // ADR 0012: the stings climb with the moment; "Nice!" stays a whisper, the top words are big
+  expect(lv.stingNice!.rms).toBeLessThan(lv.capture!.rms);
+  expect(lv.stingLagoon!.rms).toBeGreaterThan(lv.stingNice!.rms);
+  expect(lv.stingAtoll!.rms).toBeGreaterThan(lv.stingLagoon!.rms);
+  expect(lv.stingAmazing!.rms).toBeGreaterThan(lv.stingLagoon!.rms * 1.3);
+  expect(lv.stingSpotless!.rms).toBeGreaterThan(lv.stingLagoon!.rms);
+  // combo layers add shimmer, not loudness; a break is a sigh, never louder than a pinch
+  expect(lv.captureCombo20!.rms).toBeLessThan(lv.captureBig!.rms * 1.25);
+  expect(lv.comboBreak!.peak).toBeLessThan(lv.capture!.peak);
+  expect(lv.comboLevel!.peak).toBeLessThan(lv.captureBig!.peak);
+  // the whoosh is air under the moment, not a blast
+  expect(lv.whoosh!.peak).toBeLessThan(lv.captureBig!.peak);
+  // the biggest stacked moment and the fanfare still don't clip (checked above) and lead the mix
+  expect(lv.amazingMoment!.rms).toBeGreaterThan(lv.captureBig!.rms);
+  expect(lv.fanfare!.rms).toBeGreaterThan(lv.newBest!.rms);
+  expect(lv.revealLegendary!.rms).toBeGreaterThan(lv.revealUncommon!.rms);
+  expect(lv.revealUncommon!.rms).toBeGreaterThan(lv.discovery!.rms * 0.9);
   // music is a bed: present, but always well under the gameplay sounds
   for (const m of ['music', 'musicNight']) {
     expect(lv[m]!.rms, m).toBeGreaterThan(0.01);

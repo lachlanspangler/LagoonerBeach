@@ -1,29 +1,45 @@
 /**
  * Effects dispatcher: turns domain events into choreographed visuals, sound and haptics.
  * Timeline (ms after release): piece flies to its cell (≈90) → per wave k at 90 + k·150:
- * lagoon fills, ring pebbles lift and burst in a ripple from the lagoon's center, particles,
- * score pop; callout for big moments; tiny shake only for cascades/huge lagoons.
+ * lagoon fills, ring pebbles lift and burst outward from the lagoon's center (burst.ts), droplets,
+ * chime one step up per combo → the word + number above the lagoon → (tier 3+) sweep and a capped
+ * shake → (tier 4) tide wash and whoosh. How much happens is decided by `momentFor` (ADR 0012):
+ * big moments get big, normal moves stay calm. Input is never blocked.
  */
 import type { GameEvent } from '../core/game.ts';
 import { pieceById } from '../core/pieces.ts';
 import { xOf, yOf } from '../core/grid.ts';
 import { Kind } from '../render/particles.ts';
 import type { Scene } from '../render/scene.ts';
-import { MOTION, calloutFor } from '../render/theme.ts';
+import { MOTION } from '../render/theme.ts';
+import { chimeLayers, chimeStep, comboChange, comboLevel, LIMITS, MomentGuard, momentFor } from '../render/moments.ts';
+import { placeStack, WORD_LIFE, WORD_SIZE, BEST_LIFE } from '../render/celebrate.ts';
 import type { Sfx } from '../audio/sfx.ts';
 import type { Haptics } from '../platform/haptics.ts';
 import type { LagoonCatch } from '../meta/catch.ts';
-import { SPECIES_BY_ID } from '../meta/creatures.ts';
 
 interface Scheduled {
   at: number;
-  fn: () => void;
+  fn: (t: number) => void;
+}
+
+export interface DispatchOpts {
+  firstCapture?: boolean;
+  catches?: readonly LagoonCatch[];
+  newIds?: ReadonlySet<string>;
+  /** Combo state after the move (drives the badge and its grace shells). */
+  after?: { streak: number; dry: number };
 }
 
 export class Fx {
   private queue: Scheduled[] = [];
   /** Species already celebrated as "New!" this session (a cascade can catch one twice). */
   private announced = new Set<string>();
+  readonly guard = new MomentGuard();
+  /** When the latest move is visually settled (discovery reveals wait for it). */
+  settleAt = 0;
+  /** When the latest move's word fades (the NEW BEST banner waits for it). */
+  private wordEnd = 0;
 
   constructor(
     private readonly scene: Scene,
@@ -37,32 +53,99 @@ export class Fx {
     const due = this.queue.filter((q) => q.at <= now);
     if (!due.length) return;
     this.queue = this.queue.filter((q) => q.at > now);
-    for (const q of due) q.fn();
+    for (const q of due) q.fn(q.at);
   }
 
   get pending(): boolean {
     return this.queue.length > 0;
   }
 
-  private at(t: number, fn: () => void): void {
+  /** Schedule `fn` at absolute time t; it receives its scheduled time (so a frozen clock is exact). */
+  private at(t: number, fn: (t: number) => void): void {
     this.queue.push({ at: t, fn });
   }
 
   /** Flush everything instantly (e.g. on restart). */
   reset(): void {
     this.queue = [];
+    this.guard.reset();
+    this.settleAt = 0;
+  }
+
+  /** The mid-game moment you pass your best (once per game): gold banner under the score. */
+  newBest(now: number): void {
+    // a word owns the moment; the banner lands as it fades (but never more than ~0.9 s late)
+    const t = Math.max(now + 450, Math.min(this.wordEnd - 150, now + 1000));
+    this.at(t, (t) => {
+      this.scene.celebrate.bestAt = t;
+      this.scene.celebrate.bestShown = true;
+      this.sfx.newBest();
+      this.haptics.fire('medium', t);
+    });
+    this.settleAt = Math.max(this.settleAt, t + BEST_LIFE * 0.5);
+  }
+
+  /**
+   * A reef chapter is complete (endless reefs, 20 per chapter): a screen-filling moment after the
+   * clear's own word has faded — tide wash, gold "Chapter N!" + its name, whoosh, fanfare.
+   * Returns when it has settled (the reef result card waits for it).
+   */
+  chapterComplete(now: number, chapter: number, name: string): number {
+    const sc = this.scene;
+    const l = sc.layout;
+    const cel = sc.celebrate;
+    const t = Math.max(now + 650, this.wordEnd + 60);
+    const life = 1500;
+    this.at(t, (t) => {
+      const b = l.board;
+      const ts = sc.textScale;
+      this.guard.claimWord(4, t, life);
+      cel.washAt = t;
+      sc.sweep = t + 200;
+      cel.showWord(
+        { text: `Chapter ${chapter}!`, style: 'gold', tier: 4, x: b.x + b.w / 2, y: b.y + b.h * 0.42, start: t, life },
+        l,
+        ts,
+      );
+      cel.showNumber({
+        text: name,
+        x: b.x + b.w / 2,
+        y: b.y + b.h * 0.42 + l.cell * 1.05 * ts,
+        size: l.cell * 0.5 * ts,
+        start: t + 120,
+        life: life - 120,
+        style: 'water',
+      });
+      if (!sc.reducedMotion)
+        for (let i = 0; i < 16; i++) {
+          const x = b.x + b.w * (0.1 + 0.8 * ((i * 0.618) % 1));
+          const y = b.y + b.h * (0.25 + 0.5 * ((i * 0.382) % 1));
+          sc.particles.burst(1, x, y, Kind.Spark, 0, l.cell * 2.4, l.cell * 0.16, MOTION.particleMax, sc.rand);
+        }
+      this.sfx.whoosh();
+      this.sfx.fanfare(0.12);
+      this.haptics.fire('heavy', t);
+    });
+    this.settleAt = Math.max(this.settleAt, t + life);
+    return t + life;
   }
 
   dispatch(
     events: readonly GameEvent[],
     now: number,
     from: { x: number; y: number } | null,
-    opts: { firstCapture?: boolean; catches?: readonly LagoonCatch[]; newIds?: ReadonlySet<string> } = {},
-  ): void {
+    opts: DispatchOpts = {},
+  ): number {
     const sc = this.scene;
     const l = sc.layout;
+    const cel = sc.celebrate;
     const flight = from ? MOTION.place * 0.8 : 0;
-    const toasted = new Set<string>(); // one "New:" chip per species, even across cascade waves
+    const rm = sc.reducedMotion;
+    let settle = now + flight + MOTION.place;
+    let hapticsLeft = LIMITS.maxHapticsPerMove;
+    const buzz = (k: 'tick' | 'medium' | 'heavy', t: number) => {
+      if (hapticsLeft-- > 0) this.haptics.fire(k, t);
+    };
     for (const e of events) {
       switch (e.type) {
         case 'placed': {
@@ -83,27 +166,24 @@ export class Fx {
               start: now,
             });
           sc.tray[e.slot] = { t: null, dealStart: 0, back: null };
-          this.at(now + flight, () => {
+          this.at(now + flight, (t) => {
             this.sfx.place(piece.size);
-            this.haptics.fire('tick');
+            buzz('tick', t);
           });
           break;
         }
         case 'captured': {
-          // logical board is final now: remove cleared cells from the mirror, animate them as dying
+          // logical board is final now: remove cleared cells from the mirror, animate them bursting
           for (const c of e.cleared) sc.board[c.cell] = 0;
-          const maxArea = Math.max(...e.pockets.map((p) => p.cells.length));
-          const clean = e.score.cleanBonus > 0;
-          // how big a moment this is decides how much happens — small pops stay calm
-          const tier = maxArea >= 12 || e.waves.length > 1 || clean ? 3 : maxArea >= 6 ? 2 : maxArea >= 3 ? 1 : 0;
-          // a jackpot's word owns the moment: news chips wait until it has faded
-          const lockupEnd =
-            now + flight + (e.waves.length - 1) * MOTION.waveGap + MOTION.lagoonFill + 80 + MOTION.callout;
-          const chipAt = (t: number) => (tier === 3 ? Math.max(t, lockupEnd - 120) : t);
-          const perPebble = [2, 3, 3, 4][tier]!;
-          const budget = [16, 24, 28, 36][tier]!;
+          const prevStreak = sc.streak;
+          const m = momentFor(e, { prevStreak });
+          const tier = m.tier;
+          const v = m.visual;
           let spent = 0;
           const board = l.board;
+          const waves = e.waves.length;
+          const last = now + flight + (waves - 1) * MOTION.waveGap;
+          let lastPop = last;
           e.waves.forEach((w, k) => {
             const t0 = now + flight + k * MOTION.waveGap;
             const area = w.pockets.reduce((a, p) => a + p.cells.length, 0);
@@ -117,168 +197,146 @@ export class Fx {
             cx = board.x + (cx / lagoonCells.length + 0.5) * l.cell;
             cy = board.y + (cy / lagoonCells.length + 0.5) * l.cell;
             sc.lagoons.push({ cells: lagoonCells, start: t0 });
-            // ring pebbles pop outward from the lagoon's center, each shedding a few droplets of its color
+            // ring pebbles burst outward from the lagoon's center, in a ripple by distance; later
+            // waves and bigger moments burst harder
+            const strength = rm ? 0 : v.burst + k * 0.1;
             for (const d of w.cleared) {
               const [x, y] = sc.cellCenter(d.cell);
               const dist = Math.hypot(x - cx, y - cy) / l.cell;
               const st = t0 + MOTION.lagoonFill + dist * MOTION.ringStagger * 2;
-              sc.dying.push({ cell: d.cell, color: d.color, start: st });
-              const n = Math.min(perPebble, budget - spent);
-              spent += n;
+              sc.burst.add(x, y, cx, cy, d.color, st, strength, l.cell, sc.rand);
+              settle = Math.max(settle, st + 700);
+              lastPop = Math.max(lastPop, st);
+              const n = Math.min(v.perPebble, v.budget - spent);
+              spent += Math.max(0, n);
               if (n > 0)
-                this.at(st + 60, () =>
+                this.at(st + 70, () => {
                   sc.particles.burst(
                     n,
                     x,
                     y,
                     Kind.Droplet,
                     d.color,
-                    l.cell * 3,
+                    l.cell * 3 * (0.8 + 0.2 * v.burst),
                     l.cell * 0.2,
                     MOTION.particleMin,
                     sc.rand,
-                  ),
-                );
+                  );
+                });
             }
-            this.at(t0, () => {
-              sc.ripples.push({ x: cx, y: cy, start: t0, r: l.cell * (0.9 + Math.sqrt(area) * 0.6) });
+            this.at(t0, (t) => {
+              sc.ripples.push({ x: cx, y: cy, start: t, r: l.cell * (0.9 + Math.sqrt(area) * 0.6) });
               // a few bubbles rise out of the water
-              for (const c of lagoonCells.slice(0, 6)) {
+              for (const c of lagoonCells.slice(0, tier >= 3 ? 8 : 5)) {
                 const [x, y] = sc.cellCenter(c);
                 sc.particles.burst(1, x, y, Kind.Foam, 0, l.cell * 1.2, l.cell * 0.3, MOTION.particleMin, sc.rand);
               }
-              if (tier === 3)
+              if (v.sparks)
                 for (const c of lagoonCells.slice(0, 12)) {
                   const [x, y] = sc.cellCenter(c);
                   sc.particles.burst(1, x, y, Kind.Spark, 0, l.cell * 2.2, l.cell * 0.14, MOTION.particleMax, sc.rand);
                 }
-              // the catch: each creature leaps out of this wave's water and dives back to the sea
-              const caught = (opts.catches ?? [])
-                .filter((c) => c.wave === k + 1)
-                .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
-              const announced = new Set<string>();
-              // reduced motion: catches are still recorded and announced, just not animated
-              (sc.reducedMotion ? [] : caught.slice(0, 4)).forEach((c, f) => {
-                // only the first of a newly discovered species gets the "New!" treatment
-                const isNew =
-                  (opts.newIds?.has(c.x.id) ?? false) && !announced.has(c.x.id) && !this.announced.has(c.x.id);
-                if (isNew) {
-                  announced.add(c.x.id);
-                  this.announced.add(c.x.id);
-                }
-                const [lx, ly] = sc.cellCenter(c.cells[Math.floor(c.cells.length / 2)]!);
-                const dir = (f + k) % 2 ? -1 : 1;
-                sc.fish.push({
-                  x: lx,
-                  y: ly,
-                  vx: dir * l.cell * (isNew ? 1.2 : 1.6 + sc.rand() * 1.2),
-                  vy: -l.cell * (isNew ? 13 : 10 + sc.rand() * 2),
-                  start: t0 + 90 + f * 110,
-                  size: l.cell * (isNew ? 0.62 : 0.5),
-                  hue: '#FF8A3D',
-                  species: c.x.id,
-                  golden: c.x.golden,
-                  isNew,
-                });
-              });
-              const fresh = caught.filter((c) => opts.newIds?.has(c.x.id) && !toasted.has(c.x.id));
-              for (const c of fresh) toasted.add(c.x.id);
-              if (fresh.length)
-                this.at(chipAt(t0 + 200), () => {
-                  this.sfx.discovery();
-                  const names = [...new Set(fresh.map((c) => SPECIES_BY_ID.get(c.x.id)?.name ?? ''))].join(' · ');
-                  sc.toast(`New: ${names}`, performance.now(), 1700);
-                });
-              this.sfx.capture(area, e.streak, k);
-              // feel the streak: long streaks and big moments hit harder
-              this.haptics.fire(k > 0 || area >= 12 || e.streak >= 5 ? 'heavy' : 'medium');
+              this.leap(opts, k, t0);
+              // the chime climbs one pentatonic step per combo (cap 12), extra voices at ×5/×10/×20
+              this.sfx.capture(area, chimeStep(e.streak, 0), k, 0, chimeLayers(e.streak));
+              if (k < 2) buzz(m.haptic[Math.min(k, m.haptic.length - 1)]!, t);
             });
           });
-          const last = now + flight + (e.waves.length - 1) * MOTION.waveGap;
           const pts = e.score.total;
-          if (tier === 3)
-            this.at(last + MOTION.lagoonFill, () => {
-              sc.sweep = performance.now();
-              this.sfx.jackpot(e.waves.length);
+          const clean = e.score.cleanBonus > 0;
+          // Spotless owns the middle of the board, so it waits for the last ring to leave its cells
+          const wordAt = clean ? Math.max(last + MOTION.lagoonFill + 40, lastPop + 190) : last + MOTION.lagoonFill + 40;
+          // words fit the 1.3 s settle budget; the rare tier-4 word may hold a little longer
+          const life = Math.max(tier === 4 ? 850 : 600, Math.min(WORD_LIFE[tier]!, now + LIMITS.settleMs - wordAt));
+          settle = Math.max(settle, wordAt + life);
+          this.wordEnd = m.word ? wordAt + life : 0;
+          if (v.sweep) this.at(last + MOTION.lagoonFill, (t) => (sc.sweep = t));
+          if (v.wash)
+            this.at(last + MOTION.lagoonFill + 60, (t) => {
+              cel.washAt = t;
+              this.sfx.whoosh();
             });
-          // streak milestones get their own little moment
-          if (e.streak >= 5 && e.streak % 5 === 0)
-            this.at(chipAt(now + flight + 260), () => {
-              sc.toast(`Streak ×${e.streak}!`, performance.now(), 1200);
-              this.sfx.streakMilestone(e.streak);
-            });
-          // one feedback channel: the points, once, at the lagoon; a word only for real jackpots
-          const word = tier === 3 ? calloutFor(maxArea, e.waves.length, clean) : null;
-          const land = last + MOTION.lagoonFill + 80;
-          const lastCells = e.waves[e.waves.length - 1]!.pockets.flatMap((p) => p.cells);
-          let gx = 0;
-          let gy = 0;
-          for (const c of lastCells) {
-            const [x, y] = sc.cellCenter(c);
-            gx += x;
-            gy += y;
-          }
-          gx /= lastCells.length;
-          gy /= lastCells.length;
-          this.at(land, () => {
-            const t = performance.now();
+          if (v.shake > 0 && !rm)
+            this.at(now + flight + 40, (t) => (sc.shake = { start: t, amp: MomentGuard.shake(v.shake) }));
+          // the word and the number: one stack, above the last lagoon (never on the water)
+          const lastCells = e.waves[waves - 1]!.pockets.flatMap((p) => p.cells);
+          this.at(wordAt, (t) => {
             sc.score = sc.pendingScore ?? sc.score;
+            if (tier >= 2) sc.scorePunch = { at: t, amp: [0, 0, 0.08, 0.14, 0.2][tier]! };
+            const ts = sc.textScale;
+            const word = m.word && this.guard.claimWord(tier, t, life) ? m.word : null;
+            const numH = l.cell * (word ? 0.5 : tier >= 1 ? 0.56 : 0.48) * ts;
+            const night = sc.palette.name === 'night';
+            const wm = word ? cel.measure(word, l.cell * WORD_SIZE[tier]! * ts, m.style, night) : null;
+            // sprites carry padding for the outline; the visible line is about one text height
+            const wordH = wm ? l.cell * WORD_SIZE[tier]! * ts * 1.05 : 0;
+            const wordW = wm ? Math.min(l.board.w, wm.w) : numH * 3;
+            // the board is empty after Spotless: the word takes the middle of the board
+            const pos =
+              tier === 4 && clean
+                ? { x: board.x + board.w / 2, y: board.y + board.h * 0.42 }
+                : placeStack(l, lastCells, wordH, numH, wordW);
             if (word) {
-              sc.texts.push({
-                text: word,
-                x: gx,
-                y: gy - l.cell * 0.45,
-                start: t,
-                size: l.cell * 0.8,
-                life: MOTION.callout,
-                strong: true,
-              });
-              sc.texts.push({
-                text: `+${pts}`,
-                x: gx,
-                y: gy + l.cell * 0.25,
-                start: t + 40,
-                size: l.cell * 0.55,
-                life: MOTION.callout - 40,
-                strong: false,
-                accent: true,
-                rise: 0.25,
-              });
-            } else {
-              sc.texts.push({
-                text: `+${pts}`,
-                x: gx,
-                y: gy,
-                start: t,
-                size: l.cell * (tier >= 2 ? 0.66 : tier === 1 ? 0.56 : 0.48),
-                life: MOTION.scorePop,
-                strong: false,
-                accent: true,
-              });
+              cel.showWord({ text: word, style: m.style, tier, x: pos.x, y: pos.y, start: t, life }, l, ts);
+              if (m.sound.sting !== 'none') this.sfx.sting(m.sound.sting);
             }
-          });
-          if (tier === 3) {
-            this.at(now + flight + 40, () => {
-              sc.shake = { start: performance.now(), amp: Math.min(6, 2 + e.waves.length * 1.2) };
+            cel.showNumber({
+              text: `+${pts}`,
+              x: pos.x,
+              y: word ? pos.y + wordH * 0.5 + numH * 0.55 : pos.y,
+              size: numH,
+              start: t + (word ? 60 : 0),
+              life: word ? life - 60 : MOTION.scorePop,
             });
-          }
-          this.at(now + flight, () => {
-            sc.streak = e.streak;
-            sc.streakPulse = performance.now();
           });
+          // the combo badge ticks up as the piece lands
+          // render the moment's text off the hot frame: word, number, the combo's next badge
+          {
+            const ts = sc.textScale;
+            const numPx = l.cell * (m.word ? 0.5 : tier >= 1 ? 0.56 : 0.48) * ts;
+            cel.prewarm(
+              [
+                ...(m.word ? [[m.word, l.cell * WORD_SIZE[tier]! * ts, m.style] as const] : []),
+                [`+${pts}`, numPx, 'points'] as const,
+                ...(e.streak >= 2 ? cel.comboSprites(e.streak, l, ts) : []),
+              ],
+              sc.palette.name === 'night',
+            );
+          }
+          const after = opts.after ?? { streak: e.streak, dry: 0 };
+          const change = comboChange({ streak: prevStreak, dry: sc.dry }, after);
+          sc.streak = e.streak;
+          this.at(now + flight, (t) => {
+            sc.streakPulse = t;
+            if (e.streak >= 2) cel.comboUp(e.streak, t);
+            else cel.combo.n = e.streak;
+            if (change === 'milestone') this.sfx.comboLevel(comboLevel(e.streak));
+          });
+          this.settleAt = settle;
           break;
         }
         case 'cleanReef':
-          this.at(now + flight + 260, () => this.sfx.cleanReef());
-          break;
+          break; // part of the Spotless moment (sting + wash)
         case 'streakLost':
           sc.streak = 0;
+          if (e.was >= 2)
+            this.at(now + flight, (t) => {
+              cel.comboBreak(t);
+              this.sfx.comboBreak();
+            });
+          else cel.combo.n = 0;
           break;
-        case 'scored':
+        case 'scored': {
           // captures reveal the new total when their points land; plain placements right away
           sc.pendingScore = e.total;
-          if (!events.some((x) => x.type === 'captured')) this.at(now + flight, () => (sc.score = e.total));
+          if (!events.some((x) => x.type === 'captured')) {
+            this.at(now + flight, () => (sc.score = e.total));
+            // a dry move with the combo alive dims one grace shell
+            const after = opts.after;
+            if (after && after.streak >= 2 && after.dry > 0) this.at(now + flight, (t) => cel.comboDry(after.dry, t));
+          }
           break;
+        }
         case 'dealt': {
           const base = now + flight + 140;
           e.tray.forEach((t, i) => (sc.tray[i] = { t, dealStart: base + i * MOTION.dealStagger, back: null }));
@@ -286,13 +344,50 @@ export class Fx {
           break;
         }
         case 'gameOver':
-          this.at(now + flight + 500, () => {
-            sc.gameOverAt = performance.now();
+          this.at(now + flight + 500, (t) => {
+            sc.gameOverAt = t;
             this.sfx.gameOver();
-            this.haptics.fire('fail');
+            this.haptics.fire('fail', t);
           });
           break;
       }
     }
+    if (opts.after) sc.dry = opts.after.dry;
+    if (!events.some((e) => e.type === 'captured')) this.settleAt = settle;
+    return this.settleAt;
+  }
+
+  /** The catch: each creature leaps out of this wave's water and dives back to the sea. */
+  private leap(opts: DispatchOpts, k: number, t0: number): void {
+    const sc = this.scene;
+    const l = sc.layout;
+    // reduced motion: catches are still recorded and revealed, just not animated
+    if (sc.reducedMotion) return;
+    const caught = (opts.catches ?? [])
+      .filter((c) => c.wave === k + 1)
+      .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
+    const announced = new Set<string>();
+    caught.slice(0, 4).forEach((c, f) => {
+      // only the first of a newly discovered species gets the "New!" treatment
+      const isNew = (opts.newIds?.has(c.x.id) ?? false) && !announced.has(c.x.id) && !this.announced.has(c.x.id);
+      if (isNew) {
+        announced.add(c.x.id);
+        this.announced.add(c.x.id);
+      }
+      const [lx, ly] = sc.cellCenter(c.cells[Math.floor(c.cells.length / 2)]!);
+      const dir = (f + k) % 2 ? -1 : 1;
+      sc.fish.push({
+        x: lx,
+        y: ly,
+        vx: dir * l.cell * (isNew ? 1.2 : 1.6 + sc.rand() * 1.2),
+        vy: -l.cell * (isNew ? 13 : 10 + sc.rand() * 2),
+        start: t0 + 90 + f * 110,
+        size: l.cell * (isNew ? 0.62 : 0.5),
+        hue: '#FF8A3D',
+        species: c.x.id,
+        golden: c.x.golden,
+        isNew,
+      });
+    });
   }
 }

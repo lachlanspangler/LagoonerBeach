@@ -119,6 +119,25 @@ export const humanBot: Bot = (s, rng) => {
   return rng.next() < 0.7 ? scored[0]!.m : scored[rng.int(Math.min(6, scored.length))]!.m;
 };
 
+/**
+ * Combo farmer (ADR 0012): any capture beats any non-capture; among captures it takes the cheapest
+ * (pinches) just to keep the combo alive. Used to prove the combo multiplier can't be farmed.
+ */
+export const farmerBot: Bot = (s) => {
+  let best: Move | null = null;
+  let bv = -Infinity;
+  for (const m of legalMoves(s)) {
+    const r = applyMove(s, m, { noRefill: true })!;
+    const cap = r.state.streak > s.streak;
+    const v = (cap ? 1e6 - (r.state.score - s.score) * 10 : 0) + evaluate(r.state.board);
+    if (v > bv) {
+      bv = v;
+      best = m;
+    }
+  }
+  return best;
+};
+
 export const BOTS: Record<'random' | 'firstFit' | 'greedy' | 'search' | 'human', Bot> = {
   random: randomBot,
   firstFit: firstFitBot,

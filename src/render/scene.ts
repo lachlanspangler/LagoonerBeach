@@ -8,9 +8,13 @@ import type { TrayPiece } from '../core/dealer.ts';
 import { computeLayout, trayCellFor, type Insets, type Layout } from './layout.ts';
 import { Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
-import { DAY, GEOM, MOTION, type Palette } from './theme.ts';
+import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, type Palette } from './theme.ts';
+import { Burst } from './burst.ts';
+import { Celebrate, spring } from './celebrate.ts';
+
+/** 0 → 1 with a small overshoot over a unit of time. */
+const spring01 = (k: number): number => spring(k * 360, 360, 0.1);
 import { clamp01, easeInCubic, easeInOutSine, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
-import { STREAK_GRACE } from '../core/scoring.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import { drawCreature } from './creatures.ts';
 
@@ -35,11 +39,6 @@ export interface PreviewView {
   points?: number;
 }
 
-interface Dying {
-  cell: number;
-  color: number;
-  start: number;
-}
 interface Lagoon {
   cells: readonly number[];
   start: number;
@@ -98,9 +97,9 @@ interface Placing {
 /** Seconds a leaping creature stays on screen. */
 const FISH_LIFE = 0.95;
 
-export const FONT = `"Lagoon UI", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif`;
+export const FONT = FONT_STACK;
 /** Display voice (callouts, names, titles). Never for numbers: its digits are proportional. */
-export const DISPLAY_FONT = `"Lagoon Display", "Iowan Old Style", Georgia, serif`;
+export const DISPLAY_FONT = DISPLAY_STACK;
 
 export class Scene {
   palette: Palette = DAY;
@@ -114,7 +113,10 @@ export class Scene {
 
   board = new Uint8Array(CELLS);
   land = new Float64Array(CELLS); // start time of landing bounce per cell
-  dying: Dying[] = [];
+  /** Ring pebbles popping and scattering (ADR 0012). */
+  readonly burst = new Burst();
+  /** Words, +N, COMBO badge, NEW BEST banner, tide wash. */
+  readonly celebrate = new Celebrate();
   lagoons: Lagoon[] = [];
   ripples: Ripple[] = [];
   texts: FloatText[] = [];
@@ -194,6 +196,8 @@ export class Scene {
   lastDragDraw: { x: number; y: number } | null = null;
   /** Jackpot light sweep across the board. */
   sweep = -1e9;
+  /** Score punch when a big moment's points land. */
+  scorePunch = { at: -1e9, amp: 0 };
   /** Tap-to-place selection (drawn raised with an outline). */
   selected: number | null = null;
 
@@ -222,6 +226,8 @@ export class Scene {
     this.canvas.style.height = `${h}px`;
     this.layout = computeLayout(w, h, inset);
     this.sprites.reset(dpr);
+    this.celebrate.sprites.dpr = dpr;
+    this.celebrate.sprites.clear();
     this.panel = null;
   }
 
@@ -233,6 +239,11 @@ export class Scene {
         this.sprites.pebble(this.palette, c, s, 'normal');
         this.sprites.pebble(this.palette, c, s, 'lit');
       }
+  }
+
+  /** Bundled fonts arrived: re-render cached display text. */
+  fontsReady(): void {
+    this.celebrate.sprites.clear();
   }
 
   setPalette(p: Palette): void {
@@ -297,7 +308,15 @@ export class Scene {
     this.drawBlocks(now);
     this.drawGhost();
     this.drawPlacing(now);
-    this.drawDying(now);
+    const ps = Math.round(l.cell);
+    // the scatter stays around the board: never over the HUD or into the tray
+    g.save();
+    g.beginPath();
+    const top = Math.max(l.hud.y + l.hud.h, l.board.y - l.cell * 0.7);
+    g.rect(l.board.x - l.cell * 0.7, top, l.board.w + l.cell * 1.4, l.board.y + l.board.h + l.cell * 0.4 - top);
+    g.clip();
+    this.burst.draw(g, now, l.cell, (c) => this.sprites.pebble(p, c, ps, 'lit'));
+    g.restore();
     this.drawRipples(now);
     this.drawSweep(now);
     g.restore();
@@ -308,6 +327,7 @@ export class Scene {
     this.drawDrag();
     this.drawFish(now);
     this.particles.draw(g, this.sprites.look.colors, p.foam);
+    this.celebrate.drawBoard(g, now, l, p, this.reducedMotion);
     this.drawTexts(now);
     this.drawHud(now);
     this.drawChips(now);
@@ -542,24 +562,6 @@ export class Scene {
           l.cell,
         );
       }
-    }
-  }
-
-  private drawDying(now: number): void {
-    const g = this.g;
-    for (const d of this.dying) {
-      const t = (now - d.start) / 260;
-      if (t < 0) {
-        const [x, y, s] = this.cellRect(d.cell);
-        g.drawImage(this.sprites.pebble(this.palette, d.color, Math.round(this.layout.cell), 'lit'), x, y, s, s);
-        continue;
-      }
-      if (t >= 1) continue;
-      const scale = t < 0.3 ? lerp(1, 1.18, easeOutQuad(t / 0.3)) : lerp(1.18, 0, easeInCubic((t - 0.3) / 0.7));
-      const [x, y, s] = this.cellRect(d.cell, scale);
-      g.globalAlpha = 1 - easeInCubic(t);
-      g.drawImage(this.sprites.pebble(this.palette, d.color, Math.round(this.layout.cell), 'lit'), x, y, s, s);
-      g.globalAlpha = 1;
     }
   }
 
@@ -892,39 +894,22 @@ export class Scene {
       return;
     }
     g.fillStyle = p.text;
-    g.font = `800 ${big}px ${FONT}`;
-    g.fillText(String(Math.round(this.shownScore)), cx, l.hud.y + l.hud.h * 0.7);
+    // big moments punch the score as their points land (tier ≥ 2 only; calm moves don't)
+    const pk = (now - this.scorePunch.at) / 360;
+    const punch = pk >= 0 && pk < 1 && !this.reducedMotion ? 1 + this.scorePunch.amp * (1 - spring01(pk)) : 1;
+    g.font = `800 ${Math.round(big * punch)}px ${FONT}`;
+    g.fillText(String(Math.round(this.shownScore)), cx, l.hud.y + l.hud.h * 0.7 + (punch - 1) * big * 0.3);
     g.font = `700 ${Math.round(big * 0.3)}px ${FONT}`;
     g.fillStyle = p.textDim;
-    const beat = this.score > this.best && this.best > 0;
+    const beat = (this.score > this.best && this.best > 0) || this.celebrate.bestShown;
+    if (beat) g.fillStyle = p.name === 'night' ? '#F5C451' : '#9A6A00';
     g.fillText(beat ? 'NEW BEST' : `BEST ${this.best}`, cx, l.hud.y + l.hud.h * 0.24);
     const chipUp = this.chips.length > 0 && now >= this.chips[0]!.start;
-    if (this.streak >= 2 && !chipUp) {
-      const k = clamp01((now - this.streakPulse) / 300);
-      const sc = this.reducedMotion ? 1 : 1 + 0.25 * (1 - easeOutCubic(k));
-      g.font = `800 ${Math.round(big * 0.34 * sc)}px ${FONT}`;
-      g.fillStyle = p.water;
-      const label = `Streak ×${this.streak}`;
-      // tide dots: moves left before the streak breaks (fills back up on every capture)
-      const w = g.measureText(label).width;
-      const r = Math.max(2.5, big * 0.06);
-      const dotsW = r * 3 + (STREAK_GRACE - 1) * r * 2.8;
-      const x0 = cx - (w + dotsW) / 2;
-      g.textAlign = 'left';
-      g.fillText(label, x0, l.hud.y + l.hud.h * 0.95);
-      g.textAlign = 'center';
-      for (let i = 0; i < STREAK_GRACE; i++) {
-        g.globalAlpha = i < STREAK_GRACE - this.dry ? 1 : 0.22;
-        g.beginPath();
-        g.arc(x0 + w + r * 3 + i * r * 2.8, l.hud.y + l.hud.h * 0.95 - big * 0.12, r, 0, Math.PI * 2);
-        g.fill();
-      }
-      g.globalAlpha = 1;
-    }
+    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, chipUp);
   }
 
   private gc(now: number): void {
-    if (this.dying.length && this.dying.every((d) => now - d.start > 300)) this.dying = [];
+    this.burst.gc(now);
     this.lagoons = this.lagoons.filter((x) => now - x.start < MOTION.lagoonFill * 4);
     this.ripples = this.ripples.filter((x) => now - x.start < 700);
     this.texts = this.texts.filter((x) => now - x.start < x.life);
@@ -938,7 +923,8 @@ export class Scene {
       this.drag !== null ||
       this.preview !== null ||
       this.particles.count > 0 ||
-      this.dying.length > 0 ||
+      this.burst.active(now) ||
+      this.celebrate.busy(now) ||
       this.lagoons.length > 0 ||
       this.ripples.length > 0 ||
       this.texts.length > 0 ||
@@ -954,6 +940,7 @@ export class Scene {
       this.land.some((t) => now - t < MOTION.place * 1.6) ||
       now - this.streakPulse < 300 ||
       now - this.sweep < 650 ||
+      now - this.scorePunch.at < 360 ||
       (this.gameOverAt >= 0 && now - this.gameOverAt < 600)
     );
   }

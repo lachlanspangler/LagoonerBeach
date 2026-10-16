@@ -6,6 +6,7 @@
 import { expect, test } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { boot, dragMove } from '../e2e/helpers.ts';
+import { BOARDS, boardString } from '../e2e/celebrate-boards.ts';
 
 /**
  * Shared CI runners are slower and noisier than any phone budget we care about; budgets there are
@@ -155,4 +156,52 @@ test('night theme (glow + plankton, always animating) stays within the draw budg
   expect(draws.length).toBeGreaterThan(30);
   expect(p95).toBeLessThan(8 * K);
   await ctx.close();
+});
+
+test('biggest celebration (3-wave Unbelievable!, COMBO ×20, wash) stays within budget at 4× throttle', async ({
+  page,
+}) => {
+  await boot(page, 'seed=11');
+  const b = BOARDS.biggest!;
+  await page.evaluate(([board, tray]) => (window as any).__atoll.setup(board, tray), [boardString(b), b.tray] as const);
+  await page.evaluate((n) => (window as any).__atoll.stageCombo(n), b.combo);
+  await page.waitForTimeout(800);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => {
+    (window as any).__long = [];
+    new PerformanceObserver((l) => (window as any).__long.push(...l.getEntries().map((e) => e.duration))).observe({
+      type: 'longtask',
+    });
+    (window as any).__atoll.clearFrames();
+  });
+  const path = await page.evaluate((m) => (window as any).__atoll.pathFor(m), b.move);
+  await page.mouse.move(path.down.x, path.down.y);
+  await page.mouse.down();
+  await page.mouse.move(path.up.x, path.up.y, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(1600);
+  const draws: number[] = await page.evaluate(() => (window as any).__atoll.drawTimes());
+  const long: number[] = await page.evaluate(() => (window as any).__long);
+  // our own main-thread work per task (a frame: fx tick + draw; the release: commit + dispatch)
+  const js: number[] = await page.evaluate(() => (window as any).__atoll.taskTimes());
+  const sorted = [...draws].sort((a, c) => a - c);
+  const p95 = sorted[Math.floor(sorted.length * 0.95)]!;
+  const report = {
+    frames: draws.length,
+    p50: +sorted[sorted.length >> 1]!.toFixed(2),
+    p95: +p95.toFixed(2),
+    max: +sorted[sorted.length - 1]!.toFixed(2),
+    jsMax: +Math.max(...js).toFixed(2),
+    browserLongTasks: long.map((x) => Math.round(x)),
+  };
+  mkdirSync('artifacts', { recursive: true });
+  writeFileSync('artifacts/perf-celebrate.json', JSON.stringify(report, null, 2));
+  console.log('biggest moment', JSON.stringify(report));
+  expect((await page.evaluate(() => (window as any).__atoll.state())).score).toBeGreaterThan(5000);
+  expect(draws.length).toBeGreaterThan(20);
+  expect(p95).toBeLessThan(8 * K);
+  // Browser "long tasks" here are software compositing of full-board redraws (headless Chromium
+  // under CPU throttling has no GPU; CLAUDE.md gotchas): reported, not asserted. Our own tasks are.
+  expect(js.filter((x) => x > 50 * K)).toEqual([]);
 });

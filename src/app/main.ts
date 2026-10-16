@@ -52,6 +52,8 @@ import { installDebugApi } from './debug.ts';
 import { ReefSource } from './reefSource.ts';
 import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } from './reefProgress.ts';
 import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf } from '../core/endless.ts';
+import type { RevealItem } from '../ui/reveal.ts';
+import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
@@ -70,6 +72,9 @@ const reefAt = (i: number) => reefs?.get(i) ?? null;
 const TIER_LABEL: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
 
 const params = new URLSearchParams(location.search);
+/** Debug/test only: a frozen clock renders one exact frame of any moment (pixel baselines). */
+let frozen: number | null = null;
+const clock = (): number => frozen ?? performance.now();
 const DEBUG = params.has('debug') || navigator.webdriver === true;
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -99,6 +104,8 @@ let dailyDate = today();
 let state: GameState = startState();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
+/** When the latest move was dispatched (debug freeze offsets are relative to it). */
+let lastDispatchAt = 0;
 let bestCelebrated = false;
 /** Which game the per-game tallies below belong to. */
 let tallyKey = '';
@@ -110,9 +117,11 @@ let gameCatch = { count: 0, newIds: [] as string[] };
 function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
   lagoons: LagoonCatch[];
   newIds: Set<string>;
+  reveals: RevealItem[];
 } {
   const lagoons: LagoonCatch[] = [];
   const newIds = new Set<string>();
+  const reveals: RevealItem[] = [];
   for (const e of r.events) {
     if (e.type !== 'captured') continue;
     const env = {
@@ -128,12 +137,18 @@ function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
       dry: journal.dry,
     });
     for (const l of lc) {
+      // the first golden of a species already found is a find too
+      for (const c of l.catches)
+        if (c.golden && journal.entries[c.id] && !journal.entries[c.id]!.golden && !reveals.some((r) => r.id === c.id))
+          reveals.push({ id: c.id, size: c.size, golden: true, firstGolden: true });
       const rec = record(journal, l.catches, today());
       journal = rec.journal;
       gameCatch.count += l.catches.length;
       for (const id of rec.newSpecies) {
         newIds.add(id);
         gameCatch.newIds.push(id);
+        const c = l.catches.find((x) => x.id === id)!;
+        reveals.push({ id, size: c.size, golden: c.golden });
       }
     }
     lagoons.push(...lc);
@@ -141,7 +156,7 @@ function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
   if (lagoons.length) saveJournal(journal);
   if (newIds.size)
     ui.announce(`New in your journal: ${[...newIds].map((id) => SPECIES_BY_ID.get(id)?.name).join(', ')}`);
-  return { lagoons, newIds };
+  return { lagoons, newIds, reveals };
 }
 /** Biggest lagoon of the current game (for the daily share picture). */
 let bigLagoon: LagoonShape | null = null;
@@ -178,6 +193,7 @@ function applyTheme(): void {
   document.head.append(m);
   const rm = profile.settings.reducedMotion ?? motionQuery.matches;
   scene.reducedMotion = rm;
+  document.documentElement.dataset.rm = rm ? '1' : '0';
   scene.textScale = profile.settings.largeText ? 1.25 : 1;
   document.documentElement.dataset.large = profile.settings.largeText ? '1' : '0';
   document.documentElement.dataset.motion = rm ? 'reduced' : 'full'; // creature idles (ADR 0011)
@@ -242,7 +258,9 @@ function syncScene(): void {
   drag.cancelAll();
   scene.board = state.board.slice();
   scene.land.fill(-1e9);
-  scene.dying = [];
+  scene.burst.clear();
+  scene.celebrate.reset(state.streak, state.dry);
+  reveal.clear();
   scene.lagoons = [];
   scene.texts = [];
   scene.placing = [];
@@ -343,7 +361,9 @@ function updateHint(): void {
 }
 
 // ------------------------------------------------------------------ moves
-function commit(m: Move, from: { x: number; y: number } | null): boolean {
+/** `quiet`: bot autoplay (tests) records discoveries without staging their reveals. */
+function commit(m: Move, from: { x: number; y: number } | null, quiet = false): boolean {
+  const t0 = performance.now();
   const r = applyMove(state, m);
   if (!r) return false;
   if (mode !== 'puzzle') runLog.record(state, m, mode, dailyDate);
@@ -351,31 +371,23 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
   const prevScore = state.score;
   state = r.state;
   // the moment you pass your best, mid-game (once per game)
-  if (mode !== 'puzzle' && prevBest > 0 && prevScore <= prevBest && state.score > prevBest && !bestCelebrated) {
-    bestCelebrated = true;
-    later(650, () => {
-      const l = scene.layout;
-      scene.texts.push({
-        text: 'New best!',
-        x: l.w / 2,
-        y: l.board.y + l.board.h * 0.2,
-        start: performance.now(),
-        size: l.cell * 0.8,
-        life: 1100,
-        strong: true,
-      });
-      sfx.newBest();
-      haptics.fire('heavy');
-      dirty = true;
-    });
-  }
   persist();
   const caught = catchFor(r);
-  fx.dispatch(r.events, performance.now(), from, {
+  const t = clock();
+  lastDispatchAt = t;
+  const settled = fx.dispatch(r.events, t, from, {
     firstCapture: teaching,
     catches: caught.lagoons,
     newIds: caught.newIds,
+    after: { streak: state.streak, dry: state.dry },
   });
+  // the moment you pass your best, mid-game: one gold banner under the score (once per game)
+  if (mode !== 'puzzle' && prevBest > 0 && prevScore <= prevBest && state.score > prevBest && !bestCelebrated) {
+    bestCelebrated = true;
+    fx.newBest(t);
+  }
+  // discoveries wait for the capture to settle (never mid-capture), then queue one at a time
+  if (caught.reveals.length && !quiet) reveal.enqueue(caught.reveals, settled + 80);
   scene.dry = state.dry;
   for (const e of r.events) {
     if (e.type === 'captured') {
@@ -406,6 +418,7 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
   updateMisfits();
   drag.clearSel();
   dirty = true;
+  taskTimes.push(performance.now() - t0);
   return true;
 }
 
@@ -459,15 +472,20 @@ function finishGame(prevBest: number): void {
     caught: { ...gameCatch, newIds: [...gameCatch.newIds] },
     // starts posting now (if the player has a name) so the rank is ready when the card shows
     leaderboard: mode === 'puzzle' || !LB_ON ? undefined : lbResult(runLog.finish(state, mode), mode),
+    prevBest,
+    reducedMotion: scene.reducedMotion,
   };
-  later(DEBUG && params.has('fast') ? 0 : 1400, () => {
-    if (overShown) return;
-    overShown = true;
-    if (card.newBest && !bestCelebrated) sfx.newBest();
-    // freeze the score behind the card at the final value (no mid-count-up mismatch)
-    scene.score = scene.shownScore = card.score;
-    resultCard = ui.showGameOver(card);
-  });
+  const token = gameToken;
+  later(DEBUG && params.has('fast') ? 0 : 1400, () =>
+    // a discovery still on screen finishes first; the results follow it
+    reveal.whenIdle(() => {
+      if (overShown || token !== gameToken) return;
+      overShown = true;
+      // freeze the score behind the card at the final value (no mid-count-up mismatch)
+      scene.score = scene.shownScore = card.score;
+      resultCard = ui.showGameOver(card);
+    }),
+  );
 }
 
 // ------------------------------------------------------------------ leaderboards (lazy: ui/leaderboard.ts)
@@ -545,7 +563,11 @@ function checkPuzzle(): void {
     const ch = chapterOf(i + 1).chapter;
     const done = chapterCleared(new Set(profile.puzzle.solved), ch);
     const progress = `${chapterName(ch)} · ${done}/${CHAPTER_SIZE} · ${cleared} reef${cleared === 1 ? '' : 's'} cleared`;
-    later(1300, () => ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress }));
+    const hold = chapterHold;
+    chapterHold = 0;
+    later(1300 + hold, () =>
+      ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress }),
+    );
   } else {
     const cleared = profile.puzzle.solved.length;
     later(700, () => ui.showPuzzleResult({ solved: false, index: i, total: MAX_REEF, cleared }));
@@ -671,15 +693,14 @@ function switchMode(m: Mode): void {
   syncScene();
 }
 
-// Chapter milestone: a chip + a sound for now; richer celebrations can listen to the same event.
+// Chapter milestone (ADR 0012): a screen-filling moment on the board; the reef card waits for it.
+/** Extra delay for the reef result card while a chapter moment plays (set by the listener). */
+let chapterHold = 0;
 reefEvents.addEventListener('chapterComplete', (e) => {
   const d = (e as CustomEvent<ChapterCompleteDetail>).detail;
-  later(900, () => {
-    scene.toast(`Chapter ${d.chapter} complete · ${d.name}`, performance.now(), 2200);
-    sfx.streakMilestone(40);
-    haptics.fire('heavy');
-    ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
-  });
+  const now = clock();
+  chapterHold = Math.max(0, fx.chapterComplete(now, d.chapter, d.name) - now - 1300 + 250);
+  ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
 });
 
 // ------------------------------------------------------------------ UI
@@ -756,6 +777,22 @@ const ui = new Ui({
     wakeAudio();
     sfx.click();
   },
+  onRecord: () => {
+    sfx.fanfare();
+    haptics.fire('heavy');
+  },
+});
+
+const reveal = new LazyReveal(document.getElementById('ui')!, {
+  sfx,
+  haptics,
+  reducedMotion: () => scene.reducedMotion,
+  night: () => scene.palette.name === 'night',
+  announce: (t) => ui.announce(t),
+  found: () => Object.keys(journal.entries).length,
+  date: () => today(),
+  now: clock,
+  canOpen: () => scene.drag === null && !ui.open,
 });
 
 scene.onCollect = () => {
@@ -771,7 +808,7 @@ let sealKey = '';
 const drag = new DragController(canvas, {
   layout: () => scene.layout,
   state: () => state,
-  enabled: () => !ui.open,
+  enabled: () => !ui.open && !reveal.blocking,
   onPick: () => {
     wakeAudio();
     sfx.pick();
@@ -864,16 +901,20 @@ let dirty = true;
 let last = performance.now();
 const frameTimes: number[] = [];
 const drawTimes: number[] = [];
+/** Our own main-thread work per task: commits and whole frames (perf tests). */
+const taskTimes: number[] = [];
 /** When the first frame showing a freshly picked piece finished drawing (latency tests). */
 const pickDrawnAt: number[] = [];
 const dropDrawnAt: number[] = [];
 let lastDrawnMoves = -1;
 function frame(): void {
   // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
-  const now = performance.now();
+  const f0 = performance.now();
+  const now = clock();
   const dt = now - last;
   last = now;
   fx.tick(now);
+  if (frozen !== null) scene.shownScore = scene.score;
   const wasDragging = scene.drag !== null;
   scene.drag = drag.view(now);
   if (dirty || scene.busy(now) || fx.pending) {
@@ -889,6 +930,8 @@ function frame(): void {
     frameTimes.push(dt);
     if (frameTimes.length > 1200) frameTimes.shift();
     if (drawTimes.length > 1200) drawTimes.shift();
+    taskTimes.push(performance.now() - f0);
+    if (taskTimes.length > 1200) taskTimes.shift();
   }
   requestAnimationFrame(frame);
 }
@@ -911,6 +954,7 @@ const idle =
   ((cb: () => void) => setTimeout(cb, 300));
 idle(() => {
   sfx.prepare();
+  setTimeout(() => reveal.prefetch(), 2500);
   scene.warmSprites();
   lbBackground();
 });
@@ -919,8 +963,13 @@ applyTheme();
 syncScene();
 requestAnimationFrame(frame);
 // bundled fonts arrive after first paint (font-display: swap): redraw once they're in
-document.fonts?.addEventListener?.('loadingdone', () => (dirty = true));
-void document.fonts?.load?.('800 16px "Lagoon UI"').then(() => (dirty = true));
+const fontsIn = () => {
+  scene.fontsReady();
+  dirty = true;
+};
+document.fonts?.addEventListener?.('loadingdone', fontsIn);
+void document.fonts?.load?.('800 16px "Lagoon UI"').then(fontsIn);
+void document.fonts?.load?.('900 16px "Lagoon Display"').then(fontsIn);
 
 if (!DEBUG && 'serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));
@@ -940,6 +989,7 @@ if (DEBUG)
     sfx,
     frameTimes,
     drawTimes,
+    taskTimes,
     pickDrawnAt,
     dropDrawnAt,
     commit,
@@ -971,4 +1021,62 @@ if (DEBUG)
     },
     puzzleSolution: () => (mode === 'puzzle' ? (reefAt(state.seed)?.solution ?? null) : null),
     reefSource: () => reefs,
+    celebrate: {
+      freeze: (msAfterMove) => {
+        frozen = msAfterMove === null ? null : lastDispatchAt + msAfterMove;
+        if (frozen === null) last = performance.now();
+        dirty = true;
+      },
+      freezeNow: () => {
+        frozen = performance.now();
+        lastDispatchAt = frozen;
+        return frozen;
+      },
+      stageCombo: (n, dry = 0) => {
+        state = { ...state, streak: n, dry };
+        scene.streak = n;
+        scene.dry = dry;
+        scene.celebrate.reset(n, dry);
+        dirty = true;
+      },
+      stageRecord: (best) => {
+        if (mode === 'daily') profile.dailyBest[dailyDate] = best;
+        else profile.best = best;
+        scene.best = best;
+        bestCelebrated = false;
+        dirty = true;
+      },
+      revealSpecies: (id, o) => reveal.enqueue([{ id, size: o?.size ?? 24.6, golden: o?.golden ?? false }], 0),
+      chapterMoment: (chapter, name) => {
+        lastDispatchAt = clock();
+        fx.chapterComplete(lastDispatchAt, chapter, name);
+        dirty = true;
+      },
+      celebrateWord: () => scene.celebrate.word?.text ?? null,
+      revealState: () => reveal.current(),
+      revealFreeze: (t) => reveal.freeze(t),
+      revealSkip: () => reveal.skip(),
+      haptics: () => haptics.log.slice(),
+      shareCard: async (id) => {
+        const { renderShareCard } = await import('../ui/share-card.ts');
+        const sp = SPECIES_BY_ID.get(id)!;
+        const log: string[] = [];
+        const c = renderShareCard(sp, { date: today(), log });
+        return { w: c.width, h: c.height, png: c.toDataURL('image/png').length, text: log, hint: sp.hint };
+      },
+      showResults: (o) =>
+        ui.showGameOver({
+          score: o.score,
+          best: Math.max(o.score, o.prevBest),
+          newBest: o.score > o.prevBest && o.prevBest > 0,
+          prevBest: o.prevBest,
+          moves: 64,
+          lagoon: 12,
+          mode: 'classic',
+          dailyStreak: 0,
+          unlocked: [],
+          caught: { count: 9, newIds: [] },
+          reducedMotion: scene.reducedMotion,
+        }),
+    },
   });

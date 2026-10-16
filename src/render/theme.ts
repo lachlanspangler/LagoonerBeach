@@ -60,6 +60,11 @@ export const NIGHT: Palette = {
   pebbles: PEBBLES,
 };
 
+/** UI font: Nunito ("Lagoon UI", bundled) — every number in the game. */
+export const FONT_STACK = `"Lagoon UI", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif`;
+/** Display voice: Fraunces ("Lagoon Display", bundled) — words only, never numbers (proportional digits). */
+export const DISPLAY_STACK = `"Lagoon Display", "Iowan Old Style", Georgia, serif`;
+
 export const MOTION = {
   pickUp: 90,
   place: 110,
@@ -85,12 +90,3 @@ export const GEOM = {
   liftCells: 1.4,
   touchSlop: 6,
 } as const;
-
-/** Lagoon size → callout word. Only big moments speak; small pops stay quiet. */
-export function calloutFor(area: number, waves: number, clean: boolean): string | null {
-  if (clean) return 'Spotless!';
-  if (waves >= 2) return `Ripple ×${waves}`;
-  if (area >= 12) return 'Atoll!';
-  if (area >= 6) return 'Lagoon';
-  return null;
-}

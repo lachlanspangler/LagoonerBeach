@@ -8,6 +8,7 @@ import { HABITATS, SPECIES, SPECIES_BY_ID, type Species } from '../meta/creature
 import { found, type Journal } from '../meta/journal.ts';
 import { drawCreature, hasNewArt, whenArtReady } from '../render/creatures.ts';
 import { buildReefList, type ReefListModel } from './reefList.ts';
+import { resultsHero } from './results.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
@@ -30,6 +31,16 @@ export interface UiHandlers {
   onErase(): void;
   onShare(): void;
   onClick(): void;
+  /** The results' NEW HIGH SCORE moment just landed (play the fanfare + heavy haptic). */
+  onRecord?(): void;
+  /**
+   * The results hero has settled (count-up and record moment done). Hook point for the name-entry
+   * step: game over → [name entry] → leaderboard. `card` is the results card element.
+   */
+  onResultsSettled?(
+    info: { score: number; newBest: boolean; mode: 'classic' | 'daily' | 'puzzle' },
+    card: HTMLElement,
+  ): void;
 }
 
 const ICON_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>`;
@@ -406,9 +417,22 @@ export class Ui {
     /** Leaderboard hook (Daily/Classic): a button that opens name entry → board; `mount` lets the
      *  leaderboard module update its label (e.g. "#37 this week") when a result arrives. */
     leaderboard?: { label: string; open(): void; mount?(b: HTMLButtonElement): void };
+    /** Best before this game (for "was 1200" on a record). */
+    prevBest?: number;
+    reducedMotion?: boolean;
   }): HTMLElement {
     const card = document.createElement('div');
     card.className = 'card';
+    const hero = resultsHero({
+      score: o.score,
+      best: o.best,
+      prevBest: o.prevBest ?? 0,
+      newBest: o.newBest,
+      reducedMotion: o.reducedMotion ?? false,
+      nearMiss: nearMiss(o.score, o.best),
+      onRecord: () => this.h.onRecord?.(),
+      onSettled: () => this.h.onResultsSettled?.({ score: o.score, newBest: o.newBest, mode: o.mode }, card),
+    });
     const stats = [
       [o.moves, 'Moves'],
       [o.lagoon, 'Top lagoon'],
@@ -416,10 +440,10 @@ export class Ui {
       [o.dailyStreak, 'Streak'],
     ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<h2>${o.mode === 'daily' ? 'Daily complete' : 'No room left'}</h2>
-      <div class="big" data-testid="final-score">${o.score}</div>
-      <div class="sub">${o.newBest ? '<span class="best-flash">NEW BEST</span>' : nearMiss(o.score, o.best)}</div>
+      <div class="hero-slot"></div>
       <div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
       ${o.unlocked.length ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
+    card.querySelector('.hero-slot')!.replaceWith(hero.el);
     if (o.caught?.newIds.length) card.append(newSpeciesRow(o.caught.newIds, () => this.h.onJournal()));
     if (o.mode === 'daily') {
       card.append(this.button('', 'btn primary', 'Share', 'Share result', () => this.h.onShare()));
@@ -435,7 +459,8 @@ export class Ui {
       lb.mount?.(b);
     }
     this.show(card, false);
-    this.announce(`Game over. Score ${o.score}.${o.newBest ? ' New best!' : ''}`);
+    hero.start();
+    this.announce(`Game over. Score ${o.score}.${o.newBest ? ' New high score!' : ''}`);
     return card;
   }
 }
