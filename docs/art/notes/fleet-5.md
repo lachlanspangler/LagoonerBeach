@@ -56,3 +56,22 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** A-. It feels big and kind; the crop is the joke.
 - **Would improve:** the detail view still clips the front 3 units (centred crop), so the wide
   mouth line is partly at the tile edge; a kit option to anchor the XXL crop to the head would fix it.
+
+## angler (epic, night) — L, fish
+- **Feature (R10):** one big round head-body (ellipse, the dominant primitive), a crescent underbite
+  jaw jutting past the upper lip with three rounded white baby teeth, and a glowing lure bulb on a
+  thick curved stalk (`extra`, so it doesn't shrink the body).
+- **Dark identity (R16):** `#3B3240` lifted to purple-grey `#8A7494` (L 0.59), pale lilac belly
+  `#D9CCE0` (L 0.86), lure `#F2E97A` as a `light` part: baked glow at night. Nocturnal by habitat:
+  awake on Night, `sleepy` on Day.
+- **Signature:** the lure dips, then swings forward and swells (offering its light), the jaw drops
+  into a beam, `happy`, and a wink to finish. Catch: lure wag plus a chomp.
+- **Rounds (3):**
+  1. Charming at once, but IoU 0.73 vs clownfish (fail), Night ΔL exactly 0.30, and the pectoral
+     sat on the jaw seam like an ear.
+  2. Taller, rounder ball body, jaw jutting further, lighter body: still 0.72.
+  3. Smaller stubby tail, thicker stalk and a bigger bulb so the lure carries the silhouette
+     (clownfish 0.66); pectoral turned into a small swept-back fin.
+- **Self-grade:** A-. Cute-spooky: the teeth read as baby teeth, the lure glows.
+- **Would improve:** the rig mouth isn't used (the jaw is the mouth), so `happy` only adds a small
+  open mouth behind the teeth; a jaw-drop driven by the expression would read better.
