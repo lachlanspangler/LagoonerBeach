@@ -58,3 +58,18 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   ambient uses a soft breathe instead of a fin flutter).
 - Grade: B. Still to improve: the disc outline is a little lumpy at the upper back; the false eye
   could be a touch smaller so the joke lands only on second look.
+
+## damsel
+- Size class: S. Feature: a short, deep body (deeper than the clownfish, 74 × 69 overall) with
+  an upright dorsal sail, chest out, and a deep V swallow tail with splayed lobes; pale-blue tips
+  on the tail lobes and the sail.
+- Signature: the tiny defender: puffs up 1.1× with a `proud` face, tips its chin up, charges
+  6 units with a tail flurry, then settles back `happy`. Catch hook: a proud puff.
+- Rounds: 5. (1) a normal-length oval with a short fork: IoU 0.79 vs clownfish, and the dorsal
+  read as a hump. (2) longer lobes and trailing fins: 0.72. (3) a 12° nose-up stance plus a
+  front-to-back squeeze: IoU fine but the tail rotated into a single "arm" (it looked like a
+  penguin). (4) back to a plain grid: a body that is short and deep by construction plus a V tail
+  splayed at ~40°: 0.63 vs clownfish, and it reads as a stocky little fish. (5) a taller sail
+  and bigger accent tips so the upright posture shows.
+- Grade: B. Still to improve: the sail and anal fin merge into the body in the same blue (no
+  interior line); a slightly lighter fin colour would help but costs the third authored colour.
