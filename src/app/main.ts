@@ -887,6 +887,7 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   announce: (t) => ui.announce(t),
   found: () => Object.keys(journal.entries).length,
   date: () => today(),
+  playerName: () => profile.lb?.name || undefined,
   now: clock,
   canOpen: () => scene.drag === null && !ui.open,
   onStrip: (ms) => {

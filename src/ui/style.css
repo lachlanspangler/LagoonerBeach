@@ -434,6 +434,37 @@ a {
   animation: none;
 }
 
+/* lists: rows and tiles rise in 35 ms apart (first 8; the rest arrive with the 8th) */
+.veil.show .lb-list > .lb-row,
+.veil.show .j-grid > .j-tile {
+  animation: rise var(--dur-base) var(--ease-enter) both;
+  animation-delay: 280ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(1) {
+  animation-delay: 0ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(2) {
+  animation-delay: 35ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(3) {
+  animation-delay: 70ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(4) {
+  animation-delay: 105ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(5) {
+  animation-delay: 140ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(6) {
+  animation-delay: 175ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(7) {
+  animation-delay: 210ms;
+}
+.veil.show :is(.lb-list > .lb-row, .j-grid > .j-tile):nth-child(8) {
+  animation-delay: 245ms;
+}
+
 /* ═══ Type ═══ */
 .title-m {
   margin: 0;
@@ -1088,6 +1119,8 @@ html[data-rm='1'] .sheet {
   transition: opacity 150ms linear;
 }
 html[data-rm='1'] .veil.show .stagger > *,
+html[data-rm='1'] .veil.show .lb-list > .lb-row,
+html[data-rm='1'] .veil.show .j-grid > .j-tile,
 html[data-rm='1'] .track i,
 html[data-rm='1'] .reef.next,
 html[data-rm='1'] .icon-btn.collect {

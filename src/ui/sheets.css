@@ -241,7 +241,7 @@
   text-align: center;
 }
 .chapter-title b {
-  font: 600 20px/1.15 var(--font-display);
+  font: 600 18px/1.2 var(--font-display);
   color: var(--ink);
 }
 .chapter-title .segs {

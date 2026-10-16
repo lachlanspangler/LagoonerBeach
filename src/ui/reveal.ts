@@ -52,6 +52,8 @@ export interface RevealDeps {
   now?: () => number;
   /** False while the player is mid-drag or a menu is open: the reveal waits (never interrupts). */
   canOpen?: () => boolean;
+  /** The player's beach name for the share card, if they chose one. */
+  playerName?: () => string | undefined;
   /** A common pop takes the strip between board and tray for `ms` (chips wait for it). */
   onStrip?: (ms: number) => void;
 }
@@ -514,7 +516,7 @@ export class Reveal {
 
   private async share(sp: Species, item: RevealItem): Promise<void> {
     await document.fonts?.ready;
-    const c = renderShareCard(sp, { golden: item.golden, date: this.d.date() });
+    const c = renderShareCard(sp, { golden: item.golden, date: this.d.date(), name: this.d.playerName?.() });
     const how = await shareCanvas(c, `lagooner-beach-${sp.id}.png`, `I found a ${sp.name} on Lagooner Beach!`);
     this.d.announce(how === 'downloaded' ? 'Saved the picture' : how === 'shared' ? 'Shared' : 'Could not share');
   }

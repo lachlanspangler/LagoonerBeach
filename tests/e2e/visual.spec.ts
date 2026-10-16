@@ -34,6 +34,21 @@ for (const sz of SIZES)
       expect(l.tray.y + l.tray.h).toBeLessThanOrEqual(sz.height + 1);
       // cells big enough to read and hit (≥ 34 CSS px on any phone ≥ 360 wide)
       if (sz.width >= 360) expect(l.cell).toBeGreaterThanOrEqual(34);
+      // the strip (reef progress, chips) sits between board and tray
+      expect(l.strip.y).toBe(l.board.y + l.board.h);
+      expect(l.strip.y + l.strip.h).toBeLessThanOrEqual(l.tray.y + l.tray.h / 2);
+      // top bar: two round 44+ px buttons on screen, above the board, clear of the centered score
+      const bar = await page.evaluate(() =>
+        ['menu-btn', 'side-btn'].map((id) => document.getElementById(id)!.getBoundingClientRect().toJSON()),
+      );
+      for (const r of bar) {
+        expect(r.width).toBeGreaterThanOrEqual(44);
+        expect(r.left).toBeGreaterThanOrEqual(0);
+        expect(r.right).toBeLessThanOrEqual(sz.width);
+        expect(r.bottom).toBeLessThanOrEqual(l.board.y);
+      }
+      expect(bar[0].right).toBeLessThan(sz.width / 2 - 60);
+      expect(bar[1].left).toBeGreaterThan(sz.width / 2 + 60);
       for (let i = 0; i < 8; i++) await dragMove(page, 'greedy', 30);
       await page.waitForTimeout(900);
       mkdirSync('artifacts/shots', { recursive: true });
