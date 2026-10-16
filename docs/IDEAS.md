@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**78 ideas** — chosen: 1 · built: 13 · prototyped: 4 · shortlisted: 0 · backlog: 14 · merged: 4 · rejected: 42
+**83 ideas** — chosen: 1 · built: 15 · prototyped: 4 · shortlisted: 0 · backlog: 17 · merged: 4 · rejected: 42
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -20,6 +20,8 @@
 | I-076 | built | Points peek | While dragging over a big capture, show its points next to the ghost. | — | 24 | ✗ | 5/1 | est |
 | I-079 | built | No-hint marks | Reefs cleared without a hint get a distinct mark. | Meowdoku stars | 24 | ✗ | 5/1 | est |
 | I-083 | built | Best moment card | Game-over card shows your biggest lagoon as a little picture. | — | 24 | ✗ | 5/2 | est |
+| I-087 | built | Tide dots | Three dots show how many dry moves your streak has left. | — | 24 | ✗ | 7/1 | est |
+| I-088 | built | Last-chance wobble | Pieces that can't fit shake 'no' before game over. | — | 24 | ✗ | 5/1 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-080 | built | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
@@ -28,7 +30,10 @@
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
 | I-078 | backlog | Reef of the day | One shared reef puzzle per day with its own streak. | Queens daily | 24 | ✗ | 6/2 | est |
+| I-089 | backlog | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
+| I-084 | backlog | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
+| I-090 | backlog | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
@@ -187,6 +192,22 @@
 - **Value/effort:** 5/2
 - **Reason:** Pairs with the share picture.
 
+### I-087 — Tide dots (built)
+- **Pitch:** Three dots show how many dry moves your streak has left.
+- **Closest existing:** —
+- **What's new:** The streak rule becomes visible.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** Fixes a hidden rule (streak grace).
+
+### I-088 — Last-chance wobble (built)
+- **Pitch:** Pieces that can't fit shake 'no' before game over.
+- **Closest existing:** —
+- **What's new:** The loss reads at a glance.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** Fair-fail legibility.
+
 ### I-062 — Difficulty ramp (built)
 - **Pitch:** Pieces get chunkier the longer you survive.
 - **Closest existing:** Block Blast generator
@@ -256,6 +277,14 @@
 - **Value/effort:** 6/2
 - **Reason:** Defer: one daily is clearer; revisit if puzzle mode retains better.
 
+### I-089 — Second lesson (backlog)
+- **Pitch:** After your first pinch, the next hint suggests a 2-cell lagoon.
+- **Closest existing:** Onboarding ladders
+- **What's new:** Teaches 'bigger is better' without text.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** Depends on real-player data showing people stay with pinches.
+
 ### I-015 — Square Pop (backlog)
 - **Pitch:** Any filled square, 3×3 or bigger, pops.
 - **Closest existing:** Woodoku
@@ -263,6 +292,22 @@
 - **Scores (R1..R14):** 2 1 2 1 2 1 2 2 2 1 1 2 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 5/2
 - **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later.
+
+### I-084 — Living atoll (backlog)
+- **Pitch:** Your best lagoons grow a little island collection on the home screen.
+- **Closest existing:** Meowdoku cat collection
+- **What's new:** Meta-progression with a face.
+- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 2 2 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 6/5
+- **Reason:** Charming retention layer; needs a home screen, which we don't have yet (by design).
+
+### I-090 — Colorblind audit (backlog)
+- **Pitch:** Simulate deuteranopia/protanopia on every skin; flag pairs that collide.
+- **Closest existing:** —
+- **What's new:** Measured accessibility.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 1 1 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 4/1
+- **Reason:** Colors are cosmetic, but piece identity still benefits.
 
 ### I-008 — Mirror (backlog)
 - **Pitch:** Everything you place is reflected across the mirror.

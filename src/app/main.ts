@@ -160,6 +160,7 @@ function syncScene(): void {
   scene.shownScore = state.score;
   scene.best = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   scene.streak = state.streak;
+  scene.dry = state.dry;
   scene.gameOverAt = state.over ? now : -1;
   scene.preview = null;
   scene.drag = null;
@@ -230,6 +231,7 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
   state = r.state;
   persist();
   fx.dispatch(r.events, performance.now(), from);
+  scene.dry = state.dry;
   for (const e of r.events) {
     if (e.type === 'captured') {
       profile.stats.captures += e.pockets.length;

@@ -10,6 +10,7 @@ import { Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, GEOM, MOTION, type Palette } from './theme.ts';
 import { clamp01, easeInCubic, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
+import { STREAK_GRACE } from '../core/scoring.ts';
 
 export interface DragView {
   slot: number;
@@ -110,6 +111,8 @@ export class Scene {
   shownScore = 0;
   best = 0;
   streak = 0;
+  /** Dry moves since the last capture (streak breaks at STREAK_GRACE). */
+  dry = 0;
   streakPulse = -1e9;
   gameOverAt = -1;
   hint: { cells: readonly number[]; start: number } | null = null;
@@ -464,6 +467,10 @@ export class Scene {
         return;
       }
       const dimmed = this.gameOverAt >= 0 || this.misfit[i] === true;
+      // last chance: the pieces that couldn't fit shake "no" before the card appears
+      const wt = now - this.gameOverAt;
+      if (this.gameOverAt >= 0 && wt < 600 && !this.reducedMotion)
+        x += Math.sin(wt / 28) * l.cell * 0.12 * (1 - wt / 600);
       if (this.selected === i) {
         const sl = l.slots[i]!;
         this.g.strokeStyle = this.palette.water;
@@ -612,7 +619,22 @@ export class Scene {
       const sc = this.reducedMotion ? 1 : 1 + 0.25 * (1 - easeOutCubic(k));
       g.font = `800 ${Math.round(big * 0.34 * sc)}px ${FONT}`;
       g.fillStyle = p.water;
-      g.fillText(`≈ ×${this.streak}`, cx, l.hud.y + l.hud.h * 0.95);
+      const label = `≈ ×${this.streak}`;
+      // tide dots: moves left before the streak breaks (fills back up on every capture)
+      const w = g.measureText(label).width;
+      const r = Math.max(2.5, big * 0.06);
+      const dotsW = r * 3 + (STREAK_GRACE - 1) * r * 2.8;
+      const x0 = cx - (w + dotsW) / 2;
+      g.textAlign = 'left';
+      g.fillText(label, x0, l.hud.y + l.hud.h * 0.95);
+      g.textAlign = 'center';
+      for (let i = 0; i < STREAK_GRACE; i++) {
+        g.globalAlpha = i < STREAK_GRACE - this.dry ? 1 : 0.22;
+        g.beginPath();
+        g.arc(x0 + w + r * 3 + i * r * 2.8, l.hud.y + l.hud.h * 0.95 - big * 0.12, r, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.globalAlpha = 1;
     }
   }
 
@@ -643,7 +665,8 @@ export class Scene {
       now - this.shake.start < MOTION.shake ||
       this.tray.some((s) => now - s.dealStart < MOTION.dealIn || s.back !== null) ||
       this.land.some((t) => now - t < MOTION.place * 1.6) ||
-      now - this.streakPulse < 300
+      now - this.streakPulse < 300 ||
+      (this.gameOverAt >= 0 && now - this.gameOverAt < 600)
     );
   }
 }
