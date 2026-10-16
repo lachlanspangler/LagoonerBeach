@@ -41,3 +41,20 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
 - Self-grade: B+. Instantly a boxfish at 24 px; dots and square read at 54 px.
 - Would improve: the face sits a little far from the snout because the validator wants the eye
   30–38 % back on a box that includes the tail stalk; a face zone on the box alone would look cuter.
+
+## sunfish (Ocean Sunfish)
+- Size class XL, fish (profile). Feature: a tall disc with no tail, a scalloped clavus frill and long
+  swept-back fins straight up and down (darker accent tips). Silver-blue body with chroma raised to
+  0.035 (the old `#B7C3CF` was below the R16 chroma floor), pale belly, sweet sun-blush.
+- Signature: flops onto its side, snout to the sky, with blissful `sleepy` lids (sunbathing), then
+  rights itself with a small overshoot and a `happy` face. Ambient: slow dorsal/anal sculling in
+  opposite phase. Catch: fins flare.
+- Rounds: 3.
+  1. Disc 60×54, fins to ±44: body box 89 tall (R1 fail). The flop rotated it face-down (read as tumbling).
+  2. Shortened fins: IoU rose to 0.72 vs boxfish and 0.71 vs clownfish (fail): without the tall fins it
+     is just another round fish. Flop direction reversed so the face points up.
+  3. Smaller disc (56×48), fins kept long (±40) and slightly narrower: the fins now dominate the
+     normalised mask. clownfish 0.68, puffer 0.67, boxfish 0.67.
+- Self-grade: B+. Gentle and dopey; the up-down fins make it nameable at 24 px.
+- Would improve: XL frame-breaking (R28) only happens in the leap; in the tile it fits. A sun
+  sparkle prop during the sunbathe would sell the joke further.
