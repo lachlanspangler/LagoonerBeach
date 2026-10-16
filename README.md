@@ -9,6 +9,7 @@ other block puzzle, holes kill you. Here, holes are how you score.
 - **Classic**: endless, gently ramping, one-more-round.
 - **Daily**: the same deal for everyone each day, with streaks and an emoji share card.
 - **Reef puzzles**: 360 solver-verified puzzles (56 needing a cascade). Place every piece so the board ends empty.
+- **Beach Journal**: every lagoon catches a beach creature — 47 species tied to the shapes you build.
 
 ## Quick start
 ```sh
@@ -17,6 +18,8 @@ make dev     # http://localhost:5317   (?debug=1 for test hooks, ?seed=N to fix 
 make check   # typecheck, lint, format, unit/property/balance tests
 make e2e     # production build + browser tests (Chromium + WebKit), screenshots, perf, audio QA
 make ios-sim # iOS Simulator build + screenshot (needs Xcode)
+make android-emu      # Android emulator build + screenshot (needs the Android SDK)
+make android-release  # signed AAB (needs android/keystore.properties)
 ```
 
 ## Where things are
@@ -27,5 +30,5 @@ make ios-sim # iOS Simulator build + screenshot (needs Xcode)
 - `docs/IDEAS.md`: the ideas ledger (generated from `docs/ideas_ledger.json`)
 - `CLAUDE.md`: architecture map and conventions for whoever works on this next
 
-All art and sound are original: sprites are drawn in code and every sound is synthesized with
-WebAudio. There are no asset files.
+All art, sound and music are original: sprites and creatures are drawn in code, every sound and
+the music are synthesized with WebAudio. There are no asset files. No data is collected.
