@@ -153,3 +153,17 @@ broke, what I decided and why.
   validation checks mode and `over` consistency; daily streak can't rewind; one clock.
 - Wrote regression e2e tests and **proved they fail on the old code** before keeping them.
 - Store screenshot generator (`scripts/store-shots.ts`) — first run caught my own staging bug.
+
+## 2026-10-16 02:45 CDT — Content, a11y, perf, visual nets
+- Reef pack analysis: **zero** cascade reefs and 14 tiny reefs. Added a double-wall construction
+  and a minimum reef size → 200 reefs, 27 needing a cascade. Reef select grid (nothing locked).
+- Points peek (I-076), tide dots for streak grace (I-087), last-chance wobble (I-088).
+- Colorblind audit (Machado CVD matrices + ΔE): default orchid merged with lagoon blue under
+  deuteranopia (ΔE 3.9). Darkened orchid → 11.3. Test keeps floors.
+- Hint perf: worst full solve 76 ms on M4 (≈300+ ms on a mid phone). Hints now follow the stored
+  solution while on-path; off-path positions solve in ≤ 10 ms.
+- Visual baselines: first attempt *didn't* catch a 1 px gutter change (Playwright's default
+  per-pixel threshold 0.2 swallowed it). Tightened to 0.08; now fails 4/5 on that change and is
+  stable over 3 runs.
+- Fresh clone → `make setup && make check` green (one-command setup verified).
+- Refactor: debug hooks → `src/app/debug.ts`, env helpers → `src/app/env.ts`.
