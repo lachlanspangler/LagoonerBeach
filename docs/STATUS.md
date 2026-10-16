@@ -30,7 +30,7 @@ creature for your Beach Journal.
   - Six composed screenshots and the Play feature graphic and icon (`npx tsx scripts/store-shots.ts`, `native-assets.ts` → `artifacts/store/`).
   - Every iOS and Android icon and splash.
   - Privacy policy (`public/privacy.html`; no data collected).
-  - Monetization ADR 0008: free, no ads in v1, optional one-time "supporter" unlock later.
+  - Monetization ADR 0008: free and ad-free; recommends one optional cosmetic "Supporter Pack" IAP (not built, waits for your go).
 - **Builds:**
   - iOS Simulator build (`make ios-sim`).
   - Android debug APK on a headless emulator (`make android-emu`).
@@ -42,7 +42,7 @@ creature for your Beach Journal.
 
 **Placeholders (deliberate, need your input):**
 - `com.example.atoll` app id.
-- The contact email and URL in the privacy policy.
+- The privacy policy has no contact email yet.
 - No signing keystore is checked in (`android/keystore.properties` is gitignored).
 
 ## What I need from you
@@ -61,7 +61,7 @@ creature for your Beach Journal.
 6. **CI:** push, then check the GitHub Actions run. The e2e job had failed only on GitHub; I hardened
    it (retries, 2 workers, ×3 perf budgets, GitHub annotations) but couldn't see the logs (they need
    repo admin). If it still fails, paste the annotation text.
-7. **Monetization:** confirm ADR 0008 (no ads; a later one-time supporter unlock) or tell me otherwise.
+7. **Monetization:** go/no-go on ADR 0008's Supporter Pack (needs store accounts; I'd build it as a purchase screen in Settings over the existing skins).
 
 ## What I'd do next
 - Re-tune `DEFAULT_RAMP` and catch odds from real play data instead of the bot model. The tools
