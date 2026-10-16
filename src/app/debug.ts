@@ -27,7 +27,7 @@ export interface DebugDeps {
   drawTimes: number[];
   pickDrawnAt: number[];
   dropDrawnAt: number[];
-  commit(m: Move, from: { x: number; y: number } | null): boolean;
+  commit(m: Move, from: { x: number; y: number } | null, quiet?: boolean): boolean;
   restart(): void;
   switchMode(m: 'classic' | 'daily' | 'puzzle'): void;
   loadPuzzle(i: number): void;
@@ -37,6 +37,22 @@ export interface DebugDeps {
   /** Screenshots only: show a believable best score / a well-filled journal (not saved). */
   stageBest(n: number, score?: number): void;
   stageJournal(ids: string[]): void;
+  /** Celebration staging (ADR 0012): frozen clock, combo, records, discoveries. */
+  celebrate: {
+    /** Freeze the render clock at `ms` after the last move (null = live again). */
+    freeze(msAfterMove: number | null): void;
+    /** Freeze now and treat it as the next move's dispatch time; returns it. */
+    freezeNow(): number;
+    stageCombo(n: number): void;
+    /** Set the stored best (so a capture crosses it, or the results show a record). */
+    stageRecord(best: number): void;
+    revealSpecies(id: string, o?: { golden?: boolean; size?: number }): void;
+    revealState(): { id: string; modal: boolean; settled: boolean } | null;
+    revealFreeze(t: number): boolean;
+    revealSkip(): void;
+    haptics(): { k: string; t: number }[];
+    showResults(o: { score: number; prevBest: number }): void;
+  };
 }
 
 export function installDebugApi(d: DebugDeps): void {
@@ -76,7 +92,7 @@ export function installDebugApi(d: DebugDeps): void {
         const s = d.state();
         const m = BOTS[bot](s, new Rng(s.moves + 7));
         if (!m) break;
-        d.commit(m, null);
+        d.commit(m, null, true);
       }
       return d.state().moves;
     },
@@ -92,6 +108,9 @@ export function installDebugApi(d: DebugDeps): void {
     journal: d.journal,
     stageBest: d.stageBest,
     stageJournal: d.stageJournal,
+    ...d.celebrate,
+    /** Commit a move directly (no drag; flight 0) — for frozen-clock staging. */
+    commitMove: (m: Move) => d.commit(m, null),
     /** Stage a board ("." or "0" empty, 1-6 colors; 64 chars) and tray piece ids. */
     setup(board: string, tray: (string | null)[]) {
       const g = decodeGame({
@@ -129,6 +148,29 @@ export function installDebugApi(d: DebugDeps): void {
         ],
         ['streakMilestone', (s) => s.streakMilestone(10)],
         ['discovery', (s) => s.discovery()],
+        // ADR 0012: tier stings, combo layers, screen-filling whoosh, results fanfare, reveals
+        ['stingNice', (s) => s.sting('nice')],
+        ['stingLagoon', (s) => s.sting('lagoon')],
+        ['stingAtoll', (s) => s.sting('atoll')],
+        ['stingRiptide', (s) => s.sting('riptide')],
+        ['stingSpotless', (s) => s.sting('spotless')],
+        ['stingAmazing', (s) => s.sting('amazing')],
+        ['whoosh', (s) => s.whoosh()],
+        ['comboLevel', (s) => s.comboLevel(4)],
+        ['comboBreak', (s) => s.comboBreak()],
+        ['captureCombo20', (s) => s.capture(6, 12, 0, 0, 3)],
+        // the biggest in-game moment: 3 waves at combo 20 + Amazing sting + whoosh
+        [
+          'amazingMoment',
+          (s) => (
+            [0, 1, 2].forEach((k) => s.capture(12, 12, k, k * 0.15, 3)),
+            s.sting('amazing', 0.46),
+            s.whoosh(0.52)
+          ),
+        ],
+        ['fanfare', (s) => s.fanfare()],
+        ['revealUncommon', (s) => s.reveal('uncommon')],
+        ['revealLegendary', (s) => s.reveal('legendary')],
         ['deal', (s) => s.deal()],
         ['newBest', (s) => s.newBest()],
         ['gameOver', (s) => s.gameOver()],

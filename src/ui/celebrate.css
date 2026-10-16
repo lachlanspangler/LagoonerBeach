@@ -1,0 +1,306 @@
+/* Celebration UI (ADR 0012): discovery reveal, quick common pop, results hero / NEW HIGH SCORE. */
+
+/* ---------------------------------------------------------------- discovery reveal (modal) */
+.reveal {
+  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.reveal.show {
+  opacity: 1;
+}
+.reveal.settled {
+  pointer-events: none;
+}
+.reveal.settled .rv-card {
+  pointer-events: auto;
+}
+.reveal.leaving {
+  opacity: 0;
+  transition-duration: 180ms;
+}
+.rv-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.rv-card {
+  position: relative;
+  width: min(88vw, 340px);
+  background: linear-gradient(180deg, var(--hab, var(--panel)) 0, var(--panel) 52%);
+  border-radius: 28px;
+  padding: 18px 20px 16px;
+  text-align: center;
+  box-shadow:
+    0 18px 48px var(--shadow),
+    0 0 0 2px var(--tier) inset;
+  transform: scale(0.8);
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.reveal.show .rv-card {
+  transform: none;
+}
+.r-golden .rv-card {
+  box-shadow:
+    0 18px 48px var(--shadow),
+    0 0 0 3px #e2b24a inset;
+  background: linear-gradient(180deg, #fff8e2, var(--panel) 45%);
+}
+html[data-theme='night'] .r-golden .rv-card {
+  background: linear-gradient(180deg, #2c2a1c, var(--panel) 45%);
+}
+.rv-over {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.rv-pool {
+  display: grid;
+  place-items: center;
+  margin: 2px auto 0;
+  width: 200px;
+  height: 168px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--tier) 22%, transparent), transparent 75%);
+}
+.rv-info {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 220ms ease,
+    transform 260ms cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.reveal.info .rv-info {
+  opacity: 1;
+  transform: none;
+}
+.rv-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 1.05;
+  margin: 2px 0 4px;
+}
+.rv-rarity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--dim);
+}
+.rv-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 14px;
+  margin: 12px 0 8px;
+  text-align: left;
+}
+.rv-facts div {
+  display: flex;
+  flex-direction: column-reverse;
+  border-left: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  padding-left: 10px;
+}
+.rv-facts div:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+.rv-facts b {
+  font-size: 15px;
+  font-weight: 800;
+}
+.rv-facts span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.rv-journal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 6px 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dim);
+}
+.rv-stamp {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2.5px solid var(--tier);
+  color: var(--tier);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  transform: rotate(-12deg) scale(1.8);
+  opacity: 0;
+  transition:
+    transform 200ms cubic-bezier(0.3, 0, 0.8, 0.15),
+    opacity 120ms ease;
+}
+.rv-stamp b {
+  font-size: 16px;
+}
+.reveal.stamped .rv-stamp {
+  transform: rotate(-12deg);
+  opacity: 1;
+}
+.rv-btns {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.reveal.settled .rv-btns {
+  opacity: 1;
+}
+.rv-btns .btn {
+  margin: 0;
+}
+.rv-btns .btn.ghost {
+  width: auto;
+  padding: 0 18px;
+}
+
+/* ---------------------------------------------------------------- common: quick pop, never modal */
+.reveal-pop {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: calc(var(--safe-top) + 92px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 4px 6px;
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow: 0 6px 16px var(--shadow);
+  transform: translate(-50%, -6px) scale(0.85);
+  opacity: 0;
+  transition:
+    transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 140ms ease;
+  z-index: 25;
+}
+.reveal-pop.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+.reveal-pop.leaving {
+  opacity: 0;
+  transform: translate(-50%, -6px) scale(0.96);
+}
+.rp-over {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-align: left;
+}
+.rp-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 19px;
+  text-align: left;
+}
+
+/* ---------------------------------------------------------------- results hero */
+.res-hero {
+  position: relative;
+  margin: 4px 0 10px;
+}
+.res-hero canvas.res-confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.card .res-score {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  transition: color 200ms ease;
+}
+.card .res-hero.record .res-score {
+  background: linear-gradient(180deg, #ffe08a, #f2b93b 55%, #b9821f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #7a5410;
+}
+.res-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 5px 22px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  color: #9a6a00;
+  background: #fff1cc;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 12px 50%);
+  transform: translateY(-10px) scale(0.6);
+  opacity: 0;
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 140ms ease;
+}
+html[data-theme='night'] .res-ribbon {
+  color: #f5c451;
+  background: #3a2e10;
+}
+.res-ribbon svg {
+  width: 20px;
+  height: 20px;
+}
+.res-hero.record.landed .res-ribbon {
+  transform: none;
+  opacity: 1;
+}
+.res-was {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dim);
+}
+.res-was s {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-card,
+  .reveal-pop,
+  .res-ribbon,
+  .rv-stamp,
+  .rv-info {
+    transition-duration: 1ms !important;
+  }
+}
+html[data-rm='1'] .rv-card,
+html[data-rm='1'] .reveal-pop,
+html[data-rm='1'] .res-ribbon,
+html[data-rm='1'] .rv-stamp,
+html[data-rm='1'] .rv-info {
+  transition-duration: 1ms !important;
+}
