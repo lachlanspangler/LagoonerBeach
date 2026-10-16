@@ -57,8 +57,18 @@ export function boardFromString(s: string): Board {
   return Uint8Array.from(s, (ch) => Number(ch));
 }
 
-/** One generation attempt; null if the construction failed or the solver rejects it. */
-export function generatePuzzle(seed: number, p: GenParams): Puzzle | null {
+export interface Construction {
+  readonly board: Board;
+  readonly pieces: readonly string[];
+  readonly lagoons: number;
+}
+
+/**
+ * The constructive half of a generation attempt (no solver): lagoons, rings, carved pieces, colored
+ * reef. Null if the construction failed or the board already holds a pocket. Same RNG sequence as
+ * `generatePuzzle`, which is this plus the solver.
+ */
+export function constructPuzzle(seed: number, p: GenParams): Construction | null {
   const rng = new Rng(seed);
   const lagoon = new Uint8Array(CELLS);
   const ring = new Uint8Array(CELLS);
@@ -127,7 +137,14 @@ export function generatePuzzle(seed: number, p: GenParams): Puzzle | null {
   for (let c = 0; c < CELLS; c++) if (board[c]) filled++;
   if (filled < (p.minPebbles ?? 4)) return null;
   if (findPockets(board).length) return null;
-  const pieces = chosen.map((c) => c.piece.id);
+  return { board, pieces: chosen.map((c) => c.piece.id), lagoons: made };
+}
+
+/** One generation attempt; null if the construction failed or the solver rejects it. */
+export function generatePuzzle(seed: number, p: GenParams): Puzzle | null {
+  const c = constructPuzzle(seed, p);
+  if (!c) return null;
+  const { board, pieces, lagoons: made } = c;
   const s = solve(board, pieces);
   if (!s.solvable || !s.first) return null;
   return { id: '', board: boardToString(board), pieces, solution: s.first, grade: grade(board, pieces), lagoons: made };
