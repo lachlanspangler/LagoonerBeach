@@ -14,7 +14,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Pixel 7'] } },
     // Safari engine: gameplay flows only (perf numbers are Chromium-specific via CDP)
-    { name: 'webkit', use: { ...devices['iPhone 15'] }, testMatch: ['e2e/gameplay.spec.ts'] },
+    { name: 'webkit', use: { ...devices['iPhone 15'] }, testMatch: ['e2e/gameplay.spec.ts', 'e2e/input.spec.ts'] },
   ],
 
   webServer: {
