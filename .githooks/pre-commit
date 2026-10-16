@@ -1,0 +1,3 @@
+#!/bin/sh
+# Self-healing gate: never commit a red tree. Bypass only with --no-verify (and log why in the diary).
+npm run -s check || { echo "pre-commit: npm run check failed"; exit 1; }

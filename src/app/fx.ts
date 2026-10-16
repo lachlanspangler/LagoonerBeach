@@ -140,10 +140,34 @@ export class Fx {
             sc.score = sc.pendingScore ?? sc.score;
             if (word) {
               const cy = l.board.y + l.board.h * 0.36;
-              sc.texts.push({ text: word, x: l.w / 2, y: cy, start: t, size: l.cell * 0.95, life: MOTION.callout, strong: true });
-              sc.texts.push({ text: `+${pts}`, x: l.w / 2, y: cy + l.cell * 0.85, start: t + 60, size: l.cell * 0.55, life: MOTION.callout - 60, strong: false });
+              sc.texts.push({
+                text: word,
+                x: l.w / 2,
+                y: cy,
+                start: t,
+                size: l.cell * 0.95,
+                life: MOTION.callout,
+                strong: true,
+              });
+              sc.texts.push({
+                text: `+${pts}`,
+                x: l.w / 2,
+                y: cy + l.cell * 0.85,
+                start: t + 60,
+                size: l.cell * 0.55,
+                life: MOTION.callout - 60,
+                strong: false,
+              });
             } else {
-              sc.texts.push({ text: `+${pts}`, x: px, y: py, start: t, size: l.cell * (maxArea >= 3 ? 0.7 : 0.55), life: MOTION.scorePop, strong: false });
+              sc.texts.push({
+                text: `+${pts}`,
+                x: px,
+                y: py,
+                start: t,
+                size: l.cell * (maxArea >= 3 ? 0.7 : 0.55),
+                life: MOTION.scorePop,
+                strong: false,
+              });
             }
           });
           if (e.waves.length > 1 || maxArea >= 12) {

@@ -474,7 +474,13 @@ export class Scene {
       g.lineWidth = Math.max(3, t.size * 0.16);
       const night = this.palette.name === 'night';
       g.lineJoin = 'round';
-      g.strokeStyle = t.strong ? (night ? 'rgba(0,20,30,0.75)' : '#FFFFFF') : night ? 'rgba(0,0,0,0.55)' : 'rgba(59,50,41,0.6)';
+      g.strokeStyle = t.strong
+        ? night
+          ? 'rgba(0,20,30,0.75)'
+          : '#FFFFFF'
+        : night
+          ? 'rgba(0,0,0,0.55)'
+          : 'rgba(59,50,41,0.6)';
       g.strokeText(t.text, t.x, t.y - rise);
       g.fillStyle = t.strong ? (night ? this.palette.waterHi : '#1F8FB5') : '#FFFFFF';
       g.fillText(t.text, t.x, t.y - rise);

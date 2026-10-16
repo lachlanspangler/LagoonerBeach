@@ -4,6 +4,7 @@
 setup:            ## install deps + browsers
 	npm ci || npm install
 	npx playwright install chromium
+	git config core.hooksPath .githooks
 
 dev:              ## dev server on :5317
 	npm run dev
