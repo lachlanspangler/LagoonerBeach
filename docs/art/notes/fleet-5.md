@@ -34,3 +34,25 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** A-. Joyful and readable; the spin is the most fun signature in my set.
 - **Would improve:** the permanent smile is only the rig's small `smile` (capped at 0.9 × eye
   width); a longer mouth crease along the beak would sell "permanent smile" better.
+
+## whaleshark (legendary) — XXL, shark
+- **Feature (R10):** a flat, blunt, front-heavy head with a long gentle mouth line across the
+  front, an authored grid of 9 white spots, small dorsal, big crescent tail.
+- **Crop (R27/R28):** the back half of the body and the tail are `extra` parts, so the body box is
+  the front 73 units only; tiles frame the big head and the tail runs off the left edge. It doesn't
+  fit, on purpose, and the leap is a breach bigger than the lagoon.
+- **Dark identity (R16):** `#3E5A73` lifted to `#5F7F9C` (L 0.58; the validator's floor is 0.55, and
+  the Night check needs ≥ 0.30 ΔL), white belly, white spots.
+- **Signature:** three plankton specks (prop) drift into the mouth during an enormous slow blink,
+  then a smug little `proud` smile and a contented swallow (sy). Catch: a heavy tail sweep.
+- **Rounds (4):**
+  1. A generic deep fish oval: IoU 0.76 vs the dolphin and 0.72 vs clownfish (fail); the mouth sat on
+     the tile edge and the tile cropped head and tail equally.
+  2. Flat near-vertical front face and a long, lower body: passes (0.68) but still a "big fish".
+  3. Front half as the only non-extra part: the tile showed nothing but a head, and the leap was
+     enormous. Too far.
+  4. Non-extra part extended back to x −26 (box 73 units): head, spots, fin and dorsal all in
+     frame, tail cropped. Pectoral made smaller and moved behind the face. Closest: clownfish 0.65.
+- **Self-grade:** A-. It feels big and kind; the crop is the joke.
+- **Would improve:** the detail view still clips the front 3 units (centred crop), so the wide
+  mouth line is partly at the tile edge; a kit option to anchor the XXL crop to the head would fix it.
