@@ -69,3 +69,22 @@ test('drag released far off the board returns the piece', async ({ page }) => {
   await page.waitForTimeout(250);
   expect((await state(page)).moves).toBe(before.moves);
 });
+
+test('real touch drag (CDP touch events) places a piece', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'CDP touch is Chromium-only');
+  await boot(page);
+  const before = await state(page);
+  const plan = await page.evaluate(() => (window as any).__atoll.plan('greedy'));
+  const cdp = await page.context().newCDPSession(page);
+  const touch = (type: string, x: number, y: number) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] } as never);
+  await touch('touchStart', plan.down.x, plan.down.y);
+  for (let i = 1; i <= 8; i++)
+    await touch(
+      'touchMove',
+      plan.down.x + ((plan.up.x - plan.down.x) * i) / 8,
+      plan.down.y + ((plan.up.y - plan.down.y) * i) / 8,
+    );
+  await touch('touchEnd', plan.up.x, plan.up.y);
+  await expect.poll(async () => (await state(page)).moves).toBe(before.moves + 1);
+});
