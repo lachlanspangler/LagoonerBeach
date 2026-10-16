@@ -157,3 +157,18 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   all visible for the whole performance).
 - Grade: B. Still to improve: the flash props get the ink outline like every fill, so they read as
   beads more than light; a glow-only prop would be nicer (kit limitation in the report).
+
+## Batch summary
+- Within the fish batch (+ clownfish) the closest pairs are clownfish/parrot 0.69, clownfish/grouper
+  0.68, barracuda/minnow 0.66, grouper/parrot 0.66; against the whole 47-species cast the closest
+  fish-class pair is barracuda/flounder 0.70 and the closest cross-class one butterfly/combjelly
+  0.76.
+- Five fish separate by pose rather than outline (wrasse −14°, blenny −20°, lanternfish −45° nose-up;
+  grouper +18°, butterfly +17° nose-down): with eleven-plus profile fish the centroid-aligned mask
+  test leaves little room for level ovals, and each tilt was given a story (busy, nosy, rising at
+  night, resting on the sand, picking at coral).
+- Kit limitations hit: patterns clip to their own group's silhouette, so a light organ can't
+  blink on its own without being an outlined fill (lanternfish uses prop flashes, which get the ink
+  outline); `underbite` teeth scale with the R8-capped mouth width (≈ 1 px at tile size); no way to
+  author a species' resting expression (the grouper's "half-lid idle" only shows at the end of its
+  yawn and in the R32 sleepy state).
