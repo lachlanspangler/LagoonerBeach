@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**93 ideas** — chosen: 1 · built: 24 · prototyped: 4 · shortlisted: 0 · backlog: 2 · merged: 5 · rejected: 57
+**139 ideas** — chosen: 1 · built: 24 · prototyped: 4 · shortlisted: 0 · backlog: 43 · merged: 5 · rejected: 62
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -37,6 +37,47 @@
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
+| I-101 | backlog | Creature style guide | One construction kit (eyes, blush, ink outline, palette) every species follows. | Neko Atsume / Pokémon | 27 | ✗ | 9/3 | est |
+| I-102 | backlog | Size classes | XS shrimp → XXL kraken: real relative scale in leaps, journal and reveal. | Animal Crossing fish shadows | 27 | ✗ | 8/2 | est |
+| I-103 | backlog | Idle personalities | Each species has its own idle: hermit peeks, octopus wiggles, ray glides, puffer inflates. | Neko Atsume | 27 | ✗ | 8/5 | est |
+| I-104 | backlog | Expressions | Idle, happy (caught), surprised (new), sleepy (night) faces. | Sanrio / Duolingo | 27 | ✗ | 8/3 | est |
+| I-105 | backlog | Blink & breathe | Every creature blinks every 2–5 s and breathes 2%. | Duolingo characters | 27 | ✗ | 6/1 | est |
+| I-106 | backlog | Journal tile art | Each tile: creature at its size class on a habitat-tinted card; rarity frame. | Pokédex / Critterpedia | 27 | ✗ | 8/2 | est |
+| I-107 | backlog | Golden shimmer | Golden variants: moving specular band + sparkles, not a flat tint. | Pokémon shinies | 27 | ✗ | 6/2 | est |
+| I-108 | backlog | Creature sprite cache | Pre-render each species per size/expression to offscreen canvases; animate transforms only. | — | 27 | ✗ | 7/2 | est |
+| I-109 | backlog | Creature of the day | Journal header features one found creature with its flavor line. | Duolingo stories | 27 | ✗ | 4/2 | est |
+| I-110 | backlog | Silhouette quiz | Unfound tiles are true silhouettes that read at 24 px; hints below. | Pokémon silhouettes | 27 | ✗ | 6/1 | est |
+| I-111 | backlog | Combo counter | COMBO ×N callout escalates with consecutive sealing moves (our streak), breaks after 3 dry moves. | Block Blast | 27 | ✗ | 9/3 | est |
+| I-112 | backlog | Praise ladder | Nice! → Lovely Lagoon! → Atoll! → Tidal! by move value; cascades and multi-lagoons get their own words. | Block Blast praise words | 27 | ✗ | 8/2 | est |
+| I-113 | backlog | Ring burst physics | Ring pebbles pop outward with spin, gravity and fade; bigger rings burst harder. | Block Blast block scatter | 27 | ✗ | 9/3 | est |
+| I-114 | backlog | Combo pitch ladder | Capture chime climbs a pentatonic step per combo level; layers add at ×5, ×10. | Block Blast / Peggle | 27 | ✗ | 7/2 | est |
+| I-115 | backlog | Combo meter | Thin meter under the score shows combo and grace (3 pips drain on dry moves). | Block Blast combo timer | 27 | ✗ | 7/2 | est |
+| I-116 | backlog | Combo break | Gentle deflate + "Combo 12" fades when it breaks; no punishment sound. | Block Blast | 27 | ✗ | 6/1 | est |
+| I-117 | backlog | NEW HIGH SCORE moment | Mid-game crossing: gold sweep + NEW BEST banner once; game over: big score count-up with confetti foam. | Block Blast | 27 | ✗ | 9/2 | est |
+| I-118 | backlog | Spotless board clear | Whole-board clear: tide wash across the board, giant SPOTLESS!, extra creature. | Block Blast all-clear | 27 | ✗ | 8/2 | est |
+| I-119 | backlog | Hit stop | 40–60 ms freeze before a big burst. | Vlambeer juice | 27 | ✗ | 6/1 | est |
+| I-120 | backlog | Haptic layering | Haptic pattern per tier: tick, medium, heavy double, heavy triple for Atoll+cascade. | Block Blast | 27 | ✗ | 6/1 | est |
+| I-121 | backlog | Score count-up | Score rolls up with ease-out; digits pop on big moves. | Royal Match | 27 | ✗ | 6/1 | est |
+| I-124 | backlog | Discovery reveal | New species: board dims, card flips open with the creature dancing, name in display type, rarity rays. | Gacha reveals (cosmetic only) | 27 | ✗ | 10/4 | est |
+| I-125 | backlog | Rarity-scaled reveal | Common: chip; uncommon: card; rare: rays; epic: rays + music sting; legendary: full-screen tide + fanfare. | Pokémon / AC | 27 | ✗ | 9/2 | est |
+| I-126 | backlog | Discovery share card | A share image: creature, name, rarity, where it was caught, date. | Wordle share | 27 | ✗ | 7/3 | est |
+| I-127 | backlog | Journal stamp | After reveal the entry stamps into the journal with a thump. | Passport stamps | 27 | ✗ | 6/1 | est |
+| I-128 | backlog | First-catch sizes | Reveal shows the size vs a reference (a shell) with record badge. | Animal Crossing | 27 | ✗ | 5/2 | est |
+| I-130 | backlog | Daily leaderboard | Everyone plays the same deal; board resets at UTC midnight. | Wordle / Block Blast | 27 | ✗ | 8/4 | est |
+| I-131 | backlog | Endless all-time + week | Two time spans; week gives fresh chances. | Game Center recurring boards | 27 | ✗ | 7/2 | est |
+| I-132 | backlog | Just-above-you target | Show the next name to beat and the gap. | Duolingo leagues | 27 | ✗ | 9/1 | est |
+| I-133 | backlog | Arcade name entry | 7 letters, A–Z only, stylized display. | Arcade cabinets | 27 | ✗ | 7/2 | est |
+| I-134 | backlog | Replay-verified scores | Server replays the move log with the core. | — | 27 | ✗ | 8/4 | est |
+| I-135 | backlog | Ghost of the leader | Watch the daily #1 replay after you finish. | Racing ghosts | 27 | ✗ | 6/4 | est |
+| I-137 | backlog | Endless reefs | Reefs generated forever from their index, solver-verified, in a worker. | Good Sudoku | 27 | ✗ | 9/5 | est |
+| I-138 | backlog | Reef chapters | 20 reefs per named chapter with progress and a chapter-complete moment. | Monument Valley chapters | 27 | ✗ | 8/2 | est |
+| I-139 | backlog | Depth meter | Total reefs cleared shown as depth below the surface. | Alto distance | 27 | ✗ | 6/1 | est |
+| I-140 | backlog | Signature reefs | Every 10th reef is a showpiece (bigger, a cascade, a shape). | Puzzle game boss levels | 27 | ✗ | 6/2 | est |
+| I-142 | backlog | Display font | A licensed rounded display face for scores, callouts and names. | Top-chart puzzles | 27 | ✗ | 8/2 | est |
+| I-143 | backlog | Custom icon set | Inline SVG icons on one grid and stroke. | Apple HIG | 27 | ✗ | 6/2 | est |
+| I-144 | backlog | Spring buttons | Buttons squish on press with a spring and a soft tick. | Duolingo | 27 | ✗ | 5/1 | est |
+| I-145 | backlog | Sheet transitions | Menus slide up with a spring; backdrop blur. | iOS sheets | 27 | ✗ | 5/1 | est |
+| I-146 | backlog | Results screen redesign | Score hero, best delta, combo max, catches row, primary CTA. | Royal Match | 27 | ✗ | 7/2 | est |
 | I-100 | backlog | Leaderboards | Game Center / Play Games best-score boards. | Block Blast | 23 | ✗ | 5/4 | est |
 | I-098 | backlog | Cell-cursor mode | Play with a keyboard/switch cursor over cells, with spoken previews. | Accessible board games | 20 | ✗ | 4/7 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
@@ -44,6 +85,11 @@
 | I-084 | merged | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
 | I-022 | merged | Kaleidoscope | Each piece also appears rotated around the center. | Mirror (I-008) | 22 | ✗ | 4/2 | est |
 | I-054 | merged | Magnet Wall | Clears pull everything toward the magnet. | Tetris | 20 | ✗ | 3/3 | est |
+| I-122 | rejected | Rejected: full-screen flashes | White flashes on big combos. | Block Blast | 27 | ✗ | 3/1 | est |
+| I-123 | rejected | Rejected: combo timer in seconds | Real-time timer for combos. | Candy Crush blitz | 27 | ✗ | 3/2 | est |
+| I-129 | rejected | Rejected: paid lures | Buy bait for rare species. | Fishing Clash | 27 | ✗ | 1/2 | est |
+| I-136 | rejected | Rejected: friend boards via contacts | Import contacts to see friends. | Many | 27 | ✗ | 3/6 | est |
+| I-141 | rejected | Rejected: reef stars by moves | 3-star ratings by move count. | Candy Crush | 27 | ✗ | 4/2 | est |
 | I-051 | rejected | Hollow + Lines | Fill a line or close a loop to clear. | Block Blast | 25 | ✗ | 6/1 | meas |
 | I-026 | rejected | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
 | I-052 | rejected | Moat | Seal off any space — even against the wall — and it pops. | Qix / Xonix | 24 | ✗ | 5/2 | meas |
@@ -344,6 +390,334 @@
 - **Reason:** Rejected after prototype: shallow ceiling (search survives 25 moves), and deaths happen with half the board empty because big pieces cannot reach open space — feels unfair.
 - **Data:** skid: 11/13/17/25 moves; skill 3.6×; ≤4-cell variant 13/14/20/29.
 
+### I-101 — Creature style guide (backlog)
+- **Pitch:** One construction kit (eyes, blush, ink outline, palette) every species follows.
+- **Closest existing:** Neko Atsume / Pokémon
+- **What's new:** A cohesive cast drawn in code.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/3
+- **Reason:** Session 3 art overhaul foundation.
+
+### I-102 — Size classes (backlog)
+- **Pitch:** XS shrimp → XXL kraken: real relative scale in leaps, journal and reveal.
+- **Closest existing:** Animal Crossing fish shadows
+- **What's new:** Scale tells rarity and character at a glance.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** Owner ask.
+
+### I-103 — Idle personalities (backlog)
+- **Pitch:** Each species has its own idle: hermit peeks, octopus wiggles, ray glides, puffer inflates.
+- **Closest existing:** Neko Atsume
+- **What's new:** Motion as personality, not decoration.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/5
+- **Reason:** Owner ask.
+
+### I-104 — Expressions (backlog)
+- **Pitch:** Idle, happy (caught), surprised (new), sleepy (night) faces.
+- **Closest existing:** Sanrio / Duolingo
+- **What's new:** Faces sell personality at 24 px.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/3
+- **Reason:** Owner ask.
+
+### I-105 — Blink & breathe (backlog)
+- **Pitch:** Every creature blinks every 2–5 s and breathes 2%.
+- **Closest existing:** Duolingo characters
+- **What's new:** Alive without noise.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-106 — Journal tile art (backlog)
+- **Pitch:** Each tile: creature at its size class on a habitat-tinted card; rarity frame.
+- **Closest existing:** Pokédex / Critterpedia
+- **What's new:** Collection looks valuable.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** 
+
+### I-107 — Golden shimmer (backlog)
+- **Pitch:** Golden variants: moving specular band + sparkles, not a flat tint.
+- **Closest existing:** Pokémon shinies
+- **What's new:** Rarer finds look precious.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** 
+
+### I-108 — Creature sprite cache (backlog)
+- **Pitch:** Pre-render each species per size/expression to offscreen canvases; animate transforms only.
+- **Closest existing:** —
+- **What's new:** Rich art at 60 fps.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
+### I-109 — Creature of the day (backlog)
+- **Pitch:** Journal header features one found creature with its flavor line.
+- **Closest existing:** Duolingo stories
+- **What's new:** Daily reason to open the journal.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 4/2
+- **Reason:** 
+
+### I-110 — Silhouette quiz (backlog)
+- **Pitch:** Unfound tiles are true silhouettes that read at 24 px; hints below.
+- **Closest existing:** Pokémon silhouettes
+- **What's new:** Who's that…? curiosity.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-111 — Combo counter (backlog)
+- **Pitch:** COMBO ×N callout escalates with consecutive sealing moves (our streak), breaks after 3 dry moves.
+- **Closest existing:** Block Blast
+- **What's new:** Block Blast's best hook, on our rule.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/3
+- **Reason:** Measured: farming pinches scores half of greedy; not exploitable.
+
+### I-112 — Praise ladder (backlog)
+- **Pitch:** Nice! → Lovely Lagoon! → Atoll! → Tidal! by move value; cascades and multi-lagoons get their own words.
+- **Closest existing:** Block Blast praise words
+- **What's new:** Readable escalation.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** 
+
+### I-113 — Ring burst physics (backlog)
+- **Pitch:** Ring pebbles pop outward with spin, gravity and fade; bigger rings burst harder.
+- **Closest existing:** Block Blast block scatter
+- **What's new:** The satisfying break.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/3
+- **Reason:** 
+
+### I-114 — Combo pitch ladder (backlog)
+- **Pitch:** Capture chime climbs a pentatonic step per combo level; layers add at ×5, ×10.
+- **Closest existing:** Block Blast / Peggle
+- **What's new:** Hear the combo grow.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
+### I-115 — Combo meter (backlog)
+- **Pitch:** Thin meter under the score shows combo and grace (3 pips drain on dry moves).
+- **Closest existing:** Block Blast combo timer
+- **What's new:** Loss aversion made visible.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
+### I-116 — Combo break (backlog)
+- **Pitch:** Gentle deflate + "Combo 12" fades when it breaks; no punishment sound.
+- **Closest existing:** Block Blast
+- **What's new:** Teaches the grace rule.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-117 — NEW HIGH SCORE moment (backlog)
+- **Pitch:** Mid-game crossing: gold sweep + NEW BEST banner once; game over: big score count-up with confetti foam.
+- **Closest existing:** Block Blast
+- **What's new:** The peak of a session.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/2
+- **Reason:** 
+
+### I-118 — Spotless board clear (backlog)
+- **Pitch:** Whole-board clear: tide wash across the board, giant SPOTLESS!, extra creature.
+- **Closest existing:** Block Blast all-clear
+- **What's new:** Rare, screen-filling moment.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** 
+
+### I-119 — Hit stop (backlog)
+- **Pitch:** 40–60 ms freeze before a big burst.
+- **Closest existing:** Vlambeer juice
+- **What's new:** Impact without chaos.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-120 — Haptic layering (backlog)
+- **Pitch:** Haptic pattern per tier: tick, medium, heavy double, heavy triple for Atoll+cascade.
+- **Closest existing:** Block Blast
+- **What's new:** Feel the size.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-121 — Score count-up (backlog)
+- **Pitch:** Score rolls up with ease-out; digits pop on big moves.
+- **Closest existing:** Royal Match
+- **What's new:** Points feel earned.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-124 — Discovery reveal (backlog)
+- **Pitch:** New species: board dims, card flips open with the creature dancing, name in display type, rarity rays.
+- **Closest existing:** Gacha reveals (cosmetic only)
+- **What's new:** Opening a present.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 10/4
+- **Reason:** Owner ask.
+
+### I-125 — Rarity-scaled reveal (backlog)
+- **Pitch:** Common: chip; uncommon: card; rare: rays; epic: rays + music sting; legendary: full-screen tide + fanfare.
+- **Closest existing:** Pokémon / AC
+- **What's new:** Rarer = bigger, never slower than 2.5 s.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/2
+- **Reason:** 
+
+### I-126 — Discovery share card (backlog)
+- **Pitch:** A share image: creature, name, rarity, where it was caught, date.
+- **Closest existing:** Wordle share
+- **What's new:** Share-worthy screens.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/3
+- **Reason:** 
+
+### I-127 — Journal stamp (backlog)
+- **Pitch:** After reveal the entry stamps into the journal with a thump.
+- **Closest existing:** Passport stamps
+- **What's new:** Closure.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-128 — First-catch sizes (backlog)
+- **Pitch:** Reveal shows the size vs a reference (a shell) with record badge.
+- **Closest existing:** Animal Crossing
+- **What's new:** Size records matter.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** 
+
+### I-130 — Daily leaderboard (backlog)
+- **Pitch:** Everyone plays the same deal; board resets at UTC midnight.
+- **Closest existing:** Wordle / Block Blast
+- **What's new:** Shared competition.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/4
+- **Reason:** Owner ask.
+
+### I-131 — Endless all-time + week (backlog)
+- **Pitch:** Two time spans; week gives fresh chances.
+- **Closest existing:** Game Center recurring boards
+- **What's new:** Always winnable.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
+### I-132 — Just-above-you target (backlog)
+- **Pitch:** Show the next name to beat and the gap.
+- **Closest existing:** Duolingo leagues
+- **What's new:** Always someone to beat.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/1
+- **Reason:** 
+
+### I-133 — Arcade name entry (backlog)
+- **Pitch:** 7 letters, A–Z only, stylized display.
+- **Closest existing:** Arcade cabinets
+- **What's new:** Charm + safety.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
+### I-134 — Replay-verified scores (backlog)
+- **Pitch:** Server replays the move log with the core.
+- **Closest existing:** —
+- **What's new:** Determinism kills cheating cheaply.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/4
+- **Reason:** 
+
+### I-135 — Ghost of the leader (backlog)
+- **Pitch:** Watch the daily #1 replay after you finish.
+- **Closest existing:** Racing ghosts
+- **What's new:** Learn from the best (replays are free).
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/4
+- **Reason:** 
+
+### I-137 — Endless reefs (backlog)
+- **Pitch:** Reefs generated forever from their index, solver-verified, in a worker.
+- **Closest existing:** Good Sudoku
+- **What's new:** Never run out.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 9/5
+- **Reason:** Owner ask.
+
+### I-138 — Reef chapters (backlog)
+- **Pitch:** 20 reefs per named chapter with progress and a chapter-complete moment.
+- **Closest existing:** Monument Valley chapters
+- **What's new:** Progress you can feel.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** 
+
+### I-139 — Depth meter (backlog)
+- **Pitch:** Total reefs cleared shown as depth below the surface.
+- **Closest existing:** Alto distance
+- **What's new:** Endless progress made tangible.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-140 — Signature reefs (backlog)
+- **Pitch:** Every 10th reef is a showpiece (bigger, a cascade, a shape).
+- **Closest existing:** Puzzle game boss levels
+- **What's new:** Rhythm in the curve.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** 
+
+### I-142 — Display font (backlog)
+- **Pitch:** A licensed rounded display face for scores, callouts and names.
+- **Closest existing:** Top-chart puzzles
+- **What's new:** Brand voice.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** 
+
+### I-143 — Custom icon set (backlog)
+- **Pitch:** Inline SVG icons on one grid and stroke.
+- **Closest existing:** Apple HIG
+- **What's new:** Cohesion.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** 
+
+### I-144 — Spring buttons (backlog)
+- **Pitch:** Buttons squish on press with a spring and a soft tick.
+- **Closest existing:** Duolingo
+- **What's new:** Tactile UI.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** 
+
+### I-145 — Sheet transitions (backlog)
+- **Pitch:** Menus slide up with a spring; backdrop blur.
+- **Closest existing:** iOS sheets
+- **What's new:** Premium motion.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** 
+
+### I-146 — Results screen redesign (backlog)
+- **Pitch:** Score hero, best delta, combo max, catches row, primary CTA.
+- **Closest existing:** Royal Match
+- **What's new:** Clear hierarchy.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
 ### I-100 — Leaderboards (backlog)
 - **Pitch:** Game Center / Play Games best-score boards.
 - **Closest existing:** Block Blast
@@ -399,6 +773,46 @@
 - **Scores (R1..R14):** 2 1 2 1 2 1 1 2 2 1 1 1 1 2 → **20**/28, gates FAIL (est)
 - **Value/effort:** 3/3
 - **Reason:** Merged into I-011 (Collapse).
+
+### I-122 — Rejected: full-screen flashes (rejected)
+- **Pitch:** White flashes on big combos.
+- **Closest existing:** Block Blast
+- **What's new:** —
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 3/1
+- **Reason:** Seizure risk and breaks calm identity; use additive glow at night only.
+
+### I-123 — Rejected: combo timer in seconds (rejected)
+- **Pitch:** Real-time timer for combos.
+- **Closest existing:** Candy Crush blitz
+- **What's new:** —
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** Time pressure contradicts no-time-limit accessibility promise.
+
+### I-129 — Rejected: paid lures (rejected)
+- **Pitch:** Buy bait for rare species.
+- **Closest existing:** Fishing Clash
+- **What's new:** —
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 1/2
+- **Reason:** Pay-to-win; violates ADR 0008.
+
+### I-136 — Rejected: friend boards via contacts (rejected)
+- **Pitch:** Import contacts to see friends.
+- **Closest existing:** Many
+- **What's new:** —
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 3/6
+- **Reason:** Needs PII and accounts; against privacy stance.
+
+### I-141 — Rejected: reef stars by moves (rejected)
+- **Pitch:** 3-star ratings by move count.
+- **Closest existing:** Candy Crush
+- **What's new:** —
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
+- **Value/effort:** 4/2
+- **Reason:** Puzzles have a fixed piece count; stars would be meaningless. ★ = no hints stays.
 
 ### I-051 — Hollow + Lines (rejected)
 - **Pitch:** Fill a line or close a loop to clear.
