@@ -1,0 +1,59 @@
+# Store listing — Lagooner Beach
+
+Character limits noted per field. Copy is original. Screenshots: `npx tsx scripts/store-shots.ts`
+→ `artifacts/store/` (1290×2796, iPhone 6.7"; also valid for Play phone screenshots).
+
+## Shared
+- **Name (30):** Lagooner Beach
+- **Category:** Games › Puzzle (secondary: Board)
+- **Age rating:** 4+ / Everyone (no violence, no user content, no purchases in v1, no ads in v1)
+- **Price:** Free
+- **Privacy:** "Data Not Collected" (App Store) / "No data collected, no data shared" (Play Data
+  safety). Policy: `public/privacy.html` (host at a public URL before submitting).
+
+## App Store (iOS)
+- **Subtitle (30):** Close a loop. Watch it pop.
+- **Promotional text (170):** Holes are the whole point. Seal a loop of blocks, the water inside
+  pops it all — and every lagoon catches a beach creature for your journal.
+- **Keywords (100):** puzzle,block,blocks,loop,lagoon,beach,calm,brain,daily,relaxing,fish,collect,reef,offline
+- **Description (4000):**
+
+  Every block puzzle tells you holes are bad. Lagooner Beach says: make them.
+
+  Drag pieces onto the board. When you close a loop of blocks, the empty space inside fills with
+  water — and the whole ring pops. Bigger lagoons score more. Thick walls collapse in cascades.
+  Two pools sealed with one piece? Double.
+
+  Every lagoon catches something. Long, flat pools bring eels. A perfect square brings a box crab.
+  A pool with an island in the middle? Maybe a sea turtle. Find all 47 creatures — from hermit crabs
+  to a whale shark — in your Beach Journal, with a hint for every one you haven't found.
+
+  • One rule, learned in one move. No tutorial screens.
+  • Always a solution: every set of three pieces can be placed. If you get stuck, it was a choice.
+  • Daily challenge — the same deal for everyone, with streaks and a spoiler-free share card.
+  • 360 Reef puzzles, each one proven solvable, from Calm to Abyss, plus a Reef of the day.
+  • Calm by day, glowing by night. Original music and sounds, all made in code.
+  • Made for every eye: a high-contrast style with shapes on every color, reduced motion,
+    tap-to-place, haptics and sounds you can switch off.
+  • No ads. No accounts. No data collected. Plays offline.
+
+- **What's new (first release):** Welcome to the beach.
+
+## Google Play (Android)
+- **Short description (80):** Close a loop of blocks and everything inside pops. Catch 47 beach creatures.
+- **Full description (4000):** same as the App Store description above.
+- **Tags:** Puzzle, Casual, Offline, Single player, Relaxing
+- **Feature graphic (1024×500):** _to create from the store shots (logo + "Close a loop." + a lagoon);
+  `scripts/store-shots.ts` can be extended._
+
+## Screenshot captions (in order)
+1. Close a loop.
+2. Everything inside pops.
+3. Calm by day. Glowing by night.
+4. 360 reef puzzles. Every one solvable.
+5. Made for every eye.
+_(Add: "Catch all 47 beach creatures." with the journal screen.)_
+
+## Needs the owner
+Seller name, support URL, marketing URL, contact email (also in the privacy policy), and a
+name/trademark check for "Lagooner Beach".
