@@ -7,7 +7,7 @@ export default defineConfig({
   server: { port: 5317, strictPort: true },
   preview: { port: 4317, strictPort: true },
   test: {
-    include: ['tests/unit/**/*.test.ts'],
+    include: ['tests/unit/**/*.test.ts', 'server/test/**/*.test.ts'],
     environment: 'node',
     testTimeout: 30_000,
     coverage: {

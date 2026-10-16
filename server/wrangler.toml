@@ -1,0 +1,20 @@
+# Lagooner Beach leaderboard Worker. Step-by-step setup: docs/server/DEPLOY.md.
+# Wrangler 4.86.x is the last line that runs on Node 20 (pinned in server/package.json).
+name = "lagooner-lb"
+main = "src/worker.ts"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lagooner-lb"
+database_id = "REPLACE_WITH_DATABASE_ID" # printed by: npx wrangler@4.86 d1 create lagooner-lb
+
+[vars]
+# Comma-separated. Capacitor iOS = capacitor://localhost, Android = https://localhost, plus the PWA origin.
+ALLOWED_ORIGINS = "capacitor://localhost,https://localhost,https://REPLACE_WITH_PWA_ORIGIN"
+
+# Retention (UTC): old dailies/weeks, spent run tokens, stale rate counters.
+[triggers]
+crons = ["30 0 * * *"]
+
+# Secret, never in this file: RUN_TOKEN_SECRET (npx wrangler@4.86 secret put RUN_TOKEN_SECRET)

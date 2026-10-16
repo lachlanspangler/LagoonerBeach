@@ -6,10 +6,13 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
 ## Shared
 - **Name (30):** Lagooner Beach
 - **Category:** Games › Puzzle (secondary: Board)
-- **Age rating:** 4+ / Everyone (no violence, no user content, no purchases in v1, no ads in v1)
+- **Age rating:** 4+ / Everyone (no violence, no purchases in v1, no ads in v1). With online
+  leaderboards on, answer "yes" to user-generated content: player names only, 7 letters A–Z,
+  filtered on device and server, no chat or messaging.
 - **Price:** Free
-- **Privacy:** "Data Not Collected" (App Store) / "No data collected, no data shared" (Play Data
-  safety). Policy: `public/privacy.html` (host at a public URL before submitting).
+- **Privacy:** policy `public/privacy.html` (host at a public URL before submitting). The labels
+  depend on the build (see "Privacy" below): demo-board builds collect nothing; builds with
+  `VITE_LB_URL` set collect leaderboard data after the player opts in.
 
 ## App Store (iOS)
 - **Subtitle (30):** Close a loop. Watch it pop.
@@ -35,7 +38,8 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
   • Calm by day, glowing by night. Original music and sounds, all made in code.
   • Made for every eye: a high-contrast style with shapes on every color, reduced motion,
     tap-to-place, haptics and sounds you can switch off.
-  • No ads. No accounts. No data collected. Plays offline.
+  • Daily, weekly and all-time leaderboards with a 7-letter beach name. Optional.
+  • No ads. No accounts. No tracking. Plays offline.
 
 - **What's new (first release):** Welcome to the beach.
 
@@ -53,6 +57,28 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
 4. Calm by day. Glowing by night. (Night theme, a wide 4×2 lagoon about to seal)
 5. 360 reef puzzles. Every one solvable. (Reef 186, Tricky: the opening move seals a lagoon)
 6. Made for every eye. (Glyph high-contrast style, its own board)
+
+## Privacy (store forms)
+Answer these from the build you submit.
+
+**Demo-board build** (`VITE_LB_URL` unset; leaderboards run on the device):
+- App Store: **Data Not Collected**.
+- Play Data safety: **No data collected, no data shared**.
+
+**Online-leaderboard build** (`VITE_LB_URL` set; see `docs/server/DEPLOY.md`):
+- **App Store privacy label** (per `docs/research/LEADERBOARDS.md` §8):
+  - Data types: **Identifiers → User ID** (the chosen screen name and the random player id) and
+    **User Content → Gameplay Content** (scores and move logs).
+  - Purpose for both: **App Functionality** only.
+  - **Linked to the user: Yes** (pseudonymous but persistent; the conservative answer).
+  - **Used for tracking: No.**
+- **Play Data safety:**
+  - Collected: **Personal info → Name** (in-game nickname), **App activity → Other actions**
+    (gameplay: scores, move logs), **Device or other IDs** (the random player id).
+  - Shared with third parties: **No** (Cloudflare is a service provider processing on our behalf).
+  - Processed ephemerally: No. Collection is **optional** (only after the player posts).
+  - Purpose: **App functionality**. Encrypted in transit: **Yes**. Users can request deletion:
+    **Yes** (Erase all progress in Settings, or by email).
 
 ## Needs the owner
 Seller name, support URL, marketing URL, contact email (also in the privacy policy), and a

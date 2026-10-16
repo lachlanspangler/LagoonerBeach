@@ -62,6 +62,10 @@ creature for your Beach Journal.
    it (retries, 2 workers, ×3 perf budgets, GitHub annotations) but couldn't see the logs (they need
    repo admin). If it still fails, paste the annotation text.
 7. **Monetization:** go/no-go on ADR 0008's Supporter Pack (needs store accounts; I'd build it as a purchase screen in Settings over the existing skins).
+8. **Leaderboards (ADR 0010):** built and on by default with on-device **Demo** boards. To go global:
+   a Cloudflare account and the ~20-minute steps in `docs/server/DEPLOY.md` (D1 database, one secret,
+   deploy, then build with `VITE_LB_URL=…`). Then update the store privacy forms
+   (`docs/store/LISTING.md` → Privacy). Or build with `VITE_LB=off` to ship without leaderboards.
 
 ## What I'd do next
 - Re-tune `DEFAULT_RAMP` and catch odds from real play data instead of the bot model. The tools

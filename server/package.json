@@ -1,0 +1,16 @@
+{
+  "name": "lagooner-lb",
+  "private": true,
+  "type": "module",
+  "description": "Lagooner Beach leaderboard Worker (Cloudflare Workers + D1). Unit tests run from the repo root (npm test).",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "schema:local": "wrangler d1 execute lagooner-lb --local --file=schema.sql",
+    "schema:remote": "wrangler d1 execute lagooner-lb --remote --file=schema.sql",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "~4.86.0"
+  }
+}
