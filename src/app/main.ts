@@ -169,7 +169,10 @@ function syncScene(): void {
   scene.selected = null;
   overShown = false;
 
-  if (state.moves === 0) bigLagoon = null;
+  if (state.moves === 0) {
+    bigLagoon = null;
+    puzzleMoves = [];
+  }
   updateHint();
   updateMisfits();
   scene.hudLabel = null;
@@ -249,8 +252,10 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
       );
     }
   }
-  if (mode === 'puzzle') checkPuzzle();
-  else if (state.over) finishGame(prevBest);
+  if (mode === 'puzzle') {
+    puzzleMoves.push(m);
+    checkPuzzle();
+  } else if (state.over) finishGame(prevBest);
   saveProfile(profile);
   updateHint();
   updateMisfits();
@@ -337,15 +342,32 @@ function checkPuzzle(): void {
 }
 
 /** Solver-backed hint: outline one placement that still leads to a clear (or say it's a dead end). */
-function puzzleHint(): void {
-  if (mode !== 'puzzle' || puzzleStatus(state) !== 'playing') return;
+/** Moves made in the current reef (to follow the stored solution cheaply). */
+let puzzleMoves: Move[] = [];
+
+/**
+ * Next winning move. While the player's moves match a prefix of the stored solution, use it
+ * (free); otherwise solve from the current position (smaller than the start, so fast enough).
+ */
+function nextPuzzleMove(): Move | null {
+  const sol = (PACK![state.seed] as unknown as { solution: { piece: number; x: number; y: number }[] }).solution;
+  const onPath = puzzleMoves.every((h, i) => sol[i] && sol[i].piece === h.slot && sol[i].x === h.x && sol[i].y === h.y);
+  const k = puzzleMoves.length;
+  if (onPath && sol[k]) return { slot: sol[k].piece, x: sol[k].x, y: sol[k].y };
   const slots = state.tray.map((t, i) => (t ? i : -1)).filter((i) => i >= 0);
   const res = solve(
     state.board,
     slots.map((i) => state.tray[i]!.pieceId),
   );
+  const m = res.first?.[0];
+  return m ? { slot: slots[m.piece]!, x: m.x, y: m.y } : null;
+}
+
+function puzzleHint(): void {
+  if (mode !== 'puzzle' || puzzleStatus(state) !== 'playing') return;
+  const next = nextPuzzleMove();
   const l = scene.layout;
-  if (!res.first || !res.first.length) {
+  if (!next) {
     scene.texts.push({
       text: 'Dead end — restart',
       x: l.w / 2,
@@ -358,8 +380,8 @@ function puzzleHint(): void {
     ui.announce('Dead end. Restart the reef.');
     haptics.fire('fail');
   } else {
-    const m = res.first[0]!;
-    const p = pieceById(state.tray[slots[m.piece]!]!.pieceId);
+    const m = next;
+    const p = pieceById(state.tray[m.slot]!.pieceId);
     scene.hint = { cells: p.cells.map(([dx, dy]) => (m.y + dy) * N + m.x + dx), start: performance.now() };
     profile.stats.hints = (profile.stats.hints ?? 0) + 1;
     // a hint blocks the no-hint mark for this reef until it has been cleared cleanly (restart can't launder it)
@@ -380,6 +402,7 @@ function loadPuzzle(i: number): void {
   profile.puzzle.index = k;
   saveProfile(profile);
   state = newPuzzleGame(PACK[k]!, k);
+  puzzleMoves = [];
   syncScene();
 }
 
