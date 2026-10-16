@@ -55,14 +55,20 @@
       carry contact details, and they pass a word filter. After your first post, later Daily and Classic results are
       posted automatically under the same name; Erase all progress stops this. When online, the game also asks the
       server for a seed for your next Classic game so it can be ranked; before your first post that request carries no
-      identifier. Builds without an online leaderboard show on-device "Demo" boards and send nothing.
+      identifier. At that game's first move, the game tells the server it has started (sending only the signed seed
+      ticket), so the server can tell how long it took. Builds without an online leaderboard show on-device "Demo"
+      boards and send nothing.
     </p>
     <h2>Where it's stored, and for how long</h2>
     <p>
       The leaderboard runs on Cloudflare (Workers and D1) on our behalf. Cloudflare sees your IP address to deliver each
-      request; we don't store it (a salted one-way hash may be kept for up to a day as a rate-limit counter). Daily
-      boards are kept 30 days, weekly boards 8 weeks, the all-time board until you delete it; used seeds 72 hours;
-      backups roll off within 30 days. We don't sell or share this data or use it for advertising.
+      request; we don't store it. To limit abuse we keep a salted one-way hash of the address (never the address) as a
+      rate-limit counter, and next to a salted hash of your player id (never the id) to limit how many players one
+      network can add. Deletion runs hourly, so each item is gone within an hour of its limit: daily boards 30 days,
+      weekly boards 8 weeks, the all-time board until you delete it; used seeds and game start times 72 hours;
+      rate-limit counters 1 hour; per-network counters 24 hours (for a Daily board, until that Daily closes, at most 52
+      hours after it opens). Backups roll off within 30 days. We don't sell or share this data or use it for
+      advertising.
     </p>
     <h2>Deleting your data</h2>
     <p>

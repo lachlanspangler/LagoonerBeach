@@ -93,8 +93,10 @@ VITE_LB_URL=http://localhost:8787 npx vite --port 5317
 
 ## Operating it
 - Live logs: `npx wrangler tail` (no IP addresses are logged by the Worker).
-- Retention runs daily at 00:30 UTC (cron in `wrangler.toml`): dailies older than 30 days, weekly
-  boards older than 8 weeks, spent run tokens after 72 h, rate counters after a day.
+- Retention runs hourly at :07 (cron in `wrangler.toml`): dailies older than 30 days, weekly boards
+  older than 8 weeks, spent run tokens and run starts once 72 h old, rate counters once their 1 h
+  window has passed, per-network IP-hash sets when they expire (a day, or when that Daily closes).
+  Each row outlives its limit by at most an hour; `docs/store/PRIVACY.md` states these numbers.
 - Moderation (names are filtered on the client and the server, but nothing is perfect):
   ```sh
   # find a player by name

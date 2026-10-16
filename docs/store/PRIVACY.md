@@ -35,21 +35,27 @@ leaderboard screen; **Erase all progress** stops posting and deletes everything 
 
 **Seeds for Classic (Endless) games.** When you're online, the game asks the leaderboard server for
 a game seed for your next Classic game, so that game can be ranked fairly. Before you have posted,
-that request carries no identifier; after, it carries your random player id.
+that request carries no identifier; after, it carries your random player id. When you make the first
+move of such a game, the game tells the server that the game has started (it sends only the signed
+seed ticket), so the server can tell how long the game took.
 
 **Demo boards.** Builds without an online leaderboard show boards that run entirely on your device,
 with sample players, labelled "Demo". They send nothing.
 
 ## Where it's stored, and for how long
 The leaderboard runs on Cloudflare (Workers and D1), which processes it on our behalf. Your IP
-address is seen by Cloudflare to deliver each request; we don't store it. For seed requests made
-before you've posted, a salted, one-way hash of the address is kept as a rate-limit counter for at
-most a day.
+address is seen by Cloudflare to deliver each request; we don't store it. To limit abuse, the server
+keeps a salted, one-way hash of the address (never the address): as a rate-limit counter, and, to
+limit how many players one network can add, next to a salted hash of your player id (never the id
+itself). Deletion runs every hour, so each item below is gone within an hour of its limit.
 
 - Daily boards: kept for 30 days, then deleted.
 - Weekly boards: kept for 8 weeks, then deleted.
 - All-time board: kept until you delete it.
-- Used game seeds: 72 hours. Rate-limit counters: one day.
+- Used game seeds and game start times: 72 hours.
+- Rate-limit counters (hashed address or random player id): 1 hour.
+- Per-network counters (hashed address with hashed player id): 24 hours; for a Daily board, until
+  that Daily closes (at most 52 hours after it opens).
 - Database backups (point-in-time restore) roll off within 30 days.
 
 We don't sell or share leaderboard data with anyone, and we don't use it for advertising.
