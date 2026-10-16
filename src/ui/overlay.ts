@@ -25,7 +25,8 @@ export interface UiHandlers {
   onSkin(): void;
   onSettings(): void;
   onJournal(): void;
-  onLeaderboards(): void;
+  /** Absent = leaderboards switched off for this build (no menu entry). */
+  onLeaderboards?(): void;
   onErase(): void;
   onShare(): void;
   onClick(): void;
@@ -199,7 +200,8 @@ export class Ui {
         this.h.onJournal(),
       ),
     );
-    card.append(this.button('menu-lb', 'btn', 'Leaderboards', 'Leaderboards', () => this.h.onLeaderboards()));
+    if (this.h.onLeaderboards)
+      card.append(this.button('menu-lb', 'btn', 'Leaderboards', 'Leaderboards', () => this.h.onLeaderboards?.()));
     card.append(this.button('', 'btn ghost', 'Settings', 'Settings', () => this.h.onSettings()));
     this.show(card, canResume);
   }

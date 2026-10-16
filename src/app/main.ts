@@ -457,7 +457,7 @@ function finishGame(prevBest: number): void {
     shape: bigLagoon && bigLagoon.cells.length >= 2 ? bigLagoon : null,
     caught: { ...gameCatch, newIds: [...gameCatch.newIds] },
     // starts posting now (if the player has a name) so the rank is ready when the card shows
-    leaderboard: mode === 'puzzle' ? undefined : lbResult(runLog.finish(state, mode), mode),
+    leaderboard: mode === 'puzzle' || !LB_ON ? undefined : lbResult(runLog.finish(state, mode), mode),
   };
   later(DEBUG && params.has('fast') ? 0 : 1400, () => {
     if (overShown) return;
@@ -471,6 +471,8 @@ function finishGame(prevBest: number): void {
 
 // ------------------------------------------------------------------ leaderboards (lazy: ui/leaderboard.ts)
 const LB_URL = (import.meta.env.VITE_LB_URL as string | undefined) || undefined;
+/** `VITE_LB=off` builds ship without leaderboards (no menu entry, no results button, no network). */
+const LB_ON = import.meta.env.VITE_LB !== 'off';
 let lbMod: Promise<LeaderboardUi> | null = null;
 /** The last results card, so leaderboard sheets opened from it can go back to it. */
 let resultCard: HTMLElement | null = null;
@@ -494,15 +496,25 @@ function lbui(): Promise<LeaderboardUi> {
 }
 /** Results-card hook: Leaderboard button (name entry → board), auto-post when already named. */
 function lbResult(run: FinishedRun | null, m: 'classic' | 'daily') {
-  const h = lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false)));
+  type Hook = ReturnType<LeaderboardUi['forResult']>;
+  let hook: Promise<Hook> | null = null;
+  let btn: HTMLButtonElement | null = null;
+  // the leaderboard module loads only for players who have opted in, or when the button is tapped
+  const get = () =>
+    (hook ??= lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false))));
+  const named = !!profile.lb?.name;
+  if (named) void get(); // opted in: post now, so the rank is ready when the card shows
   return {
-    label: profile.lb?.name ? 'Leaderboard' : 'Post your score',
-    open: () => void h.then((x) => x.open()),
-    mount: (b: HTMLButtonElement) => void h.then((x) => x.mount(b)),
+    label: named ? 'Leaderboard' : 'Post your score',
+    open: () => void get().then((x) => (btn && x.mount(btn), x.open())),
+    mount: (b: HTMLButtonElement) => {
+      btn = b;
+      if (named) void get().then((x) => x.mount(b));
+    },
   };
 }
 /** Queued scores, pending deletions, a spare Endless seed: only touches the network when needed. */
-const lbBackground = () => (LB_URL || hasPendingLbWork()) && void lbui().then((l) => l.background());
+const lbBackground = () => LB_ON && (LB_URL || hasPendingLbWork()) && void lbui().then((l) => l.background());
 addEventListener('online', lbBackground);
 
 function checkPuzzle(): void {
@@ -674,7 +686,7 @@ const ui = new Ui({
   onOpenMenu: () => ui.showMenu(profile, mode, !state.over, Object.keys(journal.entries).length),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
-  onLeaderboards: () => void lbui().then((l) => l.showBoards(mode === 'daily' ? 'daily' : 'week')),
+  onLeaderboards: LB_ON ? () => void lbui().then((l) => l.showBoards(mode === 'daily' ? 'daily' : 'week')) : undefined,
   onErase: () => {
     erasing = true; // don't let the unload handlers write it all back
     const lbId = profile.lb?.installId;

@@ -57,6 +57,7 @@ test('blocked and reserved names are refused before posting', async ({ page }) =
   await boot(page, 'mode=daily&fast=1');
   await finishDaily(page);
   await page.locator('#lb-open').click();
+  await expect(page.getByTestId('lb-name-entry')).toBeVisible();
   await page.keyboard.type(rot13('SHPX'));
   await expect(page.locator('#lb-name-hint')).toHaveText("That name isn't allowed. Try another");
   await expect(page.getByTestId('lb-post')).toBeDisabled();
@@ -77,6 +78,7 @@ test('a classic game resumed after a reload can still be posted (move log saved 
   await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));
   await expect(page.getByTestId('final-score')).toBeVisible({ timeout: 5000 });
   await page.locator('#lb-open').click();
+  await expect(page.getByTestId('lb-name-entry')).toBeVisible();
   await page.keyboard.type('kelp');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('tab', { name: 'This week' })).toHaveAttribute('aria-selected', 'true');
@@ -105,6 +107,7 @@ test('erase all progress removes your scores, the queue and your id', async ({ p
   await boot(page, 'mode=daily&fast=1');
   await finishDaily(page);
   await page.locator('#lb-open').click();
+  await expect(page.getByTestId('lb-name-entry')).toBeVisible();
   await page.keyboard.type('tide');
   await page.getByTestId('lb-post').click();
   await expect(page.locator('.lb-row.me')).toContainText('TIDE');
