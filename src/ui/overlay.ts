@@ -272,7 +272,7 @@ export class Ui {
     }
     const about = document.createElement('div');
     about.className = 'foot';
-    about.innerHTML = `Lagooner Beach ${__APP_VERSION__} · no data collected · <a href="./privacy.html" target="_blank" rel="noopener" style="color:inherit">Privacy</a>`;
+    about.innerHTML = `Lagooner Beach ${__APP_VERSION__} · no ads, no tracking · <a href="./privacy.html" target="_blank" rel="noopener" style="color:inherit">Privacy</a>`;
     card.append(about);
     let armed = 0;
     const erase = this.button('', 'btn ghost', 'Erase all progress', 'Erase all progress', () => {

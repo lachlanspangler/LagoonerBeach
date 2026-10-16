@@ -29,13 +29,45 @@
     <h1>Lagooner Beach — Privacy Policy</h1>
     <p><em>Last updated: 2026-10-16</em></p>
     <p>
-      <strong>Lagooner Beach collects no personal data.</strong> No accounts, no analytics, no advertising identifiers,
-      no crash reporters, no third-party SDKs that phone home, and no network requests while you play.
+      <strong>No accounts, no ads, no analytics, no tracking, and no third-party SDKs that phone home.</strong> The only
+      data that ever leaves your device is for the <strong>optional leaderboards</strong>, and only after you choose a
+      name and post a score.
     </p>
     <h2>What stays on your device</h2>
     <p>
-      Your progress — best scores, settings, daily streaks, reefs cleared, and your Beach Journal — is saved only on
-      your device. Nothing is uploaded. Deleting the app (or clearing the site's data) deletes it.
+      Your progress (best scores, settings, daily streaks, reefs cleared, your Beach Journal and your leaderboard name)
+      is saved only on your device. Deleting the app (or clearing the site's data) deletes it.
+    </p>
+    <h2>Leaderboards (optional)</h2>
+    <p>Nothing is sent until you tap <strong>Post</strong> on a leaderboard name screen. A posted score sends:</p>
+    <ul>
+      <li>
+        <strong>Public:</strong> the name you chose (1–7 letters A–Z), your score and number of moves, and a creature
+        from your Beach Journal as your avatar.
+      </li>
+      <li>
+        <strong>Not public:</strong> the moves of that game and its seed (the server replays them to check the score is
+        real), a random player id created on your device the first time you post, and the app version.
+      </li>
+    </ul>
+    <p>
+      The random id is not a device or advertising id. Names can't contain digits, spaces or symbols, so they can't
+      carry contact details, and they pass a word filter. After your first post, later Daily and Classic results are
+      posted automatically under the same name; Erase all progress stops this. When online, the game also asks the
+      server for a seed for your next Classic game so it can be ranked; before your first post that request carries no
+      identifier. Builds without an online leaderboard show on-device "Demo" boards and send nothing.
+    </p>
+    <h2>Where it's stored, and for how long</h2>
+    <p>
+      The leaderboard runs on Cloudflare (Workers and D1) on our behalf. Cloudflare sees your IP address to deliver each
+      request; we don't store it (a salted one-way hash may be kept for up to a day as a rate-limit counter). Daily
+      boards are kept 30 days, weekly boards 8 weeks, the all-time board until you delete it; used seeds 72 hours;
+      backups roll off within 30 days. We don't sell or share this data or use it for advertising.
+    </p>
+    <h2>Deleting your data</h2>
+    <p>
+      <strong>Settings → Erase all progress</strong> deletes everything on your device and asks the server to delete
+      your player, name and scores (sent at the next launch if you're offline). You can also email us to ask.
     </p>
     <h2>Sharing</h2>
     <p>
@@ -43,11 +75,16 @@
       device's share sheet. The game doesn't send it anywhere itself.
     </p>
     <h2>Children</h2>
-    <p>Suitable for all ages; collects nothing from anyone.</p>
+    <p>
+      Suitable for all ages. Leaderboards are optional; names are 7 letters A–Z and filtered; there is no chat or
+      messaging, and the player id is random and only used to run the boards.
+    </p>
     <h2>Changes</h2>
     <p>
-      If this ever changes (for example optional ads or purchases), this page will be updated before that version ships,
-      and anything involving data will be opt-in.
+      If this changes (for example optional purchases), this page will be updated before that version ships, and
+      anything involving data will be opt-in.
     </p>
+    <h2>Contact</h2>
+    <p>Questions or deletion requests: <em>owner to add a contact email before publishing.</em></p>
   </body>
 </html>
