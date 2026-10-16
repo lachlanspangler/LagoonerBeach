@@ -10,7 +10,10 @@ import { Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, type Palette } from './theme.ts';
 import { Burst } from './burst.ts';
-import { Celebrate } from './celebrate.ts';
+import { Celebrate, spring } from './celebrate.ts';
+
+/** 0 → 1 with a small overshoot over a unit of time. */
+const spring01 = (k: number): number => spring(k * 360, 360, 0.1);
 import { clamp01, easeInCubic, easeInOutSine, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import { drawCreature } from './creatures.ts';
@@ -193,6 +196,8 @@ export class Scene {
   lastDragDraw: { x: number; y: number } | null = null;
   /** Jackpot light sweep across the board. */
   sweep = -1e9;
+  /** Score punch when a big moment's points land. */
+  scorePunch = { at: -1e9, amp: 0 };
   /** Tap-to-place selection (drawn raised with an outline). */
   selected: number | null = null;
 
@@ -889,8 +894,11 @@ export class Scene {
       return;
     }
     g.fillStyle = p.text;
-    g.font = `800 ${big}px ${FONT}`;
-    g.fillText(String(Math.round(this.shownScore)), cx, l.hud.y + l.hud.h * 0.7);
+    // big moments punch the score as their points land (tier ≥ 2 only; calm moves don't)
+    const pk = (now - this.scorePunch.at) / 360;
+    const punch = pk >= 0 && pk < 1 && !this.reducedMotion ? 1 + this.scorePunch.amp * (1 - spring01(pk)) : 1;
+    g.font = `800 ${Math.round(big * punch)}px ${FONT}`;
+    g.fillText(String(Math.round(this.shownScore)), cx, l.hud.y + l.hud.h * 0.7 + (punch - 1) * big * 0.3);
     g.font = `700 ${Math.round(big * 0.3)}px ${FONT}`;
     g.fillStyle = p.textDim;
     const beat = (this.score > this.best && this.best > 0) || this.celebrate.bestShown;
@@ -932,6 +940,7 @@ export class Scene {
       this.land.some((t) => now - t < MOTION.place * 1.6) ||
       now - this.streakPulse < 300 ||
       now - this.sweep < 650 ||
+      now - this.scorePunch.at < 360 ||
       (this.gameOverAt >= 0 && now - this.gameOverAt < 600)
     );
   }

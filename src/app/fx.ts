@@ -262,6 +262,7 @@ export class Fx {
           const lastCells = e.waves[waves - 1]!.pockets.flatMap((p) => p.cells);
           this.at(wordAt, (t) => {
             sc.score = sc.pendingScore ?? sc.score;
+            if (tier >= 2) sc.scorePunch = { at: t, amp: [0, 0, 0.08, 0.14, 0.2][tier]! };
             const ts = sc.textScale;
             const word = m.word && this.guard.claimWord(tier, t, life) ? m.word : null;
             const numH = l.cell * (word ? 0.5 : tier >= 1 ? 0.56 : 0.48) * ts;
