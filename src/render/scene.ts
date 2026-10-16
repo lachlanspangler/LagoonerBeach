@@ -116,6 +116,8 @@ export class Scene {
 
   /** Tray slots whose piece fits nowhere on the current board (drawn faded). */
   misfit: boolean[] = [false, false, false];
+  /** Tap-to-place selection (drawn raised with an outline). */
+  selected: number | null = null;
 
   private panel: HTMLCanvasElement | OffscreenCanvas | null = null;
   private visRand = 0x12345;
@@ -434,6 +436,15 @@ export class Scene {
         return;
       }
       const dimmed = this.gameOverAt >= 0 || this.misfit[i] === true;
+      if (this.selected === i) {
+        const sl = l.slots[i]!;
+        this.g.strokeStyle = this.palette.water;
+        this.g.lineWidth = 3;
+        this.g.beginPath();
+        this.g.roundRect(sl.cx - sl.w * 0.42, sl.cy - sl.h * 0.42, sl.w * 0.84, sl.h * 0.84, l.cell * 0.4);
+        this.g.stroke();
+        y -= l.cell * 0.15;
+      }
       this.drawPieceAt(p, slot.t.color, x, y, l.trayCell, a * (dimmed ? 0.45 : 1));
     });
   }
@@ -599,6 +610,7 @@ export class Scene {
       this.placing.length > 0 ||
       this.fish.length > 0 ||
       this.hint !== null ||
+      this.selected !== null ||
       Math.abs(this.score - this.shownScore) > 0.5 ||
       now - this.shake.start < MOTION.shake ||
       this.tray.some((s) => now - s.dealStart < MOTION.dealIn || s.back !== null) ||

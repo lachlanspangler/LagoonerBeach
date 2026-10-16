@@ -2052,7 +2052,7 @@
    "basis": "est",
    "value": 6,
    "effort": 3,
-   "status": "backlog",
+   "status": "built",
    "reason": "Accessibility option; dragging stays the default."
   },
   {

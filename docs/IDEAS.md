@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**72 ideas** — chosen: 1 · built: 8 · prototyped: 4 · shortlisted: 0 · backlog: 14 · merged: 4 · rejected: 41
+**72 ideas** — chosen: 1 · built: 9 · prototyped: 4 · shortlisted: 0 · backlog: 13 · merged: 4 · rejected: 41
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -16,13 +16,13 @@
 | I-065 | built | Daily share grid | Share your daily as a tiny emoji picture of your biggest lagoon. | Wordle share grid | 25 | ✓ | 7/2 | est |
 | I-066 | built | Near-miss bar | Game-over card shows how close you got to your best. | Block Blast best line | 24 | ✗ | 6/1 | est |
 | I-071 | built | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
+| I-073 | built | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
-| I-073 | backlog | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
@@ -149,6 +149,14 @@
 - **Value/effort:** 8/1
 - **Reason:** Makes the fail state foreseeable (R13).
 
+### I-073 — Tap-to-place (built)
+- **Pitch:** Tap a piece, then tap a cell, as an alternative to dragging.
+- **Closest existing:** Accessibility modes
+- **What's new:** Motor accessibility.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/3
+- **Reason:** Accessibility option; dragging stays the default.
+
 ### I-062 — Difficulty ramp (built)
 - **Pitch:** Pieces get chunkier the longer you survive.
 - **Closest existing:** Block Blast generator
@@ -201,14 +209,6 @@
 - **Scores (R1..R14):** 2 1 2 1 2 2 2 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
 - **Value/effort:** 5/4
 - **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
-
-### I-073 — Tap-to-place (backlog)
-- **Pitch:** Tap a piece, then tap a cell, as an alternative to dragging.
-- **Closest existing:** Accessibility modes
-- **What's new:** Motor accessibility.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 6/3
-- **Reason:** Accessibility option; dragging stays the default.
 
 ### I-015 — Square Pop (backlog)
 - **Pitch:** Any filled square, 3×3 or bigger, pops.

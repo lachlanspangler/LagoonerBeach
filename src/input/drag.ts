@@ -21,6 +21,8 @@ export interface DragHost {
   /** Release. `move` is null when the drop is not legal; from = piece top-left in CSS px. */
   onDrop(slot: number, move: Move | null, from: { x: number; y: number }, overBoard: boolean): void;
   onCancel(slot: number, from: { x: number; y: number }): void;
+  /** Tap-to-place: a tray piece was tapped (selected) or the selection cleared (null). */
+  onSelect(slot: number | null): void;
 }
 
 interface Active {
@@ -32,6 +34,9 @@ interface Active {
   gy: number;
   px: number;
   py: number;
+  sx: number;
+  sy: number;
+  moved: boolean;
   start: number;
   anchor: { x: number; y: number } | null;
 }
@@ -39,9 +44,14 @@ interface Active {
 /** Snap search radius in cells and hysteresis band. */
 const MAGNET = 0.62;
 const HYSTERESIS = 0.62;
+/** A press shorter/smaller than this on a tray piece is a tap (select), not a drag. */
+const TAP_MS = 280;
+const TAP_SLOP = 8;
 
 export class DragController {
   private a: Active | null = null;
+  /** Tap-to-place selection (accessibility path; dragging stays primary). */
+  private sel: { slot: number; anchor: { x: number; y: number } | null } | null = null;
 
   constructor(
     private readonly el: HTMLElement,
@@ -82,6 +92,11 @@ export class DragController {
     const slot = slotAt(l, px, py);
     const s = this.host.state();
     const t = slot >= 0 ? s.tray[slot] : null;
+    if (this.sel && !t) {
+      e.preventDefault();
+      this.boardTap(px, py);
+      return;
+    }
     if (!t || s.over) return;
     e.preventDefault();
     const piece = pieceById(t.pieceId);
@@ -91,7 +106,20 @@ export class DragController {
     const oy = sl.cy - (piece.h * l.trayCell) / 2;
     const gx = Math.max(0, Math.min(piece.w, (px - ox) / l.trayCell));
     const gy = Math.max(0, Math.min(piece.h, (py - oy) / l.trayCell));
-    this.a = { pointerId: e.pointerId, slot, piece, gx, gy, px, py, start: performance.now(), anchor: null };
+    this.a = {
+      pointerId: e.pointerId,
+      slot,
+      piece,
+      gx,
+      gy,
+      px,
+      py,
+      sx: px,
+      sy: py,
+      moved: false,
+      start: performance.now(),
+      anchor: null,
+    };
     try {
       this.el.setPointerCapture(e.pointerId);
     } catch {
@@ -109,6 +137,10 @@ export class DragController {
     // use coalesced events' last point for lowest latency
     a.px = e.clientX - r.left;
     a.py = e.clientY - r.top;
+    if (!a.moved && Math.hypot(a.px - a.sx, a.py - a.sy) > TAP_SLOP) {
+      a.moved = true;
+      if (this.sel) this.clearSel();
+    }
     this.update();
   };
 
@@ -152,6 +184,14 @@ export class DragController {
     this.a = null;
     const l = this.host.layout();
     const [ox, oy] = this.origin(a);
+    if (!a.moved && performance.now() - a.start < TAP_MS) {
+      // a tap: toggle selection instead of dropping
+      const again = this.sel?.slot === a.slot;
+      this.sel = again ? null : { slot: a.slot, anchor: null };
+      this.host.onSelect(this.sel ? a.slot : null);
+      return;
+    }
+
     const cx = ox + (a.piece.w * l.cell) / 2;
     const cy = oy + (a.piece.h * l.cell) / 2;
     const overBoard = cx > l.board.x && cx < l.board.x + l.board.w && cy > l.board.y && cy < l.board.y + l.board.h;
@@ -168,6 +208,46 @@ export class DragController {
     if (this.a && e.pointerId === this.a.pointerId)
       queueMicrotask(() => this.a && this.a.pointerId === e.pointerId && this.cancelAll());
   };
+
+  get selected(): number | null {
+    return this.sel?.slot ?? null;
+  }
+
+  clearSel(): void {
+    if (!this.sel) return;
+    this.sel = null;
+    this.host.onSelect(null);
+  }
+
+  /** With a piece selected: first tap previews (piece centered on the tapped cell), second confirms. */
+  private boardTap(px: number, py: number): void {
+    const sel = this.sel!;
+    const l = this.host.layout();
+    const s = this.host.state();
+    const t = s.tray[sel.slot];
+    if (!t) return this.clearSel();
+    const piece = pieceById(t.pieceId);
+    const cx = Math.floor((px - l.board.x) / l.cell);
+    const cy = Math.floor((py - l.board.y) / l.cell);
+    if (cx < 0 || cy < 0 || cx >= N || cy >= N) return this.clearSel();
+    const fx = cx - (piece.w - 1) / 2;
+    const fy = cy - (piece.h - 1) / 2;
+    const fake = { piece, anchor: null } as unknown as Active;
+    const anchor = this.snap(s, fake, fx, fy);
+    if (anchor && sel.anchor && anchor.x === sel.anchor.x && anchor.y === sel.anchor.y) {
+      this.sel = null;
+      this.host.onSelect(null);
+      this.host.onDrop(
+        sel.slot,
+        { slot: sel.slot, x: anchor.x, y: anchor.y },
+        { x: l.board.x + anchor.x * l.cell, y: l.board.y + anchor.y * l.cell },
+        true,
+      );
+      return;
+    }
+    sel.anchor = anchor;
+    this.host.onHover(sel.slot, 0, 0, anchor);
+  }
 
   cancelAll = (): void => {
     const a = this.a;

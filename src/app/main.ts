@@ -154,7 +154,10 @@ function syncScene(): void {
   scene.preview = null;
   scene.drag = null;
   fx.reset();
+  drag.clearSel();
+  scene.selected = null;
   overShown = false;
+
   if (state.moves === 0) bigLagoon = null;
   updateHint();
   updateMisfits();
@@ -237,6 +240,7 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
   saveProfile(profile);
   updateHint();
   updateMisfits();
+  drag.clearSel();
   dirty = true;
   return true;
 }
@@ -487,6 +491,17 @@ const drag = new DragController(canvas, {
     if (overBoard) {
       sfx.invalid();
       haptics.fire('tick');
+    }
+    dirty = true;
+  },
+  onSelect: (slot) => {
+    scene.selected = slot;
+    if (slot === null) scene.preview = null;
+    else {
+      sfx.unlock();
+      sfx.pick();
+      haptics.fire('tick');
+      ui.announce('Piece selected. Tap the board to preview, tap again to place.');
     }
     dirty = true;
   },

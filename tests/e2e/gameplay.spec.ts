@@ -132,3 +132,20 @@ test('reef puzzle hint points at a winning move', async ({ page }) => {
   await page.getByRole('button', { name: 'Hint' }).click();
   await expect(page.locator('#sr')).toHaveText('Hint shown on the board.');
 });
+
+test('tap-to-place: tap a piece, tap the board to preview, tap again to place', async ({ page }) => {
+  await boot(page);
+  const m = await page.evaluate(() => {
+    const a = (window as any).__atoll;
+    const l = a.layout();
+    return { slot: l.slots[0], board: l.board, cell: l.cell };
+  });
+  await page.mouse.click(m.slot.cx, m.slot.cy);
+  await expect(page.locator('#sr')).toContainText('Piece selected');
+  const cx = m.board.x + m.cell * 3.5;
+  const cy = m.board.y + m.cell * 3.5;
+  await page.mouse.click(cx, cy);
+  expect((await state(page)).moves).toBe(0); // first tap only previews
+  await page.mouse.click(cx, cy);
+  await expect.poll(async () => (await state(page)).moves).toBe(1);
+});
