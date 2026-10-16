@@ -5,7 +5,7 @@
 -- One row per install that has posted. id = the random install id (128-bit hex), never shown.
 CREATE TABLE IF NOT EXISTS players (
   id          TEXT PRIMARY KEY,
-  name        TEXT NOT NULL CHECK (name GLOB '[A-Z]*' AND length(name) BETWEEN 1 AND 7),
+  name        TEXT NOT NULL CHECK (name NOT GLOB '*[^A-Z]*' AND length(name) BETWEEN 1 AND 7),
   avatar      TEXT,                          -- Beach Journal species id, optional
   created_at  INTEGER NOT NULL,              -- ms epoch
   updated_at  INTEGER NOT NULL,
