@@ -197,9 +197,9 @@ export class Reveal {
       card.style.setProperty('--hab', HABITAT_TINT[sp.habitat][this.d.night() ? 1 : 0]);
       card.innerHTML = `<div class="rv-over">${item.firstGolden ? 'Golden find' : 'New discovery'}</div>
         <div class="rv-pool"></div>
+        <div class="rv-rarity"><canvas class="rv-pips"></canvas><span>${item.golden ? 'Golden · ' : ''}${cap(sp.rarity)}</span></div>
         <div class="rv-info">
           <div class="rv-name">${sp.name}</div>
-          <div class="rv-rarity"><canvas class="rv-pips"></canvas><span>${item.golden ? 'Golden · ' : ''}${cap(sp.rarity)}</span></div>
           <div class="rv-facts">
             <div><b>${formatSize(item.size)}</b><span>Size</span></div>
             <div><b>${howLine(sp)}</b><span>How</span></div>

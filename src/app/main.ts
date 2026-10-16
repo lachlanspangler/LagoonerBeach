@@ -1032,11 +1032,11 @@ if (DEBUG)
         lastDispatchAt = frozen;
         return frozen;
       },
-      stageCombo: (n) => {
-        state = { ...state, streak: n, dry: 0 };
+      stageCombo: (n, dry = 0) => {
+        state = { ...state, streak: n, dry };
         scene.streak = n;
-        scene.dry = 0;
-        scene.celebrate.reset(n, 0);
+        scene.dry = dry;
+        scene.celebrate.reset(n, dry);
         dirty = true;
       },
       stageRecord: (best) => {
@@ -1052,6 +1052,7 @@ if (DEBUG)
         fx.chapterComplete(lastDispatchAt, chapter, name);
         dirty = true;
       },
+      celebrateWord: () => scene.celebrate.word?.text ?? null,
       revealState: () => reveal.current(),
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),

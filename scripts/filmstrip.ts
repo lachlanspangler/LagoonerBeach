@@ -9,7 +9,7 @@
  * Server: LB_URL (default http://localhost:5317) or --port.
  */
 import { chromium } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { BOARDS, boardString } from '../tests/e2e/celebrate-boards.ts';
 
 const arg = (k: string, d: string) => {
@@ -33,6 +33,7 @@ const out = arg(
 );
 const full = has('full') || !!reveal || !!results;
 mkdirSync(out, { recursive: true });
+for (const f of readdirSync(out)) if (f.endsWith('.png')) rmSync(`${out}/${f}`);
 const b = await chromium.launch();
 const p = await b.newPage({
   viewport: { width: 390, height: 844 },
@@ -54,11 +55,16 @@ const frames = async () => {
 };
 
 if (stage) {
-  const s = BOARDS[stage];
+  const s = BOARDS[stage] && { ...BOARDS[stage]! };
   if (!s) throw new Error(`unknown stage ${stage}: ${Object.keys(BOARDS).join(', ')}`);
   await p.evaluate(([board, tray]) => (window as any).__atoll.setup(board, tray), [boardString(s), s.tray] as const);
   const combo = Number(arg('combo', String(s.combo ?? 0)));
-  if (combo) await p.evaluate((n) => (window as any).__atoll.stageCombo(n), combo);
+  if (combo)
+    await p.evaluate(([n, dry]) => (window as any).__atoll.stageCombo(n, dry), [combo, Number(arg('dry', '0'))]);
+  if (has('move')) {
+    const [slot, x, y] = arg('move', '').split(',').map(Number);
+    s.move = { slot: slot!, x: x!, y: y! };
+  }
   if (has('best')) {
     await p.evaluate(
       ([best, score]) => {

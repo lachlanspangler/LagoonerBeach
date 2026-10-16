@@ -500,7 +500,7 @@ export class Celebrate {
     const pipR = Math.max(3, size * 0.17);
     const pipsW = pipR * 2 * STREAK_GRACE + pipR * 0.8 * (STREAK_GRACE - 1);
     const total = overlapW + pipR * 2 + pipsW;
-    const x0 = l.w / 2 - total / 2;
+    const x0 = l.w / 2 - (total * scale) / 2;
     const y = cy + drop;
     // level glow: a soft halo behind the badge (×10+), a ring flare on level-up
     if (st.glow && !rm) {

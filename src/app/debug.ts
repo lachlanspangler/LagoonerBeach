@@ -44,12 +44,14 @@ export interface DebugDeps {
     freeze(msAfterMove: number | null): void;
     /** Freeze now and treat it as the next move's dispatch time; returns it. */
     freezeNow(): number;
-    stageCombo(n: number): void;
+    stageCombo(n: number, dry?: number): void;
     /** Set the stored best (so a capture crosses it, or the results show a record). */
     stageRecord(best: number): void;
     revealSpecies(id: string, o?: { golden?: boolean; size?: number }): void;
     /** Play the chapter-complete moment now (relative times as after a move). */
     chapterMoment(chapter: number, name: string): void;
+    /** The word on the board right now (if any). */
+    celebrateWord(): string | null;
     revealState(): { id: string; modal: boolean; settled: boolean } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;

@@ -89,7 +89,7 @@ html[data-theme='night'] .r-golden .rv-card {
   font-weight: 900;
   font-size: 32px;
   line-height: 1.05;
-  margin: 2px 0 4px;
+  margin: 4px 0 2px;
 }
 .rv-rarity {
   display: flex;
@@ -186,6 +186,9 @@ html[data-theme='night'] .r-golden .rv-card {
   position: absolute;
   left: 50%;
   top: calc(var(--safe-top) + 92px);
+  width: max-content;
+  max-width: 92vw;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 8px;

@@ -246,7 +246,8 @@ export class Fx {
           const clean = e.score.cleanBonus > 0;
           // Spotless owns the middle of the board, so it waits for the last ring to leave its cells
           const wordAt = clean ? Math.max(last + MOTION.lagoonFill + 40, lastPop + 190) : last + MOTION.lagoonFill + 40;
-          const life = Math.max(600, Math.min(WORD_LIFE[tier]!, now + LIMITS.settleMs - wordAt));
+          // words fit the 1.3 s settle budget; the rare tier-4 word may hold a little longer
+          const life = Math.max(tier === 4 ? 850 : 600, Math.min(WORD_LIFE[tier]!, now + LIMITS.settleMs - wordAt));
           settle = Math.max(settle, wordAt + life);
           this.wordEnd = m.word ? wordAt + life : 0;
           if (v.sweep) this.at(last + MOTION.lagoonFill, (t) => (sc.sweep = t));
