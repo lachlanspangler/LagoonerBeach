@@ -114,7 +114,9 @@ export function dealTray(rng: Rng, board: Board, moves: number, cfg: RampConfig 
       b = resolvePlacement(b, p, x, y, 1).board;
       built.push(p);
     }
-    if (built.length === TRAY_SIZE) {
+    if (built.length) {
+      // nearly full board: keep the playable prefix, pad with the sample (at least one piece fits)
+      while (built.length < TRAY_SIZE) built.push(pieces[built.length]!);
       // shuffle so the "solution order" isn't simply left-to-right
       for (let i = built.length - 1; i > 0; i--) {
         const j = rng.int(i + 1);

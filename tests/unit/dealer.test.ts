@@ -115,6 +115,16 @@ describe('always-a-solution guarantee', () => {
     }
   });
 
+  it('when only part of a tray can be placed, at least one dealt piece still fits', () => {
+    // one border cell free: a dot fits, and after it nothing does
+    const b = board(['.#######', '########', '########', '########', '########', '########', '########', '########']);
+    const r = new Rng(11);
+    for (let i = 0; i < 100; i++) {
+      const t = dealTray(r, b, 200);
+      expect(t.some((x) => fitsAnywhere(b, pieceById(x.pieceId)))).toBe(true);
+    }
+  });
+
   it('trayClearable agrees with brute force on random positions', () => {
     const r = new Rng(77);
     let s = newGame(77);
