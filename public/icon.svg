@@ -11,8 +11,8 @@
     <rect x="0" y="110" width="100" height="100" rx="26" fill="#F2795B"/>
     <rect x="110" y="110" width="100" height="100" rx="26" fill="url(#lag)"/>
     <rect x="220" y="110" width="100" height="100" rx="26" fill="#53C08C"/>
-    <rect x="0" y="220" width="100" height="100" rx="26" fill="#A97BE6"/>
-    <rect x="110" y="220" width="100" height="100" rx="26" fill="#A97BE6"/>
+    <rect x="0" y="220" width="100" height="100" rx="26" fill="#8E5BD8"/>
+    <rect x="110" y="220" width="100" height="100" rx="26" fill="#8E5BD8"/>
     <rect x="220" y="220" width="100" height="100" rx="26" fill="#53C08C"/>
   </g>
 </svg>
