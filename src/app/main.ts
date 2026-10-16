@@ -605,6 +605,8 @@ const frameTimes: number[] = [];
 const drawTimes: number[] = [];
 /** When the first frame showing a freshly picked piece finished drawing (latency tests). */
 const pickDrawnAt: number[] = [];
+const dropDrawnAt: number[] = [];
+let lastDrawnMoves = -1;
 function frame(): void {
   // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
   const now = performance.now();
@@ -618,6 +620,10 @@ function frame(): void {
     scene.draw(now, dt);
     drawTimes.push(performance.now() - t0);
     if (!wasDragging && scene.drag) pickDrawnAt.push(performance.now());
+    if (state.moves !== lastDrawnMoves) {
+      lastDrawnMoves = state.moves;
+      dropDrawnAt.push(performance.now());
+    }
     dirty = false;
     frameTimes.push(dt);
     if (frameTimes.length > 1200) frameTimes.shift();
@@ -659,6 +665,7 @@ if (DEBUG)
     frameTimes,
     drawTimes,
     pickDrawnAt,
+    dropDrawnAt,
     commit,
     restart,
     switchMode,

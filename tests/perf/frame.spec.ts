@@ -62,3 +62,36 @@ test('input → first acknowledging frame latency (4× throttle)', async ({ page
   // acknowledged within ≤ 2 frames at 60 Hz, even under 4× throttle
   expect(lat[lat.length - 1]!).toBeLessThan(34);
 });
+
+test('release → first frame with the placed piece (4× throttle, first-run teaching on)', async ({ page }) => {
+  await boot(page, '');
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => {
+    (window as any).__ups = [];
+    document
+      .getElementById('game')!
+      .addEventListener('pointerup', () => (window as any).__ups.push(performance.now()), { capture: true });
+  });
+  const lat: number[] = [];
+  for (let i = 0; i < 12; i++) {
+    const plan = await page.evaluate(() => (window as any).__atoll.plan('greedy'));
+    if (!plan) break;
+    await page.mouse.move(plan.down.x, plan.down.y);
+    await page.mouse.down();
+    await page.mouse.move(plan.up.x, plan.up.y, { steps: 3 });
+    await page.mouse.up();
+    await page.waitForTimeout(450);
+    const [ups, drawn] = await page.evaluate(() => [(window as any).__ups, (window as any).__atoll.dropDrawnAt()]);
+    const u = ups[ups.length - 1];
+    const f = drawn.find((t: number) => t >= u);
+    if (u && f) lat.push(f - u);
+  }
+  console.log('drop latency ms (in order)', lat.map((x) => x.toFixed(1)).join(' '));
+  console.log(
+    'commit ms (in order)',
+    (await page.evaluate(() => (window as any).__atoll.commitTimes())).map((x: number) => x.toFixed(1)).join(' '),
+  );
+  expect(lat.length).toBeGreaterThan(8);
+  expect(Math.max(...lat)).toBeLessThan(34);
+});

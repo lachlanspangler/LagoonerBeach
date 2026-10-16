@@ -23,6 +23,7 @@ export interface DebugDeps {
   frameTimes: number[];
   drawTimes: number[];
   pickDrawnAt: number[];
+  dropDrawnAt: number[];
   commit(m: Move, from: { x: number; y: number } | null): boolean;
   restart(): void;
   switchMode(m: 'classic' | 'daily' | 'puzzle'): void;
@@ -39,6 +40,7 @@ export function installDebugApi(d: DebugDeps): void {
     frameTimes: () => d.frameTimes.slice(),
     drawTimes: () => d.drawTimes.slice(),
     pickDrawnAt: () => d.pickDrawnAt.slice(),
+    dropDrawnAt: () => d.dropDrawnAt.slice(),
     clearFrames: () => {
       d.frameTimes.length = 0;
       d.drawTimes.length = 0;
