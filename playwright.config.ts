@@ -25,7 +25,13 @@ export default defineConfig({
     {
       name: 'webkit',
       use: { ...devices['iPhone 15'] },
-      testMatch: ['e2e/gameplay.spec.ts', 'e2e/input.spec.ts', 'e2e/a11y.spec.ts', 'e2e/leaderboard.spec.ts'],
+      testMatch: [
+        'e2e/gameplay.spec.ts',
+        'e2e/input.spec.ts',
+        'e2e/a11y.spec.ts',
+        'e2e/leaderboard.spec.ts',
+        'e2e/art.spec.ts',
+      ],
     },
   ],
 

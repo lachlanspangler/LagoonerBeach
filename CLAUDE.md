@@ -59,7 +59,8 @@ src/meta/      pure meta-progression: unlocks (skins), share text,
                types/submission checks — both shared with server/
 src/content/   generated data (puzzles.json) — never hand-edit
 src/sim/       bots (random/firstFit/greedy/search) + playGame; used by tests, tuning, autoplay
-src/render/    Canvas2D renderer, theme tokens, sprites, particles, tweens, creatures.ts (procedural art)
+src/render/    Canvas2D renderer, theme tokens, sprites, particles, tweens, creatures.ts (drawCreature:
+               new art or legacy fallback); art/ = creature art kit + species/<id>.ts (ADR 0011, lazy chunk)
 src/input/     pointer drag model (grab offset, lift, snap, hysteresis, cancel)
 src/audio/     WebAudio-synthesized SFX (sfx.ts) + generative music (music.ts); no audio files
 src/platform/  storage, haptics, visibility/lifecycle, PWA; leaderboard.ts (backend interface, HTTP,

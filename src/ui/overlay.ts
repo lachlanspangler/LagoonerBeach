@@ -6,7 +6,7 @@ import type { Profile, ThemePref } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
 import { HABITATS, SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
-import { drawCreature } from '../render/creatures.ts';
+import { drawCreature, hasNewArt, whenArtReady } from '../render/creatures.ts';
 import { buildReefList, type ReefListModel } from './reefList.ts';
 
 export interface UiHandlers {
@@ -335,7 +335,10 @@ export class Ui {
     const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
     const rarity = sp.rarity[0]!.toUpperCase() + sp.rarity.slice(1);
     card.innerHTML = `<h2>${e ? rarity : 'Not found yet'}</h2>`;
-    const art = creatureThumb(sp, 150, e ? undefined : ink, (e?.golden ?? 0) > 0);
+    const art = creatureThumb(sp, 150, e ? undefined : ink, (e?.golden ?? 0) > 0, {
+      animate: true,
+      shy: e?.count === 1,
+    });
     art.style.margin = '6px auto';
     art.style.display = 'block';
     card.append(art);
@@ -446,8 +449,18 @@ function nearMiss(score: number, best: number): string {
     <div class="bar-label">${pct}% of best</div><div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
 }
 
-/** A crisp canvas thumbnail of a creature (or its silhouette). */
-export function creatureThumb(sp: Species, px: number, silhouette?: string, golden = false): HTMLCanvasElement {
+/**
+ * A crisp canvas thumbnail of a creature (or its silhouette). Tiles are static and scaled by the
+ * species' size class (ADR 0011, R27); the species page (`animate`) runs the idle loop at ≤ 30 fps
+ * while it's on screen (blinks only under reduced motion). Redraws once the art chunk arrives.
+ */
+export function creatureThumb(
+  sp: Species,
+  px: number,
+  silhouette?: string,
+  golden = false,
+  o: { animate?: boolean; shy?: boolean; avatar?: boolean } = {},
+): HTMLCanvasElement {
   const c = document.createElement('canvas');
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   c.width = Math.round(px * dpr);
@@ -456,7 +469,38 @@ export function creatureThumb(sp: Species, px: number, silhouette?: string, gold
   c.style.height = `${px}px`;
   const g = c.getContext('2d')!;
   g.scale(dpr, dpr);
-  drawCreature(g, sp, px / 2, px / 2, px * 0.82, 0, { silhouette, golden });
+  const night = document.documentElement.dataset.theme === 'night';
+  const fit = o.avatar ? 'avatar' : px >= 100 ? 'detail' : 'tile'; // avatars: identity, not size
+  const expression = o.shy && !silhouette ? 'shy' : undefined;
+  const draw = (t?: number) => {
+    g.clearRect(0, 0, px, px);
+    const still = document.documentElement.dataset.motion === 'reduced';
+    drawCreature(g, sp, px / 2, px / 2, px, 0, { silhouette, golden, night, fit, t, still, expression });
+  };
+  draw();
+  const animate = () => {
+    if (!o.animate || silhouette || !hasNewArt(sp.id)) return;
+    let seen = false;
+    let last = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      if (c.isConnected) seen = true;
+      else if (seen || now - t0 > 3000) return; // closed (or never shown): stop
+      if (now - last >= 33) {
+        last = now;
+        draw(now / 1000);
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  if (hasNewArt(sp.id)) animate();
+  else
+    whenArtReady(() => {
+      if (!hasNewArt(sp.id)) return;
+      draw();
+      animate();
+    });
   return c;
 }
 

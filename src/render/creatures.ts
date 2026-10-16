@@ -1,18 +1,61 @@
 /**
- * Procedural creature art (no assets). Every species is a body type + two colors + a pattern.
- * Drawn facing right, centered on (0,0), about `s` wide. Silhouette mode paints everything one ink
- * (journal entries not found yet); golden mode adds a gold sheen.
+ * Creature drawing: the public API every surface calls (`drawCreature`).
+ *
+ * New art (ADR 0011) lives in a lazily loaded chunk (`art/creature-art.ts`, prefetched on idle
+ * after first paint). Species with new art are drawn by the kit; everything else, and everything
+ * before the chunk arrives, uses the legacy procedural drawing below, so the game is never broken
+ * mid-migration.
  */
 import type { Species } from '../meta/creatures.ts';
+import type * as ArtChunk from './art/creature-art.ts';
 
-export interface DrawOpts {
-  readonly silhouette?: string;
-  readonly golden?: boolean;
-}
+export type DrawOpts = ArtChunk.DrawOpts;
 
 type G = CanvasRenderingContext2D;
 
+let chunk: typeof ArtChunk | null = null;
+let loading: Promise<typeof ArtChunk> | null = null;
+
+/** Load the art chunk (idempotent). Resolves once new art can be drawn. */
+export function loadCreatureArt(): Promise<typeof ArtChunk> {
+  loading ??= import('./art/creature-art.ts').then((m) => {
+    chunk = m;
+    if (typeof location !== 'undefined' && /[?&]debug=1/.test(location.search))
+      (globalThis as { __lbArt?: unknown }).__lbArt = m;
+    return m;
+  });
+  return loading;
+}
+
+/** True when this species will be drawn with new art right now. */
+export const hasNewArt = (id: string): boolean => chunk?.ART.has(id) ?? false;
+/** Run `cb` once the art chunk is in (immediately if it already is). */
+export function whenArtReady(cb: () => void): void {
+  if (chunk) cb();
+  else void loadCreatureArt().then(cb, () => {});
+}
+
+// R39: prefetch after first paint, on idle, so the art is in before the first capture.
+if (typeof window !== 'undefined' && typeof requestAnimationFrame === 'function') {
+  const w = window as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void };
+  requestAnimationFrame(() => {
+    if (w.requestIdleCallback) w.requestIdleCallback(() => void loadCreatureArt(), { timeout: 2500 });
+    else setTimeout(() => void loadCreatureArt(), 600);
+  });
+}
+
+/**
+ * Draw a species centred at (x, y). `s`: the box (fit tile/detail), the old leaping-fish size (fit
+ * leap), or the creature's span. Opts extend the legacy ones with expression, t (animate), night, fit.
+ */
 export function drawCreature(g: G, sp: Species, x: number, y: number, s: number, angle = 0, o: DrawOpts = {}): void {
+  const art = chunk?.ART.get(sp.id);
+  if (chunk && art) return chunk.drawSpecies(g, sp, art, x, y, s, angle, o);
+  drawLegacy(g, sp, x, y, o.fit && o.fit !== 'leap' ? s * 0.82 : s, angle, o);
+}
+
+/** The original procedural art: body type + two colours + a pattern, about `s` wide. */
+export function drawLegacy(g: G, sp: Species, x: number, y: number, s: number, angle = 0, o: DrawOpts = {}): void {
   g.save();
   g.translate(x, y);
   g.rotate(angle);
