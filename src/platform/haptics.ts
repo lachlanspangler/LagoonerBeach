@@ -18,10 +18,23 @@ export function setNativeHaptics(fn: Native): void {
   native = fn;
 }
 
+/** At most one heavy pulse per HEAVY_GAP_MS; extra heavies soften to medium (ADR 0012). */
+export const HEAVY_GAP_MS = 300;
+export function guardHaptic(k: HapticKind, now: number, lastHeavy: number): HapticKind {
+  return k === 'heavy' && now - lastHeavy < HEAVY_GAP_MS ? 'medium' : k;
+}
+
 export class Haptics {
   enabled = true;
-  fire(k: HapticKind): void {
+  private lastHeavy = -Infinity;
+  /** What actually fired, newest last (tests read it via the debug API). */
+  readonly log: { k: HapticKind; t: number }[] = [];
+  fire(want: HapticKind, now = performance.now()): void {
     if (!this.enabled) return;
+    const k = guardHaptic(want, now, this.lastHeavy);
+    if (k === 'heavy') this.lastHeavy = now;
+    this.log.push({ k, t: now });
+    if (this.log.length > 64) this.log.shift();
     if (native) return native(k);
     const nav = globalThis.navigator as Navigator | undefined;
     if (nav && typeof nav.vibrate === 'function') nav.vibrate(PATTERNS[k]);
