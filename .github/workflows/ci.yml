@@ -9,6 +9,7 @@ jobs:
         with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npm run check
+      - run: npm run coverage
       # the shipped puzzle pack must be exactly reproducible from the generator
       - run: npm run puzzles && git diff --exit-code src/content/puzzles.json
   e2e:
