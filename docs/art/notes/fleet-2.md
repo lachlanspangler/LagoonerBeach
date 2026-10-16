@@ -130,3 +130,22 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
 - Would improve: blush lands on the stalk knobs (the rig puts it under the eyes); a "blush on the
   head, eyes on stalks" option would read sweeter. It's also a touch "garden snail"; a real periwinkle
   is rounder with a lower spire.
+
+## nautilus (Nautilus)
+- Size class M, snail (profile, facing right), deep and `nocturnal` (awake at night, sleepy by day,
+  R32). Feature: a round cream coil with five hand-placed orange-brown tiger stripes on its back
+  half and a whorl line to the navel, a peach hooded head at the opening (the brown hood cap is a
+  pattern), and a splayed tuft of four tentacles. One big eye (23 % of the face zone).
+- Signature: jets backward 7 units (tentacles stream: squash 0.55 tall, 1.2 long), three bubbles rise
+  from the opening (prop), `surprised`; drifts back, a polite blink, then `happy`.
+  Catch: the tentacles wave.
+- Rounds: 3.
+  1. Shell r 32 with a tight tentacle tuft: drew outside the artboard (bubble prop at x 50), and IoU
+     vs sand dollar 0.77, clownfish 0.80.
+  2. Added a hood jutting forward over the head as a fill part (the textbook nautilus profile): worse,
+     0.79; it filled the notch between shell and tentacles.
+  3. Smaller shell set further back, hood demoted to a pattern, tentacles longer and fanned from
+     -8 to +31: sand dollar 0.66, clownfish 0.72 (cross-class, limit 0.80).
+- Self-grade: B+. Polite and old-fashioned; the stripes and tuft read at 54 px.
+- Would improve: the tentacle tuft reads a little like a hand; more, thinner tentacles would be more
+  accurate but break the ≥ 5 unit thickness rule at this scale.
