@@ -375,9 +375,9 @@ tooling; (4) five pilots, ≥ 3 rounds each; (5) integrate leap + journal; (6) f
   *behind* the fills (`destination-over`), so joins vanish; Night rim behind that; patterns clip with
   `source-atop`. Face rig, 7 expressions + wink, blink/signature schedulers, keyframe tracks, size-scaled
   tempo, props (anemone, ink heart). `drawCreature` is still the API; legacy art is the fallback.
-- **Numbers:** initial JS 41.9 KB gz (+0.3); art chunk 12.7 KB gz with 5 species (kit ≈ 8 KB, ≈ 0.7–1.1
-  KB/species → ≈ 45–52 KB for 47; budget 60, enforced). 4× throttle: 0.026 ms mean per animated
-  creature (budget 0.12), 6 leapers p95 0.7 ms, zero rasters after warm-up. WebKit Path2D(string) parity
+- **Numbers:** initial JS 50.8 KB gz on rebased main (this work ≈ +0.6); art chunk 13.4 KB gz with 5 species (kit ≈ 8 KB, ≈ 0.7–1.1
+  KB/species → ≈ 45–52 KB for 47; budget 60, enforced). 4× throttle: 0.033 ms mean per animated
+  creature (budget 0.12), 6 leapers p95 0.8 ms, zero rasters after warm-up. WebKit Path2D(string) parity
   with the Canvas-free rasteriser within 8 %; closest silhouettes clownfish/turtle 0.75 (< 0.80).
 - **Pilots, what the rounds fixed:** clownfish — validator bugs first (segments counted per joined
   path, patterns counted against the artboard), then a pectoral fin crossing the head bar, a tail tip
@@ -394,3 +394,8 @@ tooling; (4) five pilots, ≥ 3 rounds each; (5) integrate leap + journal; (6) f
   legacy species plus the sheet's "leap as in game" strip (the same call as scene.ts).
 - Not done (guide items for later): rarity frames/pips (R29), the bubble-pearl present (R30), XS
   double-hop / XXL breach (R26), the species-page size line (R28).
+- **Rebased onto main** (endless reefs + leaderboards). Leaderboard rows show a creature avatar via
+  `creatureThumb`; with the journal's size-class fill an XS avatar would shrink to 38 % of its circle,
+  so avatars get their own `fit: 'avatar'` (identity, not size: long side 0.8 of the circle). Looked at
+  the demo board: octopus and clownfish avatars read at 36 px. Full e2e on the rebased branch: 86
+  passed (Chromium + WebKit), 1 pre-existing skip.

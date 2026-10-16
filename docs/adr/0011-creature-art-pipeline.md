@@ -33,7 +33,7 @@ Everything that makes the cast cohesive is **shared code**, in `src/render/art/`
 
 **Public API stays `drawCreature(g, sp, x, y, s, angle, opts)`** in `src/render/creatures.ts`, with
 opts extended by `expression`, `t` (seconds, animate), `still` (reduced motion: blinks only), `night`,
-`fit` (`tile` / `detail` / `leap`), `flip`, `action` (catch/release hook) and `signatureAt`. If the
+`fit` (`tile` / `detail` / `leap` / `avatar` for leaderboard rows: identity size, not size class), `flip`, `action` (catch/release hook) and `signatureAt`. If the
 chunk isn't loaded yet, or a species has no new art, the **legacy procedural drawing** is used, so the
 game is never broken mid-migration.
 
@@ -75,13 +75,13 @@ lagoon at any moment, so per-species fetching would only add latency at the wors
   tests. Keeping `Path2D` means no per-frame path building at all.
 
 ## Performance and bundle budget (measured)
-- Initial JS **41.9 KB gz** (≤ 64 KB budget; +0.3 KB for the loader/dispatch). The art chunk is not
+- Initial JS **50.8 KB gz** on current main (≤ 64 KB budget); this pipeline adds ≈ 0.6 KB (loader, dispatch, tile/avatar plumbing). The art chunk is not
   in the initial bundle; `scripts/size-check.ts` fails the build if it is.
-- Art chunk with 5 pilots: **12.7 KB gz** (kit ≈ 8 KB + ≈ 0.7–1.1 KB per species). Projection for all
+- Art chunk with 5 pilots: **13.4 KB gz** (kit ≈ 8 KB + ≈ 0.7–1.1 KB per species). Projection for all
   47: ≈ 45–52 KB. **Budget 60 KB gz**, enforced in `scripts/size-check.ts`.
 - Draw cost at 4× CPU throttle (`tests/perf/art.spec.ts`, 6 animated leapers, steady state):
-  **0.026 ms mean per creature** (budget 0.12), frame p95 0.7 ms for all six (budget 1.0), zero new
-  rasters after warm-up, cache 0.6 MB. Whole-game draw p95 1.2 ms (`tests/perf/frame.spec.ts`).
+  **0.033 ms mean per creature** (budget 0.12), frame p95 0.8 ms for all six (budget 1.0), zero new
+  rasters after warm-up, cache 0.6 MB. Whole-game draw p95 1.4 ms (`tests/perf/frame.spec.ts`).
 - Memory: LRU over all rasters, 12 MB cap (w × h × 4).
 
 ## WebKit `Path2D(string)` verification
