@@ -60,6 +60,11 @@ export const NIGHT: Palette = {
   pebbles: PEBBLES,
 };
 
+/** UI font: Nunito ("Lagoon UI", bundled) — every number in the game. */
+export const FONT_STACK = `"Lagoon UI", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif`;
+/** Display voice: Fraunces ("Lagoon Display", bundled) — words only, never numbers (proportional digits). */
+export const DISPLAY_STACK = `"Lagoon Display", "Iowan Old Style", Georgia, serif`;
+
 export const MOTION = {
   pickUp: 90,
   place: 110,

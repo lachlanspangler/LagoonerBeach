@@ -17,6 +17,9 @@ import { farmerBot, greedyBot } from '../../src/sim/bots.ts';
 import { median, playGame } from '../../src/sim/play.ts';
 import { STREAK_GRACE, nextStreak } from '../../src/core/scoring.ts';
 import { HEAVY_GAP_MS, guardHaptic } from '../../src/platform/haptics.ts';
+import { applyMove, newGame } from '../../src/core/game.ts';
+import { findPockets } from '../../src/core/rules.ts';
+import { BOARDS } from '../e2e/celebrate-boards.ts';
 
 /** A capture with the given pocket sizes per wave. */
 const ev = (waves: number[][], o: { clean?: boolean; streak?: number } = {}): MomentEvent => ({
@@ -173,4 +176,24 @@ describe('combo anti-exploit (combo-sim, fixed seeds)', () => {
     expect(median(farmer.map((g) => g.maxStreak))).toBeGreaterThanOrEqual(median(greedy.map((g) => g.maxStreak)) * 0.6);
     expect(fm).toBeLessThan(gm * 0.75);
   }, 20_000);
+});
+
+describe('staged celebration boards (filmstrips, baselines, perf) produce their moment', () => {
+  for (const [name, b] of Object.entries(BOARDS))
+    it(`${name} → ${b.word ?? '(no word)'}`, () => {
+      const base = newGame(1);
+      const s = {
+        ...base,
+        board: Uint8Array.from(b.rows.join(''), (ch) => (ch === '.' ? 0 : Number(ch))),
+        tray: b.tray.map((id, i) => (id ? { pieceId: id, color: ((i + 3) % 6) + 1 } : null)),
+        streak: b.combo ?? 0,
+      };
+      expect(findPockets(s.board)).toHaveLength(0);
+      const r = applyMove(s, b.move);
+      expect(r, 'legal move').not.toBeNull();
+      const cap = r!.events.find((e) => e.type === 'captured');
+      expect(cap).toBeDefined();
+      if (cap?.type !== 'captured') return;
+      expect(momentFor(cap, { prevStreak: s.streak }).word).toBe(b.word);
+    });
 });

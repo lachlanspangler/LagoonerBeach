@@ -147,7 +147,7 @@ export function momentFor(e: MomentEvent, _ctx: MomentContext): Moment {
     sound: { sting, whoosh: tier === 4 },
     haptic,
     visual: {
-      burst: [0.8, 0.95, 1.1, 1.3, 1.55][tier]!,
+      burst: [0.8, 0.95, 1.1, 1.25, 1.4][tier]!,
       perPebble: [2, 2, 3, 3, 3][tier]!,
       budget: [12, 18, 26, 36, LIMITS.maxParticlesPerMove][tier]!,
       shake: tier >= 3 ? Math.min(LIMITS.maxShakePx, 2 + f.waves * 1.2 + (tier === 4 ? 1.5 : 0)) : 0,
@@ -178,10 +178,10 @@ export interface ComboStyle {
 export function comboStyle(level: ComboLevel): ComboStyle {
   return [
     { size: 0, style: 'water', weight: 600, glow: false },
-    { size: 0.36, style: 'water', weight: 600, glow: false },
-    { size: 0.42, style: 'water', weight: 900, glow: false },
-    { size: 0.48, style: 'warm', weight: 900, glow: true },
-    { size: 0.54, style: 'gold', weight: 900, glow: true },
+    { size: 0.4, style: 'water', weight: 600, glow: false },
+    { size: 0.47, style: 'water', weight: 900, glow: false },
+    { size: 0.54, style: 'warm', weight: 900, glow: true },
+    { size: 0.6, style: 'gold', weight: 900, glow: true },
   ][level] as ComboStyle;
 }
 
