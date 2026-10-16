@@ -6,7 +6,7 @@ export interface RunClaims {
   readonly v: 1;
   /** Run id (random). */
   readonly rid: string;
-  /** Install id the run was issued to. */
+  /** Install id the run was issued to ('' = unbound: the first submitter claims it). */
   readonly pid: string;
   readonly seed: number;
   readonly teach: boolean;

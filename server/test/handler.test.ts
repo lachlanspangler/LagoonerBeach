@@ -233,7 +233,34 @@ describe('POST /v1/runs + endless submissions', () => {
     expect(self.body.me.name).toBe('ROBO');
   });
 
-  it('runs need a well-formed install id and the current rules', async () => {
+  it('players who have not opted in yet get unbound tickets; the first submitter claims them', async () => {
+    const t = await call('POST', '/v1/runs', { rules: RULES_VERSION }, { 'cf-connecting-ip': '203.0.113.9' });
+    expect(t.status).toBe(201);
+    const g = playOut(t.body.seed, { quick: true });
+    clock += g.moves.length * 1000;
+    const body = {
+      name: 'NEWBIE',
+      installId: id(7),
+      mode: 'endless',
+      seed: t.body.seed,
+      runToken: t.body.runToken,
+      teach: false,
+      rules: RULES_VERSION,
+      moves: packMoves(g.moves),
+      score: g.state.score,
+      clientVersion: 'test',
+    };
+    expect((await call('POST', '/v1/scores', body)).status).toBe(200);
+    expect((await call('POST', '/v1/scores', { ...body, installId: id(8) })).body.error.code).toBe('duplicate_run');
+    // anonymous issuing is rate-limited per (hashed) address, without storing the address
+    for (let i = 0; i < 29; i++)
+      await call('POST', '/v1/runs', { rules: RULES_VERSION }, { 'cf-connecting-ip': '203.0.113.9' });
+    const limited = await call('POST', '/v1/runs', { rules: RULES_VERSION }, { 'cf-connecting-ip': '203.0.113.9' });
+    expect(limited.status).toBe(429);
+    expect([...store.rate.keys()].some((k) => k.includes('203.0.113.9'))).toBe(false);
+  });
+
+  it('runs need a well-formed install id (if any) and the current rules', async () => {
     expect((await call('POST', '/v1/runs', { installId: 'x', rules: RULES_VERSION })).status).toBe(400);
     expect((await call('POST', '/v1/runs', { installId: id(1), rules: 0 })).status).toBe(426);
   });

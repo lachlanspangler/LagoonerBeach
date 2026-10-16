@@ -111,7 +111,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
     if (route === 'GET /health' && parts.length === 2) return json({ ok: true, rules: [rules] }, 200, h);
     if (route === 'POST /runs' && parts.length === 2)
-      return json(await startRun(deps, await readJson(req), now, rules), 201, h);
+      return json(await startRun(req, deps, await readJson(req), now, rules), 201, h);
     if (route === 'POST /scores' && parts.length === 2)
       return json(await submit(deps, await readJson(req), now, rules), 200, h);
     if (route === 'DELETE /players' && parts.length === 3) {
@@ -163,20 +163,27 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   }
 }
 
-async function startRun(deps: Deps, body: unknown, now: number, rules: number): Promise<RunTicket> {
+/**
+ * Issue an Endless seed. The install id is optional: players who haven't opted in yet get unbound
+ * tickets (bound to whoever first submits them), so their first ranked game needs no prior post.
+ * Anonymous requests are rate-limited by a salted hash of the client IP (never stored in clear,
+ * counters pruned daily).
+ */
+async function startRun(req: Request, deps: Deps, body: unknown, now: number, rules: number): Promise<RunTicket> {
   const o = (body ?? {}) as Record<string, unknown>;
-  if (typeof o.installId !== 'string' || !INSTALL_ID_RE.test(o.installId))
-    throw new HttpError('bad_request', 'installId');
+  const pid = o.installId === undefined ? '' : o.installId;
+  if (typeof pid !== 'string' || (pid && !INSTALL_ID_RE.test(pid))) throw new HttpError('bad_request', 'installId');
   if (o.rules !== rules) throw new HttpError('upgrade_required', `rules ${String(o.rules)} ≠ ${rules}`);
   if (!deps.secret) throw new HttpError('overloaded', 'run tokens not configured');
-  if (!(await deps.store.hit(`runs:${o.installId}`, now, LIMITS.runs.windowMs, LIMITS.runs.n)))
+  const who = pid || `ip-${await runHash(`${deps.secret}|${req.headers.get('cf-connecting-ip') ?? 'unknown'}`, 0)}`;
+  if (!(await deps.store.hit(`runs:${who}`, now, LIMITS.runs.windowMs, LIMITS.runs.n)))
     throw new HttpError('rate_limited', 'too many runs', 60);
-  const p = await deps.store.player(o.installId);
+  const p = pid ? await deps.store.player(pid) : null;
   if (p?.banned) throw new HttpError('banned', 'leaderboards unavailable');
   const claims: RunClaims = {
     v: 1,
     rid: randomHex(16),
-    pid: o.installId,
+    pid,
     seed: (deps.newSeed ?? randomU32)() >>> 0,
     teach: o.teach === true,
     rules,
@@ -207,7 +214,8 @@ async function submit(deps: Deps, body: unknown, now: number, rules: number): Pr
   if (sub.mode === 'endless') {
     if (!sub.runToken) throw new HttpError('token_invalid', 'endless runs need a run token');
     const t = deps.secret ? await readRun(sub.runToken, deps.secret) : null;
-    if (!t || t.pid !== sub.installId || t.rules !== sub.rules) throw new HttpError('token_invalid', 'bad run token');
+    if (!t || (t.pid && t.pid !== sub.installId) || t.rules !== sub.rules)
+      throw new HttpError('token_invalid', 'bad run token');
     if (t.seed !== sub.seed || t.teach !== sub.teach) throw new HttpError('seed_mismatch', 'not the issued seed');
     if (now > t.exp) throw new HttpError('token_expired', 'run token expired');
     const use = await deps.store.useRun(t.rid, sub.installId, await runHash(sub.moves, sub.score), now);
