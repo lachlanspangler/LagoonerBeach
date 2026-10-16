@@ -140,6 +140,29 @@ export class Scene {
 
   /** Tray slots whose piece fits nowhere on the current board (drawn faded). */
   misfit: boolean[] = [false, false, false];
+  private toastFree = 0;
+  /** One-line messages in the band above the board, shown one at a time (never overlapping). */
+  toast(text: string, now: number, life = 1500): void {
+    const l = this.layout;
+    const start = Math.max(now, this.toastFree);
+    this.toastFree = start + life * 0.8;
+    this.texts.push({
+      text,
+      x: l.w / 2,
+      y: Math.max(l.hud.y + l.hud.h + l.cell * 0.05, l.board.y - l.cell * 0.2) - l.cell * 0.75,
+      start,
+      size: l.cell * 0.38,
+      life,
+      strong: false,
+      accent: true,
+      rise: 0.1,
+    });
+  }
+
+  /** Where the held piece was last drawn (release flight starts here, so nothing jumps). */
+  lastDragDraw: { x: number; y: number } | null = null;
+  /** Jackpot light sweep across the board. */
+  sweep = -1e9;
   /** Tap-to-place selection (drawn raised with an outline). */
   selected: number | null = null;
 
@@ -245,6 +268,7 @@ export class Scene {
     this.drawPlacing(now);
     this.drawDying(now);
     this.drawRipples(now);
+    this.drawSweep(now);
     g.restore();
     this.drawPointsPeek();
 
@@ -501,6 +525,29 @@ export class Scene {
     }
   }
 
+  /** Jackpot: one soft band of light sweeps diagonally across the board (≈650 ms). */
+  private drawSweep(now: number): void {
+    const t = (now - this.sweep) / 650;
+    if (t < 0 || t >= 1 || this.reducedMotion) return;
+    const g = this.g;
+    const b = this.layout.board;
+    g.save();
+    g.beginPath();
+    g.roundRect(b.x, b.y, b.w, b.h, b.w * GEOM.boardRadius);
+    g.clip();
+    const pos = b.x - b.w * 0.6 + b.w * 2.2 * easeInOutSine(t);
+    const gr = g.createLinearGradient(pos - b.w * 0.14, b.y, pos + b.w * 0.14, b.y + b.h * 0.25);
+    gr.addColorStop(0, 'rgba(255,255,255,0)');
+    const night = this.palette.name === 'night';
+    gr.addColorStop(0.5, night ? 'rgba(160,240,255,0.22)' : 'rgba(255,255,250,0.28)');
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    // additive light only on the dark board; on sand it would blow out to white
+    g.globalCompositeOperation = night ? 'lighter' : 'source-over';
+    g.fillStyle = gr;
+    g.fillRect(b.x, b.y, b.w, b.h);
+    g.restore();
+  }
+
   private drawRipples(now: number): void {
     const g = this.g;
     if (!this.ripples.length) return;
@@ -578,13 +625,18 @@ export class Scene {
     const l = this.layout;
     const p = pieceById(slot.t.pieceId);
     const cell = lerp(l.trayCell, l.cell, easeOutCubic(d.grow));
+    // magnet: once it has a legal spot, the held piece leans ~20% toward it so snapping feels sticky
+    const sn = this.preview && d.grow >= 1 ? this.preview : null;
+    const dx0 = sn ? lerp(d.x, l.board.x + sn.ax * l.cell, 0.2) : d.x;
+    const dy0 = sn ? lerp(d.y, l.board.y + sn.ay * l.cell, 0.2) : d.y;
+    this.lastDragDraw = { x: dx0, y: dy0 };
     // soft lifted shadow
     const g = this.g;
     g.globalAlpha = 0.18;
     g.fillStyle = '#000';
     for (const [dx, dy] of p.cells) {
       g.beginPath();
-      g.roundRect(d.x + dx * cell + cell * 0.12, d.y + dy * cell + cell * 0.3, cell * 0.8, cell * 0.8, cell * 0.25);
+      g.roundRect(dx0 + dx * cell + cell * 0.12, dy0 + dy * cell + cell * 0.3, cell * 0.8, cell * 0.8, cell * 0.25);
       g.fill();
     }
     g.globalAlpha = 1;
@@ -594,7 +646,7 @@ export class Scene {
     const normal = this.sprites.pebble(this.palette, slot.t.color, Math.round(cell));
     const bright = lit ? this.sprites.pebble(this.palette, slot.t.color, Math.round(cell), 'lit') : normal;
     for (const [dx, dy] of p.cells)
-      g.drawImage(lit?.(dx, dy) ? bright : normal, d.x + dx * cell, d.y + dy * cell, cell, cell);
+      g.drawImage(lit?.(dx, dy) ? bright : normal, dx0 + dx * cell, dy0 + dy * cell, cell, cell);
   }
 
   private drawHint(now: number): void {
@@ -775,7 +827,7 @@ export class Scene {
       const sc = this.reducedMotion ? 1 : 1 + 0.25 * (1 - easeOutCubic(k));
       g.font = `800 ${Math.round(big * 0.34 * sc)}px ${FONT}`;
       g.fillStyle = p.water;
-      const label = `≈ ×${this.streak}`;
+      const label = `Streak ×${this.streak}`;
       // tide dots: moves left before the streak breaks (fills back up on every capture)
       const w = g.measureText(label).width;
       const r = Math.max(2.5, big * 0.06);
@@ -823,6 +875,7 @@ export class Scene {
       this.tray.some((s) => now - s.dealStart < MOTION.dealIn || s.back !== null) ||
       this.land.some((t) => now - t < MOTION.place * 1.6) ||
       now - this.streakPulse < 300 ||
+      now - this.sweep < 650 ||
       (this.gameOverAt >= 0 && now - this.gameOverAt < 600)
     );
   }

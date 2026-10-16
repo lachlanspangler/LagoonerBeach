@@ -632,7 +632,9 @@ const drag = new DragController(canvas, {
   },
   onDrop: (slot, move, from, overBoard) => {
     scene.preview = null;
-    if (move && commit(move, from)) return;
+    const drawnAt = scene.lastDragDraw ?? from;
+    scene.lastDragDraw = null;
+    if (move && commit(move, drawnAt)) return;
     scene.tray[slot] = { ...scene.tray[slot]!, back: { ...from, start: performance.now() } };
     if (overBoard) {
       sfx.invalid();

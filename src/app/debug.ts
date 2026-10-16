@@ -106,6 +106,14 @@ export function installDebugApi(d: DebugDeps): void {
         ['captureBig', (s) => s.capture(12, 8, 0)],
         ['cascade', (s) => [0, 1, 2].forEach((k) => s.capture(6, 4, k, k * 0.15))],
         ['cleanReef', (s) => s.cleanReef()],
+        ['jackpot', (s) => s.jackpot(3)],
+        // what a real jackpot sounds like: three cascade waves + the swell on top
+        [
+          'jackpotMoment',
+          (s) => [0, 1, 2].forEach((k) => (s.capture(12, 9, k, k * 0.15), k === 2 && s.jackpot(3, 0.42))),
+        ],
+        ['streakMilestone', (s) => s.streakMilestone(10)],
+        ['discovery', (s) => s.discovery()],
         ['deal', (s) => s.deal()],
         ['newBest', (s) => s.newBest()],
         ['gameOver', (s) => s.gameOver()],

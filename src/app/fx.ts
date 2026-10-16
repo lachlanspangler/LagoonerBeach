@@ -180,18 +180,7 @@ export class Fx {
                 this.at(t0 + 200, () => {
                   this.sfx.discovery();
                   const names = [...new Set(fresh.map((c) => SPECIES_BY_ID.get(c.x.id)?.name ?? ''))].join(' · ');
-                  // discovery toast in the band above the board (never on it)
-                  sc.texts.push({
-                    text: `New: ${names}`,
-                    x: l.w / 2,
-                    y: Math.max(l.hud.y + l.hud.h + l.cell * 0.05, l.board.y - l.cell * 0.2) - l.cell * 0.75,
-                    start: performance.now(),
-                    size: l.cell * 0.38,
-                    life: 1700,
-                    strong: false,
-                    accent: true,
-                    rise: 0.1,
-                  });
+                  sc.toast(`New: ${names}`, performance.now(), 1700);
                 });
               this.sfx.capture(area, e.streak, k);
               // feel the streak: long streaks and big moments hit harder
@@ -200,6 +189,32 @@ export class Fx {
           });
           const last = now + flight + (e.waves.length - 1) * MOTION.waveGap;
           const pts = e.score.total;
+          // cascades count up wave by wave (×2 … then the final word shows the total)
+          for (let k = 1; k < e.waves.length - 1; k++) {
+            const tk = now + flight + k * MOTION.waveGap + 60;
+            this.at(tk, () =>
+              sc.texts.push({
+                text: `Ripple ×${k + 1}`,
+                x: l.w / 2,
+                y: Math.max(l.hud.y + l.hud.h + l.cell * 0.05, board.y - l.cell * 0.2),
+                start: performance.now(),
+                size: l.cell * (0.6 + k * 0.08),
+                life: MOTION.waveGap * 1.6,
+                strong: true,
+              }),
+            );
+          }
+          if (tier === 3)
+            this.at(last + MOTION.lagoonFill, () => {
+              sc.sweep = performance.now();
+              this.sfx.jackpot(e.waves.length);
+            });
+          // streak milestones get their own little moment
+          if (e.streak >= 5 && e.streak % 5 === 0)
+            this.at(now + flight + 260, () => {
+              sc.toast(`Streak ×${e.streak}!`, performance.now(), 1200);
+              this.sfx.streakMilestone(e.streak);
+            });
           const word = opts.firstCapture ? 'Pop!' : calloutFor(maxArea, e.waves.length, clean);
           const land = last + MOTION.lagoonFill + 80;
           this.at(land, () => {

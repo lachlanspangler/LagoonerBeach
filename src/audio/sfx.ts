@@ -170,6 +170,21 @@ export class Sfx {
     this.tone(this.note(2, 2), at + 0.26, 0.6, 'sine', 0.07);
   }
 
+  /** Jackpot (12+ lagoon, cascade, clean reef): a warm low swell under a bright open chord. */
+  jackpot(waves = 1, at = 0): void {
+    this.tone(98, at, 0.9, 'sine', 0.35, 130);
+    const lift = Math.min(3, waves - 1) * 2;
+    [0, 2, 4, 7].forEach((d, i) => this.tone(this.note(d + lift, 0), at + 0.05 + i * 0.03, 0.9, 'triangle', 0.07));
+    this.hiss(at, 0.5, 600, 0.8, 0.1);
+  }
+
+  /** Streak ×5, ×10…: two quick high notes that climb with the streak. */
+  streakMilestone(streak: number, at = 0): void {
+    const d = Math.min(8, Math.floor(streak / 5) * 2);
+    this.tone(this.note(d, 1), at, 0.25, 'sine', 0.09);
+    this.tone(this.note(d + 2, 1), at + 0.08, 0.35, 'sine', 0.09);
+  }
+
   cleanReef(at = 0): void {
     [0, 2, 4, 5, 7].forEach((d, i) => this.tone(this.note(d, 1), at + i * 0.07, 0.5, 'sine', 0.12));
   }
