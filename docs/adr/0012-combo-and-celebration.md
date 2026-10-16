@@ -80,7 +80,9 @@ The word + number land at `last wave + 160 ms` as one stack **above the last lag
 water), else below it, else on the roomier side; Spotless takes the board's centre once the ring
 has left. Words: 3-layer display text (shadow, dark round outline, vertical gradient), spring scale-in
 (overshoot ≤ 1.08, start 0.7/0.6/0.45/0.3 by tier), 3–4° settle on tier ≥ 3, rise + fade out.
-Lifetimes 700/850/950/1050 ms by tier, clamped so **every move is settled ≤ 1.3 s** (≤ 3 waves).
+Lifetimes 700/850/950/1050 ms by tier, clamped so **every move is settled ≤ 1.3 s** (≤ 3 waves);
+the rare tier-4 word may hold to ≥ 850 ms (≤ 1.7 s after release). A tier ≥ 2 moment punches the HUD
+score as its points land.
 
 Screen-filling moments, rare by design: tier-4 tide wash (one band of water + foam edge rolls across
 the board, 700 ms), the jackpot sweep, the chapter-complete moment (endless reefs: wash + gold
@@ -144,14 +146,15 @@ for a reveal that's still up. Reduced motion: no rays/tide motion, no hops, same
 | Reduced motion | no shake, no scale bounce, no flight (pebbles shrink in place), wash = crossfade, no rays/tide motion | everywhere |
 
 ## 9. Perf (tests/perf/frame.spec.ts, 4× CPU throttle, Pixel 7 profile)
-Biggest moment (3 waves, Unbelievable!, COMBO ×20, wash): draw p95 2.1–3.4 ms, max ≈ 12 ms; our own
-longest task (frame or commit) ≈ 13–17 ms (< 50 ms). The first version spent 19 ms on the jackpot frame
+Biggest moment (3 waves, Unbelievable!, COMBO ×20, wash): draw p95 2.1–3.4 ms, max ≈ 8–12 ms; our own
+longest task (frame or commit) ≈ 13–17 ms (< 50 ms). The reveal and share card are a lazy chunk
+(initial JS 64.0 → 59.2 KB gz). The first version spent 19 ms on the jackpot frame
 snapshotting freshly drawn text canvases; text sprites are now `ImageBitmap`s and are pre-rendered on
 idle between release and the word. Browser long tasks during full-board redraws are software
 compositing in headless Chromium (no GPU) — reported, not asserted.
 
 ## Consequences
-- `calloutFor` (theme.ts) is superseded by `wordFor`; the old toast chips for "New: X" and
+- `calloutFor` (theme.ts) is removed; `wordFor`/`momentFor` replace it; the old toast chips for "New: X" and
   "Streak ×N!" are gone (reveals and the badge replace them). Chips (lessons, reef of the day)
   still take the combo slot while up.
 - Debug: `freezeNow()/freeze(ms)` render exact frames; `stageCombo(n, dry)`, `stageRecord(best)`,

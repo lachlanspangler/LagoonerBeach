@@ -96,7 +96,9 @@ persistence. The renderer animates events; the logical state is already final.
 `window.__atoll` (only with `?debug=1` or in tests): `state()`, `autoplay(bot, moves)`,
 `plan(bot)` → pointer path for a bot's next move (used by e2e to drive real drags),
 `pathFor(move)`, `setup(board64, trayIds)` to stage a board, `switchMode`, `loadPuzzle(i)`,
-`puzzleSolution()`, `debugSkin(id)`, `drawTimes()`, `audioLevels()`. Endless reefs: `loadPuzzle(360)` opens
+`puzzleSolution()`, `debugSkin(id)`, `drawTimes()`, `audioLevels()`. Celebrations (ADR 0012):
+`freezeNow()`/`freeze(ms)` render an exact frame after a move, `commitMove(m)`, `stageCombo(n, dry)`,
+`stageRecord(best)`, `revealSpecies(id)`, `revealFreeze(t)`, `chapterMoment(n, name)`, `showResults(o)`. Endless reefs: `loadPuzzle(360)` opens
 reef 361 (async, from the worker), `reefStats()`, `reefReady(i)`, `prefetchReefs(i, n)`.
 Leaderboards: `?lboffline=1` makes the demo backend act offline; build with `VITE_LB_URL=…` for the
 real server or `VITE_LB=off` to ship without leaderboards.
@@ -104,8 +106,10 @@ real server or `VITE_LB=off` to ship without leaderboards.
 ## Rules that must stay true
 - One core rule (no line clears, no alternative clear rules). Every dealt tray is placeable
   (`trayClearable`). Every shipped reef is solver-verified. Catches never touch the dealer RNG.
-- Capture feedback is one channel: one `+N` at the lagoon, words only for jackpots, chips queue
-  one at a time in the streak slot, creatures swim to the journal (board ends clean).
+- Capture feedback is one channel (ADR 0012): at most one word (tier ladder in `render/moments.ts`,
+  none for pinches) + one `+N`, stacked *above* the lagoon; one COMBO ×N badge under the score;
+  chips queue one at a time in that slot; discoveries reveal after the move settles; creatures swim
+  to the journal (board ends clean). Big moments get big, normal moves stay calm.
 
 ## Gotchas learned the hard way
 - Port 5173 is used by another project on this machine → dev is :5317, preview :4317.

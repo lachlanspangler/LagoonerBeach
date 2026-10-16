@@ -415,3 +415,46 @@ tooling; (4) five pilots, ≥ 3 rounds each; (5) integrate leap + journal; (6) f
   so avatars get their own `fit: 'avatar'` (identity, not size: long side 0.8 of the circle). Looked at
   the demo board: octopus and clownfish avatars read at 36 px. Full e2e on the rebased branch: 86
   passed (Chromium + WebKit), 1 pre-existing skip.
+
+## 2026-10-16 (session 3) — COMBO, celebrations, discovery moments (ADR 0012)
+Owner brief: Block Blast energy (scatter, COMBO ×N, praise words, screen-filling moments, NEW HIGH
+SCORE) on our rule, clean and never chaotic; discoveries as moments scaled by rarity.
+- **Plan:** ADR + pure `momentFor` first (tested) → burst + text + badge → sound/haptics → NEW BEST /
+  results → reveals → baselines/perf/input tests → play it frozen frame by frame, 3 rounds.
+- **Combo = streak, no rule change** (dailies and goldens untouched). Re-ran combo-sim: farmer keeps
+  the longest combos (median max 26) and scores 1657 vs greedy 3470 → a unit test pins farmer < 0.75 ×
+  greedy on 10 seeds (1 s).
+- **Ladder** (one word per move): Nice! (3–5) · Nice Lagoon! (6–8) · Lovely! (9–11) · Twin Lagoons! ·
+  Atoll! · Archipelago! · Ripple ×2 · Riptide! · Spotless! · Amazing! / Unbelievable! (two jackpot
+  features at once). First draft let a ×10 combo count as a jackpot feature: combo-sim showed
+  "Amazing!" *more* common than "Atoll!" (1.3% vs 0.5% of greedy captures) — wrong ladder, removed;
+  the combo already has its badge. Now a word lands on 12% of a human-like bot's moves; pinches (73%
+  of captures) never speak.
+- **Burst:** closed-form physics (position = f(t)), so a frozen clock gives exact frames; that made
+  `freezeNow()/freeze(ms)` possible and every filmstrip/baseline below is exact to the ms.
+- **What the rounds changed** (contact sheets in `docs/media/celebrate/`):
+  1. Words sat *below* atolls (sprite padding counted as text height) → stack height from the type
+     size; outer-ring pebbles flew over the score → burst clipped to the board ± 0.7 cell; Spotless
+     covered its own ring → waits until the ring has left; the NEW BEST banner landed on top of the
+     word (guard checked before the word was claimed) → it waits for the move's word end.
+  2. Common pop wrapped onto 4 lines; deflate drifted left; reveal card looked empty while the pearl
+     wobbled → rarity pips shown from frame one (the tier is never hidden: no fake-outs); tier-4 words
+     were clamped to 600 ms by the settle budget → hold ≥ 850 ms; T1/T2 words smaller (0.56/0.72 cell)
+     so "Nice Lagoon!" doesn't fill the board.
+  3. Score punch on tier ≥ 2; real play via `scripts/moments.ts` (21 captures, 2 words) confirmed
+     normal moves stay calm.
+- **Perf:** the jackpot frame cost 19 ms once (first use of a freshly drawn text canvas). Text sprites
+  are now ImageBitmaps, pre-rendered on idle between release and the word: biggest moment p95
+  2.1–3.4 ms, max ≈ 8–12 ms at 4× throttle. Bundle: the reveal + share card moved to a lazy chunk
+  (initial 64.0 → 59.2 KB gz; budget 64).
+- **Input:** celebrations never block; a reveal blocks only while it animates (≤ 2 s, tap skips), and
+  waits for drags/menus to finish before opening. e2e `dragMove` taps Continue like a player; bot
+  autoplay records discoveries without staging reveals.
+- **Rebased twice** (endless reefs, leaderboards, creature art). Kept the leaderboard results button
+  under the new hero; `onResultsSettled` is the name-entry hook. Chapter-complete is now a board
+  moment (wash + "Chapter N!" + name + fanfare) and the reef card waits for it. Reveals await the art
+  chunk and play the species' signature move (new art) between surprised and happy.
+- **Felt good:** COMBO ×N ticking up with the punch; the Atoll scatter; the legendary tide; Spotless
+  in the middle of an empty board. **Felt off / open:** burst pieces keep the white "lit" rim in
+  flight (sparkly, slightly busy); the common pop overlaps the board's top row for ~2 s; chips still
+  hide the badge while up; reveal baselines will change when the art fleet redraws box crab / kraken.

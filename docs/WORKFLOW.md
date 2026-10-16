@@ -47,6 +47,8 @@ Run this forever. Each pass should end with a commit and an updated diary/status
 |---|---|
 | `scripts/shoot.ts` | play N bot moves with real drags, screenshot |
 | `scripts/filmstrip.ts [--setup board|tray]` + `scripts/montage.py` | frame-by-frame effect review |
+| `scripts/filmstrip.ts --stage <name>\|--reveal <id>\|--results s,best\|--chapter` · `scripts/celebrate-review.sh` | celebration moments on a frozen clock (exact ms) → contact sheets in `docs/media/celebrate/` (ADR 0012) |
+| `scripts/moments.ts` | real play: every capture frozen at its word time, with word tallies |
 | `scripts/dragstrip.ts` | slow drag: lift, ghost, snap, seal preview |
 | `scripts/play-cli.ts <seed> "s,x,y …"` | text play for design review |
 | `scripts/skins.ts`, `scripts/reefs.ts`, `scripts/gameover.ts` | review grids |
