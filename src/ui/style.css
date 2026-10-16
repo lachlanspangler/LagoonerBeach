@@ -253,3 +253,51 @@ body {
 .pic i.r {
   background: color-mix(in srgb, var(--text) 22%, transparent);
 }
+.card.reefs {
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+}
+.reef-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  margin: 4px -6px 6px;
+  padding: 0 6px;
+  flex: 1;
+}
+.tier {
+  text-align: left;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 12px 2px 6px;
+}
+.reef-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.reef {
+  min-height: 44px;
+  border: none;
+  border-radius: 12px;
+  font: 800 15px var(--font);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  position: relative;
+}
+.reef.done {
+  background: color-mix(in srgb, var(--water) 30%, transparent);
+}
+.reef.cur {
+  outline: 3px solid var(--accent);
+}
+.reef sup {
+  color: var(--water);
+  font-size: 10px;
+  margin-left: 1px;
+}

@@ -178,3 +178,14 @@ test('regression: a pending reef result never hijacks classic mode', async ({ pa
   expect(await page.evaluate(() => (window as any).__atoll.mode())).toBe('classic');
   expect((await state(page)).mode).toBe('classic');
 });
+
+test('reef list: pick any reef', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'All reefs' }).click();
+  await page.getByRole('button', { name: 'Reef 5', exact: true }).click();
+  await expect.poll(async () => (await state(page)).seed).toBe(4);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});

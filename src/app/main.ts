@@ -424,6 +424,18 @@ const ui = new Ui({
   onPuzzles: () => switchMode('puzzle'),
   onPuzzleNext: () => mode === 'puzzle' && loadPuzzle(state.seed + 1),
   onPuzzleRetry: () => mode === 'puzzle' && loadPuzzle(state.seed),
+  onPuzzleList: () =>
+    PACK &&
+    ui.showReefs(
+      PACK,
+      profile.puzzle.solved,
+      profile.puzzle.pure ?? [],
+      mode === 'puzzle' ? state.seed : profile.puzzle.index,
+    ),
+  onPuzzlePick: (i) => {
+    if (mode !== 'puzzle') return;
+    loadPuzzle(i);
+  },
 
   onToggle: (k) => {
     if (k === 'reducedMotion')

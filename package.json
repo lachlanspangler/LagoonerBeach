@@ -37,7 +37,7 @@
     "tune": "tsx scripts/tune.ts",
     "ideas": "tsx scripts/render-ideas.ts",
     "ideas:check": "tsx scripts/render-ideas.ts && git diff --exit-code docs/IDEAS.md",
-    "puzzles": "tsx scripts/gen-puzzles.ts --count 120"
+    "puzzles": "tsx scripts/gen-puzzles.ts --count 200"
   },
   "dependencies": {
     "@capacitor/android": "7.6.9",

@@ -14,6 +14,8 @@ export interface UiHandlers {
   onPuzzles(): void;
   onPuzzleNext(): void;
   onPuzzleRetry(): void;
+  onPuzzleList(): void;
+  onPuzzlePick(index: number): void;
   onToggle(key: 'sound' | 'haptics' | 'reducedMotion'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
@@ -156,6 +158,7 @@ export class Ui {
         ),
       );
       card.append(this.button('', 'btn', 'Skip to next reef', 'Skip to next reef', () => this.h.onPuzzleNext()));
+      card.append(this.button('', 'btn', 'All reefs', 'All reefs', () => this.h.onPuzzleList()));
       card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
     } else {
       card.append(this.button('', canResume ? 'btn' : 'btn primary', 'New game', 'New game', () => this.h.onNewGame()));
@@ -210,6 +213,49 @@ export class Ui {
     foot.textContent = `${p.stats.games} games · ${p.stats.captures} lagoons captured`;
     card.append(foot);
     this.show(card, canResume);
+  }
+
+  /** Grid of every reef by tier; tap one to play it. Nothing is locked. */
+  showReefs(
+    list: readonly { id: string; tier?: string }[],
+    solved: readonly string[],
+    pure: readonly string[],
+    current: number,
+  ): void {
+    const card = document.createElement('div');
+    card.className = 'card reefs';
+    card.innerHTML = `<h2>Reefs</h2><div class="sub">${solved.length} of ${list.length} cleared · ★ = no hints</div>`;
+    const scroller = document.createElement('div');
+    scroller.className = 'reef-scroll';
+    const names: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
+    let lastTier = '';
+    let grid: HTMLElement | null = null;
+    list.forEach((p, i) => {
+      const tier = p.tier ?? '';
+      if (tier !== lastTier) {
+        lastTier = tier;
+        const h = document.createElement('div');
+        h.className = 'tier';
+        h.textContent = names[tier] ?? tier;
+        grid = document.createElement('div');
+        grid.className = 'reef-grid';
+        scroller.append(h, grid);
+      }
+      const isPure = pure.includes(p.id);
+      const isSolved = solved.includes(p.id);
+      const b = this.button(
+        '',
+        `reef${isSolved ? ' done' : ''}${i === current ? ' cur' : ''}`,
+        `${i + 1}${isPure ? '<sup>★</sup>' : ''}`,
+        `Reef ${i + 1}${isSolved ? ', cleared' : ''}`,
+        () => this.h.onPuzzlePick(i),
+      );
+      grid!.append(b);
+    });
+    card.append(scroller);
+    card.append(this.button('', 'btn', 'Close', 'Close', () => this.h.onResume()));
+    this.show(card, true);
+    scroller.querySelector('.cur')?.scrollIntoView({ block: 'center' });
   }
 
   showPuzzleResult(o: { solved: boolean; index: number; total: number; cleared: number }): void {

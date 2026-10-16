@@ -22,6 +22,10 @@ export interface Puzzle {
 export interface GenParams {
   readonly lagoons: number;
   readonly pieces: number;
+  /** Double-thick wall around a single lagoon, so the solution cascades. */
+  readonly thick?: boolean;
+  /** Minimum pebbles on the starting reef (tiny reefs are dull). */
+  readonly minPebbles?: number;
 }
 
 const CARVABLE = PIECES.filter((p) => p.size >= 2 && p.size <= 6);
@@ -86,6 +90,17 @@ export function generatePuzzle(seed: number, p: GenParams): Puzzle | null {
     made++;
   }
   if (made < p.lagoons) return null;
+  if (p.thick) {
+    // second wall: ring of (lagoon ∪ first ring); everything inside it must stay off the border
+    const inner = new Set<number>();
+    for (let c = 0; c < CELLS; c++) if (lagoon[c] || ring[c]) inner.add(c);
+    for (const c of inner) {
+      const x = c % N;
+      const y = (c / N) | 0;
+      if (x === 0 || y === 0 || x === N - 1 || y === N - 1) return null;
+    }
+    for (const c of inner) for (const nb of NB8[c]!) if (!inner.has(nb)) ring[nb] = 1;
+  }
 
   // carve pieces out of the ring
   const carved = new Uint8Array(CELLS);
@@ -110,7 +125,7 @@ export function generatePuzzle(seed: number, p: GenParams): Puzzle | null {
   colorChunks(board, rng);
   let filled = 0;
   for (let c = 0; c < CELLS; c++) if (board[c]) filled++;
-  if (filled < 4) return null;
+  if (filled < (p.minPebbles ?? 4)) return null;
   if (findPockets(board).length) return null;
   const pieces = chosen.map((c) => c.piece.id);
   const s = solve(board, pieces);
