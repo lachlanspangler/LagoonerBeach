@@ -124,7 +124,22 @@ export class Fx {
                 const [x, y] = sc.cellCenter(c);
                 sc.particles.burst(2, x, y, Kind.Spark, 0, l.cell * 2.5, l.cell * 0.12, MOTION.particleMin, sc.rand);
               }
+              const nFish = sc.reducedMotion ? 0 : Math.min(4, Math.floor(area / 3));
+              for (let f = 0; f < nFish; f++) {
+                const dir = sc.rand() < 0.5 ? -1 : 1;
+                sc.fish.push({
+                  x: cx + (sc.rand() - 0.5) * l.cell,
+                  y: cy,
+                  vx: dir * l.cell * (2 + sc.rand() * 2.5),
+                  vy: -l.cell * (14 + sc.rand() * 5),
+                  start: t0 + 80 + f * 70,
+                  size: l.cell * (0.28 + sc.rand() * 0.08),
+
+                  hue: sc.palette.name === 'night' ? '#7DF9E8' : ['#FF8A3D', '#FFC23D', '#FF6B8A'][f % 3]!,
+                });
+              }
               this.sfx.capture(area, e.streak, k);
+
               this.haptics.fire(k > 0 || area >= 12 ? 'heavy' : 'medium');
             });
           });

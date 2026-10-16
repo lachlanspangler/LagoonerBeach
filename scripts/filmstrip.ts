@@ -24,6 +24,20 @@ const p = await b.newPage({
 await p.goto(`http://localhost:${arg('port', '5317')}/?debug=1${arg('extra', '')}`);
 await p.waitForFunction(() => (window as any).__atoll);
 await p.waitForTimeout(500);
+const setup = arg('setup', '');
+if (setup) {
+  const [board, tray] = setup.split('|');
+  await p.evaluate(
+    ([b, t]) =>
+      (window as any).__atoll.setup(
+        b,
+        t!.split(',').map((x) => x || null),
+      ),
+    [board, tray],
+  );
+  await p.waitForTimeout(400);
+}
+
 for (let i = 0; i < moves.length; i++) {
   const [slot, x, y] = moves[i]!;
   const path = await p.evaluate((m) => (window as any).__atoll.pathFor(m), { slot, x, y });

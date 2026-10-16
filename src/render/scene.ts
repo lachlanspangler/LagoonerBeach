@@ -54,6 +54,15 @@ interface FloatText {
   life: number;
   strong: boolean;
 }
+interface Fish {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  start: number;
+  size: number;
+  hue: string;
+}
 interface TraySlot {
   t: TrayPiece | null;
   dealStart: number;
@@ -88,6 +97,7 @@ export class Scene {
   ripples: Ripple[] = [];
   texts: FloatText[] = [];
   placing: Placing[] = [];
+  fish: Fish[] = [];
   tray: TraySlot[] = [0, 1, 2].map(() => ({ t: null, dealStart: 0, back: null }));
   drag: DragView | null = null;
   preview: PreviewView | null = null;
@@ -200,6 +210,7 @@ export class Scene {
     this.drawHint(now);
     this.drawTray(now);
     this.drawDrag();
+    this.drawFish(now);
     this.particles.draw(g, this.sprites.look.colors, p.foam);
     this.drawTexts(now);
     this.drawHud(now);
@@ -462,6 +473,43 @@ export class Scene {
     g.globalAlpha = 1;
   }
 
+  /** Ballistic little fish leaping out of a lagoon (visual only). */
+  private drawFish(now: number): void {
+    const g = this.g;
+    for (const f of this.fish) {
+      const t = (now - f.start) / 1000;
+      if (t < 0 || t > 0.9) continue;
+      const x = f.x + f.vx * t;
+      const y = f.y + f.vy * t + 0.5 * 2600 * t * t;
+      const ang = Math.atan2(f.vy + 2600 * t, f.vx);
+      g.save();
+      g.translate(x, y);
+      g.rotate(ang);
+      g.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.2 : 1;
+      const s = f.size;
+      g.fillStyle = f.hue;
+      g.beginPath();
+      g.ellipse(0, 0, s, s * 0.52, 0, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.moveTo(-s * 0.85, 0);
+      g.lineTo(-s * 1.55, -s * 0.5);
+      g.lineTo(-s * 1.55, s * 0.5);
+      g.closePath();
+      g.fill();
+      g.fillStyle = '#FFFFFF';
+      g.beginPath();
+      g.arc(s * 0.45, -s * 0.12, s * 0.16, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#1A1A1A';
+      g.beginPath();
+      g.arc(s * 0.5, -s * 0.12, s * 0.08, 0, Math.PI * 2);
+      g.fill();
+      g.restore();
+    }
+    g.globalAlpha = 1;
+  }
+
   private drawTexts(now: number): void {
     const g = this.g;
     g.textAlign = 'center';
@@ -520,6 +568,7 @@ export class Scene {
     this.ripples = this.ripples.filter((x) => now - x.start < 700);
     this.texts = this.texts.filter((x) => now - x.start < x.life);
     this.placing = this.placing.filter((x) => now - x.start < MOTION.place);
+    this.fish = this.fish.filter((x) => now - x.start < 900);
   }
 
   /** True when something is animating (lets the loop idle to save battery). */
@@ -533,6 +582,7 @@ export class Scene {
       this.ripples.length > 0 ||
       this.texts.length > 0 ||
       this.placing.length > 0 ||
+      this.fish.length > 0 ||
       this.hint !== null ||
       Math.abs(this.score - this.shownScore) > 0.5 ||
       now - this.shake.start < MOTION.shake ||

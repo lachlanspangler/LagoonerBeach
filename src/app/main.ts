@@ -6,6 +6,8 @@ import { dailySeed, dayIndex, recordDaily, visibleStreak } from '../core/daily.t
 import { pieceById } from '../core/pieces.ts';
 import { N } from '../core/grid.ts';
 import { fitsAnywhere } from '../core/rules.ts';
+import { decodeGame, encodeGame } from '../core/serialize.ts';
+
 import { Rng } from '../core/rng.ts';
 import { BOTS, type BotName } from '../sim/bots.ts';
 import { Sfx } from '../audio/sfx.ts';
@@ -471,6 +473,18 @@ if (DEBUG) {
     },
     restart,
     switchMode,
+    /** Debug only: stage a board ("." empty, 1-6 colors; 64 chars) and tray piece ids. */
+    setup(board: string, tray: (string | null)[]) {
+      const g = decodeGame({
+        ...encodeGame(newGame(1)),
+        board: board.replace(/\./g, '0'),
+        tray: tray.map((id, i) => (id ? { pieceId: id, color: (i % 6) + 1 } : null)),
+      });
+      if (!g) throw new Error('setup: invalid board/tray');
+      state = g;
+      syncScene();
+      return true;
+    },
     /** Debug only: force a skin (bypasses unlocks, not persisted as unlocked). */
     debugSkin(id: string) {
       profile.settings.skin = id;
