@@ -30,7 +30,8 @@ export interface UiHandlers {
 
 const ICON_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>`;
 const ICON_HINT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>`;
-const ICON_DAILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 13.5c1.2 1.3 5.8 1.3 7 0M9 10h.01M15 10h.01"/></svg>`;
+// Daily: a sun coming up over a wave
+const ICON_DAILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14a5 5 0 0 1 10 0"/><path d="M12 5v2M5.5 8.5l1.4 1.4M18.5 8.5l-1.4 1.4"/><path d="M3 18c1.5 0 1.5-1.2 3-1.2S7.5 18 9 18s1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2"/></svg>`;
 
 export class Ui {
   private root: HTMLElement;
@@ -76,7 +77,8 @@ export class Ui {
 
   setMode(mode: 'classic' | 'daily' | 'puzzle', streak: number): void {
     this.dailyBtn.innerHTML = (mode === 'puzzle' ? ICON_HINT : ICON_DAILY) + '<span class="badge"></span>';
-    this.modeTag.textContent = mode === 'daily' ? 'Daily' : mode === 'puzzle' ? 'Reef puzzles' : '';
+    // the reef HUD already says where you are; the tag only marks the Daily
+    this.modeTag.textContent = mode === 'daily' ? 'Daily' : '';
     (this.dailyBtn.querySelector('.badge') as HTMLElement).textContent = streak > 0 ? String(streak) : '';
     if (mode === 'puzzle') {
       this.dailyBtn.setAttribute('aria-label', 'Hint');

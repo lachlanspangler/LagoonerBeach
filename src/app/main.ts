@@ -245,8 +245,8 @@ function syncScene(): void {
     const pure = profile.puzzle.pure?.includes(p.id) ?? false;
 
     scene.hudLabel = {
-      top: `REEF ${i + 1} OF ${PACK.length}`,
-      big: TIER_LABEL[p.tier ?? ''] ?? 'Reef',
+      top: `${(TIER_LABEL[p.tier ?? ''] ?? '').toUpperCase()} · ${i + 1} OF ${PACK.length}${i === dailyReefIndex() ? ' · TODAY' : ''}`,
+      big: `Reef ${i + 1}`,
       sub: pure ? '✓ cleared · no hints' : solved ? '✓ cleared' : 'clear every pebble',
     };
   }
