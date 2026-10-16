@@ -6,7 +6,7 @@ async function checkTargets(page: Page, where: string) {
   const bad = await page.evaluate(() => {
     const out: string[] = [];
     for (const el of document.querySelectorAll<HTMLElement>(
-      'button, [role="button"], [role="switch"], [role="radio"]',
+      'button, [role="button"], [role="switch"], [role="radio"], [role="tab"], [role="textbox"]',
     )) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || getComputedStyle(el).visibility === 'hidden') continue;
@@ -30,6 +30,14 @@ test('touch targets and names on every screen', async ({ page }) => {
   await page.evaluate(() => (window as any).__atoll.autoplay('human', 400));
   await page.waitForTimeout(300);
   await checkTargets(page, 'game over');
+  await page.locator('#lb-open').click();
+  await expect(page.getByTestId('lb-name-entry')).toBeVisible();
+  await checkTargets(page, 'leaderboard name entry');
+  await page.keyboard.type('coral');
+  await page.getByTestId('lb-post').click();
+  await expect(page.locator('.lb-row.me')).toBeVisible();
+  await checkTargets(page, 'leaderboard');
+  await page.getByRole('button', { name: 'Close leaderboard' }).click();
   await page.evaluate(() => (window as any).__atoll.restart());
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: 'Beach Journal' }).click();
