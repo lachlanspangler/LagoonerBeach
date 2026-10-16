@@ -3,7 +3,8 @@
  * intentional, re-run `npm run tune`, update the bands, and log it in docs/DIARY.md.
  */
 import { describe, expect, it } from 'vitest';
-import { greedyBot, randomBot, firstFitBot } from '../../src/sim/bots.ts';
+import { greedyBot, randomBot, firstFitBot, humanBot } from '../../src/sim/bots.ts';
+
 import { median, playGame } from '../../src/sim/play.ts';
 
 const run = (bot: typeof randomBot, n: number) =>
@@ -24,6 +25,13 @@ describe('balance bands', () => {
     expect(med).toBeGreaterThanOrEqual(45);
     expect(med).toBeLessThanOrEqual(120);
     expect(g.every((x) => !x.capped)).toBe(true);
+  });
+
+  it('human-like bot: median session ≈ 3 minutes (35–75 moves)', () => {
+    const g = run(humanBot, 24);
+    const med = median(g.map((x) => x.moves));
+    expect(med).toBeGreaterThanOrEqual(35);
+    expect(med).toBeLessThanOrEqual(75);
   });
 
   it('no dominant trivial strategy: first-fit is far below greedy', () => {
