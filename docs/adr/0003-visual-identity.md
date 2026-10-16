@@ -1,4 +1,4 @@
-# ADR 0003 — Visual & sensory identity: "Atoll"
+# ADR 0003 — Visual & sensory identity: "Lagooner Beach" (née "Atoll")
 
 - Status: accepted · Date: 2026-10-16
 

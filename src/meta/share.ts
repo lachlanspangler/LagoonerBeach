@@ -40,7 +40,7 @@ export function shareText(o: {
   const size = Math.max(o.lagoon?.cells.length ?? 0, o.bestPocket ?? 0);
 
   const lines = [
-    `Atoll daily ${o.date}`,
+    `Lagooner Beach daily ${o.date}`,
     `${o.score.toLocaleString('en-US')} pts · biggest lagoon ${size}${o.streak > 1 ? ` · ${o.streak}-day streak` : ''}`,
   ];
   const pic = lagoonPicture(o.lagoon);

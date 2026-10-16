@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Atoll</string>
-    <string name="title_activity_main">Atoll</string>
+    <string name="app_name">Lagooner Beach</string>
+    <string name="title_activity_main">Lagooner Beach</string>
     <string name="package_name">com.example.atoll</string>
     <string name="custom_url_scheme">com.example.atoll</string>
 </resources>

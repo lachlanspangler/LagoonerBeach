@@ -1,5 +1,5 @@
 {
-  "name": "atoll",
+  "name": "lagooner-beach",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -22,7 +22,7 @@
     "vite": "7.3.7",
     "vitest": "3.2.7"
   },
-  "description": "Atoll \u2014 close a loop of blocks and everything inside it pops.",
+  "description": "Lagooner Beach \u2014 close a loop of blocks and everything inside it pops.",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -p . && vite build",

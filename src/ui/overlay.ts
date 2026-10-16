@@ -148,7 +148,7 @@ export class Ui {
       [p.daily.current, 'Streak'],
       [p.puzzle.solved.length, 'Reefs'],
     ].filter(([v]) => (v as number) > 0);
-    card.innerHTML = `<h2>Atoll</h2>
+    card.innerHTML = `<h2>Lagooner Beach</h2>
       <div class="sub">Close a loop — everything inside pops.</div>
       ${stats.length ? `<div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>` : ''}`;
     if (canResume) card.append(this.button('', 'btn primary', 'Resume', 'Resume', () => this.h.onResume()));

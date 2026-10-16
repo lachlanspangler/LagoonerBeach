@@ -9,7 +9,7 @@ describe('share', () => {
   });
   it('omits the picture without a lagoon and formats numbers', () => {
     const t = shareText({ date: '2026-10-16', score: 12345, streak: 1, lagoon: null });
-    expect(t).toBe('Atoll daily 2026-10-16\n12,345 pts · biggest lagoon 0');
+    expect(t).toBe('Lagooner Beach daily 2026-10-16\n12,345 pts · biggest lagoon 0');
   });
   it('mentions streaks of 2+', () => {
     expect(shareText({ date: '2026-10-16', score: 1, streak: 4, lagoon: null })).toContain('4-day streak');

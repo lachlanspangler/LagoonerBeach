@@ -1,4 +1,4 @@
-# Atoll
+# Lagooner Beach
 
 **Close a loop of blocks and everything inside it pops.**
 

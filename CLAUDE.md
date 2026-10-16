@@ -1,6 +1,6 @@
-# CLAUDE.md — Atoll
+# CLAUDE.md — Lagooner Beach
 
-**Atoll**: a mobile puzzle game. *Close a loop of blocks and everything inside it pops.*
+**Lagooner Beach** (formerly working title "Atoll"): a mobile puzzle game. *Close a loop of blocks and everything inside it pops.*
 8×8 board, tray of 3 fixed-orientation pieces, drag to place. Any empty region cut off from the
 board's border (a "lagoon") is captured and clears with every block around it (8-neighborhood).
 Captures cascade through thick walls. No line clears. Game over when nothing in the tray fits.

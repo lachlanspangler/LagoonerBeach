@@ -1,5 +1,5 @@
 /**
- * Colorblind audit (I-090). Colors never carry rules in Atoll, but piece identity still benefits.
+ * Colorblind audit (I-090). Colors never carry rules in the game, but piece identity still benefits.
  * Glyph must stay distinguishable under every CVD; other skins are reported (logged) not gated,
  * except the default skin which must keep a usable floor.
  */
