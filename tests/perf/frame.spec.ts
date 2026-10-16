@@ -94,3 +94,30 @@ test('release → first frame with the placed piece (4× throttle, first-run tea
   expect(sorted[Math.floor(sorted.length / 2)]!).toBeLessThan(10);
   expect(sorted[sorted.length - 1]!).toBeLessThan(40);
 });
+
+test('soak: 400 moves across several games without heap growth', async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page, 'seed=5&fast=1');
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Performance.enable');
+  const heap = async () => {
+    await cdp.send('HeapProfiler.collectGarbage');
+    const m = await cdp.send('Performance.getMetrics');
+    return m.metrics.find((x) => x.name === 'JSHeapUsedSize')!.value;
+  };
+  // warm up one game so caches/sprites exist
+  await page.evaluate(() => (window as any).__atoll.autoplay('greedy', 60));
+  await page.waitForTimeout(1500);
+  const h0 = await heap();
+  for (let round = 0; round < 8; round++) {
+    await page.evaluate(() => {
+      const a = (window as any).__atoll;
+      if (a.state().over) a.restart();
+      a.autoplay('greedy', 50);
+    });
+    await page.waitForTimeout(900); // let effects play out and lists drain
+  }
+  const h1 = await heap();
+  console.log('heap MB before/after', (h0 / 1e6).toFixed(2), (h1 / 1e6).toFixed(2));
+  expect(h1 - h0).toBeLessThan(2.5e6);
+});
