@@ -799,6 +799,25 @@ if (DEBUG)
     switchMode,
     loadPuzzle,
     journal: () => journal,
+    stageBest: (n, score) => {
+      scene.best = n;
+      if (score !== undefined) scene.score = scene.shownScore = score;
+      dirty = true;
+    },
+    stageJournal: (ids) => {
+      const entries = { ...journal.entries };
+      ids.forEach((id, i) => {
+        const sp = SPECIES_BY_ID.get(id);
+        if (sp)
+          entries[id] = {
+            count: 1 + ((i * 7) % 12),
+            best: sp.size[1] * 0.8,
+            golden: i % 9 === 0 ? 1 : 0,
+            first: '2026-10-1' + (i % 6),
+          };
+      });
+      journal = { ...journal, entries, total: 600 };
+    },
     puzzleSolution: () =>
       PACK && mode === 'puzzle' ? (PACK[state.seed] as unknown as { solution: unknown }).solution : null,
   });

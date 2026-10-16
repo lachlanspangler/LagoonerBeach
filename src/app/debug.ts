@@ -32,6 +32,9 @@ export interface DebugDeps {
   loadPuzzle(i: number): void;
   puzzleSolution(): unknown;
   journal(): unknown;
+  /** Screenshots only: show a believable best score / a well-filled journal (not saved). */
+  stageBest(n: number, score?: number): void;
+  stageJournal(ids: string[]): void;
 }
 
 export function installDebugApi(d: DebugDeps): void {
@@ -80,6 +83,8 @@ export function installDebugApi(d: DebugDeps): void {
     loadPuzzle: d.loadPuzzle,
     puzzleSolution: d.puzzleSolution,
     journal: d.journal,
+    stageBest: d.stageBest,
+    stageJournal: d.stageJournal,
     /** Stage a board ("." or "0" empty, 1-6 colors; 64 chars) and tray piece ids. */
     setup(board: string, tray: (string | null)[]) {
       const g = decodeGame({

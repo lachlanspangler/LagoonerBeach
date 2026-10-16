@@ -1,68 +1,181 @@
 /**
- * App-store screenshots (1290×2796, iPhone 6.7") with a caption band, staged with debug hooks.
- *   npx tsx scripts/store-shots.ts   → artifacts/store/*.png
+ * Store screenshots: 1290×2796 (iPhone 6.7"; also used for Play). Two passes:
+ *  1. stage real game moments with debug hooks and capture the app at 430×932 @3×;
+ *  2. compose each into a marketing frame: caption band on top, the screen below in a rounded card.
+ *   npx tsx scripts/store-shots.ts   → artifacts/store/*.png  (raw captures in artifacts/store/raw/)
  */
 import { chromium, type Page } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
-mkdirSync('artifacts/store', { recursive: true });
+import { mkdirSync, readFileSync } from 'node:fs';
+
+mkdirSync('artifacts/store/raw', { recursive: true });
 const W = 430;
-const H = 932; // ×3 = 1290×2796
+const H = 932;
+const URL = 'http://localhost:5317/?debug=1&seed=42';
 const b = await chromium.launch();
 
-async function shot(name: string, caption: string, theme: 'light' | 'dark', stage: (p: Page) => Promise<void>) {
-  const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 3, colorScheme: theme });
-  await p.goto('http://localhost:5317/?debug=1&seed=42');
+async function open(theme: 'light' | 'dark'): Promise<Page> {
+  const p = await b.newPage({
+    viewport: { width: W, height: H },
+    deviceScaleFactor: 3,
+    colorScheme: theme,
+    reducedMotion: 'no-preference',
+  });
+  await p.goto(URL);
   await p.waitForFunction(() => (window as any).__atoll);
+  await p.waitForTimeout(400);
+  // a lived-in profile: believable best, first-run hint off
+  await p.evaluate(() => {
+    const a = (window as any).__atoll;
+    a.profile().firstRunDone = true;
+    a.restart();
+    a.stageBest(12480);
+  });
   await p.waitForTimeout(300);
-  await stage(p);
-  await p.evaluate((c) => {
-    const d = document.createElement('div');
-    d.textContent = c;
-    d.style.cssText =
-      'position:fixed;left:0;right:0;bottom:0;padding:26px 28px 44px;font:800 30px ui-rounded,system-ui;text-align:center;color:var(--text);background:linear-gradient(transparent,var(--bg) 35%);pointer-events:none';
-    document.body.append(d);
-  }, caption);
-  await p.waitForTimeout(120);
-  await p.screenshot({ path: `artifacts/store/${name}.png` });
-  await p.close();
+  return p;
 }
 
-// a 3×2 lagoon whose top wall has a 3-cell gap at (2..4, 1): the tri-h lid seals it
-const LAGOON = '00000000' + '01000100' + '01000100' + '01000100' + '01111100' + '00000000' + '00000000' + '00000000';
-const dragTo = async (p: Page, slot: number, x: number, y: number, frac = 1) => {
+async function hold(p: Page, slot: number, x: number, y: number) {
   const path = await p.evaluate((m) => (window as any).__atoll.pathFor(m), { slot, x, y });
   await p.mouse.move(path.down.x, path.down.y);
   await p.mouse.down();
-  await p.mouse.move(path.down.x + (path.up.x - path.down.x) * frac, path.down.y + (path.up.y - path.down.y) * frac, {
-    steps: 8,
-  });
-  await p.waitForTimeout(250);
-};
+  await p.mouse.move(path.up.x, path.up.y, { steps: 10 });
+  await p.waitForTimeout(350);
+}
 
-await shot('1-seal', 'Close a loop.', 'light', async (p) => {
-  await p.evaluate((bd) => (window as any).__atoll.setup(bd.replace(/1/g, '3'), ['tri-h', 'square', 'cup-up']), LAGOON);
-  await dragTo(p, 0, 2, 1);
-});
-await shot('2-pop', 'It fills with water. It pops.', 'light', async (p) => {
-  await p.evaluate((bd) => (window as any).__atoll.setup(bd.replace(/1/g, '5'), ['tri-h', 'square', 'cup-up']), LAGOON);
-  await dragTo(p, 0, 2, 1);
-  await p.mouse.up();
-  await p.waitForTimeout(300);
-});
-await shot('3-night', 'Calm by day. Glowing by night.', 'dark', async (p) => {
-  await p.evaluate(() => (window as any).__atoll.autoplay('random', 11));
-  await p.waitForTimeout(1800);
-});
-await shot('4-reef', '360 reef puzzles. Every one solvable.', 'light', async (p) => {
-  await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
-  await p.waitForTimeout(400);
-  await p.evaluate(() => (window as any).__atoll.loadPuzzle(359));
-  await p.waitForTimeout(500);
-});
-await shot('5-glyph', 'Made for every eye.', 'light', async (p) => {
-  await p.evaluate(() => (window as any).__atoll.debugSkin('glyph'));
-  await p.evaluate(() => (window as any).__atoll.autoplay('random', 10));
-  await p.waitForTimeout(600);
-});
+// A lived-in board: a 3×2 lagoon waiting for its lid, plus scattered reef around it.
+const row = (r: string) => r.replace(/\./g, '0');
+const BOARD = ['........', '.5...5..', '.5...5.2', '.5...5.2', '.55555..', '......14', '33....14', '3.66..44']
+  .map(row)
+  .join('');
+
+const shots: { name: string; caption: string; theme: 'light' | 'dark'; stage: (p: Page) => Promise<void> }[] = [
+  {
+    name: '1-seal',
+    caption: 'Close a loop.',
+    theme: 'light',
+    stage: async (p) => {
+      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+      await p.evaluate(() => (window as any).__atoll.stageBest(12480, 4316));
+      await hold(p, 0, 2, 0);
+    },
+  },
+  {
+    name: '2-pop',
+    caption: 'It fills with water.\nIt pops.',
+    theme: 'light',
+    stage: async (p) => {
+      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+      await p.evaluate(() => (window as any).__atoll.stageBest(12480, 4316));
+      await hold(p, 0, 2, 0);
+      await p.mouse.up();
+      await p.waitForTimeout(330);
+    },
+  },
+  {
+    name: '3-journal',
+    caption: 'Every lagoon\ncatches something.',
+    theme: 'light',
+    stage: async (p) => {
+      await p.evaluate(() => {
+        const a = (window as any).__atoll;
+        a.stageJournal([
+          'minnow',
+          'periwinkle',
+          'hermit',
+          'limpet',
+          'sanddollar',
+          'shrimp',
+          'blenny',
+          'cockle',
+          'sandeel',
+          'gardeneel',
+          'boxcrab',
+          'starfish',
+          'cuttle',
+          'flounder',
+          'clownfish',
+          'puffer',
+          'parrot',
+          'grouper',
+          'seahorse',
+          'stingray',
+          'octopus',
+          'turtle',
+          'urchin',
+          'lanternfish',
+          'moonjelly',
+          'butterfly',
+        ]);
+      });
+      await p.getByRole('button', { name: 'Menu' }).click();
+      await p.getByRole('button', { name: 'Beach Journal' }).click();
+      await p.waitForTimeout(500);
+    },
+  },
+  {
+    name: '4-night',
+    caption: 'Calm by day.\nGlowing by night.',
+    theme: 'dark',
+    stage: async (p) => {
+      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+      await p.evaluate(() => (window as any).__atoll.stageBest(12480, 4316));
+      await hold(p, 0, 2, 0);
+    },
+  },
+  {
+    name: '5-reef',
+    caption: '360 reef puzzles.\nEvery one solvable.',
+    theme: 'light',
+    stage: async (p) => {
+      await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+      await p.waitForTimeout(400);
+      await p.evaluate(() => (window as any).__atoll.loadPuzzle(180));
+      await p.waitForTimeout(500);
+      const sol = await p.evaluate(() => (window as any).__atoll.puzzleSolution());
+      const last = sol[sol.length - 1];
+      for (const m of sol.slice(0, -1)) {
+        await hold(p, m.piece, m.x, m.y);
+        await p.mouse.up();
+        await p.waitForTimeout(900);
+      }
+      await hold(p, last.piece, last.x, last.y);
+    },
+  },
+  {
+    name: '6-glyph',
+    caption: 'Made for every eye.',
+    theme: 'light',
+    stage: async (p) => {
+      await p.evaluate(() => (window as any).__atoll.debugSkin('glyph'));
+      await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+      await p.evaluate(() => (window as any).__atoll.stageBest(12480, 4316));
+      await hold(p, 0, 2, 0);
+    },
+  },
+];
+
+for (const s of shots) {
+  const p = await open(s.theme);
+  await s.stage(p);
+  await p.screenshot({ path: `artifacts/store/raw/${s.name}.png` });
+  await p.close();
+}
+
+// pass 2: compose
+const comp = await b.newPage({ viewport: { width: 1290, height: 2796 }, deviceScaleFactor: 1 });
+for (const s of shots) {
+  const img = readFileSync(`artifacts/store/raw/${s.name}.png`).toString('base64');
+  const night = s.theme === 'dark';
+  await comp.setContent(`<html><body style="margin:0;width:1290px;height:2796px;overflow:hidden;
+    background:${night ? 'linear-gradient(#08131D,#12273A)' : 'linear-gradient(#F7F1E7,#E9DCC6)'};
+    font-family:ui-rounded,'SF Pro Rounded',system-ui,-apple-system,sans-serif">
+    <div style="height:520px;display:flex;align-items:center;justify-content:center;text-align:center;
+      color:${night ? '#E8EEF2' : '#3B3229'};font-weight:800;font-size:104px;line-height:1.08;letter-spacing:-1px;white-space:pre-line;padding:0 80px">${s.caption}</div>
+    <div style="margin:0 auto;width:1090px;height:2236px;border-radius:84px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,${night ? 0.6 : 0.25})">
+      <img src="data:image/png;base64,${img}" style="width:1090px;height:2363px;display:block;margin-top:-40px"/></div>
+  </body></html>`);
+  await comp.waitForTimeout(150);
+  await comp.screenshot({ path: `artifacts/store/${s.name}.png` });
+}
 await b.close();
 console.log('store shots → artifacts/store');
