@@ -5,6 +5,7 @@
 import { NO_STREAK, type DailyStreak } from '../core/daily.ts';
 import { decodeGame, encodeGame } from '../core/serialize.ts';
 import type { GameState } from '../core/game.ts';
+import { MAX_REEF } from '../core/endless.ts';
 
 export type ThemePref = 'auto' | 'day' | 'night';
 
@@ -118,7 +119,8 @@ export function loadProfile(): Profile {
         : {},
     unlocked: Array.isArray(o.unlocked) ? o.unlocked.filter((x): x is string => typeof x === 'string') : ['pebble'],
     puzzle: {
-      index: num(o.puzzle?.index, 0),
+      // reefs past 360 are endless (generated), so any index up to the last reef number is valid
+      index: Math.min(num(o.puzzle?.index, 0), MAX_REEF - 1),
       solved: Array.isArray(o.puzzle?.solved) ? o.puzzle.solved.filter((x): x is string => typeof x === 'string') : [],
       pure: Array.isArray(o.puzzle?.pure) ? o.puzzle.pure.filter((x): x is string => typeof x === 'string') : [],
       hinted: Array.isArray(o.puzzle?.hinted) ? o.puzzle.hinted.filter((x): x is string => typeof x === 'string') : [],

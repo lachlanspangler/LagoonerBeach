@@ -299,3 +299,34 @@ moments, leaderboards with 7-letter names, endless reefs, top-chart aesthetics.
   names + Cloudflare Worker; creature-art pipeline + 5 pilot species (then a fleet for the other
   42); combo/celebration/discovery. The worktrees sit in `.claude/` inside the repo, so lint and
   prettier picked them up — now ignored.
+
+## 2026-10-16 (session 3) — Endless reefs (ADR 0009)
+- **Plan:** (1) a solver fast enough to grade thousands of candidates; (2) reef N > 360 as a pure,
+  integer-only function of N, with a curve and chapters; (3) a worker + cache + prefetch source;
+  (4) chapter UI and a `chapterComplete` hook; (5) tests at every layer, a curve script, numbers.
+- **Bitboard solver** (`core/bitsolver.ts`): two uint32 words, shift flood fills, a shared memo of
+  winning-path counts. Matches the exhaustive grader *exactly* on all 360 shipped reefs (unit test)
+  and is ~40× faster (1 ms vs 41 ms mean). That made the "add a cheaper grading path" question moot:
+  the exact grader became cheap.
+- **Curve:** first try started chapter 19 at a peak of 178, but the pack's last chapter averages
+  ~189, so 361 felt like a cliff down. Lifted the start to 186 (chapter opens at 170 as a breather,
+  peaks at 186), ceiling 196 approached hyperbolically. Recipes were measured (1500 candidates each)
+  and only recipes that reach a reef's target are tried, which keeps p95 low near the ceiling.
+- **Numbers** (`npx tsx scripts/reef-curve.ts`, Node, this machine): reefs 361–1360: p50 2.9 ms,
+  p95 17 ms, max 150 ms; 99.8% in band (mean |error| 2.4); 29% cascades; 55/45 two/three-piece.
+  1361–100000 (501 sampled): p50 4.9 ms, p95 84 ms, max 176 ms; 99.0% in band. Well under the
+  300 ms p95 target. Chapter mean targets 178 → 182 (ch 40) → 184 (ch 65) → 186 (ch 250).
+  One duplicate board in the first 1000 generated reefs (accepted; see ADR).
+- **Browser:** reef 361 opens in ~50–120 ms cold (worker), then the next 3 are prefetched; Next is
+  instant (e2e asserts it). While the worker built 8 far reefs during real drags, frame p95 was
+  16.7 ms with zero long tasks (`tests/perf/reefgen.spec.ts`). WebKit runs the worker too.
+- **Decisions:** chapters of 20 everywhere (the pack is chapters 1–18) so progress reads the same
+  before and after 360; Reef of the day stays in 1–360 (instant, same for everyone, right
+  difficulty); endless chapters open up to one past the frontier (the pack stays fully open);
+  chapterComplete = all 20 cleared (skipping doesn't count), fired once, chip + sound for now.
+- **Looked at it:** HUD "CHAPTER 19 · CUTTLE SOUND · 1/20" fits at 390 px; the longest name
+  ("Driftglass Shallows", chapter 121) needed the label to shrink at 320 px (done in scene.ts).
+  The reef list's first draft reused `.icon-btn` for ‹ ›, which is absolutely positioned: the
+  arrow flew to the top-left corner. Own class now. Reef screen baseline updated (label only).
+- **Didn't do:** no de-duplication across generated reefs; `solved` keeps one id per reef (≈60 KB
+  at 10 000 reefs); no per-device timing on a real phone (estimate 3–5× Node, still off-thread).
