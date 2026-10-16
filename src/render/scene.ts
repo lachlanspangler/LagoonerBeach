@@ -28,6 +28,8 @@ export interface PreviewView {
   color: number;
   pocket: ReadonlySet<number>;
   ring: ReadonlySet<number>;
+  /** Points this drop would score (shown only for lagoons of 3+ cells). */
+  points?: number;
 }
 
 interface Dying {
@@ -211,6 +213,7 @@ export class Scene {
     this.drawDying(now);
     this.drawRipples(now);
     g.restore();
+    this.drawPointsPeek();
 
     this.drawHint(now);
     this.drawTray(now);
@@ -294,6 +297,31 @@ export class Scene {
     if (!pv || pv.pocket.size === 0) return;
     const a = 0.55 + 0.2 * Math.sin(now / 160);
     for (const c of pv.pocket) this.drawWaterCell(c, a, now);
+  }
+
+  /** "+84" floating over a big would-be lagoon: makes pinch-vs-lagoon a visible choice. */
+  private drawPointsPeek(): void {
+    const pv = this.preview;
+    if (!pv || !pv.points || pv.pocket.size < 3) return;
+    let sx = 0;
+    let sy = 0;
+    for (const c of pv.pocket) {
+      const [x, y] = this.cellCenter(c);
+      sx += x;
+      sy += y;
+    }
+    const g = this.g;
+    const size = Math.round(this.layout.cell * 0.42);
+    g.font = `800 ${size}px ${FONT}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    g.lineWidth = size * 0.22;
+    g.strokeStyle = this.palette.name === 'night' ? 'rgba(0,20,30,0.8)' : 'rgba(255,255,255,0.95)';
+    const t = `+${pv.points}`;
+    g.strokeText(t, sx / pv.pocket.size, sy / pv.pocket.size);
+    g.fillStyle = this.palette.name === 'night' ? this.palette.waterHi : '#1F8FB5';
+    g.fillText(t, sx / pv.pocket.size, sy / pv.pocket.size);
   }
 
   private drawLagoons(now: number): void {

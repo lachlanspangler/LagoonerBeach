@@ -2140,8 +2140,8 @@
    "basis": "est",
    "value": 5,
    "effort": 1,
-   "status": "backlog",
-   "reason": "Might clutter; try only for lagoons ≥3."
+   "status": "built",
+   "reason": "Shown only for lagoons of 3+, so pinches stay clean."
   },
   {
    "id": "I-078",

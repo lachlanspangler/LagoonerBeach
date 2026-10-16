@@ -502,6 +502,7 @@ const drag = new DragController(canvas, {
           color: t.color,
           pocket: new Set(pv.pockets.flatMap((p) => p.cells)),
           ring: new Set(pv.cleared),
+          points: pv.points,
         }
       : null;
   },

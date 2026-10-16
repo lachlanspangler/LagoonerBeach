@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**78 ideas** — chosen: 1 · built: 12 · prototyped: 4 · shortlisted: 0 · backlog: 15 · merged: 4 · rejected: 42
+**78 ideas** — chosen: 1 · built: 13 · prototyped: 4 · shortlisted: 0 · backlog: 14 · merged: 4 · rejected: 42
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -17,6 +17,7 @@
 | I-066 | built | Near-miss bar | Game-over card shows how close you got to your best. | Block Blast best line | 24 | ✗ | 6/1 | est |
 | I-071 | built | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
 | I-073 | built | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
+| I-076 | built | Points peek | While dragging over a big capture, show its points next to the ghost. | — | 24 | ✗ | 5/1 | est |
 | I-079 | built | No-hint marks | Reefs cleared without a hint get a distinct mark. | Meowdoku stars | 24 | ✗ | 5/1 | est |
 | I-083 | built | Best moment card | Game-over card shows your biggest lagoon as a little picture. | — | 24 | ✗ | 5/2 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
@@ -26,7 +27,6 @@
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
-| I-076 | backlog | Points peek | While dragging over a big capture, show its points next to the ghost. | — | 24 | ✗ | 5/1 | est |
 | I-078 | backlog | Reef of the day | One shared reef puzzle per day with its own streak. | Queens daily | 24 | ✗ | 6/2 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
@@ -163,6 +163,14 @@
 - **Value/effort:** 6/3
 - **Reason:** Accessibility option; dragging stays the default.
 
+### I-076 — Points peek (built)
+- **Pitch:** While dragging over a big capture, show its points next to the ghost.
+- **Closest existing:** —
+- **What's new:** Lets you weigh pinch vs lagoon before releasing.
+- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** Shown only for lagoons of 3+, so pinches stay clean.
+
 ### I-079 — No-hint marks (built)
 - **Pitch:** Reefs cleared without a hint get a distinct mark.
 - **Closest existing:** Meowdoku stars
@@ -239,14 +247,6 @@
 - **Scores (R1..R14):** 2 1 2 1 2 2 2 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
 - **Value/effort:** 5/4
 - **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
-
-### I-076 — Points peek (backlog)
-- **Pitch:** While dragging over a big capture, show its points next to the ghost.
-- **Closest existing:** —
-- **What's new:** Lets you weigh pinch vs lagoon before releasing.
-- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 5/1
-- **Reason:** Might clutter; try only for lagoons ≥3.
 
 ### I-078 — Reef of the day (backlog)
 - **Pitch:** One shared reef puzzle per day with its own streak.
