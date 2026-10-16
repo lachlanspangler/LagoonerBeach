@@ -137,3 +137,21 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   (cross-class); the pectoral moved back (it read as a second mouth by the real one).
 - Grade: B+. Still to improve: the tufts read a little like bunny ears (charming, not quite
   "eyebrows"); a fringe tip on each would say cirri.
+
+## lanternfish
+- Size class: S. Feature: a chibi fish, the head is half of it, with the cast's biggest eye
+  (24 % of the face zone), a short tapering body and a narrow forked tail; it swims steeply
+  nose-up at 45° (lanternfish rise to the surface every night) with a row of six glowing
+  photophores along the lower flank. `nocturnal: true` (awake at night, sleepy by day).
+- Signature: the fairy lights: three pairs of photophore flashes (props) pop on in sequence, front
+  to back, with a `surprised` face, then a little stretch and a `proud` look. Catch: front and back
+  flashes plus a tail flurry.
+- Rounds: 5. (1) level, photophores as `light` fill dots in three groups: the inked dots on the
+  belly edge read as a toothy grin, and IoU 0.72 vs clownfish, 0.72 vs flounder. (2) a 28° rise and
+  dots moved up: clears the round fish, but the tilted fork read as a kicking leg. (3) photophores
+  became glow patterns (no outline) and the blink became prop flashes; 22–36° all hit the blenny
+  (0.70, the other nose-up round head). (4) 45°: 0.62 vs blenny; a narrow fork that reads as one
+  tail; the pectoral removed (it read as a mouth). (5) the flashes now scale from 0 (they were
+  all visible for the whole performance).
+- Grade: B. Still to improve: the flash props get the ink outline like every fill, so they read as
+  beads more than light; a glow-only prop would be nicer (kit limitation in the report).
