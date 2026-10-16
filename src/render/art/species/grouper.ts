@@ -9,13 +9,19 @@ import { blob, defineArt, ellipse, join, xform } from '../kit.ts';
 
 // drawn on a round grid, then flattened top-to-bottom so the wedge is long and low (R12: it must not
 // read as the plump clownfish)
-const SY = 0.74;
-const Y = (d: string) => xform(d, { sy: SY });
+const SY = 0.86;
+// and it rests nose-down at a lazy TILT, chin toward the sand: unbothered (and its own silhouette)
+const TILT = 18;
+const Y = (d: string) => xform(xform(d, { sy: SY }), { rot: TILT });
+const tc = Math.cos((TILT * Math.PI) / 180),
+  ts = Math.sin((TILT * Math.PI) / 180);
+/** An anchor on the drawing grid, mapped like the paths. */
+const P = (x: number, y: number): [number, number] => [x * tc - y * SY * ts, x * ts + y * SY * tc];
 
 // the wedge: tall forehead and jowls at the front, narrowing to the tail root at −24
 const body = blob([
-  [34, 2],
-  [32, -20],
+  [37, 0],
+  [33, -20],
   [20, -34],
   [4, -32],
   [-10, -18],
@@ -25,8 +31,8 @@ const body = blob([
   [-22, 6],
   [-10, 13],
   [4, 26],
-  [20, 30],
-  [30, 20],
+  [18, 26],
+  [28, 10],
 ]);
 const tail = blob(
   [
@@ -64,12 +70,12 @@ const anal = blob(
 // the big lips: a thick upper lip over the snout and a heavy, downturned lower lip (the jaw group)
 // the big lips: a thick, downturned lower lip that juts forward (the jaw group, it drops to yawn)
 const lowerLip = blob([
-  [22, 6],
-  [32, 4],
-  [39, 7],
-  [40, 15],
-  [33, 20],
-  [22, 16],
+  [22, 7],
+  [33, 6],
+  [40, 10],
+  [39, 17],
+  [31, 21],
+  [20, 17],
 ]);
 const pectoral = ellipse(0, 12, 6, 3.2, 24);
 // tan saddle blotches (R18 saddle), placed by hand
@@ -90,7 +96,7 @@ export default defineArt({
   groups: [
     {
       id: 'tail',
-      pivot: [-27, 0],
+      pivot: P(-27, 0),
       parts: [
         { d: Y(tail), role: 'body' },
         { d: Y(ellipse(-36, -6, 4, 4)), role: 'accent', kind: 'pattern' },
@@ -107,15 +113,15 @@ export default defineArt({
         { d: Y(saddles), role: 'accent', kind: 'pattern', alpha: 0.85 },
       ],
     },
-    { id: 'finA', pivot: [-2, 7.5], parts: [{ d: Y(pectoral), role: 'body' }] },
-    { id: 'jaw', pivot: [24, 6.5], parts: [{ d: Y(lowerLip), role: 'body' }] },
+    { id: 'finA', pivot: P(-2, 9), parts: [{ d: Y(pectoral), role: 'body' }] },
+    { id: 'jaw', pivot: P(22, 8), parts: [{ d: Y(lowerLip), role: 'body' }] },
   ],
   shine: Y(ellipse(20, -16, 9, 3.6, -20)),
   face: {
-    eyes: [[13, 1]],
+    eyes: [P(13, 0)],
     eye: 10,
     zone: [0, -27, 41, 50],
-    mouth: { at: [35, 5.5], w: 6.5, shape: 'flat' },
+    mouth: { at: P(35, 5), w: 6.5, shape: 'flat' },
     sweet: true,
   },
   idle: {

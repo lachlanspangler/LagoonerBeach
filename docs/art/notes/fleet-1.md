@@ -50,12 +50,14 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   white-ringed false eye-spot on the back of the body.
 - Signature: the trick: it spins round (sx flips to −1) to show the false eye from the other
   side, hangs there `happy`, spins back and winks with the real eye. Catch: the default wiggle.
-- Rounds: 4. (1) the false eye was big and on the fin, so it read as the real eye and the fish
+- Rounds: 5. (1) the false eye was big and on the fin, so it read as the real eye and the fish
   looked like it faced up-left; the real eye sat on the snout base. (2) shorter snout, eye moved
   back onto the disc, band behind it; the fins were swept back so the disc leaned like a sail.
   (3) fins brought upright and symmetric, thinner snout (it read as a duck beak), false eye moved
   onto the body. (4) the pectoral fin under the false eye made a second face; removed it (the
-  ambient uses a soft breathe instead of a fin flutter).
+  ambient uses a soft breathe instead of a fin flutter). (5) against the full cast it was 0.71 vs
+  the sunfish (same tall disc with fins): it now hovers nose-down at a 17° tilt, picking at the reef
+  with its snout (dainty), 0.68 vs sunfish, 0.76 vs combjelly (cross-class limit 0.80).
 - Grade: B. Still to improve: the disc outline is a little lumpy at the upper back; the false eye
   could be a touch smaller so the joke lands only on second look.
 
@@ -90,7 +92,7 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   membrane between rays would say "fin", but it would fill the gaps that make the silhouette.
 
 ## grouper
-- Size class: L. Feature: a long, low, front-heavy wedge (84 × 48): a massive blunt head and jowls
+- Size class: L. Feature: a front-heavy wedge resting nose-down (79 × 53): a massive blunt head and jowls
   narrowing to a thin tail root, a rounded fan tail, and a big jutting, downturned lower lip; tan
   saddle blotches on a lifted brown.
 - Signature: the slow yawn: the lower lip (its own `jaw` group) drops 34° and swells while the head
@@ -100,10 +102,12 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   donut. (2) a stronger wedge and one jutting lower lip: 0.77. (3) taller forehead, thinner tail
   root, shorter dorsal: 0.74. (4) the whole fish flattened top-to-bottom (SY 0.74) into a long, low
   wedge: 0.68, and it finally looks "unbothered" rather than "plump". (5) a fatter, shorter lip (it
-  read as a cigar) and a bigger yawn.
-- Grade: B−. Still to improve: the lip still reads a little like something held in the mouth; the
-  massive-head idea is weaker after flattening. The clownfish margin (0.69) is the tightest in the
-  batch.
+  read as a cigar) and a bigger yawn. (6) after rebasing on the full cast it hit the flounder
+  (0.76, the flat oval): the wedge came back up (SY 0.86) and the grouper now rests nose-down at an
+  18° tilt, chin toward the sand, which is both lazier and its own silhouette: 0.68 vs clownfish,
+  0.67 vs cuttle, flounder off the list.
+- Grade: B−. Still to improve: the lip still reads a little like something held in the mouth;
+  clownfish (0.68) is the tightest margin in the batch.
 
 ## parrot
 - Size class: M. Feature: a chunky body with a bumped, steep forehead over a big rounded beak
