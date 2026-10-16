@@ -9,9 +9,23 @@ jobs:
         with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npm run check
-      - run: npx playwright install --with-deps chromium
+      # the shipped puzzle pack must be exactly reproducible from the generator
+      - run: npm run puzzles && git diff --exit-code src/content/puzzles.json
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run build
       - run: npx playwright test
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: playwright, path: "test-results/\nplaywright-report/\nartifacts/" }
+        with:
+          name: playwright
+          path: |
+            test-results/
+            playwright-report/
+            artifacts/
