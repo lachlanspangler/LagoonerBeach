@@ -186,3 +186,18 @@ broke, what I decided and why.
   unlocked on a fresh profile). The remaining critique items are listed under "Next" in STATUS.
 - Soak test (400 moves): heap +0.16 MB. Bundle budget check added (26 KB gz initial).
 - Final state: `make check` (76) and `make e2e` (55) green; everything committed.
+
+## 2026-10-16 (session 2) — Bearings
+- Repo pushed by the user to GitHub. CI run on e0286d8: `check` ✅, `e2e` ❌. Job logs need admin
+  rights and there's no `gh` or Docker here, so I can't see the failing test. Made CI diagnosable
+  and robust instead: Playwright `github` reporter (failures become public annotations), 2 workers +
+  1 retry on CI, perf budgets ×3 on shared runners (strict locally), ubuntu-24.04, action majors v7
+  (the run warned Node-20 actions are deprecated). Verify after the next push.
+- Local baseline green: `make setup && make check && make e2e` → 76 + 55.
+- Played: Reef #31 (calm) solved quickly; Reef #141 (deep) I got wrong. I built the obvious small
+  lagoon; the answer is the bigger 3×2 one using the bar as roof. Good "aha", fair. Classic early
+  game still a stream of pinches; captures feel lively but busy (matches the UX critique).
+- **User request:** Block Blast's "there's always a solution for the three pieces you get".
+  Decision: the dealer will *guarantee* every new tray can be fully placed in some order on the
+  current board (captures in between count). Losing becomes purely the player's misplay. Expect
+  longer games → re-tune the ramp.
