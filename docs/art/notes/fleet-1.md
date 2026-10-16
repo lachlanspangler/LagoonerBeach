@@ -50,14 +50,16 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   white-ringed false eye-spot on the back of the body.
 - Signature: the trick: it spins round (sx flips to −1) to show the false eye from the other
   side, hangs there `happy`, spins back and winks with the real eye. Catch: the default wiggle.
-- Rounds: 5. (1) the false eye was big and on the fin, so it read as the real eye and the fish
+- Rounds: 6. (1) the false eye was big and on the fin, so it read as the real eye and the fish
   looked like it faced up-left; the real eye sat on the snout base. (2) shorter snout, eye moved
   back onto the disc, band behind it; the fins were swept back so the disc leaned like a sail.
   (3) fins brought upright and symmetric, thinner snout (it read as a duck beak), false eye moved
   onto the body. (4) the pectoral fin under the false eye made a second face; removed it (the
   ambient uses a soft breathe instead of a fin flutter). (5) against the full cast it was 0.71 vs
   the sunfish (same tall disc with fins): it now hovers nose-down at a 17° tilt, picking at the reef
-  with its snout (dainty), 0.68 vs sunfish, 0.76 vs combjelly (cross-class limit 0.80).
+  with its snout (dainty), 0.68 vs sunfish, 0.76 vs combjelly (cross-class limit 0.80). (6) the
+  e2e "draws in every mode" test sampled the spin at its edge-on instant (a sliver of 221 px):
+  the turn is now a quick 75 ms snap each way, which also reads snappier.
 - Grade: B. Still to improve: the disc outline is a little lumpy at the upper back; the false eye
   could be a touch smaller so the joke lands only on second look.
 
