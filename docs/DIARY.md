@@ -201,3 +201,30 @@ broke, what I decided and why.
   Decision: the dealer will *guarantee* every new tray can be fully placed in some order on the
   current board (captures in between count). Losing becomes purely the player's misplay. Expect
   longer games → re-tune the ramp.
+
+## 2026-10-16 (session 2) — Guarantee, rename, Android, UX batch 1
+- **Always-a-solution trays** (user request): `trayClearable` DFS + constructive fallback; deal
+  cost p50 0.01 ms. Search bot now never dies (Block Blast property); late ramp chunkier so the
+  human-like median stays ~50 moves.
+- **Renamed to Lagooner Beach** (user). ADR 0006. Storage keys/daily salt unchanged on purpose.
+- **Android:** installed command-line SDK (5.5 GB on disk — the emulator system image is most of
+  it; more than the ~2 GB estimate). Debug APK builds; runs on an Android 15 Pixel 6 emulator; real
+  `adb input swipe` drags place pieces. `make android-emu`.
+- UX batch 1 (before/after in `artifacts/ux/{before,after*}`): calmer tiered captures, gradient
+  water + sheen (no stripes), lit held cells, dashed hint + ghost demo + "Pop!", tighter layout.
+
+## Plan (user asked for a complete, shippable game + a catch/collection layer)
+1. Finish UX items: Night bioluminescent glow; fresh UX review agent on the result.
+2. **Catch layer** (ADR 0007): every lagoon catches beach creatures; species tied to lagoon *shapes*
+   and conditions (long thin → eel, wide → ray, square → box crab, plus → starfish, night → glow
+   jelly, cascades/clean reef → legendaries), rarity by size; sizes as personal records; a
+   Beach Journal with silhouettes + hints; pity timer. Deterministic, separate from the dealer RNG.
+   Procedural original creature art (archetypes × palettes × patterns). Tune with bots so the log
+   takes weeks.
+3. Feel pass: drag weight, snap, place/pop timing, combo & cascade escalation, sound, haptics.
+4. Music: original synthesized generative beach music + ambience, separate toggle.
+5. Retention: journal, daily, streaks, reef packs, skins, bests — plus weekly reef set & milestones
+   if they pass the rubric.
+6. Content: larger reef pack with a smooth curve and more cascades.
+7. Store-ready: listing copy (both stores), screenshots, full icon sets (iOS AppIcon + Android
+   adaptive), splash, privacy policy, accessibility review, Android release AAB, monetization ADR.
