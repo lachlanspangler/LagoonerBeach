@@ -865,7 +865,12 @@ export class Scene {
     const big = Math.round(Math.min(56, l.hud.h * 0.48) * Math.min(1.15, this.textScale));
     if (this.hudLabel) {
       g.fillStyle = p.textDim;
-      g.font = `700 ${Math.round(big * 0.3)}px ${FONT}`;
+      // chapter labels vary in length: shrink to stay clear of the corner buttons on narrow phones
+      const topPx = Math.round(big * 0.3);
+      g.font = `700 ${topPx}px ${FONT}`;
+      const room = l.w - 2 * 64;
+      const tw = g.measureText(this.hudLabel.top).width;
+      if (tw > room) g.font = `700 ${Math.max(9, Math.floor((topPx * room) / tw))}px ${FONT}`;
       g.fillText(this.hudLabel.top, cx, l.hud.y + l.hud.h * 0.24);
       g.fillStyle = p.text;
       g.font = `800 ${big}px ${FONT}`;
