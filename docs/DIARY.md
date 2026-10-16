@@ -110,3 +110,25 @@ broke, what I decided and why.
   seals the 1-cell lagoon and the 8-ring takes everything. Good sign the solver beats intuition.
 - Played the hardest reef by hand (on paper): the obvious lagoon is a trap; the solution joins two
   clusters into two lagoons with one piece. That's the Meowdoku-style "aha" — keep.
+
+## 2026-10-16 01:10 CDT — Hint, native shells, WebKit, audio QA
+- Puzzle hint button (solver-backed; flags dead ends).
+- Capacitor 7 (8 needs Node 22). iOS Simulator build + launch works (`make ios-sim`).
+  **Broke on iOS only:** score under the Dynamic Island — the JS safe-area probe read 0 before
+  WKWebView settled insets. Persistent probe + ResizeObserver fixed it. Android: no SDK here.
+- Gameplay e2e now also runs on WebKit (iPhone 15 profile): 9/9 pass.
+- Audio QA via OfflineAudioContext: mix was far too quiet (deal ≈ silent). After boosting, cascades
+  clipped (each wave stacked a sub-bass). Body on first wave only; level hierarchy now asserted.
+
+## 2026-10-16 01:20 CDT — Played by hand (scripts/play-cli.ts, seed 777, 7 moves)
+- Move 2 already pinches a pocket (bend + zag). Early game = a stream of pinches; board stays
+  clean. Slightly too gentle before the ramp kicks in at move 8 — acceptable as a warm-up.
+- Emergent tactics I noticed without being told (rubric R7 ✓):
+  1. **Roof & cup** — a long bar becomes a roof; you build a cup under it for a 2–4 cell lagoon.
+  2. **Twin pockets** — two diagonal-adjacent holes sealed by one piece → ×2 multi.
+  3. **Sealer spot** — leave a one-cell notch so a future dot/duo can close a big ring.
+  4. **Thick walls** — building a double wall around a lagoon sets up a cascade jackpot.
+- Push-your-luck is real: I set up a 2-cell lagoon under the roof and had to *hope* the next tray
+  had the closing piece. That hope is the "one more round" hook.
+- Risk noted: players may think diagonal gaps leak. They don't (4-connectivity); the live water
+  preview teaches it on the first try. Keep the preview prominent.
