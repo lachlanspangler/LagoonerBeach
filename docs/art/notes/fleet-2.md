@@ -22,3 +22,22 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
 - Self-grade: B+. The puff is funny and reads in 1 s; the rest pose reads as "puffer" at 24 px.
 - Would improve: the pectoral fan still competes a little with the face at 54 px; a kit
   "per-part scale" (lengthen spines without thickening them) would make the puff crisper.
+
+## boxfish (Yellow Boxfish)
+- Size class M, fish (profile). Feature: a near-cube rounded square (54×58, r 10) with tiny fins and
+  a fan tail on a thin stalk. Six hand-placed dark polka dots, pale belly band, `pout` lips.
+- Signature: the tiny dorsal, anal and tail fins whir furiously (±24–26°, ~0.05 s per swing) while
+  the box creeps 3 units forward with a `surprised` effort face, then a satisfied nod and `happy`.
+  Catch: the same whir with a squash.
+- Rounds: 4.
+  1. 58×52 box, big tail, pectoral beside the eye. IoU vs clownfish 0.755 (fail). The pectoral read as
+     a second, bigger mouth (same trap as the puffer).
+  2. Square box 56×56: clownfish 0.67 but sand dollar 0.79 (a square normalises close to a coin).
+  3. Grid search on box size/radius and tail stalk; a thin long stalk plus taller dorsal/anal fins
+     set forward put mass where neither a disc nor the clownfish has it: clownfish 0.67, puffer 0.67,
+     sand dollar 0.73.
+  4. Dropped the pectoral entirely (it read as a beak next to the low eye anywhere I put it); the
+     anal fin got its own group so the whir still has three fins. Mouth moved inside the box.
+- Self-grade: B+. Instantly a boxfish at 24 px; dots and square read at 54 px.
+- Would improve: the face sits a little far from the snout because the validator wants the eye
+  30–38 % back on a box that includes the tail stalk; a face zone on the box alone would look cuter.
