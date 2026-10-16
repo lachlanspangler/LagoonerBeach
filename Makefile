@@ -37,3 +37,6 @@ clean:
 ios-sim: build     ## build web, sync, build+launch on an iPhone simulator, screenshot
 	npx cap sync ios
 	./scripts/ios-sim.sh
+
+android-emu: build  ## build debug APK, run on a headless Android emulator, screenshot
+	./scripts/android-emu.sh
