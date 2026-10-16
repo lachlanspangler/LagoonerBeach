@@ -94,3 +94,23 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
      silhouette further from a coin: sand dollar 0.64, octopus 0.70 (cross-class limit 0.80).
 - Self-grade: A-. Reads as a clam with a creature inside; the pearl reveal is sweet.
 - Would improve: blush (#FF8FA3) reads greyish on teal; a per-species blush tint isn't in the kit.
+
+## cockle (Cockle)
+- Size class XS, object (front view). Feature: a ribbed fan-shaped lid with a round umbo knob, a lower
+  valve ending in four round scallops, a pink mantle in the gap with the eyes peeking out under the
+  brim, and the cockle's jumping foot poking out (a little "blep"). Four brown ribs (R18).
+- Signature: the lid lifts 10° and rocks while three little notes float up (prop), `happy`, ending
+  with a wink. Catch: the lid pops with an XS-sized squash (0.86/1.14).
+- Rounds: 5.
+  1. Round shell with umbo and scalloped lip: IoU vs sand dollar 0.875 (fail). Any plump round shell is a coin.
+  2. Fan (narrower top): 0.74.
+  3. Heart variant (two lid lobes and a rounded point, per the appendix's "heart-ish"): 0.83, worse;
+     the dip between the lobes is too small to matter at 24 px. Reverted.
+  4. Foot positions: downward-right foot helps (0.70); a sideways foot hid behind the scallops.
+  5. Straighter fan sides plus deeper notches between the scallops: sand dollar 0.67, clownfish 0.70
+     (cross-class, limit 0.80).
+- Self-grade: B. Charming and readable, but the fan shape reads a bit like a little hat, and it is
+  closer to square (81×79) than the appendix's "wider than tall": every rounder/wider version
+  collided with the sand dollar.
+- Would improve: a true side-view heart would need a silhouette metric that rewards interior notches;
+  with centroid IoU the cheapest distinctness lever was the triangle.
