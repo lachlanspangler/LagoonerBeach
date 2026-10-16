@@ -3,61 +3,16 @@
  * and rarity, with the game's name. Spoiler-free: no hint of how it was caught.
  * Canvas → PNG blob → Web Share (files) → Capacitor Share (if the plugins exist) → download.
  */
-import type { Habitat, Rarity, Species } from '../meta/creatures.ts';
+import type { Species } from '../meta/creatures.ts';
 import { SPECIES } from '../meta/creatures.ts';
 import { drawCreature, type DrawOpts } from '../render/creatures.ts';
 import { DISPLAY_STACK, FONT_STACK } from '../render/theme.ts';
+import { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK } from './rarity.ts';
 
-export const RARITY_COLOR: Record<Rarity, string> = {
-  common: '#B8A88F',
-  uncommon: '#53C08C',
-  rare: '#3D9BE9',
-  epic: '#8E5BD8',
-  legendary: '#F2B93B',
-};
-export const RARITY_RANK: Record<Rarity, number> = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
-
-/** Habitat backdrop: top → bottom. */
-export const HABITAT_TINT: Record<Habitat, readonly [string, string]> = {
-  shallows: ['#F6EBD6', '#E2CFAE'],
-  lagoon: ['#DDF4F8', '#9ED8E6'],
-  deep: ['#D5DEEE', '#7E97BE'],
-  night: ['#1F3A57', '#0B1622'],
-  reef: ['#FBE3DA', '#EDB3A0'],
-  legend: ['#FFF4D6', '#F0C978'],
-};
+export { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK };
 
 export const W = 1080;
 export const H = 1350;
-
-/** Little shell pips: `n` filled of 5 (rarity never by hue alone). */
-export function drawPips(
-  g: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  r: number,
-  n: number,
-  on: string,
-  off: string,
-): void {
-  const gap = r * 3.2;
-  const x0 = cx - gap * 2;
-  for (let i = 0; i < 5; i++) {
-    const x = x0 + i * gap;
-    g.beginPath();
-    g.moveTo(x, cy + r * 0.9);
-    g.arc(x, cy + r * 0.15, r, Math.PI * 1.05, Math.PI * 1.95);
-    g.closePath();
-    if (i < n) {
-      g.fillStyle = on;
-      g.fill();
-    } else {
-      g.strokeStyle = off;
-      g.lineWidth = Math.max(1.5, r * 0.3);
-      g.stroke();
-    }
-  }
-}
 
 export function renderShareCard(
   sp: Species,

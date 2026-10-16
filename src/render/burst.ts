@@ -106,10 +106,20 @@ export class Burst {
     return false;
   }
 
-  draw(g: CanvasRenderingContext2D, now: number, size: number, sprite: (color: number) => CanvasImageSource): void {
+  /**
+   * `lit` = the white-rimmed "will pop" pebble; `plain` = the normal one. In flight the rim
+   * crossfades away (a scattering pebble is just a pebble; the rim only marks the ring in place).
+   */
+  draw(
+    g: CanvasRenderingContext2D,
+    now: number,
+    size: number,
+    lit: (color: number) => CanvasImageSource,
+    plain: (color: number) => CanvasImageSource = lit,
+  ): void {
     for (let i = 0; i < this.count; i++) {
       const st = this.start[i]!;
-      const spr = sprite(this.color[i]!);
+      const spr = lit(this.color[i]!);
       const x0 = this.x0[i]!;
       const y0 = this.y0[i]!;
       if (now < st) {
@@ -140,11 +150,20 @@ export class Burst {
       const y = y0 + this.vy[i]! * t + 0.5 * this.gravity * t * t;
       const s = size * lerp(1.12, 0.3, easeInCubic(k) * 0.6 + k * 0.4);
       const rot = this.vr[i]! * t;
-      g.globalAlpha = k < 0.55 ? 1 : 1 - clamp01((k - 0.55) / 0.45);
+      const a = k < 0.55 ? 1 : 1 - clamp01((k - 0.55) / 0.45);
+      // rim → plain over the first third of the flight
+      const m = clamp01((k - 0.04) / 0.3);
       g.save();
       g.translate(x, y);
       g.rotate(rot);
-      g.drawImage(spr, -s / 2, -s / 2, s, s);
+      if (m < 1) {
+        g.globalAlpha = a * (1 - m);
+        g.drawImage(spr, -s / 2, -s / 2, s, s);
+      }
+      if (m > 0) {
+        g.globalAlpha = a * m;
+        g.drawImage(plain(this.color[i]!), -s / 2, -s / 2, s, s);
+      }
       g.restore();
     }
     g.globalAlpha = 1;

@@ -48,10 +48,10 @@ import { initNative } from '../platform/native.ts';
 import { catchCapture, type LagoonCatch } from '../meta/catch.ts';
 import { record, type Journal } from '../meta/journal.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
-import { installDebugApi } from './debug.ts';
+import type { DebugDeps } from './debug.ts';
 import { ReefSource } from './reefSource.ts';
 import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } from './reefProgress.ts';
-import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf } from '../core/endless.ts';
+import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf, reefId } from '../core/endless.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
@@ -160,6 +160,7 @@ function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
     lagoons.push(...lc);
   }
   if (lagoons.length) saveJournal(journal);
+  if (newIds.size) ui.markUnseen(journal);
   if (newIds.size)
     ui.announce(`New in your journal: ${[...newIds].map((id) => SPECIES_BY_ID.get(id)?.name).join(', ')}`);
   return { lagoons, newIds, reveals };
@@ -244,12 +245,22 @@ function resize(): void {
   const ins = insets();
   // keep the HUD clear of the menu buttons
   scene.resize(w, h, Math.min(3, window.devicePixelRatio || 1), { ...ins, top: ins.top + 6 });
-  const mb = document.getElementById('menu-btn')?.getBoundingClientRect();
-  scene.journalTarget = mb && mb.width ? { x: mb.left + mb.width / 2, y: mb.top + mb.height / 2 } : null;
+  aimJournal();
+  // DOM overlays that sit on the play screen (the common-discovery pop) follow the canvas layout
+  const l = scene.layout;
+  const root = document.documentElement.style;
+  root.setProperty('--board-top', `${l.board.y}px`);
+  root.setProperty('--board-bottom', `${l.board.y + l.board.h}px`);
+  root.setProperty('--strip-y', `${l.strip.y + l.strip.h / 2}px`);
   idle(() => scene.warmSprites());
   dirty = true;
 }
 window.addEventListener('resize', resize);
+/** Caught creatures swim to the Beach Journal button (the menu in Reefs, where the bulb takes its place). */
+function aimJournal(): void {
+  const mb = ui.journalButton().getBoundingClientRect();
+  scene.journalTarget = mb.width ? { x: mb.left + mb.width / 2, y: mb.top + mb.height / 2 } : null;
+}
 
 // ------------------------------------------------------------------ sync scene with state
 /** Bumped whenever a different game is shown; delayed UI from an older game must not fire. */
@@ -302,22 +313,35 @@ function syncScene(): void {
   updateHint();
   updateMisfits();
   scene.hudLabel = null;
+  scene.modeTag = mode === 'daily' ? 'Daily' : '';
   const p = mode === 'puzzle' ? reefAt(state.seed) : null;
   if (p) {
     const i = state.seed;
     const solved = profile.puzzle.solved.includes(p.id);
     const pure = profile.puzzle.pure?.includes(p.id) ?? false;
-    const status = pure ? '✓ cleared · no hints' : solved ? '✓ cleared' : 'clear every pebble';
+    // the instruction only while it's news (first three reefs); afterwards the tier and your mark
+    const status = pure ? '✓ No hints' : solved ? '✓ Cleared' : i < 3 ? 'Clear every pebble' : '';
     const tag = i === dailyReefIndex() ? 'Reef of the day' : (TIER_LABEL[p.tier ?? ''] ?? '');
+    const c = chapterOf(i + 1);
+    const first = c.first;
+    const solvedNow = new Set(profile.puzzle.solved);
     scene.hudLabel = {
-      top: chapterLabel(i + 1).toUpperCase(),
+      top: chapterLabel(i + 1),
       big: `Reef ${i + 1}`,
-      sub: tag ? `${tag} · ${status}` : status,
+      sub: [tag, status].filter(Boolean).join(' · '),
+      tier: p.tier ?? 'endless',
+      chapter: {
+        name: `${chapterName(c.chapter)} · ${c.pos} of ${CHAPTER_SIZE}`,
+        segs: Array.from({ length: CHAPTER_SIZE }, (_, k) =>
+          solvedNow.has(reefId(first + k)) ? 1 : k === c.pos - 1 ? 2 : 0,
+        ),
+      },
     };
     reefs!.pin(i);
     reefs!.prefetch(i); // the next few reefs are ready before "Next reef" is tapped
   }
-  ui.setMode(mode, visibleStreak(profile.daily, dayIndex(today())));
+  ui.setMode(mode, visibleStreak(profile.daily, dayIndex(today())), journal);
+  aimJournal();
   dirty = true;
 }
 
@@ -578,11 +602,20 @@ function checkPuzzle(): void {
     const newIds = [...gameCatch.newIds];
     const ch = chapterOf(i + 1).chapter;
     const done = chapterCleared(new Set(profile.puzzle.solved), ch);
-    const progress = `${chapterName(ch)} · ${done}/${CHAPTER_SIZE} · ${cleared} reef${cleared === 1 ? '' : 's'} cleared`;
+    const progress = `${chapterName(ch)} · ${done} of ${CHAPTER_SIZE}`;
     const hold = chapterHold;
     chapterHold = 0;
+    const chFirst = (ch - 1) * CHAPTER_SIZE + 1;
+    const solvedSet = new Set(profile.puzzle.solved);
+    const segs = Array.from({ length: CHAPTER_SIZE }, (_, k) => solvedSet.has(reefId(chFirst + k)));
+    const token = gameToken;
+    // a discovery still on screen (the common pop included) finishes first; the card follows it
     later(1300 + hold, () =>
-      ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress }),
+      reveal.whenIdle(
+        () =>
+          token === gameToken &&
+          ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress, segs }),
+      ),
     );
   } else {
     const cleared = profile.puzzle.solved.length;
@@ -760,7 +793,14 @@ reefEvents.addEventListener('chapterComplete', (e) => {
 
 // ------------------------------------------------------------------ UI
 const ui = new Ui({
-  onOpenMenu: () => ui.showMenu(profile, mode, !state.over, Object.keys(journal.entries).length),
+  onOpenMenu: () =>
+    ui.showMenu(
+      profile,
+      mode,
+      !state.over,
+      Object.keys(journal.entries).length,
+      profile.daily.lastDay === dayIndex(today()),
+    ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
   onLeaderboards: LB_ON ? () => void lbui().then((l) => l.showBoards(mode === 'daily' ? 'daily' : 'week')) : undefined,
@@ -773,7 +813,8 @@ const ui = new Ui({
   },
   onResume: () => ui.close(),
   onNewGame: () => restart(),
-  onDaily: () => (mode === 'puzzle' ? puzzleHint() : switchMode(mode === 'daily' ? 'classic' : 'daily')),
+  onDaily: () => (mode === 'daily' ? restart() : switchMode('daily')),
+  onHint: () => puzzleHint(),
   onClassic: () => switchMode('classic'),
   onPuzzles: () => switchMode('puzzle'),
   onPuzzleNext: () => mode === 'puzzle' && loadPuzzle(state.seed + 1),
@@ -848,10 +889,14 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   now: clock,
   canOpen: () => scene.drag === null && !ui.open,
+  onStrip: (ms) => {
+    scene.holdStrip(performance.now() + ms);
+    dirty = true;
+  },
 });
 
 scene.onCollect = () => {
-  const b = ui.menuBtn;
+  const b = ui.journalButton();
   b.classList.remove('collect');
   void b.offsetWidth; // restart the animation
   b.classList.add('collect');
@@ -1010,6 +1055,7 @@ const idle =
 idle(() => {
   sfx.prepare();
   setTimeout(() => reveal.prefetch(), 2500);
+  setTimeout(() => ui.prefetchSheets(), 1800);
   scene.warmSprites();
   lbBackground();
 });
@@ -1031,8 +1077,10 @@ if (!DEBUG && 'serviceWorker' in navigator && import.meta.env.PROD) {
 }
 
 // ------------------------------------------------------------------ debug / test hooks
-if (DEBUG)
-  installDebugApi({
+// a lazy chunk: players never download the bots and the audio QA harness
+if (DEBUG) void import('./debug.ts').then(({ installDebugApi }) => installDebugApi(debugDeps()));
+function debugDeps(): DebugDeps {
+  return {
     state: () => state,
     setState: (g) => {
       state = g;
@@ -1074,6 +1122,7 @@ if (DEBUG)
       });
       journal = { ...journal, entries, total: 600 };
     },
+    markSeen: (ids) => ui.markSeen(ids, journal),
     puzzleSolution: () => (mode === 'puzzle' ? (reefAt(state.seed)?.solution ?? null) : null),
     reefSource: () => reefs,
     celebrate: {
@@ -1134,4 +1183,5 @@ if (DEBUG)
           reducedMotion: scene.reducedMotion,
         }),
     },
-  });
+  };
+}

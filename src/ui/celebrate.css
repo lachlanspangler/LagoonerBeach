@@ -54,6 +54,13 @@
     0 0 0 3px #e2b24a inset;
   background: linear-gradient(180deg, #fff8e2, var(--panel) 45%);
 }
+html[data-theme='night'] .rv-card {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--hab, var(--panel)) 32%, var(--panel)) 0,
+    var(--panel) 52%
+  );
+}
 html[data-theme='night'] .r-golden .rv-card {
   background: linear-gradient(180deg, #2c2a1c, var(--panel) 45%);
 }
@@ -185,7 +192,8 @@ html[data-theme='night'] .r-golden .rv-card {
   pointer-events: none;
   position: absolute;
   left: 50%;
-  top: calc(var(--safe-top) + 92px);
+  /* in the strip between board and tray: never over the board's top row (or the HUD) */
+  top: var(--strip-y);
   width: max-content;
   max-width: 92vw;
   white-space: nowrap;
@@ -196,20 +204,21 @@ html[data-theme='night'] .r-golden .rv-card {
   border-radius: 999px;
   background: var(--panel);
   box-shadow: 0 6px 16px var(--shadow);
-  transform: translate(-50%, -6px) scale(0.85);
+  transform: translate(-50%, calc(-50% + 8px)) scale(0.85);
   opacity: 0;
   transition:
-    transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 140ms ease;
+    transform var(--dur-bouncy) var(--spring-bouncy),
+    opacity var(--dur-quick) ease;
   z-index: 25;
 }
 .reveal-pop.show {
-  transform: translate(-50%, 0);
+  transform: translate(-50%, -50%);
   opacity: 1;
 }
 .reveal-pop.leaving {
   opacity: 0;
-  transform: translate(-50%, -6px) scale(0.96);
+  transform: translate(-50%, calc(-50% - 6px)) scale(0.96);
+  transition-duration: var(--dur-exit);
 }
 .rp-over {
   font-size: 10px;

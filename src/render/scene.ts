@@ -8,7 +8,7 @@ import type { TrayPiece } from '../core/dealer.ts';
 import { computeLayout, trayCellFor, type Insets, type Layout } from './layout.ts';
 import { Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
-import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, type Palette } from './theme.ts';
+import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, fmt, type Palette } from './theme.ts';
 import { Burst } from './burst.ts';
 import { Celebrate, spring } from './celebrate.ts';
 
@@ -142,8 +142,15 @@ export class Scene {
     /** First-run demo: a ghost of this tray piece glides to the hinted spot, on loop. */
     demo?: { slot: number; ax: number; ay: number } | null;
   } | null = null;
-  /** Replaces the score HUD (puzzle mode). */
-  hudLabel: { top: string; big: string; sub: string } | null = null;
+  /** Replaces the score HUD (puzzle mode); `chapter` is drawn as progress in the strip. */
+  hudLabel: {
+    top: string;
+    big: string;
+    sub: string;
+    tier?: string;
+    /** Chapter name line + 20 segments (0 open, 1 cleared, 2 this reef). */
+    chapter?: { name: string; segs: readonly number[] };
+  } | null = null;
 
   /** Tray slots whose piece fits nowhere on the current board (drawn faded). */
   misfit: boolean[] = [false, false, false];
@@ -151,13 +158,27 @@ export class Scene {
   private chips: { text: string; life: number; start: number }[] = [];
   toast(text: string, now: number, life = 1500): void {
     const prev = this.chips[this.chips.length - 1];
-    const start = prev ? Math.max(now, prev.start + prev.life + 80) : now;
+    const free = Math.max(now, this.stripHold + 80);
+    const start = prev ? Math.max(free, prev.start + prev.life + 80) : free;
     if (this.chips.length >= 4) return; // never build a backlog of stale news
     this.chips.push({ text, life, start });
   }
 
   clearChips(): void {
     this.chips = [];
+    this.stripHold = -1e9;
+  }
+
+  /** Something else (a common discovery pop) owns the strip until `until`: chips wait for it. */
+  stripHold = -1e9;
+  holdStrip(until: number): void {
+    this.stripHold = Math.max(this.stripHold, until);
+    let t = until + 80;
+    for (const c of this.chips)
+      if (c.start < t) {
+        c.start = t;
+        t = c.start + c.life + 80;
+      }
   }
 
   private drawChips(now: number): void {
@@ -168,24 +189,65 @@ export class Scene {
     const g = this.g;
     const l = this.layout;
     const a = k < 0.12 ? k / 0.12 : k > 0.82 ? (1 - k) / 0.18 : 1;
-    const size = Math.round(l.cell * 0.36 * this.textScale);
+    const p = this.palette;
+    const size = Math.round(Math.min(15, l.cell * 0.34) * this.textScale);
     g.font = `800 ${size}px ${FONT}`;
-    const w = g.measureText(c.text).width + size * 1.6;
-    const h = size * 1.9;
-    // takes the streak line's slot under the score while it's up (one message at a time)
-    const cy = l.hud.y + l.hud.h * 0.9;
-    const drop = this.reducedMotion ? 0 : (1 - easeOutCubic(Math.min(1, k / 0.12))) * -8;
-    const night = this.palette.name === 'night';
+    const w = Math.min(l.w - 24, g.measureText(c.text).width + size * 2);
+    const h = Math.round(size * 2.2);
+    // chips own the strip between board and tray (never the HUD's COMBO slot, never the board)
+    const cy = this.stripY();
+    const s = this.reducedMotion ? 1 : 0.9 + 0.1 * spring01(Math.min(1, k / 0.14));
+    const drop = this.reducedMotion ? 0 : (1 - easeOutCubic(Math.min(1, k / 0.12))) * 6;
     g.globalAlpha = a;
-    g.fillStyle = night ? 'rgba(20,38,54,0.92)' : 'rgba(255,250,242,0.95)';
+    g.save();
+    g.translate(l.w / 2, cy + drop);
+    g.scale(s, s);
+    g.fillStyle = p.name === 'night' ? 'rgba(0,0,0,0.35)' : 'rgba(74,52,30,0.10)';
     g.beginPath();
-    g.roundRect(l.w / 2 - w / 2, cy - h / 2 + drop, w, h, h / 2);
+    g.roundRect(-w / 2, -h / 2 + 3, w, h, h / 2);
     g.fill();
-    g.fillStyle = night ? this.palette.waterHi : '#1A86AC';
+    g.fillStyle = p.surface;
+    g.beginPath();
+    g.roundRect(-w / 2, -h / 2, w, h, h / 2);
+    g.fill();
+    g.restore();
+    g.fillStyle = p.accent;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillText(c.text, l.w / 2, cy + drop + 1);
+    g.fillText(c.text, l.w / 2, cy + drop + 1, w - size);
     g.globalAlpha = 1;
+  }
+
+  /** Vertical center of the strip between the board and the tray's pieces. */
+  stripY(): number {
+    const l = this.layout;
+    return l.strip.y + Math.min(l.strip.h, l.cell * 1.6) / 2 + l.cell * 0.05;
+  }
+
+  /** Reef mode: chapter progress in the strip (20 segments, this reef marked). Chips take the slot. */
+  private drawStrip(now: number): void {
+    const ch = this.hudLabel?.chapter;
+    if (!ch || now < this.stripHold || (this.chips.length > 0 && now >= this.chips[0]!.start)) return;
+    const g = this.g;
+    const l = this.layout;
+    const p = this.palette;
+    const cy = this.stripY();
+    const W = Math.min(l.board.w * 0.62, 240);
+    const x0 = l.w / 2 - W / 2;
+    const gap = 3;
+    const sw = (W - gap * (ch.segs.length - 1)) / ch.segs.length;
+    const size = Math.round(Math.min(13, l.cell * 0.29) * this.textScale);
+    g.font = `800 ${size}px ${FONT}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = p.textDim;
+    g.fillText(ch.name, l.w / 2, cy - 5, l.w - 24);
+    ch.segs.forEach((v, i) => {
+      g.fillStyle = v === 1 ? (p.name === 'night' ? p.accent : p.water) : v === 2 ? p.accent : p.surfaceSunk;
+      g.beginPath();
+      g.roundRect(x0 + i * (sw + gap), cy + 3 - (v === 2 ? 1 : 0), sw, v === 2 ? 8 : 6, 3);
+      g.fill();
+    });
   }
 
   /** Where caught creatures swim off to (the menu button, where the journal lives). */
@@ -315,7 +377,13 @@ export class Scene {
     const top = Math.max(l.hud.y + l.hud.h, l.board.y - l.cell * 0.7);
     g.rect(l.board.x - l.cell * 0.7, top, l.board.w + l.cell * 1.4, l.board.y + l.board.h + l.cell * 0.4 - top);
     g.clip();
-    this.burst.draw(g, now, l.cell, (c) => this.sprites.pebble(p, c, ps, 'lit'));
+    this.burst.draw(
+      g,
+      now,
+      l.cell,
+      (c) => this.sprites.pebble(p, c, ps, 'lit'),
+      (c) => this.sprites.pebble(p, c, ps, 'normal'),
+    );
     g.restore();
     this.drawRipples(now);
     this.drawSweep(now);
@@ -330,6 +398,7 @@ export class Scene {
     this.celebrate.drawBoard(g, now, l, p, this.reducedMotion);
     this.drawTexts(now);
     this.drawHud(now);
+    this.drawStrip(now);
     this.drawChips(now);
     this.gc(now);
   }
@@ -354,6 +423,15 @@ export class Scene {
       g.beginPath();
       g.roundRect(0, 0, W, W, W * GEOM.boardRadius);
       g.fill();
+      // a top highlight: the board reads as a lit tray (night) / a wet-sand rim (day)
+      g.save();
+      g.clip();
+      g.strokeStyle = p.boardHi;
+      g.lineWidth = 2;
+      g.beginPath();
+      g.roundRect(1, 1, W - 2, W + 8, W * GEOM.boardRadius);
+      g.stroke();
+      g.restore();
       const cell = l.cell;
       const gut = cell * GEOM.gutter;
       for (let i = 0; i < CELLS; i++) {
@@ -442,9 +520,9 @@ export class Scene {
     g.lineJoin = 'round';
     g.lineWidth = size * 0.22;
     g.strokeStyle = this.palette.name === 'night' ? 'rgba(0,20,30,0.8)' : 'rgba(255,255,255,0.95)';
-    const t = `+${pv.points}`;
+    const t = `+${fmt(pv.points)}`;
     g.strokeText(t, sx / pv.pocket.size, sy / pv.pocket.size);
-    g.fillStyle = this.palette.name === 'night' ? this.palette.waterHi : '#1F8FB5';
+    g.fillStyle = this.palette.name === 'night' ? this.palette.waterHi : this.palette.accent;
     g.fillText(t, sx / pv.pocket.size, sy / pv.pocket.size);
   }
 
@@ -646,7 +724,7 @@ export class Scene {
         x += Math.sin(wt / 28) * l.cell * 0.12 * (1 - wt / 600);
       if (this.selected === i) {
         const sl = l.slots[i]!;
-        this.g.strokeStyle = this.palette.water;
+        this.g.strokeStyle = this.palette.accent;
         this.g.lineWidth = 3;
         this.g.beginPath();
         this.g.roundRect(sl.cx - sl.w * 0.42, sl.cy - sl.h * 0.42, sl.w * 0.84, sl.h * 0.84, l.cell * 0.4);
@@ -697,7 +775,7 @@ export class Scene {
     const k = (now - h.start) / 1000;
     // dashed lagoon-blue outline, pulsing clearly (was a faint 1.1:1 outline)
     const a = this.reducedMotion ? 0.85 : 0.55 + 0.4 * (0.5 + 0.5 * Math.sin(k * Math.PI * 2));
-    g.strokeStyle = this.palette.name === 'night' ? this.palette.waterHi : '#1A86AC';
+    g.strokeStyle = this.palette.name === 'night' ? this.palette.waterHi : this.palette.accent;
     g.lineWidth = Math.max(2, this.layout.cell * 0.06);
     g.setLineDash([this.layout.cell * 0.14, this.layout.cell * 0.1]);
     g.lineDashOffset = this.reducedMotion ? 0 : -k * this.layout.cell * 0.5;
@@ -862,50 +940,89 @@ export class Scene {
           ? 'rgba(0,0,0,0.55)'
           : 'rgba(59,50,41,0.6)';
       g.strokeText(t.text, t.x, t.y - rise);
-      g.fillStyle = ink ? (night ? this.palette.waterHi : '#1A86AC') : '#FFFFFF';
+      g.fillStyle = ink ? (night ? this.palette.waterHi : this.palette.accent) : '#FFFFFF';
       g.fillText(t.text, t.x, t.y - rise);
     }
     g.globalAlpha = 1;
   }
+
+  /** Caps label with real tracking where canvas supports it (Baseline 2025), else plain. */
+  private label(text: string, x: number, y: number, px: number, color: string, maxW?: number): void {
+    const g = this.g as CanvasRenderingContext2D & { letterSpacing?: string };
+    g.font = `800 ${px}px ${FONT}`;
+    g.fillStyle = color;
+    const hasLs = 'letterSpacing' in g;
+    if (hasLs) g.letterSpacing = `${(px * 0.08).toFixed(2)}px`;
+    // tracking adds space after the last glyph too: nudge so the label stays centered
+    g.fillText(text, x + (hasLs ? (px * 0.08) / 2 : 0), y, maxW);
+    if (hasLs) g.letterSpacing = '0px';
+  }
+
+  /** "Daily" in the HUD's best line (replaces the old floating cyan mode tag). */
+  modeTag = '';
 
   private drawHud(now: number): void {
     const g = this.g;
     const l = this.layout;
     const p = this.palette;
     const cx = l.w / 2;
+    const night = p.name === 'night';
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    const big = Math.round(Math.min(56, l.hud.h * 0.48) * Math.min(1.15, this.textScale));
+    const ts = Math.min(1.15, this.textScale);
+    // score.hud: Nunito 900, 52 px on a 390-pt phone (tabular digits: the count-up never jitters)
+    const big = Math.round(Math.min(52, l.hud.h * 0.5, l.cell * 1.2) * ts);
+    const lab = Math.round(Math.min(12, big * 0.25) * Math.min(1.2, this.textScale));
+    const room = l.w - 2 * 70; // clear of the 44 px corner buttons
     if (this.hudLabel) {
-      g.fillStyle = p.textDim;
-      // chapter labels vary in length: shrink to stay clear of the corner buttons on narrow phones
-      const topPx = Math.round(big * 0.3);
-      g.font = `700 ${topPx}px ${FONT}`;
-      const room = l.w - 2 * 64;
-      const tw = g.measureText(this.hudLabel.top).width;
-      if (tw > room) g.font = `700 ${Math.max(9, Math.floor((topPx * room) / tw))}px ${FONT}`;
-      g.fillText(this.hudLabel.top, cx, l.hud.y + l.hud.h * 0.24);
+      const hl = this.hudLabel;
+      // "Reef 28" in the display face, the tier (and the reef's mark) as a quiet chip under it
+      const title = Math.round(Math.min(34, big * 0.7));
+      g.font = `900 ${title}px ${DISPLAY_FONT}`;
       g.fillStyle = p.text;
-      g.font = `800 ${big}px ${FONT}`;
-      g.fillText(this.hudLabel.big, cx, l.hud.y + l.hud.h * 0.7);
-      g.font = `700 ${Math.round(big * 0.28)}px ${FONT}`;
-      g.fillStyle = p.water;
-      g.fillText(this.hudLabel.sub, cx, l.hud.y + l.hud.h * 0.95);
+      g.fillText(hl.big, cx, l.hud.y + l.hud.h * 0.44, room);
+      if (hl.sub) {
+        const dotC: Record<string, string> = { calm: p.success, tricky: p.water, deep: '#3D6FD0', abyss: '#7A55B0' };
+        const fs = Math.round(Math.min(13, big * 0.27) * Math.min(1.2, this.textScale));
+        g.font = `800 ${fs}px ${FONT}`;
+        const tw = Math.min(room, g.measureText(hl.sub).width);
+        const pw = tw + fs * 2.6;
+        const ph = Math.round(fs * 2.1);
+        const py = l.hud.y + l.hud.h * 0.71;
+        g.fillStyle = p.surfaceSunk;
+        g.beginPath();
+        g.roundRect(cx - pw / 2, py - ph / 2, pw, ph, ph / 2);
+        g.fill();
+        g.fillStyle = dotC[hl.tier ?? ''] ?? p.accent;
+        g.beginPath();
+        g.arc(cx - pw / 2 + fs * 1.05, py, fs * 0.3, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = p.textDim;
+        g.textBaseline = 'middle';
+        g.fillText(hl.sub, cx + fs * 0.45, py + 1, room);
+        g.textBaseline = 'alphabetic';
+      }
+      this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false);
       return;
     }
     g.fillStyle = p.text;
     // big moments punch the score as their points land (tier ≥ 2 only; calm moves don't)
     const pk = (now - this.scorePunch.at) / 360;
     const punch = pk >= 0 && pk < 1 && !this.reducedMotion ? 1 + this.scorePunch.amp * (1 - spring01(pk)) : 1;
-    g.font = `800 ${Math.round(big * punch)}px ${FONT}`;
-    g.fillText(String(Math.round(this.shownScore)), cx, l.hud.y + l.hud.h * 0.7 + (punch - 1) * big * 0.3);
-    g.font = `700 ${Math.round(big * 0.3)}px ${FONT}`;
-    g.fillStyle = p.textDim;
+    const base = l.hud.y + l.hud.h * 0.5;
+    g.font = `900 ${Math.round(big * punch)}px ${FONT}`;
+    const ls = g as CanvasRenderingContext2D & { letterSpacing?: string };
+    if ('letterSpacing' in ls) ls.letterSpacing = `${(-big * 0.02).toFixed(2)}px`;
+    g.fillText(fmt(this.shownScore), cx, base + (punch - 1) * big * 0.3);
+    if ('letterSpacing' in ls) ls.letterSpacing = '0px';
+    // best second, as on the results card; hidden until there is one (first run)
     const beat = (this.score > this.best && this.best > 0) || this.celebrate.bestShown;
-    if (beat) g.fillStyle = p.name === 'night' ? '#F5C451' : '#9A6A00';
-    g.fillText(beat ? 'NEW BEST' : `BEST ${this.best}`, cx, l.hud.y + l.hud.h * 0.24);
-    const chipUp = this.chips.length > 0 && now >= this.chips[0]!.start;
-    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, chipUp);
+    const tag = this.modeTag ? `${this.modeTag} · ` : '';
+    const text = beat ? `${tag}NEW BEST` : this.best > 0 ? `${tag}BEST ${fmt(this.best)}` : this.modeTag;
+    if (text)
+      this.label(text.toUpperCase(), cx, base + lab * 1.8, lab, beat ? (night ? p.gold : p.goldInk) : p.textDim, room);
+    // chips live in the strip: the COMBO badge always keeps its slot under the score
+    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false);
   }
 
   private gc(now: number): void {

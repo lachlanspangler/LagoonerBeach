@@ -9,6 +9,8 @@
  */
 import type { Ui } from './overlay.ts';
 import { creatureThumb } from './overlay.ts';
+import { icon } from './icons.ts';
+import './leaderboard.css';
 import type { Profile } from '../platform/storage.ts';
 import type { Journal } from '../meta/journal.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
@@ -129,7 +131,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: s
 /** Numbers from the server are formatted only if they really are numbers. */
 const num = (v: unknown): string => (typeof v === 'number' && Number.isFinite(v) ? fmt(v) : '–');
 
-const ICON_OFFLINE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M8.5 8.6A5 5 0 0 0 7 18h10.5M16.6 11A3.5 3.5 0 0 1 20 17.2"/><path d="M10.5 6.2A5 5 0 0 1 16 9"/></svg>`;
+const ICON_OFFLINE = icon('offline');
 
 export function createLeaderboardUi(d: LbUiDeps): LeaderboardUi {
   return new LeaderboardUi(d);
@@ -296,7 +298,7 @@ export class LeaderboardUi {
 
   private card(extra: string): HTMLElement {
     const c = document.createElement('div');
-    c.className = `card lb-sheet ${extra}${this.d.reducedMotion() ? ' lb-rm' : ''}`;
+    c.className = `sheet lb-sheet ${extra}${this.d.reducedMotion() ? ' lb-rm' : ''}`;
     return c;
   }
 

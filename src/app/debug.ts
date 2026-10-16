@@ -38,6 +38,8 @@ export interface DebugDeps {
   /** Screenshots only: show a believable best score / a well-filled journal (not saved). */
   stageBest(n: number, score?: number): void;
   stageJournal(ids: string[]): void;
+  /** The journal's "new" dots: mark these species as looked at. */
+  markSeen(ids: string[]): void;
   /** Celebration staging (ADR 0012): frozen clock, combo, records, discoveries. */
   celebrate: {
     /** Freeze the render clock at `ms` after the last move (null = live again). */
@@ -115,7 +117,10 @@ export function installDebugApi(d: DebugDeps): void {
     prefetchReefs: (i: number, count: number) => d.reefSource()?.prefetch(i - 1, count),
     journal: d.journal,
     stageBest: d.stageBest,
+    /** Show a chip (lesson / reef of the day / welcome back) now. */
+    toast: (text: string, life = 3000) => d.scene.toast(text, performance.now(), life),
     stageJournal: d.stageJournal,
+    markSeen: d.markSeen,
     ...d.celebrate,
     /** Commit a move directly (no drag; flight 0) — for frozen-clock staging. */
     commitMove: (m: Move) => d.commit(m, null),

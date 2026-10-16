@@ -52,7 +52,12 @@ export interface RevealDeps {
   now?: () => number;
   /** False while the player is mid-drag or a menu is open: the reveal waits (never interrupts). */
   canOpen?: () => boolean;
+  /** A common pop takes the strip between board and tray for `ms` (chips wait for it). */
+  onStrip?: (ms: number) => void;
 }
+
+/** How long the common pop stays settled before it leaves by itself (ms after REVEAL_MS). */
+export const POP_HOLD_MS = 600;
 
 /** Settled time per rarity (ms): the reveal is skippable at any point before. */
 export const REVEAL_MS: Record<Rarity, number> = {
@@ -184,6 +189,7 @@ export class Reveal {
       stage.className = 'rp-stage';
       el.prepend(stage);
       this.sizeCanvas(stage, 64, 64);
+      this.d.onStrip?.(REVEAL_MS[rarity] + POP_HOLD_MS + 200);
     } else {
       el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}`;
       el.setAttribute('role', 'dialog');
@@ -275,7 +281,7 @@ export class Reveal {
     if (!a.modal) {
       this.drawStage(a, t, 64, 64, rm, 0);
       // the quick pop leaves by itself (no tap needed, no input blocked)
-      if (t > total + 1100) this.finish();
+      if (t > total + POP_HOLD_MS) this.finish();
       return;
     }
     const popAt = rm ? 0 : POP_MS[rarity];

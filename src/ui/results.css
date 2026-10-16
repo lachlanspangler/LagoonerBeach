@@ -1,8 +1,7 @@
-/* Results hero (ADR 0012): count-up, NEW HIGH SCORE ribbon, confetti. */
-/* ---------------------------------------------------------------- results hero */
+/* Results hero (ADR 0012, UI_DESIGN §6.6/§7.3): count-up, NEW HIGH SCORE ribbon, confetti. */
 .res-hero {
   position: relative;
-  margin: 4px 0 10px;
+  margin: 2px 0 0;
 }
 .res-hero canvas.res-confetti {
   position: absolute;
@@ -11,45 +10,53 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
-.card .res-score {
-  font-size: 64px;
-  font-weight: 900;
-  line-height: 1.05;
+.res-score {
+  font: 900 76px/1 var(--font);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  transition: color 200ms ease;
+  color: var(--ink);
+  margin: 6px 0 4px;
+  white-space: nowrap;
 }
-.card .res-hero.record .res-score {
+html[data-large='1'] .res-score {
+  font-size: 64px;
+}
+.res-hero.record .res-score {
   background: linear-gradient(180deg, #ffe08a, #f2b93b 55%, #b9821f);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-stroke: 1.5px #7a5410;
+  filter: drop-shadow(0 3px 0 rgba(122, 84, 16, 0.18));
+}
+html[data-theme='night'] .res-hero.record .res-score {
+  -webkit-text-stroke-color: #3a2a08;
+  filter: drop-shadow(0 0 18px rgba(245, 196, 81, 0.25));
+}
+.res-sub {
+  min-height: 44px;
 }
 .res-ribbon {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   margin-top: 2px;
-  padding: 5px 22px;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 19px;
-  letter-spacing: 0.06em;
-  color: #9a6a00;
-  background: #fff1cc;
+  padding: 6px 24px;
+  font: 900 20px/1.1 var(--font-display);
+  letter-spacing: 0.08em;
+  color: var(--gold-ink);
+  background: var(--gold-tint);
   clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 12px 50%);
-  transform: translateY(-10px) scale(0.6);
+  transform: translateY(-12px) scale(0.6);
   opacity: 0;
   transition:
-    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 140ms ease;
+    transform var(--dur-bouncy) var(--spring-bouncy),
+    opacity var(--dur-quick) ease;
 }
 html[data-theme='night'] .res-ribbon {
-  color: #f5c451;
   background: #3a2e10;
 }
-.res-ribbon svg {
+.res-ribbon .ic {
   width: 20px;
   height: 20px;
 }
@@ -58,20 +65,25 @@ html[data-theme='night'] .res-ribbon {
   opacity: 1;
 }
 .res-was {
-  margin-top: 4px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--dim);
+  margin-top: 6px;
+  font: 700 14px var(--font);
+  color: var(--ink-2);
+  transform: translateY(-6px);
+  opacity: 0;
+  transition:
+    transform var(--dur-base) var(--ease-enter) 120ms,
+    opacity var(--dur-base) ease 120ms;
+}
+.res-hero.record.landed .res-was {
+  transform: none;
+  opacity: 1;
 }
 .res-was s {
-  opacity: 0.8;
+  text-decoration-thickness: 2px;
+  text-decoration-color: color-mix(in srgb, var(--ink-2) 70%, transparent);
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .res-ribbon {
-    transition-duration: 1ms !important;
-  }
-}
-html[data-rm='1'] .res-ribbon {
+html[data-rm='1'] .res-ribbon,
+html[data-rm='1'] .res-was {
   transition-duration: 1ms !important;
+  transition-delay: 0ms !important;
 }
