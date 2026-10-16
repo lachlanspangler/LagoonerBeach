@@ -31,6 +31,7 @@ import { lookFor } from '../render/skins.ts';
 import { shareText, type LagoonShape } from '../meta/share.ts';
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
 import { solve } from '../core/solver.ts';
+import { initNative } from '../platform/native.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -106,11 +107,14 @@ darkQuery.addEventListener('change', applyTheme);
 motionQuery.addEventListener('change', applyTheme);
 
 // ------------------------------------------------------------------ layout
+// Persistent probe: WebKit settles safe-area insets after first layout (and on rotation), so we
+// watch the probe's size instead of reading env() once at startup.
+const probe = document.createElement('div');
+probe.style.cssText =
+  'position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;width:calc(env(safe-area-inset-left) + env(safe-area-inset-right) + 1px);height:calc(env(safe-area-inset-top) + env(safe-area-inset-bottom) + 1px);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:content-box';
+document.body.append(probe);
+new ResizeObserver(() => resize()).observe(probe);
 function insets() {
-  const probe = document.createElement('div');
-  probe.style.cssText =
-    'position:fixed;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
-  document.body.append(probe);
   const cs = getComputedStyle(probe);
   const r = {
     top: parseFloat(cs.paddingTop) || 0,
@@ -118,7 +122,6 @@ function insets() {
     bottom: parseFloat(cs.paddingBottom) || 0,
     left: parseFloat(cs.paddingLeft) || 0,
   };
-  probe.remove();
   return r;
 }
 function resize(): void {
@@ -530,6 +533,7 @@ function frame(now: number): void {
   requestAnimationFrame(frame);
 }
 
+void initNative();
 resize();
 applyTheme();
 syncScene();

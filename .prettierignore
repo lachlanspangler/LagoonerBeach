@@ -7,3 +7,5 @@ playwright-report
 test-results
 *.json
 *.md
+ios/
+android/

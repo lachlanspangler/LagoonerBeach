@@ -32,3 +32,7 @@ ideas:            ## regenerate docs/IDEAS.md from the ledger
 
 clean:
 	rm -rf dist coverage test-results playwright-report artifacts/tmp
+
+ios-sim: build     ## build web, sync, build+launch on an iPhone simulator, screenshot
+	npx cap sync ios
+	./scripts/ios-sim.sh
