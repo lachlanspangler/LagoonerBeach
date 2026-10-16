@@ -96,7 +96,7 @@ interface Placing {
 }
 
 /** Seconds a leaping creature stays on screen. */
-const FISH_LIFE = 1.25;
+const FISH_LIFE = 0.95;
 
 export const FONT = `ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif`;
 
@@ -150,6 +150,10 @@ export class Scene {
     const start = prev ? Math.max(now, prev.start + prev.life + 80) : now;
     if (this.chips.length >= 4) return; // never build a backlog of stale news
     this.chips.push({ text, life, start });
+  }
+
+  clearChips(): void {
+    this.chips = [];
   }
 
   private drawChips(now: number): void {
@@ -740,10 +744,14 @@ export class Scene {
     const g = this.g;
     for (const f of this.fish) {
       const t = (now - f.start) / 1000;
+      if (t > FISH_LIFE && !f.arrived && this.journalTarget && f.species) {
+        f.arrived = true;
+        this.onCollect?.();
+      }
       if (t < 0 || t > FISH_LIFE) continue;
       const grav = this.layout.cell * 34;
       // phase 1: a leap out of the water; phase 2: swim off to the journal (menu button) and shrink
-      const T1 = 0.42;
+      const T1 = 0.3;
       const tgt = this.journalTarget;
       let x: number;
       let y: number;

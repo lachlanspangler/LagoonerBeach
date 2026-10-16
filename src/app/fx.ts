@@ -62,6 +62,7 @@ export class Fx {
     const sc = this.scene;
     const l = sc.layout;
     const flight = from ? MOTION.place * 0.8 : 0;
+    const toasted = new Set<string>(); // one "New:" chip per species, even across cascade waves
     for (const e of events) {
       switch (e.type) {
         case 'placed': {
@@ -95,6 +96,10 @@ export class Fx {
           const clean = e.score.cleanBonus > 0;
           // how big a moment this is decides how much happens — small pops stay calm
           const tier = maxArea >= 12 || e.waves.length > 1 || clean ? 3 : maxArea >= 6 ? 2 : maxArea >= 3 ? 1 : 0;
+          // a jackpot's word owns the moment: news chips wait until it has faded
+          const lockupEnd =
+            now + flight + (e.waves.length - 1) * MOTION.waveGap + MOTION.lagoonFill + 80 + MOTION.callout;
+          const chipAt = (t: number) => (tier === 3 ? Math.max(t, lockupEnd - 120) : t);
           const perPebble = [2, 3, 3, 4][tier]!;
           const budget = [16, 24, 28, 36][tier]!;
           let spent = 0;
@@ -176,9 +181,10 @@ export class Fx {
                   isNew,
                 });
               });
-              const fresh = caught.filter((c) => opts.newIds?.has(c.x.id));
+              const fresh = caught.filter((c) => opts.newIds?.has(c.x.id) && !toasted.has(c.x.id));
+              for (const c of fresh) toasted.add(c.x.id);
               if (fresh.length)
-                this.at(t0 + 200, () => {
+                this.at(chipAt(t0 + 200), () => {
                   this.sfx.discovery();
                   const names = [...new Set(fresh.map((c) => SPECIES_BY_ID.get(c.x.id)?.name ?? ''))].join(' · ');
                   sc.toast(`New: ${names}`, performance.now(), 1700);
@@ -197,7 +203,7 @@ export class Fx {
             });
           // streak milestones get their own little moment
           if (e.streak >= 5 && e.streak % 5 === 0)
-            this.at(now + flight + 260, () => {
+            this.at(chipAt(now + flight + 260), () => {
               sc.toast(`Streak ×${e.streak}!`, performance.now(), 1200);
               this.sfx.streakMilestone(e.streak);
             });
