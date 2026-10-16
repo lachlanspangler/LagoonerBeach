@@ -93,6 +93,8 @@ export class Scene {
   preview: PreviewView | null = null;
   shake = { start: -1e9, amp: 0 };
   score = 0;
+  /** Latest logical total, revealed by fx when a capture's points land. */
+  pendingScore: number | null = null;
   shownScore = 0;
   best = 0;
   streak = 0;
@@ -470,9 +472,11 @@ export class Scene {
       g.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
       g.font = `800 ${Math.round(t.size * pop)}px ${FONT}`;
       g.lineWidth = Math.max(3, t.size * 0.16);
-      g.strokeStyle = this.palette.name === 'night' ? 'rgba(0,0,0,0.55)' : 'rgba(59,50,41,0.55)';
+      const night = this.palette.name === 'night';
+      g.lineJoin = 'round';
+      g.strokeStyle = t.strong ? (night ? 'rgba(0,20,30,0.75)' : '#FFFFFF') : night ? 'rgba(0,0,0,0.55)' : 'rgba(59,50,41,0.6)';
       g.strokeText(t.text, t.x, t.y - rise);
-      g.fillStyle = t.strong ? this.palette.waterHi : '#FFFFFF';
+      g.fillStyle = t.strong ? (night ? this.palette.waterHi : '#1F8FB5') : '#FFFFFF';
       g.fillText(t.text, t.x, t.y - rise);
     }
     g.globalAlpha = 1;

@@ -119,6 +119,7 @@ function syncScene(): void {
   const now = performance.now();
   scene.tray = state.tray.map((t, i) => ({ t, dealStart: now + i * 60, back: null }));
   scene.score = state.score;
+  scene.pendingScore = null;
   scene.shownScore = state.score;
   scene.best = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   scene.streak = state.streak;

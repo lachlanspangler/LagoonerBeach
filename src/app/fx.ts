@@ -129,36 +129,23 @@ export class Fx {
             });
           });
           const last = now + flight + (e.waves.length - 1) * MOTION.waveGap;
-          // score pop at the first lagoon
+          // points land with the burst: under the callout if there is one, else at the first lagoon
           const first = e.waves[0]!.pockets.flatMap((p) => p.cells);
           const [px, py] = sc.cellCenter(first[Math.floor(first.length / 2)]!);
           const pts = e.score.total;
-          const strong = maxArea >= 6 || e.waves.length > 1;
-          this.at(last + 120, () => {
-            sc.texts.push({
-              text: `+${pts}`,
-              x: px,
-              y: py,
-              start: performance.now(),
-              size: l.cell * (strong ? 0.75 : 0.55),
-              life: MOTION.scorePop,
-              strong: false,
-            });
-          });
           const word = calloutFor(maxArea, e.waves.length, e.score.cleanBonus > 0);
-          if (word) {
-            this.at(last + 160, () => {
-              sc.texts.push({
-                text: word,
-                x: l.w / 2,
-                y: l.board.y + l.board.h * 0.42,
-                start: performance.now(),
-                size: l.cell * 0.95,
-                life: MOTION.callout,
-                strong: true,
-              });
-            });
-          }
+          const land = last + MOTION.lagoonFill + 60;
+          this.at(land, () => {
+            const t = performance.now();
+            sc.score = sc.pendingScore ?? sc.score;
+            if (word) {
+              const cy = l.board.y + l.board.h * 0.36;
+              sc.texts.push({ text: word, x: l.w / 2, y: cy, start: t, size: l.cell * 0.95, life: MOTION.callout, strong: true });
+              sc.texts.push({ text: `+${pts}`, x: l.w / 2, y: cy + l.cell * 0.85, start: t + 60, size: l.cell * 0.55, life: MOTION.callout - 60, strong: false });
+            } else {
+              sc.texts.push({ text: `+${pts}`, x: px, y: py, start: t, size: l.cell * (maxArea >= 3 ? 0.7 : 0.55), life: MOTION.scorePop, strong: false });
+            }
+          });
           if (e.waves.length > 1 || maxArea >= 12) {
             this.at(now + flight + 40, () => {
               sc.shake = { start: performance.now(), amp: Math.min(7, 2.5 + e.waves.length * 1.5) };
@@ -177,7 +164,9 @@ export class Fx {
           sc.streak = 0;
           break;
         case 'scored':
-          this.at(now + flight, () => (sc.score = e.total));
+          // captures reveal the new total when their points land; plain placements right away
+          sc.pendingScore = e.total;
+          if (!events.some((x) => x.type === 'captured')) this.at(now + flight, () => (sc.score = e.total));
           break;
         case 'dealt': {
           const base = now + flight + 140;
