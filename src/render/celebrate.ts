@@ -42,7 +42,7 @@ export function spring(tMs: number, ms: number, overshoot: number): number {
 }
 
 interface Sprite {
-  c: HTMLCanvasElement | OffscreenCanvas;
+  c: HTMLCanvasElement | OffscreenCanvas | ImageBitmap;
   w: number;
   h: number;
 }
@@ -142,7 +142,10 @@ export class TextSprites {
       pass((x, p) => g.strokeText(p.t, x, cy));
       g.restore();
     }
-    return { c, w: W, h: H };
+    // an ImageBitmap draws without a first-use snapshot of the canvas (that cost ~19 ms once, on
+    // the jackpot frame, at 4× throttle)
+    const bmp = 'transferToImageBitmap' in c ? (c as OffscreenCanvas).transferToImageBitmap() : c;
+    return { c: bmp, w: W, h: H };
   }
 }
 
@@ -177,7 +180,7 @@ interface NumShow {
 }
 
 /** Word size by tier, as a share of a board cell. */
-export const WORD_SIZE = [0, 0.62, 0.82, 1.05, 1.25];
+export const WORD_SIZE = [0, 0.56, 0.72, 1.05, 1.25];
 /** How far below the word's starting scale the spring begins, per tier. */
 const WORD_FROM = [1, 0.7, 0.6, 0.45, 0.3];
 const WORD_OVERSHOOT = [0, 0.04, 0.06, 0.08, 0.08];
@@ -254,6 +257,30 @@ export class Celebrate {
   measure(text: string, px: number, style: TextStyle, night: boolean): { w: number; h: number } {
     const s = this.sprites.get(text, px, style, night);
     return { w: s.w, h: s.h };
+  }
+
+  /**
+   * Render the sprites a coming moment will need while the browser is idle (between release and
+   * the word landing), so the jackpot frame doesn't pay for 3-pass text rendering.
+   */
+  prewarm(items: readonly (readonly [string, number, TextStyle, number?])[], night: boolean): void {
+    const run = () => {
+      for (const [t, px, st, w] of items) this.sprites.get(t, px, st, night, w ?? 900);
+    };
+    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void })
+      .requestIdleCallback;
+    if (ric) ric(run, { timeout: 120 });
+    else setTimeout(run, 0);
+  }
+
+  /** The COMBO badge's text sizes for a combo of n (for prewarm). */
+  comboSprites(n: number, l: Layout, ts: number): [string, number, TextStyle, number][] {
+    const st = comboStyle(comboLevel(n));
+    const size = l.cell * st.size * Math.min(1.15, ts);
+    return [
+      ['COMBO', size * 0.78, st.style, st.weight],
+      [`×${n}`, size, st.style, 900],
+    ];
   }
 
   showWord(w: Omit<WordShow, 'size'> & { size?: number }, l: Layout, textScale: number): void {

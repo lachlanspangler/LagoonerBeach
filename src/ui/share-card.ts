@@ -59,11 +59,18 @@ export function drawPips(
   }
 }
 
-export function renderShareCard(sp: Species, o: { golden?: boolean; date?: string } = {}): HTMLCanvasElement {
+export function renderShareCard(
+  sp: Species,
+  o: { golden?: boolean; date?: string; /** Collects every string drawn (tests). */ log?: string[] } = {},
+): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
   const g = c.getContext('2d')!;
+  if (o.log) {
+    const fill = g.fillText.bind(g);
+    g.fillText = (t: string, x: number, y: number, m?: number) => (o.log!.push(t), fill(t, x, y, m));
+  }
   const night = sp.habitat === 'night';
   const [a, b] = HABITAT_TINT[sp.habitat];
   const bg = g.createLinearGradient(0, 0, 0, H);

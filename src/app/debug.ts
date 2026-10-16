@@ -25,6 +25,7 @@ export interface DebugDeps {
   sfx: Sfx;
   frameTimes: number[];
   drawTimes: number[];
+  taskTimes: number[];
   pickDrawnAt: number[];
   dropDrawnAt: number[];
   commit(m: Move, from: { x: number; y: number } | null, quiet?: boolean): boolean;
@@ -51,6 +52,7 @@ export interface DebugDeps {
     revealFreeze(t: number): boolean;
     revealSkip(): void;
     haptics(): { k: string; t: number }[];
+    shareCard(id: string): { w: number; h: number; png: number; text: string[]; hint: string };
     showResults(o: { score: number; prevBest: number }): void;
   };
 }
@@ -63,11 +65,13 @@ export function installDebugApi(d: DebugDeps): void {
     layout: () => d.scene.layout,
     frameTimes: () => d.frameTimes.slice(),
     drawTimes: () => d.drawTimes.slice(),
+    taskTimes: () => d.taskTimes.slice(),
     pickDrawnAt: () => d.pickDrawnAt.slice(),
     dropDrawnAt: () => d.dropDrawnAt.slice(),
     clearFrames: () => {
       d.frameTimes.length = 0;
       d.drawTimes.length = 0;
+      d.taskTimes.length = 0;
     },
     /** Pointer path (CSS px) that makes the drag controller produce the bot's next move. */
     plan(bot: BotName = 'greedy') {

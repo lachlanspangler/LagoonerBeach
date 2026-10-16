@@ -243,6 +243,19 @@ export class Fx {
             });
           });
           // the combo badge ticks up as the piece lands
+          // render the moment's text off the hot frame: word, number, the combo's next badge
+          {
+            const ts = sc.textScale;
+            const numPx = l.cell * (m.word ? 0.5 : tier >= 1 ? 0.56 : 0.48) * ts;
+            cel.prewarm(
+              [
+                ...(m.word ? [[m.word, l.cell * WORD_SIZE[tier]! * ts, m.style] as const] : []),
+                [`+${pts}`, numPx, 'points'] as const,
+                ...(e.streak >= 2 ? cel.comboSprites(e.streak, l, ts) : []),
+              ],
+              sc.palette.name === 'night',
+            );
+          }
           const after = opts.after ?? { streak: e.streak, dry: 0 };
           const change = comboChange({ streak: prevStreak, dry: sc.dry }, after);
           sc.streak = e.streak;

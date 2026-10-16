@@ -53,6 +53,7 @@ import { ReefSource } from './reefSource.ts';
 import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } from './reefProgress.ts';
 import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf } from '../core/endless.ts';
 import { Reveal, type RevealItem } from '../ui/reveal.ts';
+import { renderShareCard } from '../ui/share-card.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
@@ -362,6 +363,7 @@ function updateHint(): void {
 // ------------------------------------------------------------------ moves
 /** `quiet`: bot autoplay (tests) records discoveries without staging their reveals. */
 function commit(m: Move, from: { x: number; y: number } | null, quiet = false): boolean {
+  const t0 = performance.now();
   const r = applyMove(state, m);
   if (!r) return false;
   if (mode !== 'puzzle') runLog.record(state, m, mode, dailyDate);
@@ -416,6 +418,7 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
   updateMisfits();
   drag.clearSel();
   dirty = true;
+  taskTimes.push(performance.now() - t0);
   return true;
 }
 
@@ -895,12 +898,15 @@ let dirty = true;
 let last = performance.now();
 const frameTimes: number[] = [];
 const drawTimes: number[] = [];
+/** Our own main-thread work per task: commits and whole frames (perf tests). */
+const taskTimes: number[] = [];
 /** When the first frame showing a freshly picked piece finished drawing (latency tests). */
 const pickDrawnAt: number[] = [];
 const dropDrawnAt: number[] = [];
 let lastDrawnMoves = -1;
 function frame(): void {
   // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
+  const f0 = performance.now();
   const now = clock();
   const dt = now - last;
   last = now;
@@ -921,6 +927,8 @@ function frame(): void {
     frameTimes.push(dt);
     if (frameTimes.length > 1200) frameTimes.shift();
     if (drawTimes.length > 1200) drawTimes.shift();
+    taskTimes.push(performance.now() - f0);
+    if (taskTimes.length > 1200) taskTimes.shift();
   }
   requestAnimationFrame(frame);
 }
@@ -977,6 +985,7 @@ if (DEBUG)
     sfx,
     frameTimes,
     drawTimes,
+    taskTimes,
     pickDrawnAt,
     dropDrawnAt,
     commit,
@@ -1038,6 +1047,12 @@ if (DEBUG)
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),
       haptics: () => haptics.log.slice(),
+      shareCard: (id) => {
+        const sp = SPECIES_BY_ID.get(id)!;
+        const log: string[] = [];
+        const c = renderShareCard(sp, { date: today(), log });
+        return { w: c.width, h: c.height, png: c.toDataURL('image/png').length, text: log, hint: sp.hint };
+      },
       showResults: (o) =>
         ui.showGameOver({
           score: o.score,

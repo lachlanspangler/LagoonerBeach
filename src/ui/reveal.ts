@@ -25,6 +25,10 @@ import {
   sparkles,
 } from './share-card.ts';
 
+let lastKey = false;
+addEventListener('keydown', () => (lastKey = true), true);
+addEventListener('pointerdown', () => (lastKey = false), true);
+
 export interface RevealItem {
   readonly id: string;
   /** Size caught, cm. */
@@ -227,7 +231,12 @@ export class Reveal {
     if (fx) this.sizeCanvas(fx, innerWidth, innerHeight);
     requestAnimationFrame(() => el.classList.add('show'));
     this.cur = { item, sp, start: this.now(), modal, el, stage, fx, settled: false, stamped: false };
-    if (modal) (el.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
+    // keyboard users land on Continue; touch users get no focus ring (focus the dialog itself)
+    if (modal && lastKey) (el.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
+    else if (modal) {
+      el.tabIndex = -1;
+      el.focus({ preventScroll: true });
+    }
     this.d.announce(`New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`);
     // sound and touch: the chime when the pearl pops (commons at once)
     const pop = this.d.reducedMotion() ? 0 : POP_MS[rarity];

@@ -17,6 +17,9 @@
 .reveal.settled {
   pointer-events: none;
 }
+.reveal:focus {
+  outline: none;
+}
 .reveal.settled .rv-card {
   pointer-events: auto;
 }
