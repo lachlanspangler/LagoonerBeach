@@ -57,7 +57,9 @@ for (const i of sorted) {
   lines.push(`- **Pitch:** ${i.pitch}`);
   lines.push(`- **Closest existing:** ${i.closest}`);
   lines.push(`- **What's new:** ${i.new}`);
-  lines.push(`- **Scores (R1..R14):** ${i.scores.join(' ')} → **${total(i)}**/28, gates ${gates(i) ? 'pass' : 'FAIL'} (${i.basis})`);
+  lines.push(
+    `- **Scores (R1..R14):** ${i.scores.join(' ')} → **${total(i)}**/28, gates ${gates(i) ? 'pass' : 'FAIL'} (${i.basis})`,
+  );
   lines.push(`- **Value/effort:** ${i.value}/${i.effort}`);
   lines.push(`- **Reason:** ${i.reason}`);
   if (i.data) lines.push(`- **Data:** ${i.data}`);

@@ -1,0 +1,9 @@
+dist
+node_modules
+prototypes
+docs/IDEAS.md
+coverage
+playwright-report
+test-results
+*.json
+*.md
