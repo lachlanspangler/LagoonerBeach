@@ -84,9 +84,11 @@ test('menu opens, toggles persist, resume closes it', async ({ page }) => {
   await boot(page);
   await page.getByRole('button', { name: 'Menu' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await page.getByRole('button', { name: 'Sound' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('switch', { name: 'Sound' }).click();
+  await expect(page.getByRole('switch', { name: 'Sound' })).toHaveAttribute('aria-checked', 'false');
   expect(await page.evaluate(() => (window as any).__atoll.profile().settings.sound)).toBe(false);
-  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.reload();
   await page.waitForFunction(() => (window as any).__atoll);

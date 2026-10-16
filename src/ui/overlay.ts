@@ -19,6 +19,7 @@ export interface UiHandlers {
   onToggle(key: 'sound' | 'haptics' | 'reducedMotion'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
+  onSettings(): void;
   onShare(): void;
   onClick(): void;
 }
@@ -141,15 +142,15 @@ export class Ui {
   showMenu(p: Profile, mode: 'classic' | 'daily' | 'puzzle', canResume: boolean): void {
     const card = document.createElement('div');
     card.className = 'card';
-    const s = p.settings;
-    const rm = s.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stats = [
+      [p.best, 'Best'],
+      [p.stats.bestPocket, 'Top lagoon'],
+      [p.daily.current, 'Streak'],
+      [p.puzzle.solved.length, 'Reefs'],
+    ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<h2>Atoll</h2>
       <div class="sub">Close a loop — everything inside pops.</div>
-      <div class="stats">
-        <div><b>${p.best}</b><span>Best</span></div>
-        <div><b>${p.stats.bestPocket}</b><span>Biggest lagoon</span></div>
-        <div><b>${p.daily.current}</b><span>Daily streak</span></div>
-      </div>`;
+      ${stats.length ? `<div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>` : ''}`;
     if (canResume) card.append(this.button('', 'btn primary', 'Resume', 'Resume', () => this.h.onResume()));
     if (mode === 'puzzle') {
       card.append(
@@ -157,7 +158,6 @@ export class Ui {
           this.h.onPuzzleRetry(),
         ),
       );
-      card.append(this.button('', 'btn', 'Skip to next reef', 'Skip to next reef', () => this.h.onPuzzleNext()));
       card.append(this.button('', 'btn', 'All reefs', 'All reefs', () => this.h.onPuzzleList()));
       card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
     } else {
@@ -167,52 +167,78 @@ export class Ui {
           ? this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic())
           : this.button('', 'btn', 'Daily challenge', 'Daily challenge', () => this.h.onDaily()),
       );
-      card.append(
-        this.button('', 'btn', `Reef puzzles · ${p.puzzle.solved.length} cleared`, 'Reef puzzles', () =>
-          this.h.onPuzzles(),
-        ),
-      );
+      card.append(this.button('', 'btn', 'Reef puzzles', 'Reef puzzles', () => this.h.onPuzzles()));
     }
+    card.append(this.button('', 'btn ghost', 'Settings', 'Settings', () => this.h.onSettings()));
+    this.show(card, canResume);
+  }
+
+  showSettings(p: Profile): void {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<h2>Settings</h2>';
+    const s = p.settings;
+    const rm = s.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
     const rows = document.createElement('div');
-    rows.style.marginTop = '10px';
-    const toggle = (label: string, on: boolean, key: 'sound' | 'haptics' | 'reducedMotion') => {
+    const sw = (label: string, on: boolean, key: 'sound' | 'haptics' | 'reducedMotion') => {
       const r = document.createElement('div');
       r.className = 'row';
       r.innerHTML = `<span>${label}</span>`;
-      const b = this.button('', 'toggle', on ? 'On' : 'Off', label, () => this.h.onToggle(key));
-      b.setAttribute('aria-pressed', String(on));
+      const b = this.button('', 'switch', '<i></i>', label, () => this.h.onToggle(key));
+      b.setAttribute('role', 'switch');
+      b.setAttribute('aria-checked', String(on));
       r.append(b);
       rows.append(r);
     };
-    toggle('Sound', s.sound, 'sound');
-    toggle('Haptics', s.haptics, 'haptics');
-    toggle('Reduced motion', rm, 'reducedMotion');
+    sw('Sound', s.sound, 'sound');
+    sw('Haptics', s.haptics, 'haptics');
+    sw('Reduced motion', rm, 'reducedMotion');
     const tr = document.createElement('div');
     tr.className = 'row';
     tr.innerHTML = '<span>Theme</span>';
-    const next: Record<ThemePref, ThemePref> = { auto: 'day', day: 'night', night: 'auto' };
-    const label: Record<ThemePref, string> = { auto: 'Auto', day: 'Day', night: 'Night' };
-    tr.append(this.button('', 'toggle', label[s.theme], 'Theme', () => this.h.onTheme(next[s.theme])));
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.setAttribute('role', 'radiogroup');
+    seg.setAttribute('aria-label', 'Theme');
+    for (const [t, l] of [
+      ['auto', 'Auto'],
+      ['day', 'Day'],
+      ['night', 'Night'],
+    ] as const) {
+      const b = this.button('', 'seg-b', l, `Theme ${l}`, () => this.h.onTheme(t));
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(s.theme === t));
+      seg.append(b);
+    }
+    tr.append(seg);
     rows.append(tr);
     const sk = document.createElement('div');
     sk.className = 'row';
-    const locked = SKINS.filter((k) => !p.unlocked.includes(k.id));
-    sk.innerHTML = `<span>Pebbles</span>`;
+    sk.innerHTML = '<span>Style</span>';
     const cur = SKINS.find((k) => k.id === p.settings.skin)?.name ?? 'Pebble';
-    sk.append(this.button('', 'toggle', cur.replace(' (high contrast)', ''), `Pebbles: ${cur}`, () => this.h.onSkin()));
+    sk.append(
+      this.button('', 'toggle', `${cur.replace(' (high contrast)', '')} ›`, `Style: ${cur}. Change`, () =>
+        this.h.onSkin(),
+      ),
+    );
     rows.append(sk);
     card.append(rows);
-    if (locked.length) {
+    const next = SKINS.find((k) => !p.unlocked.includes(k.id) && k.hint);
+    if (next) {
       const hint = document.createElement('div');
       hint.className = 'foot';
-      hint.textContent = `${locked.length} to discover · next: ${locked[0]!.hint}`;
+      const left = SKINS.filter((k) => !p.unlocked.includes(k.id)).length;
+      hint.textContent = `${left} more style${left > 1 ? 's' : ''} to find · next: ${next.hint.toLowerCase()}`;
       card.append(hint);
     }
-    const foot = document.createElement('div');
-    foot.className = 'foot';
-    foot.textContent = `${p.stats.games} games · ${p.stats.captures} lagoons captured`;
-    card.append(foot);
-    this.show(card, canResume);
+    if (p.stats.games) {
+      const foot = document.createElement('div');
+      foot.className = 'foot';
+      foot.textContent = `${p.stats.games} games · ${p.stats.captures} lagoons captured`;
+      card.append(foot);
+    }
+    card.append(this.button('', 'btn primary', 'Done', 'Done', () => this.h.onResume()));
+    this.show(card, true);
   }
 
   /** Grid of every reef by tier; tap one to play it. Nothing is locked. */

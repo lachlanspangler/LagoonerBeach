@@ -88,6 +88,8 @@ function applyTheme(): void {
   const rm = profile.settings.reducedMotion ?? motionQuery.matches;
   scene.reducedMotion = rm;
   scene.particles.budget = rm ? 0.3 : 1;
+  // always-on styles (e.g. Glyph) and anything earned so far — not only after a game ends
+  for (const id of unlockedIds(snapshot())) if (!profile.unlocked.includes(id)) profile.unlocked.push(id);
   if (!profile.unlocked.includes(profile.settings.skin)) profile.settings.skin = 'pebble';
   scene.sprites.setLook(lookFor(profile.settings.skin));
   idle(() => scene.warmSprites());
@@ -455,6 +457,7 @@ function switchMode(m: Mode): void {
 // ------------------------------------------------------------------ UI
 const ui = new Ui({
   onOpenMenu: () => ui.showMenu(profile, mode, !state.over),
+  onSettings: () => ui.showSettings(profile),
   onResume: () => ui.close(),
   onNewGame: () => restart(),
   onDaily: () => (mode === 'puzzle' ? puzzleHint() : switchMode(mode === 'daily' ? 'classic' : 'daily')),
@@ -481,7 +484,7 @@ const ui = new Ui({
     else profile.settings[k] = !profile.settings[k];
     saveProfile(profile);
     applyTheme();
-    ui.showMenu(profile, mode, !state.over);
+    ui.showSettings(profile);
   },
   onSkin: () => {
     const ids = profile.unlocked;
@@ -489,13 +492,13 @@ const ui = new Ui({
     saveProfile(profile);
     applyTheme();
     syncScene();
-    ui.showMenu(profile, mode, !state.over);
+    ui.showSettings(profile);
   },
   onTheme: (t) => {
     profile.settings.theme = t;
     saveProfile(profile);
     applyTheme();
-    ui.showMenu(profile, mode, !state.over);
+    ui.showSettings(profile);
   },
   onShare: () => {
     const text = shareText({
