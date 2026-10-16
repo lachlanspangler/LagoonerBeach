@@ -209,3 +209,15 @@ test('catching: captures fill the Beach Journal; the journal opens and shows a s
   const j2 = await page.evaluate(() => (window as any).__atoll.journal());
   expect(j2.total).toBe(j.total);
 });
+
+test('reef of the day: shown in the reef grid and opens a reef', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'All reefs' }).click();
+  const btn = page.locator('#reef-of-day');
+  await expect(btn).toBeVisible();
+  await btn.click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});

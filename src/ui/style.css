@@ -403,3 +403,12 @@ body {
   background: color-mix(in srgb, var(--water) 16%, transparent);
   color: var(--text);
 }
+.reef.t-tricky {
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--water) 45%, transparent);
+}
+.reef.t-deep {
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.reef.t-abyss {
+  box-shadow: inset 0 -3px 0 #5b3a7a;
+}

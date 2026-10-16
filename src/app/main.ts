@@ -12,6 +12,7 @@ import {
 } from '../core/game.ts';
 import { dailySeed, dayIndex, recordDaily, visibleStreak } from '../core/daily.ts';
 import { pieceById } from '../core/pieces.ts';
+import { hashSeed } from '../core/rng.ts';
 import { N } from '../core/grid.ts';
 import { fitsAnywhere } from '../core/rules.ts';
 
@@ -421,6 +422,12 @@ function checkPuzzle(): void {
   const i = state.seed;
   const p = PACK[i]!;
   if (st === 'solved') {
+    const d = today();
+    if (i === dailyReefIndex(d) && !(profile.puzzle.dailyDone ?? []).includes(d)) {
+      profile.puzzle.dailyDone = [...(profile.puzzle.dailyDone ?? []), d];
+      profile.daily = recordDaily(profile.daily, dayIndex(d));
+      later(900, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
+    }
     const first = !profile.puzzle.solved.includes(p.id);
     if (first) profile.puzzle.solved.push(p.id);
     profile.puzzle.pure ??= [];
@@ -491,6 +498,13 @@ function puzzleHint(): void {
   dirty = true;
 }
 
+/** Reef of the day: one Tricky/Deep reef per date, the same for everyone. */
+function dailyReefIndex(date = today()): number {
+  if (!PACK) return 0;
+  const pool = PACK.map((p, i) => (p.tier === 'tricky' || p.tier === 'deep' ? i : -1)).filter((i) => i >= 0);
+  return pool[hashSeed(`reef-of-day:${date}`) % pool.length]!;
+}
+
 function loadPuzzle(i: number): void {
   if (!PACK) return;
   ui.close();
@@ -554,6 +568,7 @@ const ui = new Ui({
       profile.puzzle.solved,
       profile.puzzle.pure ?? [],
       mode === 'puzzle' ? state.seed : profile.puzzle.index,
+      { index: dailyReefIndex(), done: (profile.puzzle.dailyDone ?? []).includes(today()) },
     ),
   onPuzzlePick: (i) => {
     if (mode !== 'puzzle') return;
@@ -721,6 +736,17 @@ function frame(): void {
     if (drawTimes.length > 1200) drawTimes.shift();
   }
   requestAnimationFrame(frame);
+
+  // welcome back: a quiet nudge if a streak is alive and today's daily isn't done yet
+  {
+    const td = dayIndex(today());
+    const streak = visibleStreak(profile.daily, td);
+    if (streak > 0 && profile.daily.lastDay !== td)
+      setTimeout(
+        () => scene.toast(`Welcome back · Streak ${streak} — today's Daily is waiting`, performance.now(), 2600),
+        900,
+      );
+  }
 }
 
 void initNative();

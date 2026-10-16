@@ -38,7 +38,7 @@ export interface Profile {
   unlocked: string[];
   /** solved = cleared at least once; pure = cleared without using a hint. */
   /** hinted = a hint was used on it before a no-hint clear (blocks the no-hint mark). */
-  puzzle: { index: number; solved: string[]; pure?: string[]; hinted?: string[] };
+  puzzle: { index: number; solved: string[]; pure?: string[]; hinted?: string[]; dailyDone?: string[] };
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -117,6 +117,9 @@ export function loadProfile(): Profile {
       solved: Array.isArray(o.puzzle?.solved) ? o.puzzle.solved.filter((x): x is string => typeof x === 'string') : [],
       pure: Array.isArray(o.puzzle?.pure) ? o.puzzle.pure.filter((x): x is string => typeof x === 'string') : [],
       hinted: Array.isArray(o.puzzle?.hinted) ? o.puzzle.hinted.filter((x): x is string => typeof x === 'string') : [],
+      dailyDone: Array.isArray(o.puzzle?.dailyDone)
+        ? o.puzzle.dailyDone.filter((x): x is string => typeof x === 'string').slice(-60)
+        : [],
     },
   };
 }

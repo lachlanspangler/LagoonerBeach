@@ -2111,8 +2111,8 @@
    "basis": "est",
    "value": 3,
    "effort": 3,
-   "status": "backlog",
-   "reason": "Low priority; sound off is the common mobile case."
+   "status": "built",
+   "reason": "Generative synthesized music + wave ambience with its own toggle."
   },
   {
    "id": "I-076",
@@ -2169,8 +2169,8 @@
    "basis": "est",
    "value": 6,
    "effort": 2,
-   "status": "backlog",
-   "reason": "Defer: one daily is clearer; revisit if puzzle mode retains better."
+   "status": "built",
+   "reason": "Built inside the reef grid (no new menu item); counts toward the daily streak."
   },
   {
    "id": "I-079",
@@ -2314,8 +2314,8 @@
    "basis": "est",
    "value": 6,
    "effort": 5,
-   "status": "backlog",
-   "reason": "Charming retention layer; needs a home screen, which we don't have yet (by design)."
+   "status": "merged",
+   "reason": "Merged into the Beach Journal (ADR 0007): the collection with a face."
   },
   {
    "id": "I-087",
@@ -2491,6 +2491,122 @@
    "effort": 4,
    "status": "backlog",
    "reason": "Reef puzzles already cover finite play; revisit if retention data asks for it."
+  },
+  {
+   "id": "I-093",
+   "kind": "feature",
+   "name": "Beach Journal",
+   "pitch": "Every lagoon catches beach creatures tied to its shape; collect all 47.",
+   "closest": "Animal Crossing museum, Neko Atsume",
+   "new": "Shape-tied species turn the collection into a depth tutor.",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 10,
+   "effort": 6,
+   "status": "built",
+   "reason": "ADR 0007; tuned with bots so the journal takes weeks."
+  },
+  {
+   "id": "I-094",
+   "kind": "feature",
+   "name": "Weekly tide goals",
+   "pitch": "Three small goals a week (catch a seahorse, make a 6-lagoon…).",
+   "closest": "Mobile quests",
+   "new": "Structure for lapsed players.",
+   "scores": [
+    2,
+    2,
+    1,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 4,
+   "effort": 3,
+   "status": "rejected",
+   "reason": "Journal hints already act as goals; quests add a screen and pressure."
+  },
+  {
+   "id": "I-095",
+   "kind": "polish",
+   "name": "Welcome back",
+   "pitch": "On launch, a quiet toast with your live streak.",
+   "closest": "Duolingo-lite",
+   "new": "Gentle habit cue, no notifications.",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 5,
+   "effort": 1,
+   "status": "built",
+   "reason": "No push notifications (privacy); a toast is enough."
+  },
+  {
+   "id": "I-096",
+   "kind": "feature",
+   "name": "Push reminders",
+   "pitch": "Daily streak reminder notifications.",
+   "closest": "Most dailies",
+   "new": "Retention.",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 3,
+   "effort": 4,
+   "status": "rejected",
+   "reason": "Needs permissions and native plumbing; conflicts with the no-data, calm stance. Revisit only if the owner wants it."
   }
  ]
 }

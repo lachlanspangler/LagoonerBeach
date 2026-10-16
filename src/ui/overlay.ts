@@ -256,7 +256,8 @@ export class Ui {
     const card = document.createElement('div');
     card.className = 'card reefs journal';
     const n = found(j);
-    card.innerHTML = `<h2>Beach Journal</h2><div class="sub">${n} of ${SPECIES.length} found${j.total ? ` · ${j.total} caught and released` : ''}</div>`;
+    const golden = Object.values(j.entries).reduce((a, e) => a + (e.golden ? 1 : 0), 0);
+    card.innerHTML = `<h2>Beach Journal</h2><div class="sub">${n} of ${SPECIES.length} found${golden ? ` · ${golden} golden` : ''}${j.total ? ` · ${j.total} caught and released` : ''}</div>`;
     const scroller = document.createElement('div');
     scroller.className = 'reef-scroll';
     const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
@@ -319,10 +320,24 @@ export class Ui {
     solved: readonly string[],
     pure: readonly string[],
     current: number,
+    daily?: { index: number; done: boolean },
   ): void {
     const card = document.createElement('div');
     card.className = 'card reefs';
-    card.innerHTML = `<h2>Reefs</h2><div class="sub">${solved.length} of ${list.length} cleared · ★ = no hints</div>`;
+    card.innerHTML = `<h2>Reefs</h2><div class="sub">${solved.length} of ${list.length} cleared${pure.length ? ' · ★ = no hints' : ''}</div>`;
+    if (daily) {
+      const tierName =
+        { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' }[list[daily.index]?.tier ?? ''] ?? '';
+      const b = this.button(
+        'reef-of-day',
+        `btn ${daily.done ? '' : 'primary'}`,
+        `${daily.done ? '✓ ' : ''}Reef of the day · ${daily.index + 1} · ${tierName}`,
+        `Reef of the day, reef ${daily.index + 1}${daily.done ? ', done' : ''}`,
+        () => this.h.onPuzzlePick(daily.index),
+      );
+      b.style.marginBottom = '6px';
+      card.append(b);
+    }
     const scroller = document.createElement('div');
     scroller.className = 'reef-scroll';
     const names: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
@@ -343,7 +358,7 @@ export class Ui {
       const isSolved = solved.includes(p.id);
       const b = this.button(
         '',
-        `reef${isSolved ? ' done' : ''}${i === current ? ' cur' : ''}`,
+        `reef t-${tier}${isSolved ? ' done' : ''}${i === current ? ' cur' : ''}`,
         `${i + 1}${isPure ? '<sup>★</sup>' : ''}`,
         `Reef ${i + 1}${isSolved ? ', cleared' : ''}`,
         () => this.h.onPuzzlePick(i),

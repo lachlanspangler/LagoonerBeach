@@ -4,11 +4,12 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**85 ideas** — chosen: 1 · built: 17 · prototyped: 4 · shortlisted: 0 · backlog: 17 · merged: 4 · rejected: 42
+**89 ideas** — chosen: 1 · built: 21 · prototyped: 4 · shortlisted: 0 · backlog: 14 · merged: 5 · rejected: 44
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
 | I-001 | chosen | Hollow (loop clear) | Close a loop of blocks and everything inside it pops. | Block Blast + Go capture + Two Dots squares | 27 | ✓ | 10/4 | meas |
+| I-093 | built | Beach Journal | Every lagoon catches beach creatures tied to its shape; collect all 47. | Animal Crossing museum, Neko Atsume | 28 | ✓ | 10/6 | est |
 | I-069 | built | Seal tick | A tiny haptic+sound the moment your drag would seal a lagoon. | — | 27 | ✓ | 8/1 | est |
 | I-074 | built | Clear-the-reef puzzles | Hand-checked daily puzzle: clear a set board with fixed pieces. | Meowdoku levels | 27 | ✓ | 8/5 | est |
 | I-072 | built | Lagoon fish | Big lagoons get a little fish that leaps out when they pop. | Meowdoku cats | 26 | ✓ | 7/3 | est |
@@ -18,6 +19,7 @@
 | I-071 | built | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
 | I-073 | built | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
 | I-076 | built | Points peek | While dragging over a big capture, show its points next to the ghost. | — | 24 | ✗ | 5/1 | est |
+| I-078 | built | Reef of the day | One shared reef puzzle per day with its own streak. | Queens daily | 24 | ✗ | 6/2 | est |
 | I-079 | built | No-hint marks | Reefs cleared without a hint get a distinct mark. | Meowdoku stars | 24 | ✗ | 5/1 | est |
 | I-083 | built | Best moment card | Game-over card shows your biggest lagoon as a little picture. | — | 24 | ✗ | 5/2 | est |
 | I-087 | built | Tide dots | Three dots show how many dry moves your streak has left. | — | 24 | ✗ | 7/1 | est |
@@ -26,16 +28,16 @@
 | I-080 | built | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
 | I-090 | built | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
 | I-091 | built | Best-crossing moment | The instant you pass your best, a callout and chime — mid-game, once. | Block Blast | 23 | ✗ | 7/1 | est |
+| I-095 | built | Welcome back | On launch, a quiet toast with your live streak. | Duolingo-lite | 23 | ✗ | 5/1 | est |
+| I-075 | built | Ambient sea | Soft procedural wave bed under the SFX. | Calm puzzle games | 20 | ✗ | 3/3 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
-| I-078 | backlog | Reef of the day | One shared reef puzzle per day with its own streak. | Queens daily | 24 | ✗ | 6/2 | est |
 | I-089 | backlog | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
 | I-092 | backlog | Goal levels | Short levels with a target: capture a 6-cell lagoon within 15 moves. | Block Blast adventure | 24 | ✗ | 5/4 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
-| I-084 | backlog | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
@@ -46,15 +48,17 @@
 | I-039 | backlog | Echo | Every piece you place comes back two turns later. | Block Blast | 21 | ✗ | 4/2 | est |
 | I-049 | backlog | Level Ground | Each block raises the ground; flatten a row to clear it. | Terraforming sims | 21 | ✗ | 4/5 | est |
 | I-045 | backlog | Lasso | Draw a loop around blocks to clear them. | Two Dots squares, Qix | 20 | ✗ | 4/4 | est |
-| I-075 | backlog | Ambient sea | Soft procedural wave bed under the SFX. | Calm puzzle games | 20 | ✗ | 3/3 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
 | I-041 | merged | Flip Puzzle | Use these pieces to wipe the pattern clean. | Lights Out | 23 | ✗ | 6/3 | est |
+| I-084 | merged | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
 | I-022 | merged | Kaleidoscope | Each piece also appears rotated around the center. | Mirror (I-008) | 22 | ✗ | 4/2 | est |
 | I-054 | merged | Magnet Wall | Clears pull everything toward the magnet. | Tetris | 20 | ✗ | 3/3 | est |
 | I-051 | rejected | Hollow + Lines | Fill a line or close a loop to clear. | Block Blast | 25 | ✗ | 6/1 | meas |
 | I-052 | rejected | Moat | Seal off any space — even against the wall — and it pops. | Qix / Xonix | 24 | ✗ | 5/2 | meas |
 | I-082 | rejected | Puzzle undo | Step back one placement in a reef puzzle. | Meowdoku undo | 23 | ✗ | 3/2 | est |
+| I-096 | rejected | Push reminders | Daily streak reminder notifications. | Most dailies | 23 | ✗ | 3/4 | est |
 | I-021 | rejected | Dartboard | Fill a ring or a spoke on a round board to clear it. | Block Blast | 22 | ✗ | 4/6 | est |
+| I-094 | rejected | Weekly tide goals | Three small goals a week (catch a seahorse, make a 6-lagoon…). | Mobile quests | 22 | ✗ | 4/3 | est |
 | I-009 | rejected | Region Pop | Fill a colored region to pop it. | Woodoku boxes + Meowdoku regions | 21 | ✗ | 4/3 | est |
 | I-010 | rejected | Cash Out | Full lines wait for you; tap to cash them — more at once pays more. | Block Blast + push-your-luck dice | 21 | ✗ | 5/2 | est |
 | I-019 | rejected | Cluster Pop | Six touching blocks of one color pop. | Puyo Puyo | 21 | ✗ | 4/2 | est |
@@ -104,6 +108,14 @@
 - **Value/effort:** 10/4
 - **Reason:** Chosen (ADR 0001). Only candidate passing every gate on measured data; huge planning headroom; big loops form a visible jackpot.
 - **Data:** hollow8-ramp2: median moves random/firstFit/greedy/search 17/27/80/488; score skill 53.7×; firstFit÷search 0.03, greedy÷search 0.12; 2.2 moves/clear; median best pocket 19 cells. R4=1: greedy sessions too long until ramp is tuned. R2 needs a scripted first tray (pocket in 2 moves).
+
+### I-093 — Beach Journal (built)
+- **Pitch:** Every lagoon catches beach creatures tied to its shape; collect all 47.
+- **Closest existing:** Animal Crossing museum, Neko Atsume
+- **What's new:** Shape-tied species turn the collection into a depth tutor.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 2 2 2 2 2 → **28**/28, gates pass (est)
+- **Value/effort:** 10/6
+- **Reason:** ADR 0007; tuned with bots so the journal takes weeks.
 
 ### I-069 — Seal tick (built)
 - **Pitch:** A tiny haptic+sound the moment your drag would seal a lagoon.
@@ -178,6 +190,14 @@
 - **Value/effort:** 5/1
 - **Reason:** Shown only for lagoons of 3+, so pinches stay clean.
 
+### I-078 — Reef of the day (built)
+- **Pitch:** One shared reef puzzle per day with its own streak.
+- **Closest existing:** Queens daily
+- **What's new:** Daily puzzle cadence for the puzzle audience.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** Built inside the reef grid (no new menu item); counts toward the daily streak.
+
 ### I-079 — No-hint marks (built)
 - **Pitch:** Reefs cleared without a hint get a distinct mark.
 - **Closest existing:** Meowdoku stars
@@ -244,6 +264,22 @@
 - **Value/effort:** 7/1
 - **Reason:** Proven retention beat; cheap.
 
+### I-095 — Welcome back (built)
+- **Pitch:** On launch, a quiet toast with your live streak.
+- **Closest existing:** Duolingo-lite
+- **What's new:** Gentle habit cue, no notifications.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** No push notifications (privacy); a toast is enough.
+
+### I-075 — Ambient sea (built)
+- **Pitch:** Soft procedural wave bed under the SFX.
+- **Closest existing:** Calm puzzle games
+- **What's new:** Mood.
+- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 0 1 1 1 2 2 → **20**/28, gates FAIL (est)
+- **Value/effort:** 3/3
+- **Reason:** Generative synthesized music + wave ambience with its own toggle.
+
 ### I-005 — Overgrowth (growing tray) (prototyped)
 - **Pitch:** Every piece you skip grows one block.
 - **Closest existing:** Block Blast
@@ -288,14 +324,6 @@
 - **Value/effort:** 5/4
 - **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
 
-### I-078 — Reef of the day (backlog)
-- **Pitch:** One shared reef puzzle per day with its own streak.
-- **Closest existing:** Queens daily
-- **What's new:** Daily puzzle cadence for the puzzle audience.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 6/2
-- **Reason:** Defer: one daily is clearer; revisit if puzzle mode retains better.
-
 ### I-089 — Second lesson (backlog)
 - **Pitch:** After your first pinch, the next hint suggests a 2-cell lagoon.
 - **Closest existing:** Onboarding ladders
@@ -319,14 +347,6 @@
 - **Scores (R1..R14):** 2 1 2 1 2 1 2 2 2 1 1 2 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 5/2
 - **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later.
-
-### I-084 — Living atoll (backlog)
-- **Pitch:** Your best lagoons grow a little island collection on the home screen.
-- **Closest existing:** Meowdoku cat collection
-- **What's new:** Meta-progression with a face.
-- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 2 2 1 1 2 2 → **23**/28, gates FAIL (est)
-- **Value/effort:** 6/5
-- **Reason:** Charming retention layer; needs a home screen, which we don't have yet (by design).
 
 ### I-008 — Mirror (backlog)
 - **Pitch:** Everything you place is reflected across the mirror.
@@ -408,14 +428,6 @@
 - **Value/effort:** 4/4
 - **Reason:** Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb.
 
-### I-075 — Ambient sea (backlog)
-- **Pitch:** Soft procedural wave bed under the SFX.
-- **Closest existing:** Calm puzzle games
-- **What's new:** Mood.
-- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 0 1 1 1 2 2 → **20**/28, gates FAIL (est)
-- **Value/effort:** 3/3
-- **Reason:** Low priority; sound off is the common mobile case.
-
 ### I-042 — Hollow Daily Puzzle (merged)
 - **Pitch:** Clear the whole board with today's pieces.
 - **Closest existing:** Wordle-style dailies
@@ -431,6 +443,14 @@
 - **Scores (R1..R14):** 2 2 2 2 2 1 2 2 1 2 0 1 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 6/3
 - **Reason:** Puzzle mode of I-003; evaluated with it.
+
+### I-084 — Living atoll (merged)
+- **Pitch:** Your best lagoons grow a little island collection on the home screen.
+- **Closest existing:** Meowdoku cat collection
+- **What's new:** Meta-progression with a face.
+- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 2 2 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 6/5
+- **Reason:** Merged into the Beach Journal (ADR 0007): the collection with a face.
 
 ### I-022 — Kaleidoscope (merged)
 - **Pitch:** Each piece also appears rotated around the center.
@@ -474,6 +494,14 @@
 - **Value/effort:** 3/2
 - **Reason:** Reefs are ≤3 moves; Restart is already a full undo with less UI.
 
+### I-096 — Push reminders (rejected)
+- **Pitch:** Daily streak reminder notifications.
+- **Closest existing:** Most dailies
+- **What's new:** Retention.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 3/4
+- **Reason:** Needs permissions and native plumbing; conflicts with the no-data, calm stance. Revisit only if the owner wants it.
+
 ### I-021 — Dartboard (rejected)
 - **Pitch:** Fill a ring or a spoke on a round board to clear it.
 - **Closest existing:** Block Blast
@@ -481,6 +509,14 @@
 - **Scores (R1..R14):** 2 2 2 1 2 1 1 2 2 1 1 1 2 2 → **22**/28, gates FAIL (est)
 - **Value/effort:** 4/6
 - **Reason:** Pieces bend around rings → unreadable silhouettes; a grid skin.
+
+### I-094 — Weekly tide goals (rejected)
+- **Pitch:** Three small goals a week (catch a seahorse, make a 6-lagoon…).
+- **Closest existing:** Mobile quests
+- **What's new:** Structure for lapsed players.
+- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 0 1 1 2 2 → **22**/28, gates FAIL (est)
+- **Value/effort:** 4/3
+- **Reason:** Journal hints already act as goals; quests add a screen and pressure.
 
 ### I-009 — Region Pop (rejected)
 - **Pitch:** Fill a colored region to pop it.
