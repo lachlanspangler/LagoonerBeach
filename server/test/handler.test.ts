@@ -3,13 +3,13 @@
  * Every accepted score here is a real game replayed by the server's copy of src/core.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
-import { handle, type Deps } from '../src/handler.ts';
+import { LIMITS, handle, type Deps } from '../src/handler.ts';
 import { MemoryStore } from '../src/store.ts';
 import { signRun, readRun } from '../src/token.ts';
 import { dailySeed } from '../../src/core/daily.ts';
 import { packMoves } from '../../src/core/movelog.ts';
 import { RULES_VERSION } from '../../src/core/version.ts';
-import { weekBoard, type BoardEntry, type RunTicket, type Standing } from '../../src/meta/boards.ts';
+import { LB_LIMITS, weekBoard, type BoardEntry, type RunTicket, type Standing } from '../../src/meta/boards.ts';
 import { rot13 } from '../../src/meta/names.ts';
 import { playOut } from '../../tests/unit/runs.ts';
 
@@ -29,11 +29,21 @@ beforeEach(() => {
   deps = { store, secret: 'test-secret', now: () => clock, newSeed: () => seeds.shift() ?? 999 };
 });
 
+/**
+ * Each test player calls from their own address by default (derived from the install id in the body
+ * or query), like real players; tests of the per-address limits pass `cf-connecting-ip` explicitly.
+ */
+function ipFor(path: string, body: unknown): string {
+  const bid = (body as { installId?: unknown } | null | undefined)?.installId;
+  const who = typeof bid === 'string' ? bid : (/installId=([0-9a-f]+)/.exec(path)?.[1] ?? 'anon');
+  return `198.51.100.${(parseInt(who.slice(-6), 16) || 0) % 250}`;
+}
+
 async function call(method: string, path: string, body?: unknown, headers: Record<string, string> = {}) {
   const res = await handle(
     new Request(`https://lb.test${path}`, {
       method,
-      headers: { 'content-type': 'application/json', ...headers },
+      headers: { 'content-type': 'application/json', 'cf-connecting-ip': ipFor(path, body), ...headers },
       ...(body === undefined ? {} : { body: typeof body === 'string' ? body : JSON.stringify(body) }),
     }),
     deps,
@@ -62,11 +72,18 @@ const daily = (installId: string, name: string, extra: Record<string, unknown> =
   ...extra,
 });
 
-/** Issue a run token, play the issued seed, and advance the clock by a human-ish pace. */
-async function endlessRun(installId: string, name: string, salt = 0, pace = 1000) {
+/**
+ * Issue a run token, report the first move like the client does (unless `start` is false: an offline
+ * start), play the issued seed, and advance the clock by a human-ish pace.
+ */
+async function endlessRun(installId: string, name: string, salt = 0, pace = 1000, start = true) {
   const t = await call('POST', '/v1/runs', { installId, rules: RULES_VERSION });
   expect(t.status).toBe(201);
   const ticket = t.body as RunTicket;
+  if (start) {
+    const s = await call('POST', `/v1/runs/${ticket.runId}/start`, { runToken: ticket.runToken });
+    expect(s.status).toBe(200);
+  }
   const g = playOut(ticket.seed, { quick: true, salt });
   clock += g.moves.length * pace;
   return {
@@ -253,11 +270,68 @@ describe('POST /v1/runs + endless submissions', () => {
     expect((await call('POST', '/v1/scores', body)).status).toBe(200);
     expect((await call('POST', '/v1/scores', { ...body, installId: id(8) })).body.error.code).toBe('duplicate_run');
     // anonymous issuing is rate-limited per (hashed) address, without storing the address
-    for (let i = 0; i < 29; i++)
+    for (let i = 0; i < LIMITS.runs.ip - 1; i++)
       await call('POST', '/v1/runs', { rules: RULES_VERSION }, { 'cf-connecting-ip': '203.0.113.9' });
     const limited = await call('POST', '/v1/runs', { rules: RULES_VERSION }, { 'cf-connecting-ip': '203.0.113.9' });
     expect(limited.status).toBe(429);
     expect([...store.rate.keys()].some((k) => k.includes('203.0.113.9'))).toBe(false);
+  });
+
+  it('the weekly board is the week the score arrives in, not the week the ticket was issued', async () => {
+    // a spare ticket fetched late on Sunday (UTC), played and posted on Monday
+    clock = Date.parse('2026-10-18T23:00:00Z'); // Sunday, ISO week 42
+    const { body } = await endlessRun(id(1), 'TIDE', 0, 1000, false);
+    clock = Date.parse('2026-10-19T09:00:00Z'); // Monday, week 43
+    const r = await call('POST', '/v1/scores', body);
+    expect(r.status).toBe(200);
+    expect(r.body.boards.map((b: Standing) => b.board)).toEqual(['endless:all', 'endless:w2026-43']);
+    expect((await call('GET', '/v1/boards/endless:week/top')).body.entries.map((e: BoardEntry) => e.name)).toEqual([
+      'TIDE',
+    ]);
+  });
+
+  it('the speed check measures from the run start, so a prefetched ticket buys no time', async () => {
+    const honest = await endlessRun(id(1), 'TIDE');
+    await call('POST', '/v1/scores', honest.body);
+    // ticket prefetched, then 10 h later a bot starts it and plays at 10 ms per move
+    const t = (await call('POST', '/v1/runs', { installId: id(2), rules: RULES_VERSION })).body as RunTicket;
+    clock += 10 * 3_600_000;
+    expect((await call('POST', `/v1/runs/${t.runId}/start`, { runToken: t.runToken })).body).toEqual({
+      startedAt: clock,
+    });
+    const g = playOut(t.seed, { quick: true, salt: 4 });
+    clock += g.moves.length * 10;
+    const bot = {
+      ...honest.body,
+      name: 'ROBO',
+      installId: id(2),
+      seed: t.seed,
+      runToken: t.runToken,
+      moves: packMoves(g.moves),
+      score: g.state.score,
+    };
+    expect((await call('POST', '/v1/scores', bot)).status).toBe(200);
+    expect((await call('GET', '/v1/boards/endless:all/top')).body.entries.map((e: BoardEntry) => e.name)).toEqual([
+      'TIDE',
+    ]);
+  });
+
+  it('run start: the first call wins, needs the matching token, and offline starts are not speed-checked', async () => {
+    const t = (await call('POST', '/v1/runs', { installId: id(1), rules: RULES_VERSION })).body as RunTicket;
+    const first = clock;
+    expect((await call('POST', `/v1/runs/${t.runId}/start`, { runToken: t.runToken })).status).toBe(200);
+    clock += 60_000;
+    expect((await call('POST', `/v1/runs/${t.runId}/start`, { runToken: t.runToken })).body.startedAt).toBe(first);
+    expect((await call('POST', `/v1/runs/${'0'.repeat(32)}/start`, { runToken: t.runToken })).status).toBe(422);
+    expect((await call('POST', `/v1/runs/${t.runId}/start`, { runToken: 'x.y' })).body.error.code).toBe(
+      'token_invalid',
+    );
+    // never started (offline): a fast run is ranked normally — documented in ADR 0010
+    const off = await endlessRun(id(3), 'QUICK', 6, 10, false);
+    expect((await call('POST', '/v1/scores', off.body)).status).toBe(200);
+    expect((await call('GET', '/v1/boards/endless:all/top')).body.entries.map((e: BoardEntry) => e.name)).toEqual([
+      'QUICK',
+    ]);
   });
 
   it('runs need a well-formed install id (if any) and the current rules', async () => {
@@ -292,6 +366,20 @@ describe('ranking queries', () => {
     expect(top.body.entries.map((e: BoardEntry) => e.name)).toEqual([order[0]!.name, 'LATE', order[1]!.name]);
     expect(top.body.entries.map((e: BoardEntry) => e.rank)).toEqual([1, 2, 3]);
     expect(top.headers.get('cache-control')).toContain('max-age');
+  });
+
+  it('top with an install id tags that row `me` and is never cached; anonymous top is public', async () => {
+    const order = await fill();
+    // a tie with the leader: same score, so "rank equal to mine" would be ambiguous on a cached board
+    clock += 1000;
+    await call('POST', '/v1/scores', daily(id(99), 'LATE', {}, order[0]!.run));
+    const mine = await call('GET', `/v1/boards/daily:${DAY}/top?limit=5&installId=${id(99)}`);
+    expect(mine.headers.get('cache-control')).toBe('no-store');
+    expect(mine.body.entries.filter((e: BoardEntry) => e.me).map((e: BoardEntry) => e.name)).toEqual(['LATE']);
+    const anon = await call('GET', `/v1/boards/daily:${DAY}/top?limit=5`);
+    expect(anon.headers.get('cache-control')).toBe('public, max-age=30');
+    expect(anon.body.entries.some((e: BoardEntry) => e.me)).toBe(false);
+    expect((await call('GET', `/v1/boards/daily:${DAY}/top?installId=nope`)).status).toBe(400);
   });
 
   it('around me: the window, my rank, and who is just above', async () => {
@@ -377,6 +465,55 @@ describe('players, limits, CORS', () => {
     expect((await call('POST', '/v1/scores', daily(id(1), 'CORAL'))).status).toBe(200);
   });
 
+  it('rotating install ids from one address hits the address limits (100 tickets → limited)', async () => {
+    const ip = { 'cf-connecting-ip': '203.0.113.50' };
+    const statuses: number[] = [];
+    for (let i = 0; i < 100; i++)
+      statuses.push((await call('POST', '/v1/runs', { installId: id(1000 + i), rules: RULES_VERSION }, ip)).status);
+    // at most idsPerIpDay distinct ids per address per day get tickets; the rest are refused
+    expect(statuses.filter((s) => s === 201)).toHaveLength(LB_LIMITS.idsPerIpDay);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(100 - LB_LIMITS.idsPerIpDay);
+    // and the address window caps even a single id (or none) per hour
+    const one: number[] = [];
+    for (let i = 0; i < LIMITS.runs.ip + 5; i++)
+      one.push(
+        (await call('POST', '/v1/runs', { rules: RULES_VERSION }, { 'cf-connecting-ip': '203.0.113.51' })).status,
+      );
+    expect(one.filter((s) => s === 201)).toHaveLength(LIMITS.runs.ip);
+    // another address is unaffected; no key names the address, and the per-address sets hold
+    // neither the address nor the install ids (only salted hashes)
+    expect((await call('POST', '/v1/runs', { installId: id(1), rules: RULES_VERSION })).status).toBe(201);
+    expect([...store.rate.keys()].some((k) => k.includes('203.0.113'))).toBe(false);
+    const sets = [...store.sets.keys(), ...[...store.sets.values()].flatMap((s) => [...s.keys()])];
+    expect(sets.some((k) => k.includes('203.0.113') || k.includes(id(1000)) || k.includes(id(1)))).toBe(false);
+  });
+
+  it('submissions are capped per address too (rotating ids share the address window)', async () => {
+    const ip = { 'cf-connecting-ip': '203.0.113.60' };
+    const statuses: number[] = [];
+    // forged scores from ten rotating ids: each id stays far under its own limit
+    for (let i = 0; i < LIMITS.submit.ip + 3; i++)
+      statuses.push((await call('POST', '/v1/scores', daily(id(2000 + (i % 10)), 'CORAL', { score: 1 }), ip)).status);
+    expect(statuses.filter((s) => s === 422)).toHaveLength(LIMITS.submit.ip);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(3);
+  });
+
+  it(`a Daily board takes at most ${LB_LIMITS.dailyRowsPerIp} rows per address (first finish can't be farmed)`, async () => {
+    const ip = { 'cf-connecting-ip': '203.0.113.70' };
+    const runs = [1, 2, 3, 4].map((s) => dailyRun(DAY, s * 7));
+    const r: { status: number; code?: string }[] = [];
+    for (let i = 0; i < 4; i++) {
+      const x = await call('POST', '/v1/scores', daily(id(3000 + i), 'CORAL', {}, runs[i]), ip);
+      r.push({ status: x.status, code: x.body.error?.code });
+    }
+    expect(r.slice(0, 3).every((x) => x.status === 200)).toBe(true);
+    expect(r[3]).toEqual({ status: 429, code: 'board_limit' });
+    // a player already on the board can still retry, and other addresses are unaffected
+    expect((await call('POST', '/v1/scores', daily(id(3000), 'CORAL', {}, runs[0]), ip)).status).toBe(200);
+    expect((await call('POST', '/v1/scores', daily(id(3009), 'KELP', {}, runs[3]))).status).toBe(200);
+    expect((await call('GET', `/v1/boards/daily:${DAY}/top`)).body.total).toBe(4);
+  });
+
   it('answers CORS preflights and honours the allowed-origin list', async () => {
     const pre = await handle(new Request('https://lb.test/v1/scores', { method: 'OPTIONS' }), deps);
     expect(pre.status).toBe(204);
@@ -403,5 +540,20 @@ describe('players, limits, CORS', () => {
     await call('POST', '/v1/scores', body);
     await store.cleanup(clock + 73 * 3_600_000);
     expect(store.runs.size).toBe(0);
+    expect(store.starts.size).toBe(0);
+  });
+
+  it('cleanup keeps what the privacy policy says: rate counters ≤ their window, IP sets until they expire', async () => {
+    await call('POST', '/v1/scores', daily(id(1), 'CORAL'));
+    expect(store.rate.size).toBeGreaterThan(0);
+    expect(store.sets.size).toBeGreaterThan(0);
+    await store.cleanup(clock + 30 * 60_000);
+    expect(store.rate.size).toBeGreaterThan(0); // still inside its window
+    await store.cleanup(clock + 61 * 60_000);
+    expect(store.rate.size).toBe(0); // the hourly cron drops it within 2 h of its first hit
+    await store.cleanup(clock + 86_400_000); // the per-day install-id set has expired
+    expect([...store.sets.keys()].some((k) => k.startsWith('ids:'))).toBe(false);
+    await store.cleanup(Date.parse(`${DAY}T00:00:00Z`) + LB_LIMITS.dailyLateMs); // that Daily closed
+    expect(store.sets.size).toBe(0);
   });
 });
