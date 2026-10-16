@@ -94,6 +94,9 @@ interface Placing {
   start: number;
 }
 
+/** Seconds a leaping creature stays on screen. */
+const FISH_LIFE = 1.25;
+
 export const FONT = `ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif`;
 
 export class Scene {
@@ -652,11 +655,12 @@ export class Scene {
     const g = this.g;
     for (const f of this.fish) {
       const t = (now - f.start) / 1000;
-      if (t < 0 || t > 0.9) continue;
+      if (t < 0 || t > FISH_LIFE) continue;
+      const grav = this.layout.cell * 34;
       const x = f.x + f.vx * t;
-      const y = f.y + f.vy * t + 0.5 * 2600 * t * t;
-      const ang = Math.atan2(f.vy + 2600 * t, f.vx);
-      const fade = t > 0.7 ? 1 - (t - 0.7) / 0.2 : 1;
+      const y = f.y + f.vy * t + 0.5 * grav * t * t;
+      const ang = Math.atan2(f.vy + grav * t, f.vx);
+      const fade = t > FISH_LIFE - 0.25 ? (FISH_LIFE - t) / 0.25 : 1;
       const sp = f.species ? SPECIES_BY_ID.get(f.species) : undefined;
       if (sp) {
         if (f.isNew) {
@@ -796,7 +800,7 @@ export class Scene {
     this.ripples = this.ripples.filter((x) => now - x.start < 700);
     this.texts = this.texts.filter((x) => now - x.start < x.life);
     this.placing = this.placing.filter((x) => now - x.start < MOTION.place);
-    this.fish = this.fish.filter((x) => now - x.start < 900);
+    this.fish = this.fish.filter((x) => now - x.start < FISH_LIFE * 1000);
   }
 
   /** True when something is animating (lets the loop idle to save battery). */

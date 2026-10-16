@@ -13,6 +13,7 @@ import { MOTION, calloutFor } from '../render/theme.ts';
 import type { Sfx } from '../audio/sfx.ts';
 import type { Haptics } from '../platform/haptics.ts';
 import type { LagoonCatch } from '../meta/catch.ts';
+import { SPECIES_BY_ID } from '../meta/creatures.ts';
 
 interface Scheduled {
   at: number;
@@ -21,6 +22,8 @@ interface Scheduled {
 
 export class Fx {
   private queue: Scheduled[] = [];
+  /** Species already celebrated as "New!" this session (a cascade can catch one twice). */
+  private announced = new Set<string>();
 
   constructor(
     private readonly scene: Scene,
@@ -148,24 +151,48 @@ export class Fx {
               const caught = (opts.catches ?? [])
                 .filter((c) => c.wave === k + 1)
                 .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
+              const announced = new Set<string>();
               caught.slice(0, 4).forEach((c, f) => {
-                const isNew = opts.newIds?.has(c.x.id) ?? false;
+                // only the first of a newly discovered species gets the "New!" treatment
+                const isNew =
+                  (opts.newIds?.has(c.x.id) ?? false) && !announced.has(c.x.id) && !this.announced.has(c.x.id);
+                if (isNew) {
+                  announced.add(c.x.id);
+                  this.announced.add(c.x.id);
+                }
                 const [lx, ly] = sc.cellCenter(c.cells[Math.floor(c.cells.length / 2)]!);
                 const dir = (f + k) % 2 ? -1 : 1;
                 sc.fish.push({
                   x: lx,
                   y: ly,
-                  vx: dir * l.cell * (isNew ? 1.4 : 2 + sc.rand() * 1.5),
-                  vy: -l.cell * (isNew ? 17 : 12 + sc.rand() * 3),
+                  vx: dir * l.cell * (isNew ? 1.2 : 1.6 + sc.rand() * 1.2),
+                  vy: -l.cell * (isNew ? 13 : 10 + sc.rand() * 2),
                   start: t0 + 90 + f * 110,
-                  size: l.cell * 0.34,
+                  size: l.cell * (isNew ? 0.62 : 0.5),
                   hue: '#FF8A3D',
                   species: c.x.id,
                   golden: c.x.golden,
                   isNew,
                 });
               });
-              if (caught.some((c) => opts.newIds?.has(c.x.id))) this.at(t0 + 200, () => this.sfx.discovery());
+              const fresh = caught.filter((c) => opts.newIds?.has(c.x.id));
+              if (fresh.length)
+                this.at(t0 + 200, () => {
+                  this.sfx.discovery();
+                  const names = [...new Set(fresh.map((c) => SPECIES_BY_ID.get(c.x.id)?.name ?? ''))].join(' · ');
+                  // discovery toast in the band above the board (never on it)
+                  sc.texts.push({
+                    text: `New: ${names}`,
+                    x: l.w / 2,
+                    y: Math.max(l.hud.y + l.hud.h + l.cell * 0.05, l.board.y - l.cell * 0.2) - l.cell * 0.75,
+                    start: performance.now(),
+                    size: l.cell * 0.38,
+                    life: 1700,
+                    strong: false,
+                    accent: true,
+                    rise: 0.1,
+                  });
+                });
               this.sfx.capture(area, e.streak, k);
               // feel the streak: long streaks and big moments hit harder
               this.haptics.fire(k > 0 || area >= 12 || e.streak >= 5 ? 'heavy' : 'medium');
