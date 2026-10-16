@@ -180,6 +180,7 @@ function applyTheme(): void {
   scene.reducedMotion = rm;
   scene.textScale = profile.settings.largeText ? 1.25 : 1;
   document.documentElement.dataset.large = profile.settings.largeText ? '1' : '0';
+  document.documentElement.dataset.motion = rm ? 'reduced' : 'full'; // creature idles (ADR 0011)
   scene.particles.budget = rm ? 0.3 : 1;
   // always-on styles (e.g. Glyph) and anything earned so far — not only after a game ends
   for (const id of unlockedIds(snapshot())) if (!profile.unlocked.includes(id)) profile.unlocked.push(id);

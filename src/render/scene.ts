@@ -795,7 +795,16 @@ export class Scene {
         }
         g.globalAlpha = fade;
         const facing = Math.cos(ang) < 0;
-        drawCreature(g, sp, x, y, f.size * 1.6 * scale, facing ? ang - Math.PI : ang, { golden: f.golden });
+        // ADR 0011: size-class leap scale, faces its travel, catch hook while leaping, happy (surprised when new)
+        drawCreature(g, sp, x, y, f.size * 1.6 * scale, facing ? ang - Math.PI : ang, {
+          golden: f.golden,
+          fit: 'leap',
+          flip: facing,
+          night: this.palette.name === 'night',
+          t,
+          expression: f.isNew && t < T1 ? 'surprised' : 'happy',
+          action: t < T1 && !f.isNew ? { kind: 'catch', u: t / T1 } : undefined,
+        });
         g.globalAlpha = 1;
         continue;
       }
