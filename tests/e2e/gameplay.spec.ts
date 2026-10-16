@@ -192,6 +192,58 @@ test('reef list: pick any reef', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
+test('endless reef 361: generated in the worker, cleared with real drags, next reef is instant', async ({ page }) => {
+  const errors = await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.evaluate(() => (window as any).__atoll.loadPuzzle(360));
+  await expect.poll(async () => (await state(page)).seed).toBe(360);
+  const solution = await page.evaluate(() => (window as any).__atoll.puzzleSolution());
+  expect(solution.length).toBeGreaterThanOrEqual(2);
+  for (const m of solution) {
+    const path = await page.evaluate((mv) => (window as any).__atoll.pathFor({ slot: mv.piece, x: mv.x, y: mv.y }), m);
+    await page.mouse.move(path.down.x, path.down.y);
+    await page.mouse.down();
+    await page.mouse.move(path.up.x, path.up.y, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+  }
+  await expect(page.getByTestId('puzzle-result')).toHaveText('Cleared');
+  const p = await page.evaluate(() => (window as any).__atoll.profile());
+  expect(p.puzzle.solved).toContain('g361');
+  // prefetched while reef 361 was played: tapping Next opens reef 362 without waiting
+  expect(await page.evaluate(() => (window as any).__atoll.reefReady(361))).toBe(true);
+  await page.locator('#next-reef').click();
+  expect((await state(page)).seed).toBe(361);
+  const stats = await page.evaluate(() => (window as any).__atoll.reefStats());
+  expect(stats.worker).toBe(true);
+  expect(stats.fallback).toBe(0);
+  expect(stats.cached).toEqual(expect.arrayContaining([361, 362, 363, 364]));
+  expect(errors).toEqual([]);
+});
+
+test('reef list: chapters with navigation, into the endless reefs', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'All reefs' }).click();
+  const title = page.getByTestId('chapter-title');
+  await expect(title).toHaveText(/^Chapter 1 · /);
+  await expect(page.getByRole('button', { name: 'Previous chapter' })).toBeDisabled();
+  expect(await page.locator('.reef-grid .reef').count()).toBe(20); // one chapter in the DOM
+  for (let c = 1; c < 19; c++) await page.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(title).toHaveText(/^Chapter 19 · /);
+  await expect(page.locator('.chapter-title')).toContainText('endless');
+  await page.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(title).toHaveText(/^Chapter 20 · /);
+  await expect(page.getByRole('button', { name: 'Next chapter' })).toBeDisabled(); // one past the frontier
+  await page.getByRole('button', { name: 'Previous chapter' }).click();
+  await page.getByRole('button', { name: 'Reef 361', exact: true }).click();
+  await expect.poll(async () => (await state(page)).seed).toBe(360);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
 test('catching: captures fill the Beach Journal; the journal opens and shows a species', async ({ page }) => {
   await boot(page, 'seed=3&fast=1');
   await page.evaluate(() => (window as any).__atoll.autoplay('human', 400));
