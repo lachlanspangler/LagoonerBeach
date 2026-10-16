@@ -127,3 +127,32 @@ test('soak: 400 moves across several games without heap growth', async ({ page }
   console.log('heap MB before/after', (h0 / 1e6).toFixed(2), (h1 / 1e6).toFixed(2));
   expect(h1 - h0).toBeLessThan(2.5e6);
 });
+
+test('night theme (glow + plankton, always animating) stays within the draw budget', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, colorScheme: 'dark' });
+  const page = await ctx.newPage();
+  await boot(page, 'seed=11');
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => (window as any).__atoll.autoplay('random', 14));
+  await page.evaluate(() => (window as any).__atoll.clearFrames());
+  await page.waitForTimeout(3000);
+  const draws: number[] = await page.evaluate(() => (window as any).__atoll.drawTimes());
+  const sorted = [...draws].sort((a, b) => a - b);
+  const p95 = sorted[Math.floor(sorted.length * 0.95)]!;
+  const iv: number[] = await page.evaluate(() => (window as any).__atoll.frameTimes());
+  iv.sort((a, b) => a - b);
+  console.log(
+    'night idle frames',
+    draws.length,
+    'p95 draw ms',
+    p95.toFixed(2),
+    'median interval',
+    iv[iv.length >> 1]?.toFixed(1),
+  );
+  // Note: under CPU throttling headless Chromium composites in software, so frame *rate* here is
+  // not a phone proxy (≈20 fps for any theme); our own draw cost is the measured budget.
+  expect(draws.length).toBeGreaterThan(30);
+  expect(p95).toBeLessThan(8 * K);
+  await ctx.close();
+});

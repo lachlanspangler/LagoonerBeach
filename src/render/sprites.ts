@@ -40,6 +40,26 @@ export class SpriteCache {
     return c;
   }
 
+  /** Night-theme halo (2× cell, soft radial) for additive glow under pebbles. */
+  glow(color: number, size: number): CanvasImageSource {
+    const key = `glow:${this.look.id}:${color}:${size}`;
+    let c = this.cache.get(key);
+    if (!c) {
+      const px = Math.ceil(size * 2 * this.dpr);
+      c = this.canvas(px);
+      const g = c.getContext('2d') as CanvasRenderingContext2D;
+      g.scale(this.dpr, this.dpr);
+      const base = this.look.colors[color] ?? '#888888';
+      const r = g.createRadialGradient(size, size, size * 0.2, size, size, size);
+      r.addColorStop(0, base);
+      r.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = r;
+      g.fillRect(0, 0, size * 2, size * 2);
+      this.cache.set(key, c);
+    }
+    return c;
+  }
+
   private canvas(px: number): HTMLCanvasElement | OffscreenCanvas {
     if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(px, px);
     const c = document.createElement('canvas');

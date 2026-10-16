@@ -229,6 +229,7 @@ export class Scene {
     this.drawPanel();
     this.drawLagoons(now);
     this.drawPreviewWater(now);
+    this.drawGlow(now);
     this.drawBlocks(now);
     this.drawGhost();
     this.drawPlacing(now);
@@ -368,6 +369,40 @@ export class Scene {
       const a = t < 0.25 ? easeOutQuad(t / 0.25) : 1 - easeInCubic((t - 0.25) / 0.75);
       for (const c of lg.cells) this.drawWaterCell(c, a * 0.95, now);
     }
+  }
+
+  /** Night: bioluminescent halos under the pebbles and the odd plankton glint in open water. */
+  private drawGlow(now: number): void {
+    if (this.palette.name !== 'night') return;
+    const g = this.g;
+    const l = this.layout;
+    const size = Math.round(l.cell);
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.42;
+    for (let i = 0; i < CELLS; i++) {
+      const c = this.board[i]!;
+      if (!c || now < this.land[i]!) continue;
+      const [x, y] = this.cellCenter(i);
+      g.drawImage(this.sprites.glow(c, size), x - size, y - size, size * 2, size * 2);
+    }
+    if (!this.reducedMotion) {
+      // plankton: a few slow glints, positions hashed from time so no state is needed
+      const slot = Math.floor(now / 900);
+      for (let k = 0; k < 5; k++) {
+        const h = Math.imul(slot * 7 + k, 2654435761) >>> 0;
+        const i = h % CELLS;
+        if (this.board[i]) continue;
+        const ph = ((now / 900) % 1) * Math.PI;
+        const [x, y] = this.cellCenter(i);
+        g.globalAlpha = 0.5 * Math.sin(ph);
+        g.fillStyle = this.palette.waterHi;
+        g.beginPath();
+        g.arc(x + ((h >> 8) % 11) - 5, y + ((h >> 12) % 11) - 5, Math.max(1.6, l.cell * 0.05), 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+    g.restore();
   }
 
   private drawBlocks(now: number): void {
@@ -746,6 +781,7 @@ export class Scene {
       this.fish.length > 0 ||
       this.hint !== null ||
       this.selected !== null ||
+      (this.palette.name === 'night' && !this.reducedMotion) ||
       Math.abs(this.score - this.shownScore) > 0.5 ||
       now - this.shake.start < MOTION.shake ||
       this.tray.some((s) => now - s.dealStart < MOTION.dealIn || s.back !== null) ||
