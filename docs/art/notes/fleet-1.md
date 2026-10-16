@@ -43,3 +43,18 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   and on its way somewhere, which is the personality. Smaller pectoral, stripe starts later.
 - Grade: B. Still to improve: the tilt makes it sit a little high-right in the tile; a dorsal
   ribbon would add charm but pushed it back toward the barracuda.
+
+## butterfly
+- Size class: M. Feature: a disc taller than it is long (78 × 80, tall soft dorsal and anal fins),
+  a thin tweezer snout, a small rounded tail; a dark band just behind the real eye and a
+  white-ringed false eye-spot on the back of the body.
+- Signature: the trick: it spins round (sx flips to −1) to show the false eye from the other
+  side, hangs there `happy`, spins back and winks with the real eye. Catch: the default wiggle.
+- Rounds: 4. (1) the false eye was big and on the fin, so it read as the real eye and the fish
+  looked like it faced up-left; the real eye sat on the snout base. (2) shorter snout, eye moved
+  back onto the disc, band behind it; the fins were swept back so the disc leaned like a sail.
+  (3) fins brought upright and symmetric, thinner snout (it read as a duck beak), false eye moved
+  onto the body. (4) the pectoral fin under the false eye made a second face; removed it (the
+  ambient uses a soft breathe instead of a fin flutter).
+- Grade: B. Still to improve: the disc outline is a little lumpy at the upper back; the false eye
+  could be a touch smaller so the joke lands only on second look.
