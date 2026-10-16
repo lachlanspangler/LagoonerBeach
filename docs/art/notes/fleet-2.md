@@ -149,3 +149,20 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
 - Self-grade: B+. Polite and old-fashioned; the stripes and tuft read at 54 px.
 - Would improve: the tentacle tuft reads a little like a hand; more, thinner tentacles would be more
   accurate but break the ≥ 5 unit thickness rule at this scale.
+
+## limpet (Limpet)
+- Size class XS, object (side view). Feature: a low, wide rounded volcano cone (83×47) with a soft
+  apex, inset over a flared cream skirt of foot; three tapered ridges from the apex (appendix: 3 only),
+  kept off the face. Body lifted and warmed to `#D5B397` (the old `#A99C8C` fails the R16 chroma floor).
+  Eyes low at the base of the cone, sweet blush.
+- Signature: hunkers down (squash 0.84/1.14, holds on tight with a tiny tremble and squeezed `happy`
+  eyes), then pops up and scoots 2.6 units with a hop, smug `proud`. Ambient: breathe plus the skirt
+  gliding a hair. `ground: true` so all squashes stay on the rock.
+- Rounds: 3.
+  1. Cone 80×44 with a skirt as wide as the cone: box 85 (R1), eyes 2.35 widths apart (R7), the
+     middle ridge ran between the eyes like a nose, and IoU vs nautilus 0.73 (fail, same class).
+  2. Lower cone, ridges moved off the face, cone inset over a wider skirt (a step at the base): 0.68.
+  3. Ridges as tapered accent tubes (the 3 px lines vanished at 54 px), warmer palette.
+- Self-grade: B. Sweet and clearly a limpet next to the cockle, but it reads a little like a dumpling.
+- Would improve: a small rock under it (clingy!) would sell the personality; props are hidden at rest,
+  so there is no way to show a resting prop without making it part of the silhouette.
