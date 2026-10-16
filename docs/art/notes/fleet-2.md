@@ -76,3 +76,21 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
      readable at 54 px. IoU: sunfish 0.63, clownfish 0.62, sand dollar < 0.6.
 - Self-grade: A-. Charming, shy and instantly nameable.
 - Would improve: the face is small at 24 px (the price of long spines inside an 84 box).
+
+## giantclam (Giant Clam)
+- Size class L, object (front view), epic. Feature: a huge cream shell parted like lips around a
+  big teal mantle; the lid wears a crown of five round fluted lobes; V-notches where the valves meet
+  at the sides. Eyes and smile on the mantle in the gap (R6), blue mantle spots (R18, 6 placed).
+- Signature: the lid lifts slowly (11 units, a slight tilt) to reveal a pearl prop, `happy`, then
+  closes with a soft squash and a smug `proud` smile. Ambient: the lid breathes open and shut by 1 unit.
+  Catch: the lid pops open.
+- Rounds: 4.
+  1. Zig-zag scallop rim, mantle filling the whole gap: IoU vs sand dollar 0.88 (fail). Outline filled
+     to a plain oval; eyes tiny (5.6 units in a thin gap); box 85 wide (R1).
+  2. Taller gap (eye 8.6), narrower mantle: 0.74, still failing.
+  3. Deep side notches (mantle rx 27, valves pinched at the sides): 0.66. But Catmull-Rom overshoot
+     made the scallops spiky horns (R3 in spirit).
+  4. Lid rebuilt as a dome plus five overlapping round lobes: soft scallops, and the crown pushes the
+     silhouette further from a coin: sand dollar 0.64, octopus 0.70 (cross-class limit 0.80).
+- Self-grade: A-. Reads as a clam with a creature inside; the pearl reveal is sweet.
+- Would improve: blush (#FF8FA3) reads greyish on teal; a per-species blush tint isn't in the kit.
