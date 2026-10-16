@@ -183,6 +183,11 @@ export class DragController {
     const a = this.a;
     if (!a || e.pointerId !== a.pointerId) return;
     e.preventDefault();
+    if (!this.host.enabled()) {
+      // a dialog opened mid-drag (e.g. second finger on the menu): never commit behind it
+      this.cancelAll();
+      return;
+    }
     this.a = null;
     const l = this.host.layout();
     const [ox, oy] = this.origin(a);

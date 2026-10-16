@@ -27,7 +27,9 @@ export const NO_STREAK: DailyStreak = { lastDay: null, current: 0, longest: 0 };
 
 /** Record that the daily for `day` was completed. Idempotent within a day. */
 export function recordDaily(s: DailyStreak, day: number): DailyStreak {
-  if (s.lastDay === day) return s;
+  // idempotent within a day; an older day finished late (e.g. a stale tab) never rewinds the streak
+  if (s.lastDay !== null && day <= s.lastDay) return s;
+
   const current = s.lastDay !== null && day === s.lastDay + 1 ? s.current + 1 : 1;
   return { lastDay: day, current, longest: Math.max(s.longest, current) };
 }

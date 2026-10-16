@@ -49,4 +49,11 @@ describe('save/load', () => {
     ];
     for (const b of bad) expect(decodeGame(b)).toBeNull();
   });
+
+  it('rejects a save from another mode and an inconsistent over flag', () => {
+    const good = encodeGame(newGame(1));
+    expect(decodeGame(good, 'classic')).not.toBeNull();
+    expect(decodeGame(good, 'daily')).toBeNull();
+    expect(decodeGame({ ...good, over: true })).toBeNull(); // moves remain on an empty board
+  });
 });

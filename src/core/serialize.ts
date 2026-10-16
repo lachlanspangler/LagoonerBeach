@@ -46,11 +46,13 @@ export function encodeGame(s: GameState): SavedGame {
 
 const isUint = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
 
-export function decodeGame(raw: unknown): GameState | null {
+/** Decode a save; `expectMode` rejects a save that belongs to another mode. */
+export function decodeGame(raw: unknown, expectMode?: Mode): GameState | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const o = raw as Record<string, unknown>;
   if (o.v !== 1) return null;
   if (o.mode !== 'classic' && o.mode !== 'daily' && o.mode !== 'puzzle') return null;
+  if (expectMode && o.mode !== expectMode) return null;
   for (const k of ['seed', 'rng', 'moves', 'trays', 'score', 'streak', 'dry', 'captures', 'bestPocket'] as const)
     if (!isUint(o[k])) return null;
   if (typeof o.over !== 'boolean') return null;
@@ -74,7 +76,10 @@ export function decodeGame(raw: unknown): GameState | null {
   // a live classic/daily game always has a piece to place (puzzles end with an empty tray)
   if (tray.every((t) => t === null) && !o.over && o.mode !== 'puzzle') return null;
   const over = o.over;
-  if (!over && o.mode !== 'puzzle' && !anyMoveLeft(board, tray)) return null;
+  // `over` must agree with the board: over ⇔ pieces remain and none fits
+  const hasPieces = tray.some((t) => t !== null);
+  if (hasPieces && over !== !anyMoveLeft(board, tray)) return null;
+  if (!hasPieces && over) return null;
 
   return {
     v: 1,

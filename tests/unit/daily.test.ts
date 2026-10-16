@@ -25,4 +25,9 @@ describe('daily', () => {
     expect(s.current).toBe(1);
     expect(s.longest).toBe(3);
   });
+  it('finishing an older day late does not rewind the streak', () => {
+    let s = recordDaily(NO_STREAK, 20);
+    s = recordDaily(s, 21);
+    expect(recordDaily(s, 20)).toEqual(s);
+  });
 });

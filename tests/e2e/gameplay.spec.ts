@@ -149,3 +149,32 @@ test('tap-to-place: tap a piece, tap the board to preview, tap again to place', 
   await page.mouse.click(cx, cy);
   await expect.poll(async () => (await state(page)).moves).toBe(1);
 });
+
+test('regression: a pending game-over card never appears on the next game', async ({ page }) => {
+  await boot(page, 'seed=3');
+  await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));
+  expect((await state(page)).over).toBe(true);
+  await page.evaluate(() => (window as any).__atoll.restart()); // within the 1.4 s delay
+  await page.waitForTimeout(1800);
+  await expect(page.getByTestId('final-score')).toHaveCount(0);
+  expect((await state(page)).moves).toBe(0);
+});
+
+test('regression: a pending reef result never hijacks classic mode', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  const solution = await page.evaluate(() => (window as any).__atoll.puzzleSolution());
+  for (const m of solution) {
+    const path = await page.evaluate((mv) => (window as any).__atoll.pathFor({ slot: mv.piece, x: mv.x, y: mv.y }), m);
+    await page.mouse.move(path.down.x, path.down.y);
+    await page.mouse.down();
+    await page.mouse.move(path.up.x, path.up.y, { steps: 4 });
+    await page.mouse.up();
+  }
+  await page.evaluate(() => (window as any).__atoll.switchMode('classic')); // before the 1.3 s card
+  await page.waitForTimeout(1600);
+  await expect(page.getByTestId('puzzle-result')).toHaveCount(0);
+  expect(await page.evaluate(() => (window as any).__atoll.mode())).toBe('classic');
+  expect((await state(page)).mode).toBe('classic');
+});

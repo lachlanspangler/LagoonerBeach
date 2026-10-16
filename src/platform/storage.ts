@@ -36,7 +36,8 @@ export interface Profile {
   dailyBest: Record<string, number>;
   unlocked: string[];
   /** solved = cleared at least once; pure = cleared without using a hint. */
-  puzzle: { index: number; solved: string[]; pure?: string[] };
+  /** hinted = a hint was used on it before a no-hint clear (blocks the no-hint mark). */
+  puzzle: { index: number; solved: string[]; pure?: string[]; hinted?: string[] };
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -92,6 +93,7 @@ export function loadProfile(): Profile {
       totalScore: num(st.totalScore, 0),
       cascades: num(st.cascades, 0),
       cleanReefs: num(st.cleanReefs, 0),
+      hints: num(st.hints, 0),
     },
     daily: {
       lastDay: typeof dl.lastDay === 'number' ? dl.lastDay : null,
@@ -101,7 +103,10 @@ export function loadProfile(): Profile {
     dailyBest:
       o.dailyBest && typeof o.dailyBest === 'object'
         ? Object.fromEntries(
-            Object.entries(o.dailyBest).filter(([k, v]) => /^\d{4}-\d{2}-\d{2}$/.test(k) && typeof v === 'number'),
+            Object.entries(o.dailyBest)
+              .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+              .map(([k, v]) => [k, num(v, -1)] as const)
+              .filter(([, v]) => v >= 0),
           )
         : {},
     unlocked: Array.isArray(o.unlocked) ? o.unlocked.filter((x): x is string => typeof x === 'string') : ['pebble'],
@@ -109,6 +114,7 @@ export function loadProfile(): Profile {
       index: num(o.puzzle?.index, 0),
       solved: Array.isArray(o.puzzle?.solved) ? o.puzzle.solved.filter((x): x is string => typeof x === 'string') : [],
       pure: Array.isArray(o.puzzle?.pure) ? o.puzzle.pure.filter((x): x is string => typeof x === 'string') : [],
+      hinted: Array.isArray(o.puzzle?.hinted) ? o.puzzle.hinted.filter((x): x is string => typeof x === 'string') : [],
     },
   };
 }
@@ -131,7 +137,7 @@ function safeParse(s: string | null | undefined): unknown {
 }
 
 export function loadGame(): GameState | null {
-  return decodeGame(safeParse(store()?.getItem(K_GAME)));
+  return decodeGame(safeParse(store()?.getItem(K_GAME)), 'classic');
 }
 
 export function saveGame(s: GameState | null): void {
@@ -147,8 +153,7 @@ export function saveGame(s: GameState | null): void {
 export function loadDaily(date: string): GameState | null {
   const raw = safeParse(store()?.getItem(K_DAILY)) as { date?: unknown; game?: unknown } | null;
   if (!raw || raw.date !== date) return null;
-  const g = decodeGame(raw.game);
-  return g && g.mode === 'daily' ? g : null;
+  return decodeGame(raw.game, 'daily');
 }
 
 export function saveDaily(date: string, s: GameState | null): void {

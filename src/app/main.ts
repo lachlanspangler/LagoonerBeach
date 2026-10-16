@@ -136,7 +136,16 @@ function resize(): void {
 window.addEventListener('resize', resize);
 
 // ------------------------------------------------------------------ sync scene with state
+/** Bumped whenever a different game is shown; delayed UI from an older game must not fire. */
+let gameToken = 0;
+function later(ms: number, fn: () => void): void {
+  const token = gameToken;
+  setTimeout(() => token === gameToken && fn(), ms);
+}
+
 function syncScene(): void {
+  gameToken++;
+  drag.cancelAll();
   scene.board = state.board.slice();
   scene.land.fill(-1e9);
   scene.dying = [];
@@ -284,23 +293,24 @@ function finishGame(prevBest: number): void {
   } else if (newBest) profile.best = state.score;
   const unlockedNow = refreshUnlocks();
   saveProfile(profile);
-  const show = () => {
+  // snapshot now: the card must describe *this* game even if it shows a moment later
+  const card = {
+    score: state.score,
+    best: Math.max(prevBest, state.score),
+    newBest: newBest && prevBest > 0,
+    moves: state.moves,
+    lagoon: state.bestPocket,
+    mode,
+    dailyStreak: visibleStreak(profile.daily, dayIndex(today())),
+    unlocked: unlockedNow,
+    shape: bigLagoon && bigLagoon.cells.length >= 2 ? bigLagoon : null,
+  };
+  later(DEBUG && params.has('fast') ? 0 : 1400, () => {
     if (overShown) return;
     overShown = true;
-    if (newBest && prevBest > 0) sfx.newBest();
-    ui.showGameOver({
-      score: state.score,
-      best: Math.max(prevBest, state.score),
-      newBest: newBest && prevBest > 0,
-      moves: state.moves,
-      lagoon: state.bestPocket,
-      mode,
-      dailyStreak: visibleStreak(profile.daily, dayIndex(today())),
-      unlocked: unlockedNow,
-      shape: bigLagoon && bigLagoon.cells.length >= 2 ? bigLagoon : null,
-    });
-  };
-  setTimeout(show, DEBUG && params.has('fast') ? 0 : 1400);
+    if (card.newBest) sfx.newBest();
+    ui.showGameOver(card);
+  });
 }
 
 function checkPuzzle(): void {
@@ -312,23 +322,18 @@ function checkPuzzle(): void {
     const first = !profile.puzzle.solved.includes(p.id);
     if (first) profile.puzzle.solved.push(p.id);
     profile.puzzle.pure ??= [];
-    if (!hintedThisPuzzle && !profile.puzzle.pure.includes(p.id)) profile.puzzle.pure.push(p.id);
+    const hinted = profile.puzzle.hinted?.includes(p.id) ?? false;
+    if (!hinted && !profile.puzzle.pure.includes(p.id)) profile.puzzle.pure.push(p.id);
     profile.puzzle.index = Math.min(PACK.length - 1, i + 1);
     saveProfile(profile);
-    setTimeout(
-      () => ui.showPuzzleResult({ solved: true, index: i, total: PACK!.length, cleared: profile.puzzle.solved.length }),
-      1300,
-    );
+    const cleared = profile.puzzle.solved.length;
+    later(1300, () => ui.showPuzzleResult({ solved: true, index: i, total: PACK!.length, cleared }));
   } else {
-    setTimeout(
-      () =>
-        ui.showPuzzleResult({ solved: false, index: i, total: PACK!.length, cleared: profile.puzzle.solved.length }),
-      700,
-    );
+    const cleared = profile.puzzle.solved.length;
+    later(700, () => ui.showPuzzleResult({ solved: false, index: i, total: PACK!.length, cleared }));
   }
 }
 
-let hintedThisPuzzle = false;
 /** Solver-backed hint: outline one placement that still leads to a clear (or say it's a dead end). */
 function puzzleHint(): void {
   if (mode !== 'puzzle' || puzzleStatus(state) !== 'playing') return;
@@ -355,7 +360,12 @@ function puzzleHint(): void {
     const p = pieceById(state.tray[slots[m.piece]!]!.pieceId);
     scene.hint = { cells: p.cells.map(([dx, dy]) => (m.y + dy) * N + m.x + dx), start: performance.now() };
     profile.stats.hints = (profile.stats.hints ?? 0) + 1;
-    hintedThisPuzzle = true;
+    // a hint blocks the no-hint mark for this reef until it has been cleared cleanly (restart can't launder it)
+    profile.puzzle.hinted ??= [];
+    const id = PACK![state.seed]!.id;
+    if (!profile.puzzle.hinted.includes(id) && !(profile.puzzle.pure?.includes(id) ?? false))
+      profile.puzzle.hinted.push(id);
+    saveProfile(profile);
     ui.announce('Hint shown on the board.');
   }
   dirty = true;
@@ -368,7 +378,6 @@ function loadPuzzle(i: number): void {
   profile.puzzle.index = k;
   saveProfile(profile);
   state = newPuzzleGame(PACK[k]!, k);
-  hintedThisPuzzle = false;
   syncScene();
 }
 
@@ -387,9 +396,12 @@ function restart(): void {
   syncScene();
 }
 
+let wantedMode: Mode = mode;
 function switchMode(m: Mode): void {
+  wantedMode = m;
   if (m === 'puzzle' && !PACK) {
-    void loadPack().then(() => switchMode('puzzle'));
+    // only honor the pack load if the player still wants puzzles when it arrives
+    void loadPack().then(() => wantedMode === 'puzzle' && switchMode('puzzle'));
     return;
   }
   ui.close();
@@ -410,8 +422,8 @@ const ui = new Ui({
   onDaily: () => (mode === 'puzzle' ? puzzleHint() : switchMode(mode === 'daily' ? 'classic' : 'daily')),
   onClassic: () => switchMode('classic'),
   onPuzzles: () => switchMode('puzzle'),
-  onPuzzleNext: () => loadPuzzle(state.seed + 1),
-  onPuzzleRetry: () => loadPuzzle(state.seed),
+  onPuzzleNext: () => mode === 'puzzle' && loadPuzzle(state.seed + 1),
+  onPuzzleRetry: () => mode === 'puzzle' && loadPuzzle(state.seed),
 
   onToggle: (k) => {
     if (k === 'reducedMotion')
@@ -540,7 +552,9 @@ let dirty = true;
 let last = performance.now();
 const frameTimes: number[] = [];
 const drawTimes: number[] = [];
-function frame(now: number): void {
+function frame(): void {
+  // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
+  const now = performance.now();
   const dt = now - last;
   last = now;
   fx.tick(now);

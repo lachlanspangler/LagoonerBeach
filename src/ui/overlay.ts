@@ -89,6 +89,10 @@ export class Ui {
     const v = this.veil;
     if (!v) return;
     this.veil = null;
+    if (!immediate) {
+      this.returnFocus?.focus?.({ preventScroll: true });
+      this.returnFocus = null;
+    }
     if (immediate) return v.remove();
     v.classList.remove('show');
     v.setAttribute('aria-hidden', 'true');
@@ -96,8 +100,11 @@ export class Ui {
     setTimeout(() => v.remove(), 200);
   }
 
+  private returnFocus: HTMLElement | null = null;
+
   private show(card: HTMLElement, dismissable: boolean): void {
     const replacing = this.veil !== null;
+    if (!replacing) this.returnFocus = document.activeElement as HTMLElement | null;
     this.close(true);
     const v = document.createElement('div');
     v.className = 'veil';
@@ -108,10 +115,24 @@ export class Ui {
       v.addEventListener('click', (e) => {
         if (e.target === v) this.h.onResume();
       });
+    v.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dismissable) {
+        e.preventDefault();
+        this.h.onResume();
+      } else if (e.key === 'Tab') {
+        // keep focus inside the dialog
+        const f = [...v.querySelectorAll<HTMLElement>('button')];
+        if (!f.length) return;
+        const i = f.indexOf(document.activeElement as HTMLElement);
+        const next = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : i === f.length - 1 ? 0 : i + 1;
+        e.preventDefault();
+        f[next]!.focus();
+      }
+    });
     this.root.append(v);
     this.veil = v;
     if (replacing) v.classList.add('show');
-    else requestAnimationFrame(() => v.classList.add('show'));
+    else requestAnimationFrame(() => this.veil === v && v.classList.add('show'));
     (card.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
   }
 
