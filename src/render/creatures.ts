@@ -51,7 +51,7 @@ if (typeof window !== 'undefined' && typeof requestAnimationFrame === 'function'
 export function drawCreature(g: G, sp: Species, x: number, y: number, s: number, angle = 0, o: DrawOpts = {}): void {
   const art = chunk?.ART.get(sp.id);
   if (chunk && art) return chunk.drawSpecies(g, sp, art, x, y, s, angle, o);
-  drawLegacy(g, sp, x, y, o.fit === 'tile' || o.fit === 'detail' ? s * 0.82 : s, angle, o);
+  drawLegacy(g, sp, x, y, o.fit && o.fit !== 'leap' ? s * 0.82 : s, angle, o);
 }
 
 /** The original procedural art: body type + two colours + a pattern, about `s` wide. */

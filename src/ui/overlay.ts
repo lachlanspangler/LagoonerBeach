@@ -459,7 +459,7 @@ export function creatureThumb(
   px: number,
   silhouette?: string,
   golden = false,
-  o: { animate?: boolean; shy?: boolean } = {},
+  o: { animate?: boolean; shy?: boolean; avatar?: boolean } = {},
 ): HTMLCanvasElement {
   const c = document.createElement('canvas');
   const dpr = Math.min(3, window.devicePixelRatio || 1);
@@ -470,7 +470,7 @@ export function creatureThumb(
   const g = c.getContext('2d')!;
   g.scale(dpr, dpr);
   const night = document.documentElement.dataset.theme === 'night';
-  const fit = px >= 100 ? 'detail' : 'tile';
+  const fit = o.avatar ? 'avatar' : px >= 100 ? 'detail' : 'tile'; // avatars: identity, not size
   const expression = o.shy && !silhouette ? 'shy' : undefined;
   const draw = (t?: number) => {
     g.clearRect(0, 0, px, px);

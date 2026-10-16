@@ -28,7 +28,7 @@ export interface DrawOpts {
    * How `s` maps to the drawing. tile/detail: `s` is the box in px and the size class sets the fill
    * (R27). leap: `s` is the old leaping-fish size, times the R27 leap scale. Omitted: `s` ≈ span.
    */
-  readonly fit?: 'tile' | 'detail' | 'leap';
+  readonly fit?: 'tile' | 'detail' | 'leap' | 'avatar';
   /** Mirror (face left). */
   readonly flip?: boolean;
   readonly action?: { readonly kind: 'catch' | 'release'; readonly u: number };
@@ -51,7 +51,9 @@ export function spanFor(art: SpeciesArt, s: number, fit: DrawOpts['fit']): numbe
       ? s * DETAIL_FILL[art.size]
       : fit === 'leap'
         ? s * 0.84 * LEAP_SCALE[art.size]
-        : s * 0.84;
+        : fit === 'avatar'
+          ? s * 0.8 // identity, not size: every class fills the avatar circle
+          : s * 0.84;
 }
 
 export function drawSpecies(
@@ -64,7 +66,7 @@ export function drawSpecies(
   angle: number,
   o: DrawOpts,
 ): void {
-  const framed = o.fit === 'tile' || o.fit === 'detail';
+  const framed = o.fit === 'tile' || o.fit === 'detail' || o.fit === 'avatar';
   const long = spanFor(art, s, o.fit);
   // XXL bleeds out of the tile: keep the head in frame, crop the tail (R27)
   if (framed && long > s) x -= (long - s) / 2;

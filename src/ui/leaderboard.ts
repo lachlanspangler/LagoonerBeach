@@ -187,7 +187,7 @@ export class LeaderboardUi {
     const w = document.createElement('span');
     w.className = 'lb-av';
     const sp = e.avatar ? SPECIES_BY_ID.get(e.avatar) : undefined;
-    if (sp) w.append(creatureThumb(sp, px));
+    if (sp) w.append(creatureThumb(sp, px, undefined, false, { avatar: true }));
     else w.textContent = e.name.slice(0, 1);
     return w;
   }
@@ -535,7 +535,7 @@ export class LeaderboardUi {
         const empty = document.createElement('div');
         empty.className = 'lb-empty';
         const sp = SPECIES_BY_ID.get('hermit');
-        if (sp) empty.append(creatureThumb(sp, 72));
+        if (sp) empty.append(creatureThumb(sp, 72, undefined, false, { avatar: true }));
         empty.insertAdjacentHTML(
           'beforeend',
           `<div>${t === 'daily' ? 'Be the first on the beach today' : 'Be the first on the beach this week'}</div>`,
