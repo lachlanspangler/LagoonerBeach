@@ -41,7 +41,10 @@ export class Music {
     if (!this.prime(seed)) return;
     if (this.timer) return;
     const t = this.ctx!.currentTime;
-    this.bus!.gain.cancelScheduledValues(t);
+    const g = this.bus!.gain;
+    const v = g.value; // hold wherever a fade-out left it, so a quick off/on doesn't jump
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(v, t);
     this.bus!.gain.setTargetAtTime(this.volume, t, 1.2); // fade in
     this.nextBeat = Math.max(this.nextBeat, t + 0.1);
     this.tick();

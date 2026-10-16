@@ -69,6 +69,7 @@ const fx = new Fx(scene, sfx, haptics);
 const music = new Music(() => sfx.graph());
 /** Start music after the first gesture has unlocked audio (browsers require it). */
 function wakeAudio(): void {
+  if (document.hidden) return; // e.g. a theme change while backgrounded must not resume audio
   sfx.unlock();
   if (profile.settings.music && !document.hidden) music.start(freshSeed());
 }
@@ -82,6 +83,8 @@ let state: GameState = startState();
 let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
 let bestCelebrated = false;
+/** Which game the per-game tallies below belong to. */
+let tallyKey = '';
 let journal: Journal = loadJournal();
 /** This game's catch, for the end-of-game card. */
 let gameCatch = { count: 0, newIds: [] as string[] };
@@ -217,6 +220,9 @@ function syncScene(): void {
   scene.lagoons = [];
   scene.texts = [];
   scene.placing = [];
+  scene.fish = [];
+  scene.sweep = -1e9;
+  scene.clearChips();
   scene.particles.clear();
   const now = performance.now();
   scene.tray = state.tray.map((t, i) => ({ t, dealStart: now + i * 60, back: null }));
@@ -234,7 +240,10 @@ function syncScene(): void {
   scene.selected = null;
   overShown = false;
 
-  if (state.moves === 0) {
+  // per-game tallies belong to one game: reset on a fresh game or when a different game is shown
+  const key = `${mode}:${mode === 'daily' ? dailyDate : ''}:${state.seed}`;
+  if (state.moves === 0 || key !== tallyKey) {
+    tallyKey = key;
     bestCelebrated = false;
     gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
@@ -695,6 +704,7 @@ const drag = new DragController(canvas, {
     dirty = true;
   },
   onSelect: (slot) => {
+    scene.lastDragDraw = null; // a tap-to-place flies from the board anchor, not an old drag frame
     scene.selected = slot;
     if (slot === null) scene.preview = null;
     else {
@@ -707,6 +717,7 @@ const drag = new DragController(canvas, {
   },
   onCancel: (slot, from) => {
     scene.preview = null;
+    scene.lastDragDraw = null;
     scene.tray[slot] = { ...scene.tray[slot]!, back: { ...from, start: performance.now() } };
     dirty = true;
   },
@@ -765,17 +776,17 @@ function frame(): void {
     if (drawTimes.length > 1200) drawTimes.shift();
   }
   requestAnimationFrame(frame);
+}
 
-  // welcome back: a quiet nudge if a streak is alive and today's daily isn't done yet
-  {
-    const td = dayIndex(today());
-    const streak = visibleStreak(profile.daily, td);
-    if (streak > 0 && profile.daily.lastDay !== td)
-      setTimeout(
-        () => scene.toast(`Welcome back · Streak ${streak} — today's Daily is waiting`, performance.now(), 2600),
-        900,
-      );
-  }
+// welcome back: once per launch, a quiet nudge if a streak is alive and today's daily isn't done yet
+{
+  const td = dayIndex(today());
+  const streak = visibleStreak(profile.daily, td);
+  if (streak > 0 && profile.daily.lastDay !== td)
+    setTimeout(
+      () => scene.toast(`Welcome back · Streak ${streak} — today's Daily is waiting`, performance.now(), 2600),
+      900,
+    );
 }
 
 void initNative();
