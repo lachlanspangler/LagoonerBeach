@@ -190,7 +190,7 @@ export class Reveal {
       el.innerHTML = `<div class="rp-text"><div class="rp-over">New in your journal</div><div class="rp-name">${sp.name}</div></div>`;
       stage.className = 'rp-stage';
       el.prepend(stage);
-      this.sizeCanvas(stage, 64, 64);
+      this.sizeCanvas(stage, 48, 48);
       this.d.onStrip?.(REVEAL_MS[rarity] + POP_HOLD_MS + 200);
     } else {
       el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}`;
@@ -281,7 +281,7 @@ export class Reveal {
     const rarity: Rarity = a.item.firstGolden ? 'rare' : a.sp.rarity;
     const total = REVEAL_MS[rarity];
     if (!a.modal) {
-      this.drawStage(a, t, 64, 64, rm, 0);
+      this.drawStage(a, t, 48, 48, rm, 0);
       // the quick pop leaves by itself (no tap needed, no input blocked)
       if (t > total + POP_HOLD_MS) this.finish();
       return;

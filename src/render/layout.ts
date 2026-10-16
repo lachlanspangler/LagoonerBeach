@@ -55,9 +55,12 @@ export function computeLayout(w: number, h: number, inset: Insets = { top: 0, ri
   // Spare height reads top-to-bottom: status → board → strip → hand. A little above the board
   // (room for callouts), a strip between board and tray, and the hand pulled down toward the thumb:
   // the old layout left ~22% of a tall phone as dead sand under the tray.
-  const above = Math.min(slack * 0.3, cell * 1.3);
-  const below = Math.min(slack * 0.22, cell * 1.0);
-  const between = slack - above - below;
+  let above = Math.min(slack * 0.3, cell * 1.3);
+  const below = Math.min(slack * 0.22, cell * 1.0); // under the tray (implicit: what's left)
+  const between = Math.min(slack - above - below, cell * 2.4);
+  // tablets: whatever is left centers the whole stack instead of opening a canyon in the middle
+  const rest = slack - above - below - between;
+  above += rest / 2;
   const by = Math.round(inset.top + hudH + above);
   const boardBottom = by + boardSize;
   const trayY = Math.round(boardBottom + cell * GAP_CELLS + between);

@@ -27,6 +27,7 @@ entries of `docs/DIARY.md`, then `docs/WORKFLOW.md` (the loop to run).
 | `npx tsx scripts/catch-sim.ts` | simulate weeks of play → Beach Journal completion curve |
 | `npx tsx scripts/store-shots.ts` / `native-assets.ts` | store screenshots / every native icon & splash |
 | `npx tsx scripts/lb-shots.ts [--theme night]` | leaderboard review shots: results → name entry → boards, menu, offline |
+| `npx tsx scripts/screens.ts <label> [--night]` | every screen (HUD, menu, settings, results, journal, reveal, reefs, boards…) → `artifacts/ux/<label>/` |
 
 Review/play tools are listed in `docs/WORKFLOW.md` → "Review tools".
 
@@ -65,7 +66,8 @@ src/input/     pointer drag model (grab offset, lift, snap, hysteresis, cancel)
 src/audio/     WebAudio-synthesized SFX (sfx.ts) + generative music (music.ts); no audio files
 src/platform/  storage, haptics, visibility/lifecycle, PWA; leaderboard.ts (backend interface, HTTP,
                client + offline queue), lbmock.ts (on-device demo backend), runlog.ts (move logs)
-src/ui/        DOM overlays (menus, game over, settings); leaderboard.ts (lazy: name entry, boards)
+src/ui/        DOM overlays: overlay.ts (top bar, home, results, reef cards), sheets.ts (lazy: settings,
+               journal, species, reefs), icons.ts (Tidemark set), leaderboard.ts (lazy: name entry, boards)
 server/        Cloudflare Worker + D1 leaderboard (ADR 0010, docs/server/DEPLOY.md); tests in server/test
 src/app/       wiring: state machine, event → effects dispatch
 tests/unit/    Vitest (rules, property tests, determinism golden, balance bands)
@@ -107,9 +109,13 @@ real server or `VITE_LB=off` to ship without leaderboards.
 - One core rule (no line clears, no alternative clear rules). Every dealt tray is placeable
   (`trayClearable`). Every shipped reef is solver-verified. Catches never touch the dealer RNG.
 - Capture feedback is one channel (ADR 0012): at most one word (tier ladder in `render/moments.ts`,
-  none for pinches) + one `+N`, stacked *above* the lagoon; one COMBO ×N badge under the score;
-  chips queue one at a time in that slot; discoveries reveal after the move settles; creatures swim
-  to the journal (board ends clean). Big moments get big, normal moves stay calm.
+  none for pinches) + one `+N`, stacked *above* the lagoon; one COMBO ×N badge under the score
+  (that slot is the badge's alone); chips and the common-discovery pop queue one at a time in the
+  strip between board and tray; discoveries reveal after the move settles; creatures swim to the
+  journal button (board ends clean). Big moments get big, normal moves stay calm.
+- UI tokens live twice by design: CSS variables in `src/ui/style.css` and the TS mirror in
+  `src/render/theme.ts` (canvas). `tests/unit/contrast.test.ts` fails if they drift or if any text
+  pair drops under WCAG AA. Water cyan is material, never small text on light.
 
 ## Gotchas learned the hard way
 - Port 5173 is used by another project on this machine → dev is :5317, preview :4317.

@@ -251,7 +251,8 @@ function resize(): void {
   const root = document.documentElement.style;
   root.setProperty('--board-top', `${l.board.y}px`);
   root.setProperty('--board-bottom', `${l.board.y + l.board.h}px`);
-  root.setProperty('--strip-y', `${l.strip.y + l.strip.h / 2}px`);
+  // the common-discovery pop (≈56 px tall) centers in the strip, never over the board's last row
+  root.setProperty('--strip-y', `${Math.max(scene.stripY(), l.board.y + l.board.h + 32)}px`);
   idle(() => scene.warmSprites());
   dirty = true;
 }

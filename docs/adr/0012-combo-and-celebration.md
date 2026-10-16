@@ -155,8 +155,11 @@ compositing in headless Chromium (no GPU) — reported, not asserted.
 
 ## Consequences
 - `calloutFor` (theme.ts) is removed; `wordFor`/`momentFor` replace it; the old toast chips for "New: X" and
-  "Streak ×N!" are gone (reveals and the badge replace them). Chips (lessons, reef of the day)
-  still take the combo slot while up.
+  "Streak ×N!" are gone (reveals and the badge replace them). Chips (lessons, reef of the day,
+  welcome back) moved out of the combo slot into the strip between board and tray (session 3
+  aesthetic pass), so the badge is never hidden; the common-discovery pop shares that strip
+  (chips wait for it), lasts 1.4 s instead of 1.9 s and no longer covers the board's top row.
+  Burst pebbles shed the white "lit" rim over the first third of their flight.
 - Debug: `freezeNow()/freeze(ms)` render exact frames; `stageCombo(n, dry)`, `stageRecord(best)`,
   `revealSpecies(id)`, `revealFreeze(t)`, `chapterMoment(n, name)`, `showResults({score, prevBest})`,
   `shareCard(id)`, `haptics()`, `taskTimes()`. Staged boards: `tests/e2e/celebrate-boards.ts`
