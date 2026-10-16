@@ -12,7 +12,7 @@
  * Reduced motion: no rays/tide motion, no hops — the same information.
  */
 import { SPECIES, SPECIES_BY_ID, type Rarity, type Species } from '../meta/creatures.ts';
-import { drawCreature, type DrawOpts } from '../render/creatures.ts';
+import { drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
 import { spring } from '../render/celebrate.ts';
 import './celebrate.css';
 import {
@@ -62,6 +62,8 @@ export const REVEAL_MS: Record<Rarity, number> = {
   epic: 1450,
   legendary: 2000,
 };
+/** The species' signature move, played once in the reveal (new art). */
+const SIGNATURE_MS = 950;
 /** When the bubble-pearl pops (ms). */
 const POP_MS: Record<Rarity, number> = { common: 0, uncommon: 300, rare: 480, epic: 640, legendary: 980 };
 
@@ -302,8 +304,15 @@ export class Reveal {
     const s = Math.min(w, h) * (a.modal ? 0.84 : 0.7);
     const tier = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
     const night = this.d.night();
-    const opts = (expression: string, tt: number): DrawOpts =>
-      ({ golden: a.item.golden, expression, t: tt / 1000, night }) as DrawOpts;
+    type Expr = NonNullable<DrawOpts['expression']>;
+    const opts = (expression: Expr, tt: number, signatureAt?: number): DrawOpts => ({
+      golden: a.item.golden,
+      expression,
+      t: tt / 1000,
+      night,
+      still: rm,
+      ...(signatureAt !== undefined ? { signatureAt } : {}),
+    });
     if (t < popAt) {
       // the present: a translucent pearl with the silhouette inside, wobbling (more wobbles = rarer)
       const k = t / popAt;
@@ -392,19 +401,24 @@ export class Reveal {
       }
       g.globalAlpha = 1;
     }
-    // the dance: spring out (stretch), surprised; two hops; then happy, bobbing
+    // the dance (R30): spring out (stretch) looking surprised → its signature move once (new art)
+    // or two little hops (legacy art) → happy, bobbing; rare and up end proud
     let sx = 1;
     let sy = 1;
     let dy = 0;
     let ang = 0;
-    let expr = 'happy';
+    let expr: Expr = 'happy';
+    let sig: number | undefined;
     if (!rm) {
       const out = spring(u, 360, 0.12);
       sx = 0.6 + 0.4 * out;
       sy = 0.6 + 0.4 * out + 0.12 * Math.max(0, 1 - u / 260);
       if (u < 420) expr = 'surprised';
       const hopT = u - 380;
-      if (hopT > 0 && hopT < 560) {
+      if (hasNewArt(a.sp.id)) {
+        if (hopT > 0 && hopT < SIGNATURE_MS) sig = hopT / SIGNATURE_MS;
+        else if (hopT >= SIGNATURE_MS) dy = Math.sin((hopT - SIGNATURE_MS) / 380) * s * 0.02;
+      } else if (hopT > 0 && hopT < 560) {
         const ph = (hopT % 280) / 280;
         dy = -Math.sin(ph * Math.PI) * s * 0.14;
         const land = ph < 0.12 || ph > 0.88;
@@ -415,13 +429,13 @@ export class Reveal {
         dy = Math.sin((hopT - 560) / 380) * s * 0.025;
         ang = Math.sin((hopT - 560) / 520) * 0.05;
       }
-      if (RARITY_RANK[a.sp.rarity] >= 3 && u > 1200) expr = 'proud';
+      if (RARITY_RANK[a.sp.rarity] >= 3 && u > 1500) expr = 'proud';
     }
     g.save();
     g.translate(cx, cy + dy);
     g.rotate(ang);
     g.scale(sx, sy);
-    drawCreature(g, a.sp, 0, 0, s, 0, opts(expr, u));
+    drawCreature(g, a.sp, 0, 0, s, 0, opts(expr, u, sig));
     g.restore();
     if (a.item.golden && !rm) sparkles(g, cx, cy, s * 0.62, 5, u / 1000);
   }

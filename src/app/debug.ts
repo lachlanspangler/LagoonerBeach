@@ -52,7 +52,7 @@ export interface DebugDeps {
     revealFreeze(t: number): boolean;
     revealSkip(): void;
     haptics(): { k: string; t: number }[];
-    shareCard(id: string): { w: number; h: number; png: number; text: string[]; hint: string };
+    shareCard(id: string): Promise<{ w: number; h: number; png: number; text: string[]; hint: string }>;
     showResults(o: { score: number; prevBest: number }): void;
   };
 }

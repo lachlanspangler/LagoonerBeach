@@ -1,4 +1,4 @@
-/* Celebration UI (ADR 0012): discovery reveal, quick common pop, results hero / NEW HIGH SCORE. */
+/* Discovery reveal (ADR 0012): modal card by rarity, quick common pop. Loaded with the reveal chunk. */
 
 /* ---------------------------------------------------------------- discovery reveal (modal) */
 .reveal {
@@ -223,78 +223,9 @@ html[data-theme='night'] .r-golden .rv-card {
   text-align: left;
 }
 
-/* ---------------------------------------------------------------- results hero */
-.res-hero {
-  position: relative;
-  margin: 4px 0 10px;
-}
-.res-hero canvas.res-confetti {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.card .res-score {
-  font-size: 64px;
-  font-weight: 900;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  transition: color 200ms ease;
-}
-.card .res-hero.record .res-score {
-  background: linear-gradient(180deg, #ffe08a, #f2b93b 55%, #b9821f);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 1.5px #7a5410;
-}
-.res-ribbon {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-  padding: 5px 22px;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 19px;
-  letter-spacing: 0.06em;
-  color: #9a6a00;
-  background: #fff1cc;
-  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 12px 50%);
-  transform: translateY(-10px) scale(0.6);
-  opacity: 0;
-  transition:
-    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 140ms ease;
-}
-html[data-theme='night'] .res-ribbon {
-  color: #f5c451;
-  background: #3a2e10;
-}
-.res-ribbon svg {
-  width: 20px;
-  height: 20px;
-}
-.res-hero.record.landed .res-ribbon {
-  transform: none;
-  opacity: 1;
-}
-.res-was {
-  margin-top: 4px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--dim);
-}
-.res-was s {
-  opacity: 0.8;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .rv-card,
   .reveal-pop,
-  .res-ribbon,
   .rv-stamp,
   .rv-info {
     transition-duration: 1ms !important;
@@ -302,7 +233,6 @@ html[data-theme='night'] .res-ribbon {
 }
 html[data-rm='1'] .rv-card,
 html[data-rm='1'] .reveal-pop,
-html[data-rm='1'] .res-ribbon,
 html[data-rm='1'] .rv-stamp,
 html[data-rm='1'] .rv-info {
   transition-duration: 1ms !important;

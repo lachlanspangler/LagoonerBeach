@@ -5,6 +5,8 @@
  * fanfare + a heavy haptic. Reduced motion: final state at once, no confetti — same information.
  * Never delays the buttons: they're pressable from the first frame.
  */
+import './results.css';
+
 const CROWN = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 8l4.5 3.5L12 5l4.5 6.5L21 8l-2 10H5L3 8z"/></svg>`;
 
 export interface HeroOpts {

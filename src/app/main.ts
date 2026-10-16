@@ -52,8 +52,8 @@ import { installDebugApi } from './debug.ts';
 import { ReefSource } from './reefSource.ts';
 import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } from './reefProgress.ts';
 import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf } from '../core/endless.ts';
-import { Reveal, type RevealItem } from '../ui/reveal.ts';
-import { renderShareCard } from '../ui/share-card.ts';
+import type { RevealItem } from '../ui/reveal.ts';
+import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
@@ -780,7 +780,7 @@ const ui = new Ui({
   },
 });
 
-const reveal = new Reveal(document.getElementById('ui')!, {
+const reveal = new LazyReveal(document.getElementById('ui')!, {
   sfx,
   haptics,
   reducedMotion: () => scene.reducedMotion,
@@ -951,6 +951,7 @@ const idle =
   ((cb: () => void) => setTimeout(cb, 300));
 idle(() => {
   sfx.prepare();
+  setTimeout(() => reveal.prefetch(), 2500);
   scene.warmSprites();
   lbBackground();
 });
@@ -1047,7 +1048,8 @@ if (DEBUG)
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),
       haptics: () => haptics.log.slice(),
-      shareCard: (id) => {
+      shareCard: async (id) => {
+        const { renderShareCard } = await import('../ui/share-card.ts');
         const sp = SPECIES_BY_ID.get(id)!;
         const log: string[] = [];
         const c = renderShareCard(sp, { date: today(), log });
