@@ -29,3 +29,17 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   thicker (±12.5) and the dorsal/anal fins taller; it still reads as the needle of the cast.
 - Grade: B. Still to improve: the `underbite` teeth scale with the mouth width, which R8 caps at
   0.9 × eye width, so the two teeth are ≈ 1 px at tile size (kit limitation, noted in the report).
+
+## wrasse
+- Size class: S. Feature: a slim cigar that always swims nose-up at a jaunty 14° tilt, with a
+  rounded fan tail (no fork) and one bold ink stripe from behind the eye into the tail.
+- Signature: the "scrub": a fast six-beat wiggle with a `happy` face, then a little cluster of
+  bubble sparkles (prop) rises off its nose while it looks `proud` of the job. Catch: a wiggle
+  and a squash.
+- Rounds: 4. (1) a level cigar with a long low dorsal: IoU 0.79 vs barracuda and 0.72 vs minnow:
+  three level elongated fish can't separate on aspect alone. (2) an arched spine with the tail
+  tipped up: 0.67, but it read as a whale or a plane. (3) finless, gentler arch: 0.69, still a
+  blimp. (4) a straight cigar with the whole fish tilted nose-up: 0.60 / 0.59, and it reads as busy
+  and on its way somewhere, which is the personality. Smaller pectoral, stripe starts later.
+- Grade: B. Still to improve: the tilt makes it sit a little high-right in the tile; a dorsal
+  ribbon would add charm but pushed it back toward the barracuda.
