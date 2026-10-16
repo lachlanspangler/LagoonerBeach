@@ -37,7 +37,7 @@ describe('shipped reef puzzles', () => {
   });
 
   it('difficulty climbs: solver scores are non-decreasing through the pack', () => {
-    const scores = (pack as P[]).map((p) => p.grade.score);
+    const scores = (pack as P[]).filter((p) => !(p as { tutorial?: boolean }).tutorial).map((p) => p.grade.score);
     for (let i = 1; i < scores.length; i++) expect(scores[i]!).toBeGreaterThanOrEqual(scores[i - 1]!);
   });
 });

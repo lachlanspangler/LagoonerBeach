@@ -5,7 +5,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
-const BUDGET_INITIAL_JS = 40 * 1024;
+// 40 → 64 KB when the catch layer (47 species + procedural art) landed at ~40 KB total; still a
+// sub-second load on 3G and far below any engine runtime. Raise only with a diary entry.
+const BUDGET_INITIAL_JS = 64 * 1024;
 const BUDGET_CSS = 6 * 1024;
 const BUDGET_PUZZLES = 30 * 1024; // lazy chunk
 

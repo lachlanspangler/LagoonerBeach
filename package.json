@@ -38,7 +38,7 @@
     "tune": "tsx scripts/tune.ts",
     "ideas": "tsx scripts/render-ideas.ts",
     "ideas:check": "tsx scripts/render-ideas.ts && git diff --exit-code docs/IDEAS.md",
-    "puzzles": "tsx scripts/gen-puzzles.ts --count 200",
+    "puzzles": "tsx scripts/gen-puzzles.ts --count 360",
     "coverage": "vitest run --coverage",
     "size": "tsx scripts/size-check.ts"
   },
