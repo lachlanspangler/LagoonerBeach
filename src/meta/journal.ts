@@ -46,7 +46,7 @@ export function record(j: Journal, catches: readonly Catch[], date: string): Rec
       };
     }
   }
-  const dry = newSpecies.length ? 0 : j.dry + 1;
+  const dry = newSpecies.length ? 0 : catches.length ? j.dry + 1 : j.dry;
   return { journal: { entries, dry, total: j.total + catches.length }, newSpecies, records };
 }
 

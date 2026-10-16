@@ -387,7 +387,7 @@ export const SPECIES: readonly Species[] = [
     size: [20, 60],
     hint: 'A big pool, six cells or more.',
     flavor: 'Eats coral, makes sand. You are standing on its work.',
-    when: (c) => big(c) && day(c),
+    when: (c) => c.area >= 6 && day(c),
     weight: 70,
   },
   {
@@ -541,9 +541,9 @@ export const SPECIES: readonly Species[] = [
     colors: ['#C9D6FF', '#7DF9E8'],
     pattern: 'plain',
     size: [10, 40],
-    hint: 'A pool of three to five cells, after dark.',
+    hint: 'A pool of three cells or more, after dark.',
     flavor: 'No brain, no heart, no worries.',
-    when: (c) => c.night && mid(c),
+    when: (c) => c.night && c.area >= 3,
     weight: 140,
   },
   {

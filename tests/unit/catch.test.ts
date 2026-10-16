@@ -126,6 +126,29 @@ describe('rolls', () => {
         for (const x of rollCatches(c, r, { has: () => false, dry: 999 }))
           expect(SPECIES.find((s) => s.id === x.id)!.when(c)).toBe(true);
   });
+  it('every lagoon has an everyday species, so rarer creatures are never handed out by default', () => {
+    const shapes: [CatchContext['shape'], number[]][] = [
+      ['dot', [1]],
+      ['pair', [2]],
+      ['hline', [3, 5, 7]],
+      ['vline', [3, 6]],
+      ['square2', [4]],
+      ['square3', [9]],
+      ['plus', [5]],
+      ['rect', [6, 10, 15]],
+      ['corner', [3, 7]],
+      ['island', [8, 12, 20]],
+      ['blob', [3, 6, 11, 12, 24, 40]],
+    ];
+    for (const [shape, areas] of shapes)
+      for (const area of areas)
+        for (const night of [false, true])
+          for (const mode of ['classic', 'daily', 'puzzle'] as const) {
+            const c: CatchContext = { ...base, shape, area, w: 3, h: 2, night, mode };
+            const everyday = SPECIES.filter((s) => (s.rarity === 'common' || s.rarity === 'uncommon') && s.when(c));
+            expect(everyday.length, `${shape} ${area} ${night ? 'night' : 'day'} ${mode}`).toBeGreaterThan(0);
+          }
+  });
   it('is deterministic for a capture', () => {
     const cap = { waves: [{ pockets: [{ cells: cells([[3, 3]]) }] }], streak: 2, clean: false };
     const env = { gameSeed: 9, move: 4, night: false, mode: 'classic' as const };

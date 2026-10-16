@@ -128,7 +128,8 @@ export function rollCatches(ctx: CatchContext, rng: Rng, journal: JournalView): 
   const pity = Math.min(2, 1 + Math.max(0, journal.dry - 150) / 150);
   const commons = eligible.filter((s) => s.rarity === 'common');
   const everyday = commons.length ? commons : eligible.filter((s) => s.rarity === 'uncommon');
-  const pool = everyday.length ? everyday : eligible;
+  // every lagoon shape has an everyday species (tested); never hand out a rare by default
+  const pool = everyday;
   const specials = eligible
     .filter((s) => s.rarity !== 'common')
     .sort((x, y) => ORDER.indexOf(x.rarity) - ORDER.indexOf(y.rarity));
@@ -142,6 +143,7 @@ export function rollCatches(ctx: CatchContext, rng: Rng, journal: JournalView): 
     }
   }
   for (let i = 0; i < n; i++) {
+    if (!(i === 0 && first) && !pool.length) break;
     const sp =
       i === 0 && first
         ? first
@@ -229,11 +231,11 @@ export function catchCapture(cap: CaptureInfo, env: CatchEnv, journal: JournalVi
         reefWin: env.reefWin && last,
       };
       const catches = rollCatches(ctx, new Rng(catchSeed(env.gameSeed, env.move, k, i)), view);
-      for (const c of catches) {
-        if (!view.has(c.id)) dry = 0;
-        seen.add(c.id);
-      }
-      if (catches.length && !catches.some((c) => !journal.has(c.id))) dry++;
+      // same bookkeeping as journal.record, lagoon by lagoon
+      const fresh = catches.some((c) => !view.has(c.id));
+      for (const c of catches) seen.add(c.id);
+      if (fresh) dry = 0;
+      else if (catches.length) dry++;
       out.push({ wave: k + 1, pocket: i, cells: p.cells, catches });
     });
   });
