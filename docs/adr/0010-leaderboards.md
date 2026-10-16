@@ -142,3 +142,16 @@ can't be posted (tests: `tests/unit/storage.test.ts`). The profile gains `lb: {i
   but URLs can appear in logs; a signed player token (research §7.2) is the upgrade path.
 - Game Center / Play Games: not used (no custom names, separate populations, the Daily's local-date
   reset can't map onto them). They may come later for achievements only.
+
+## Update 2026-10-16 — name filter hardening (review finding #1)
+A review found 47 offensive names passing `validateName` (letter-family swaps such as Q/C/G for
+K, vowel variants of slur roots, and sexual/hate compounds only blocked as whole names). Added a
+"severe" layer matched on a skeleton spelling (CK→K, lookalikes, G→K, runs ≤ 2) plus compound
+roots; all 47 are now regression tests (ROT13). False positives measured against
+`/usr/share/dict`: 1/1,175 first names (unchanged), 0.45% of ≤7-letter words (14 newly blocked,
+all archaic/offensive-adjacent; RACHEL, CLINCH, FLINCH and SEXLESS were caught in testing and fixed).
+**Known limit:** a fuzz of vowel swaps / dropped vowels on the slur roots still finds variants that
+pass. A hand-written filter is a floor, not moderation. Before the real backend launches, the owner
+should add server-side moderation: a maintained third-party list or moderation API on submit, a
+report/ban path (the `banned` flag exists), and periodic review of the boards (DEPLOY.md lists the
+SQL). Names are A–Z ≤ 7, so the exposure is short strings only.

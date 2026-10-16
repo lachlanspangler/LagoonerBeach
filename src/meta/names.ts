@@ -13,7 +13,7 @@
  * first, the "Scunthorpe problem". Vowel-dropped spellings (FCK, BTCH…) are listed explicitly:
  * matching every root's consonant skeleton blocked CENT, SCENT and FICKLE.
  */
-import { ALLOW_ROT13, BLOCK_ROT13 } from './nameData.ts';
+import { ALLOW_ROT13, BLOCK_ROT13, SEVERE_ROT13 } from './nameData.ts';
 
 export const NAME_MAX = 7;
 
@@ -55,6 +55,8 @@ const collapseRuns = (s: string) => s.replace(/([A-Z])\1+/g, '$1');
 const formL = (s: string) => limitRuns(mapLetters(limitRuns(s)));
 const formC = (s: string) => collapseRuns(mapLetters(s));
 const reverse = (s: string) => [...s].reverse().join('');
+/** Skeleton for the severe roots: CK→K, lookalikes, then G→K too, runs capped at two. */
+const formS = (s: string) => limitRuns(mapLetters(s.replace(/CK/g, 'K')).replace(/G/g, 'K'));
 
 interface Root {
   readonly c?: string; // match in the collapsed spelling
@@ -75,6 +77,7 @@ const ROOTS: readonly Root[] = BLOCK_ROT13.split(' ').map((e) => {
 });
 
 const ALLOW: readonly string[] = ALLOW_ROT13.split(' ').map(rot13);
+const SEVERE: readonly string[] = SEVERE_ROT13.split(' ').map((e) => formS(rot13(e)));
 
 /** Reserved: impersonation of staff/the game, and values that look like missing data. */
 const RESERVED_ANYWHERE = [
@@ -131,6 +134,8 @@ export function isBlocked(name: string): boolean {
     const c = formC(p);
     const l = formL(p);
     const rl = formL(reverse(p));
+    const sk = formS(p);
+    if (SEVERE.some((w) => sk.includes(w))) return true;
     for (const r of ROOTS) {
       if (r.c && c.includes(r.c)) return true;
       if (r.l && l.includes(r.l)) return true;

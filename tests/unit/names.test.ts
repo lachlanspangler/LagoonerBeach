@@ -230,3 +230,35 @@ describe('Scunthorpe allowlist', () => {
     expect(isBlocked('CORAL')).toBe(false);
   });
 });
+
+describe('session 3 review regressions', () => {
+  // names a reviewer found passing the filter; ROT13 so this file isn't a wall of slurs
+  const ENC =
+    'AVTTE AVTT AVTTF AVTTHE AVTTBE AVTTER AVTEN AVTABT AVXXN AVDDN AVPPN AVXXRE AVDDRE AVXXHU SNDDBG SNXXBG SNTTVG SNTVG WVTNOBB ENTURNQ FCVPX ORNAE TNFWRJF XVYYWRJ XVYYTNL XVYYOYX YLAPURZ UVGYE ANGMV XXXYNA FVRTUNV OYBJWBO UNAQWBO EVZWBO PHZQHZC OVTGVGF FRKFYNI FRKGBL PUVYQCB ENRC ENLCR ZBYRFGE OHXXNXR PERNZCV WNPXBSS WREXBSS SPHX';
+  it.each(ENC.split(' '))('blocks %s (ROT13)', (e) => {
+    expect(validateName(rot13(e)).ok).toBe(false);
+  });
+  it.each([
+    'NIGEL',
+    'NICK',
+    'NICKY',
+    'NIKKI',
+    'NIKKO',
+    'NIKE',
+    'SPIKE',
+    'NICKEL',
+    'NIGGLE',
+    'SNIGGER',
+    'ESSEX',
+    'SEXTON',
+    'RACHEL',
+    'CLINCH',
+    'FLINCH',
+    'KILLIAN',
+    'HANDY',
+    'TITAN',
+    'CREAM',
+    'JACK',
+    'RAY',
+  ])('keeps %s allowed', (w) => expect(validateName(w).ok).toBe(true));
+});
