@@ -458,3 +458,24 @@ SCORE) on our rule, clean and never chaotic; discoveries as moments scaled by ra
   in the middle of an empty board. **Felt off / open:** burst pieces keep the white "lit" rim in
   flight (sparkly, slightly busy); the common pop overlaps the board's top row for ~2 s; chips still
   hide the badge while up; reveal baselines will change when the art fleet redraws box crab / kraken.
+
+## 2026-10-16 (session 3) — Integration: celebrations, all 47 creatures, review fixes
+- Merged: combo/celebration/discovery (ADR 0012), creature art pipeline (ADR 0011) + five fleet
+  batches (47/47 species, one file each, no conflicts), leaderboard review fixes, name filter
+  hardening. main: 410 unit tests; e2e 101 passed before the baseline/test fixes below.
+- **Cross-batch silhouette collision** only showed after merging fleets B and D (nautilus vs
+  cuttle IoU 0.877 > 0.80). Sent back to the nautilus artist (redesigned: hangs nose-down 40°, the
+  way a real nautilus does). Fleet A then rebased onto the full cast before finishing and found two
+  more of its own (grouper/flounder, butterfly/sunfish). Lesson: give every fleet the full cast
+  before the last round.
+- Margins are thin (fish-class pairs at 0.68–0.70): the centroid-aligned mask metric punishes round
+  bodies. Kit backlog from the fleet (to do with the critic's fixes): glow-only props, per-species
+  resting expression, head-anchored XXL crop, per-part scale without outline thickening, blush per
+  species, validator lightness floor 0.55 vs guide 0.45, segmented eels without seams.
+- **Flaky e2e under load:** a WebKit leaderboard test typed before the lazily loaded name sheet
+  existed (real players can't type before they see it) → tests wait for the sheet. Perf tests miss
+  budgets only when ~8 agents load the machine; re-run serial before calling a regression.
+- Name-filter hardening was done by me after an agent session was cut off by a safety classifier
+  (the task carried the reviewer's list of offensive names). Kept test data ROT13 and stopped
+  extending the list by hand; ADR 0010 records the remaining gap and the moderation the owner should
+  add before launch.
