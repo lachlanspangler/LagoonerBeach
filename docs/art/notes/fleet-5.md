@@ -75,3 +75,22 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** A-. Cute-spooky: the teeth read as baby teeth, the lure glows.
 - **Would improve:** the rig mouth isn't used (the jaw is the mouth), so `happy` only adds a small
   open mouth behind the teeth; a jaw-drop driven by the expression would read better.
+
+## otter (rare) — L, chibi (front-facing face)
+- **Feature (R10):** floats on its back: a plump body lying along the water, a big round head with
+  small side ears at the right end, cream muzzle with a dark button nose and whiskers, two plump
+  feet up, a long flat tail (`extra`), and paws on its chest holding a pink scallop shell.
+- **Palette:** `#7A5A3E` lifted to `#9A7656` (L 0.59, the validator floor is 0.55), cream
+  `#E6D2B8`, shell `#F4A7AE`. Blush always on (sweet). Shallows species: `sleepy` at night, which
+  suits "sleepy".
+- **Signature:** lifts the shell up to show you (`surprised`, a little wobble), then hugs it to its
+  chest (`happy`, paws squeeze in, head tilts), and a wink. Catch: shell up, tail flick.
+- **Rounds (3):**
+  1. Adorable but a teddy bear: high round ears on a round head; the shell and paws covered the
+     left cheek.
+  2. Wider head, small ears set low on the sides, whiskers, muzzle lowered; shell and paws moved
+     onto the chest, clear of the face. Now an otter.
+  3. Plumper, shorter feet with cream pads (they read as raised fingers before).
+- **Self-grade:** A-. The cutest of my set; the back-float reads at 24 px.
+- **Would improve:** it's wide and short, so the L tile fill (by long side) makes it look smaller
+  than the turtle; a hint of a water line under it would sell "floating" (no kit part for scenery).
