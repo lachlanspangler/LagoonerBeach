@@ -244,7 +244,7 @@ function film(id: string): void {
 // ─── per-species review sheet ─────────────────────────────────────────────────────────────────
 function speciesSheet(ids: string[]): void {
   const W = 1180;
-  const per = 900;
+  const per = 1080;
   const g = sheet(W, per * ids.length, DAY);
   ids.forEach((id, k) => {
     const sp = SPECIES_BY_ID.get(id);
@@ -399,6 +399,50 @@ function speciesSheet(ids: string[]): void {
       const rx = 16 + (i + 6) * (F + 6);
       tile(g, rx, y5 + 16, F, DAY);
       art(g, a, rx + F / 2, y5 + 16 + F / 2, F * 0.6, DAY, { action: { kind: 'release', u: i / 5 } });
+    }
+
+    // the leap exactly as scene.ts draws it (cell 44 px, fish size 0.5 cell, R27 leap scale), Day + Night
+    const y6 = y5 + F + 30;
+    label(
+      g,
+      'leap as in game (scene.ts call, cell 44 px): splash-out → apex → homing; Day | Night',
+      16,
+      y6 + 10,
+      DAY,
+      11,
+      'left',
+      600,
+    );
+    for (const [k, theme] of [DAY, NIGHT].entries()) {
+      const bx = 16 + k * 580,
+        by = y6 + 18,
+        bw = 570,
+        bh = 150;
+      g.fillStyle = theme === DAY ? '#E3D6C2' : '#15293A';
+      g.beginPath();
+      g.roundRect(bx, by, bw, bh, 12);
+      g.fill();
+      const cell = 44,
+        T1 = 0.3,
+        n = 9;
+      for (let i = 0; i < n; i++) {
+        const t = (i / (n - 1)) * 0.6;
+        const vx = cell * 1.8,
+          vy = -cell * 10,
+          grav = cell * 34;
+        const x = bx + 40 + i * 62;
+        const y = by + bh - 20 + (vy * t + 0.5 * grav * t * t) * 0.32;
+        const ang = Math.atan2(vy + grav * t, vx);
+        const facing = Math.cos(ang) < 0;
+        drawSpecies(g, sp, a, x, y, cell * 0.5 * 1.6, facing ? ang - Math.PI : ang, {
+          fit: 'leap',
+          flip: facing,
+          night: theme === NIGHT,
+          t,
+          expression: 'happy',
+          action: t < T1 ? { kind: 'catch', u: t / T1 } : undefined,
+        });
+      }
     }
   });
 }

@@ -35,6 +35,8 @@ export interface DrawOpts {
   readonly signatureAt?: number;
 }
 
+const SWIMMERS: ReadonlySet<SpeciesArt['klass']> = new Set(['fish', 'shark', 'long', 'wing', 'horse']);
+
 /** R32: day species doze on Night, night species doze on Day. */
 export function restingFace(art: SpeciesArt, sp: Species, night: boolean): Expression {
   const nocturnal = art.nocturnal ?? sp.habitat === 'night';
@@ -68,6 +70,8 @@ export function drawSpecies(
   if (framed && long > s) x -= (long - s) / 2;
   const night = !!o.night;
   const facing = o.flip ? -1 : 1;
+  // swimmers point along their path; crabs, octopuses and coins only lean into it
+  if (o.fit === 'leap' && !SWIMMERS.has(art.klass)) angle *= 0.3;
   if (o.silhouette) {
     renderCreature(g, art, x, y, {
       size: long,

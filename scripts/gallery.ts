@@ -4,7 +4,6 @@
  *   compare-day/night.png  BEFORE/AFTER for every species with new art
  *   silhouettes.png        24 px fill-only masks by habitat
  *   film-<id>-<mode>.png   with --film <id> [--frames N] [--mode idle|signature|catch|release]
- * Legacy contact sheets (artifacts/film/creatures-*.png) are still written with --legacy.
  */
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
@@ -38,10 +37,6 @@ if (film) {
   for (const id of ['clownfish', 'octopus', 'sanddollar', 'hermit', 'turtle'])
     for (const mode of ['idle', 'signature'])
       await shot(`film=${id}&frames=10&mode=${mode}`, `artifacts/art/film-${id}-${mode}.png`);
-}
-if (argv.includes('--legacy')) {
-  mkdirSync('artifacts/film', { recursive: true });
-  await shot('static', 'artifacts/film/creatures-all.png');
 }
 await b.close();
 if (errors.length) {
