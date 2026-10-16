@@ -19,3 +19,18 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** B+. The silhouette is unmistakable and the face is friendly.
 - **Would improve:** the bar is still a bit stiff and flat-fronted; a second, far eye on the lower
   lobe (the rig only supports one profile eye) would sell "sees every direction" much better.
+
+## dolphin (rare) — XL, shark
+- **Feature (R10):** a plump arched body with a round melon forehead and a short stubby beak, a
+  low hooked dorsal swept back (a shark's stands tall), whale-style flukes, white belly to the chin.
+- **Signature:** a spin-leap inside the tile: dip, hop 12 units with a full 360° roll, splash-settle,
+  `happy` throughout. Catch: fluke thrash and a flipper flap.
+- **Rounds (3):**
+  1. Read as a shark: tall triangular dorsal, thin needle beak, body slanting nose-down, and the
+     flipper sitting right under the eye.
+  2. Round melon and stubby beak, level body, flipper moved back behind the eye, bigger eye (8),
+     whale-style fluke lobes. Now unmistakably a dolphin, and sweet.
+  3. Dorsal tip swept further back and lower so its outline differs from the hammerhead's.
+- **Self-grade:** A-. Joyful and readable; the spin is the most fun signature in my set.
+- **Would improve:** the permanent smile is only the rig's small `smile` (capped at 0.9 × eye
+  width); a longer mouth crease along the beak would sell "permanent smile" better.
