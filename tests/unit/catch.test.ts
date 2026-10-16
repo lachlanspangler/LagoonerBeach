@@ -187,6 +187,11 @@ describe('journal', () => {
     expect(Object.keys(j.entries)).toEqual(['minnow']);
     expect(j.dry).toBe(0);
     expect(sanitizeJournal(null).entries).toEqual({});
+    // the latest catch size (species page) survives a round trip; junk is dropped
+    const ok = sanitizeJournal({ entries: { minnow: { count: 1, best: 5, first: 'x', last: 4.2 } } });
+    expect(ok.entries.minnow?.last).toBe(4.2);
+    const bad = sanitizeJournal({ entries: { minnow: { count: 1, best: 5, first: 'x', last: -1 } } });
+    expect('last' in bad.entries.minnow!).toBe(false);
   });
   it('species ids are unique and every habitat has members', () => {
     expect(new Set(SPECIES.map((s) => s.id)).size).toBe(SPECIES.length);
