@@ -136,8 +136,8 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.getByRole('button', { name: 'Settings' }).click();
     await p.waitForTimeout(500);
     await p.evaluate(() => {
-      const s = document.querySelector('.veil .card') as HTMLElement | null;
-      const sc = (s?.querySelector('.sheet-scroll') as HTMLElement | null) ?? s;
+      const s = document.querySelector('.veil .sheet, .veil .card') as HTMLElement | null;
+      const sc = (document.querySelector('.veil .sheet-body') as HTMLElement | null) ?? s;
       if (sc) sc.scrollTop = 9999;
     });
     await p.waitForTimeout(200);
