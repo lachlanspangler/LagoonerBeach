@@ -250,3 +250,26 @@ broke, what I decided and why.
   review with automated sweeps (fixed button contrast and five sub-44 px targets), all native icons +
   splashes generated, signed Android release AAB verified on the emulator (throwaway key), iOS
   Simulator build with new assets.
+
+## 2026-10-16 (session 2, close) — Third UX review + bug review
+- **Third UX review** (fresh agent) → fixed: jackpot word and +N are one lockup and news chips now
+  wait until it fades; endless clean-board callout renamed **Spotless!** (no clash with Reefs);
+  creatures reach ≡ in 0.95 s (was 1.25 s, lingered on the board); flounder redrawn as a flat
+  disc with a fin rim (the scalloped fringe read as a puffer); one tagline everywhere ("Close a
+  loop. Water fills it, the ring pops."); **Continue · Reef N** is the primary reef button until 20
+  reefs are cleared (Reef of the day sent new players to Deep reefs); store shots re-staged (distinct
+  boards, the reef shot seals a lagoon on its first move with a full tray, staged score adds up).
+  Skipped as invisible polish: bottom-third space, more distinct journal silhouettes, a creature on
+  the feature graphic. "New best" peak already exists on the card.
+- **Bug review** (fresh agent, 12 findings) → fixed 10: welcome-back toast was scheduled *every
+  frame* (filled the chip queue forever, blocked real chips, kept 60 fps redraw — the worst bug of
+  the session, invisible in tests because test profiles have no streak); collect pulse never fired
+  (fish culled the frame before arrival); per-game tallies leaked across mode switches (now keyed
+  by game); duplicate "New:" chip across cascade waves; dealer partial fallback could deal three
+  non-fitting pieces (test proven to fail on the old code); **rarity bypass** — big/huge lagoons had
+  no everyday species, so daytime 12+ lagoons always gave an epic octopus and night ones a kraken
+  (parrotfish and moon jelly widened, rare-by-default removed, coverage test over every
+  shape/size/mode; retuned; journal curve unchanged: median 43/47 by day 35); audio woke while
+  hidden; stale drag frame on tap-to-place; music fade-in jump; leftover fish/chips on New game;
+  dry counters disagreed. Left as known: another open tab can re-save after Erase; replaying a reef
+  re-records the same catches (counts only).
