@@ -5,6 +5,7 @@ import { applyMove, newGame, previewMove, legalMoves, type GameState, type Move 
 import { dailySeed, dayIndex, recordDaily, visibleStreak } from '../core/daily.ts';
 import { pieceById } from '../core/pieces.ts';
 import { N } from '../core/grid.ts';
+import { fitsAnywhere } from '../core/rules.ts';
 import { Rng } from '../core/rng.ts';
 import { BOTS, type BotName } from '../sim/bots.ts';
 import { Sfx } from '../audio/sfx.ts';
@@ -133,8 +134,13 @@ function syncScene(): void {
   fx.reset();
   overShown = false;
   updateHint();
+  updateMisfits();
   ui.setMode(mode, visibleStreak(profile.daily, dayIndex(today())));
   dirty = true;
+}
+
+function updateMisfits(): void {
+  scene.misfit = state.tray.map((t) => t !== null && !fitsAnywhere(state.board, pieceById(t.pieceId)));
 }
 
 // ------------------------------------------------------------------ teaching hint
@@ -189,6 +195,7 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
   if (state.over) finishGame(prevBest);
   saveProfile(profile);
   updateHint();
+  updateMisfits();
   dirty = true;
   return true;
 }
@@ -311,6 +318,8 @@ const ui = new Ui({
 });
 
 // ------------------------------------------------------------------ input
+let sealKey = '';
+
 const drag = new DragController(canvas, {
   layout: () => scene.layout,
   state: () => state,
@@ -325,10 +334,18 @@ const drag = new DragController(canvas, {
     const t = state.tray[slot];
     if (!t || !anchor) {
       scene.preview = null;
+      sealKey = '';
       return;
     }
     const piece = pieceById(t.pieceId);
     const pv = previewMove(state, { slot, x: anchor.x, y: anchor.y });
+    // seal tick: the moment a drag position would capture, the finger feels it
+    const key = pv && pv.pockets.length ? `${slot}:${anchor.x},${anchor.y}` : '';
+    if (key && key !== sealKey) {
+      sfx.seal(pv!.pockets.reduce((a, p) => a + p.cells.length, 0));
+      haptics.fire('tick');
+    }
+    sealKey = key;
     scene.preview = pv
       ? {
           ax: anchor.x,

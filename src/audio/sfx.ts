@@ -96,6 +96,12 @@ export class Sfx {
     this.hiss(0, 0.04, 2400, 3, 0.18);
   }
 
+  /** Soft water drip when a drag would seal a lagoon; higher for bigger lagoons. */
+  seal(area: number): void {
+    const f = 900 + Math.min(area, 16) * 40;
+    this.tone(f, 0, 0.07, 'sine', 0.07, f * 1.5);
+  }
+
   invalid(): void {
     this.tone(150, 0, 0.12, 'sine', 0.2, 110);
   }

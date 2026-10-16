@@ -181,7 +181,8 @@ export class Ui {
     card.className = 'card';
     card.innerHTML = `<h2>${o.mode === 'daily' ? 'Daily complete' : 'No room left'}</h2>
       <div class="big" data-testid="final-score">${o.score}</div>
-      <div class="sub">${o.newBest ? '<span class="best-flash">NEW BEST</span>' : `Best ${o.best}`}</div>
+      <div class="sub">${o.newBest ? '<span class="best-flash">NEW BEST</span>' : nearMiss(o.score, o.best)}</div>
+
       <div class="stats">
         <div><b>${o.moves}</b><span>Moves</span></div>
         <div><b>${o.lagoon}</b><span>Biggest lagoon</span></div>
@@ -197,4 +198,13 @@ export class Ui {
     this.show(card, false);
     this.announce(`Game over. Score ${o.score}.${o.newBest ? ' New best!' : ''}`);
   }
+}
+
+/** "Best 1200" plus a progress bar toward it — the pull of almost. */
+function nearMiss(score: number, best: number): string {
+  if (best <= 0) return '';
+  const pct = Math.max(0, Math.min(100, Math.round((score / best) * 100)));
+  const gap = best - score;
+  return `<div>Best ${best}${gap > 0 && pct >= 70 ? ` · just ${gap} short` : ''}</div>
+    <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
 }

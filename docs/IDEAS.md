@@ -4,20 +4,26 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**62 ideas** — chosen: 1 · built: 0 · prototyped: 4 · shortlisted: 0 · backlog: 15 · merged: 3 · rejected: 39
+**72 ideas** — chosen: 1 · built: 2 · prototyped: 4 · shortlisted: 0 · backlog: 20 · merged: 4 · rejected: 41
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
 | I-001 | chosen | Hollow (loop clear) | Close a loop of blocks and everything inside it pops. | Block Blast + Go capture + Two Dots squares | 27 | ✓ | 10/4 | meas |
+| I-061 | built | Teaching tray | The very first tray always lets you close a loop in two moves. | Tutorial-less onboarding (Threes) | 25 | ✗ | 9/2 | est |
+| I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
-| I-042 | backlog | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
-| I-061 | backlog | Teaching tray | The very first tray always lets you close a loop in two moves. | Tutorial-less onboarding (Threes) | 25 | ✗ | 9/2 | est |
+| I-069 | backlog | Seal tick | A tiny haptic+sound the moment your drag would seal a lagoon. | — | 27 | ✓ | 8/1 | est |
+| I-074 | backlog | Clear-the-reef puzzles | Hand-checked daily puzzle: clear a set board with fixed pieces. | Meowdoku levels | 27 | ✓ | 8/5 | est |
+| I-072 | backlog | Lagoon fish | Big lagoons get a little fish that leaps out when they pop. | Meowdoku cats | 26 | ✓ | 7/3 | est |
+| I-065 | backlog | Daily share grid | Share your daily as a tiny emoji picture of your biggest lagoon. | Wordle share grid | 25 | ✓ | 7/2 | est |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
+| I-066 | backlog | Near-miss bar | Game-over card shows how close you got to your best. | Block Blast best line | 24 | ✗ | 6/1 | est |
+| I-071 | backlog | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
+| I-073 | backlog | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
-| I-062 | backlog | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
@@ -28,6 +34,8 @@
 | I-039 | backlog | Echo | Every piece you place comes back two turns later. | Block Blast | 21 | ✗ | 4/2 | est |
 | I-049 | backlog | Level Ground | Each block raises the ground; flatten a row to clear it. | Terraforming sims | 21 | ✗ | 4/5 | est |
 | I-045 | backlog | Lasso | Draw a loop around blocks to clear them. | Two Dots squares, Qix | 20 | ✗ | 4/4 | est |
+| I-075 | backlog | Ambient sea | Soft procedural wave bed under the SFX. | Calm puzzle games | 20 | ✗ | 3/3 | est |
+| I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
 | I-041 | merged | Flip Puzzle | Use these pieces to wipe the pattern clean. | Lights Out | 23 | ✗ | 6/3 | est |
 | I-022 | merged | Kaleidoscope | Each piece also appears rotated around the center. | Mirror (I-008) | 22 | ✗ | 4/2 | est |
 | I-054 | merged | Magnet Wall | Clears pull everything toward the magnet. | Tetris | 20 | ✗ | 3/3 | est |
@@ -38,6 +46,7 @@
 | I-010 | rejected | Cash Out | Full lines wait for you; tap to cash them — more at once pays more. | Block Blast + push-your-luck dice | 21 | ✗ | 5/2 | est |
 | I-019 | rejected | Cluster Pop | Six touching blocks of one color pop. | Puyo Puyo | 21 | ✗ | 4/2 | est |
 | I-038 | rejected | Conveyor | Place pieces before the belt carries them away. | Tetris | 21 | ✗ | 2/2 | est |
+| I-063 | rejected | Next-tray peek | Show faint silhouettes of the next tray. | Tetris preview | 21 | ✗ | 4/2 | est |
 | I-013 | rejected | Corner Chain | Each piece must touch the last one only at a corner. | Blokus | 20 | ✗ | 4/2 | est |
 | I-023 | rejected | Punch Out | Punch shapes out of a full board; empty a row to score. | Block Blast | 20 | ✗ | 2/1 | est |
 | I-024 | rejected | Freehand | Draw any shape of the size you're given. | Block Blast | 20 | ✗ | 4/3 | est |
@@ -46,6 +55,7 @@
 | I-034 | rejected | Keyholes | Fill a keyhole with the exact shape that fits it. | Tetris T-spins, shape sorters | 20 | ✗ | 3/3 | est |
 | I-035 | rejected | Bomb cells | Clear through a bomb and it blasts its neighbors. | Many | 20 | ✗ | 3/2 | est |
 | I-046 | rejected | Fuse | Same-color blocks melt together; big ones pop. | Puyo, merge games | 20 | ✗ | 3/3 | est |
+| I-064 | rejected | One undo | Undo your last placement once per game. | Many puzzle games | 20 | ✗ | 3/2 | est |
 | I-012 | rejected | Melt | Blocks melt five turns after you place them. | Block Blast + ice tiles | 19 | ✗ | 4/2 | est |
 | I-014 | rejected | Chain Touch | Every piece must touch the one before it. | Block Blast | 19 | ✗ | 3/2 | est |
 | I-025 | rejected | Overrun | Your blocks spread every turn — clear lines before the board fills. | Conway's Life | 19 | ✗ | 4/3 | est |
@@ -81,6 +91,23 @@
 - **Value/effort:** 10/4
 - **Reason:** Chosen (ADR 0001). Only candidate passing every gate on measured data; huge planning headroom; big loops form a visible jackpot.
 - **Data:** hollow8-ramp2: median moves random/firstFit/greedy/search 17/27/80/488; score skill 53.7×; firstFit÷search 0.03, greedy÷search 0.12; 2.2 moves/clear; median best pocket 19 cells. R4=1: greedy sessions too long until ramp is tuned. R2 needs a scripted first tray (pocket in 2 moves).
+
+### I-061 — Teaching tray (built)
+- **Pitch:** The very first tray always lets you close a loop in two moves.
+- **Closest existing:** Tutorial-less onboarding (Threes)
+- **What's new:** Rule taught by a seeded first deal + ghost hint, no text.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 2 1 2 2 → **25**/28, gates FAIL (est)
+- **Value/effort:** 9/2
+- **Reason:** Required for Hollow's R2 (learn in one move).
+
+### I-062 — Difficulty ramp (built)
+- **Pitch:** Pieces get chunkier the longer you survive.
+- **Closest existing:** Block Blast generator
+- **What's new:** Ramp tuned by bots to a target session length.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 1 1 1 1 2 2 → **23**/28, gates FAIL (meas)
+- **Value/effort:** 8/3
+- **Reason:** Hollow is too forgiving without it (search never dies).
+- **Data:** ramp(10,100) drops greedy median 500→80 moves.
 
 ### I-005 — Overgrowth (growing tray) (prototyped)
 - **Pitch:** Every piece you skip grows one block.
@@ -118,21 +145,37 @@
 - **Reason:** Rejected after prototype: shallow ceiling (search survives 25 moves), and deaths happen with half the board empty because big pieces cannot reach open space — feels unfair.
 - **Data:** skid: 11/13/17/25 moves; skill 3.6×; ≤4-cell variant 13/14/20/29.
 
-### I-042 — Hollow Daily Puzzle (backlog)
-- **Pitch:** Clear the whole board with today's pieces.
-- **Closest existing:** Wordle-style dailies
-- **What's new:** Fixed seed + fixed pieces + solver-graded par.
+### I-069 — Seal tick (backlog)
+- **Pitch:** A tiny haptic+sound the moment your drag would seal a lagoon.
+- **Closest existing:** —
+- **What's new:** The preview is felt, not just seen.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 1 2 2 2 2 2 → **27**/28, gates pass (est)
+- **Value/effort:** 8/1
+- **Reason:** Highest value/effort polish: teaches the rule through the finger.
+
+### I-074 — Clear-the-reef puzzles (backlog)
+- **Pitch:** Hand-checked daily puzzle: clear a set board with fixed pieces.
+- **Closest existing:** Meowdoku levels
+- **What's new:** Finite, solver-graded puzzles from our rule.
 - **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 2 1 2 2 2 → **27**/28, gates pass (est)
 - **Value/effort:** 8/5
-- **Reason:** Natural puzzle mode if Hollow wins.
+- **Reason:** Second mode with Meowdoku-style completion; merges I-042.
 
-### I-061 — Teaching tray (backlog)
-- **Pitch:** The very first tray always lets you close a loop in two moves.
-- **Closest existing:** Tutorial-less onboarding (Threes)
-- **What's new:** Rule taught by a seeded first deal + ghost hint, no text.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 2 1 2 2 → **25**/28, gates FAIL (est)
-- **Value/effort:** 9/2
-- **Reason:** Required for Hollow's R2 (learn in one move).
+### I-072 — Lagoon fish (backlog)
+- **Pitch:** Big lagoons get a little fish that leaps out when they pop.
+- **Closest existing:** Meowdoku cats
+- **What's new:** A face for the reward.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 2 1 2 2 2 → **26**/28, gates pass (est)
+- **Value/effort:** 7/3
+- **Reason:** Charm; scales with lagoon size so big loops feel alive.
+
+### I-065 — Daily share grid (backlog)
+- **Pitch:** Share your daily as a tiny emoji picture of your biggest lagoon.
+- **Closest existing:** Wordle share grid
+- **What's new:** Spoiler-free social proof shaped by our mechanic.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 2 1 1 2 2 → **25**/28, gates pass (est)
+- **Value/effort:** 7/2
+- **Reason:** Wordle-style virality; the lagoon shape is unique per player.
 
 ### I-026 — Loop Pipes (backlog)
 - **Pitch:** Lay pipe tiles; any closed loop vanishes.
@@ -142,6 +185,30 @@
 - **Value/effort:** 5/4
 - **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
 
+### I-066 — Near-miss bar (backlog)
+- **Pitch:** Game-over card shows how close you got to your best.
+- **Closest existing:** Block Blast best line
+- **What's new:** Keeps 'one more round' pull.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** Cheap and proven retention lever.
+
+### I-071 — Dim misfits (backlog)
+- **Pitch:** Tray pieces that fit nowhere fade out.
+- **Closest existing:** Block Blast
+- **What's new:** Shows doom coming = fairness.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** Makes the fail state foreseeable (R13).
+
+### I-073 — Tap-to-place (backlog)
+- **Pitch:** Tap a piece, then tap a cell, as an alternative to dragging.
+- **Closest existing:** Accessibility modes
+- **What's new:** Motor accessibility.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/3
+- **Reason:** Accessibility option; dragging stays the default.
+
 ### I-015 — Square Pop (backlog)
 - **Pitch:** Any filled square, 3×3 or bigger, pops.
 - **Closest existing:** Woodoku
@@ -149,15 +216,6 @@
 - **Scores (R1..R14):** 2 1 2 1 2 1 2 2 2 1 1 2 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 5/2
 - **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later.
-
-### I-062 — Difficulty ramp (backlog)
-- **Pitch:** Pieces get chunkier the longer you survive.
-- **Closest existing:** Block Blast generator
-- **What's new:** Ramp tuned by bots to a target session length.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 1 1 1 1 2 2 → **23**/28, gates FAIL (meas)
-- **Value/effort:** 8/3
-- **Reason:** Hollow is too forgiving without it (search never dies).
-- **Data:** ramp(10,100) drops greedy median 500→80 moves.
 
 ### I-008 — Mirror (backlog)
 - **Pitch:** Everything you place is reflected across the mirror.
@@ -238,6 +296,22 @@
 - **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 1 2 1 1 → **20**/28, gates FAIL (est)
 - **Value/effort:** 4/4
 - **Reason:** Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb.
+
+### I-075 — Ambient sea (backlog)
+- **Pitch:** Soft procedural wave bed under the SFX.
+- **Closest existing:** Calm puzzle games
+- **What's new:** Mood.
+- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 0 1 1 1 2 2 → **20**/28, gates FAIL (est)
+- **Value/effort:** 3/3
+- **Reason:** Low priority; sound off is the common mobile case.
+
+### I-042 — Hollow Daily Puzzle (merged)
+- **Pitch:** Clear the whole board with today's pieces.
+- **Closest existing:** Wordle-style dailies
+- **What's new:** Fixed seed + fixed pieces + solver-graded par.
+- **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 2 1 2 2 2 → **27**/28, gates pass (est)
+- **Value/effort:** 8/5
+- **Reason:** Merged into I-074.
 
 ### I-041 — Flip Puzzle (merged)
 - **Pitch:** Use these pieces to wipe the pattern clean.
@@ -321,6 +395,14 @@
 - **Value/effort:** 2/2
 - **Reason:** Time pressure contradicts calm, one-handed, interruptible play.
 
+### I-063 — Next-tray peek (rejected)
+- **Pitch:** Show faint silhouettes of the next tray.
+- **Closest existing:** Tetris preview
+- **What's new:** Planning info.
+- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 1 0 1 1 2 2 → **21**/28, gates FAIL (est)
+- **Value/effort:** 4/2
+- **Reason:** Clutter, and it shifts the game from read-the-board to read-the-queue; Block Blast proves the 3-piece tray is enough.
+
 ### I-013 — Corner Chain (rejected)
 - **Pitch:** Each piece must touch the last one only at a corner.
 - **Closest existing:** Blokus
@@ -384,6 +466,14 @@
 - **Scores (R1..R14):** 2 1 2 1 1 1 1 2 2 1 1 1 2 2 → **20**/28, gates FAIL (est)
 - **Value/effort:** 3/3
 - **Reason:** Merge genre is crowded.
+
+### I-064 — One undo (rejected)
+- **Pitch:** Undo your last placement once per game.
+- **Closest existing:** Many puzzle games
+- **What's new:** Forgiveness.
+- **Scores (R1..R14):** 2 2 2 2 1 1 1 2 1 0 1 1 2 2 → **20**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** Removes the weight of each placement, the core tension. Never in classic.
 
 ### I-012 — Melt (rejected)
 - **Pitch:** Blocks melt five turns after you place them.

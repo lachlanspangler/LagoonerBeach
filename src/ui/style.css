@@ -222,3 +222,17 @@ body {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+.bar {
+  height: 8px;
+  border-radius: 4px;
+  margin: 8px auto 0;
+  width: 70%;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--water);
+  border-radius: 4px;
+}

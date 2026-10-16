@@ -101,6 +101,8 @@ export class Scene {
   streakPulse = -1e9;
   gameOverAt = -1;
   hint: { cells: readonly number[]; start: number } | null = null;
+  /** Tray slots whose piece fits nowhere on the current board (drawn faded). */
+  misfit: boolean[] = [false, false, false];
 
   private panel: HTMLCanvasElement | OffscreenCanvas | null = null;
   private visRand = 0x12345;
@@ -417,7 +419,7 @@ export class Scene {
         this.drawPieceAt(p, slot.t.color, x, y, cell);
         return;
       }
-      const dimmed = this.gameOverAt >= 0;
+      const dimmed = this.gameOverAt >= 0 || this.misfit[i] === true;
       this.drawPieceAt(p, slot.t.color, x, y, l.trayCell, a * (dimmed ? 0.45 : 1));
     });
   }
