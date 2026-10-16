@@ -340,16 +340,20 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
 let dirty = true;
 let last = performance.now();
 const frameTimes: number[] = [];
+const drawTimes: number[] = [];
 function frame(now: number): void {
   const dt = now - last;
   last = now;
   fx.tick(now);
   scene.drag = drag.view(now);
   if (dirty || scene.busy(now) || fx.pending) {
+    const t0 = performance.now();
     scene.draw(now, dt);
+    drawTimes.push(performance.now() - t0);
     dirty = false;
     frameTimes.push(dt);
-    if (frameTimes.length > 600) frameTimes.shift();
+    if (frameTimes.length > 1200) frameTimes.shift();
+    if (drawTimes.length > 1200) drawTimes.shift();
   }
   requestAnimationFrame(frame);
 }
@@ -370,7 +374,11 @@ if (DEBUG) {
     mode: () => mode,
     profile: () => profile,
     frameTimes: () => frameTimes.slice(),
-    clearFrames: () => (frameTimes.length = 0),
+    drawTimes: () => drawTimes.slice(),
+    clearFrames: () => {
+      frameTimes.length = 0;
+      drawTimes.length = 0;
+    },
     /** Pointer path (CSS px) that makes the drag controller produce the bot's next move. */
     plan(bot: BotName = 'greedy') {
       if (state.over) return null;

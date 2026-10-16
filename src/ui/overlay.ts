@@ -74,16 +74,20 @@ export class Ui {
     return this.veil !== null;
   }
 
-  close(): void {
+  close(immediate = false): void {
     const v = this.veil;
     if (!v) return;
     this.veil = null;
+    if (immediate) return v.remove();
     v.classList.remove('show');
+    v.setAttribute('aria-hidden', 'true');
+    v.style.pointerEvents = 'none';
     setTimeout(() => v.remove(), 200);
   }
 
   private show(card: HTMLElement, dismissable: boolean): void {
-    this.close();
+    const replacing = this.veil !== null;
+    this.close(true);
     const v = document.createElement('div');
     v.className = 'veil';
     v.setAttribute('role', 'dialog');
@@ -95,7 +99,8 @@ export class Ui {
       });
     this.root.append(v);
     this.veil = v;
-    requestAnimationFrame(() => v.classList.add('show'));
+    if (replacing) v.classList.add('show');
+    else requestAnimationFrame(() => v.classList.add('show'));
     (card.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
   }
 
