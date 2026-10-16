@@ -5,7 +5,16 @@
  * Personality: dainty, tricky, sunny. Signature: turns around to show off its false eye, turns back
  * and winks with the real one.
  */
-import { blob, capsule, circle, defineArt, ellipse, join, tube } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
+
+// it hovers nose-down at a dainty TILT, tweezer snout picking at the reef: the pose that keeps the
+// tall disc apart from the sunfish and the round jellies at 24 px (R12)
+const TILT = 17;
+const R = (d: string) => xform(d, { rot: TILT });
+const tc = Math.cos((TILT * Math.PI) / 180),
+  ts = Math.sin((TILT * Math.PI) / 180);
+/** An anchor on the drawing grid, mapped like the paths. */
+const P = (x: number, y: number): [number, number] => [x * tc - y * ts, x * ts + y * tc];
 
 // the disc: a deep, nearly round body
 const body = blob([
@@ -80,25 +89,25 @@ export default defineArt({
   groups: [
     {
       id: 'tail',
-      pivot: [-27, 0],
+      pivot: P(-27, 0),
       parts: [
-        { d: tail, role: 'body' },
-        { d: ellipse(-40.5, 0, 4, 12), role: 'white', kind: 'pattern', alpha: 0.7 },
+        { d: R(tail), role: 'body' },
+        { d: R(ellipse(-40.5, 0, 4, 12)), role: 'white', kind: 'pattern', alpha: 0.7 },
       ],
     },
     {
       id: 'body',
       parts: [
-        { d: dorsal, role: 'body' },
-        { d: anal, role: 'body' },
-        { d: body, role: 'body' },
-        { d: snout, role: 'body' },
-        { d: ellipse(-6, 28, 26, 8), role: 'belly', kind: 'pattern' },
-        { d: band, role: 'accent', kind: 'pattern', alpha: 0.9 },
-        { d: falseRing, role: 'white', kind: 'pattern' },
-        { d: falseEye, role: 'accent', kind: 'pattern' },
+        { d: R(dorsal), role: 'body' },
+        { d: R(anal), role: 'body' },
+        { d: R(body), role: 'body' },
+        { d: R(snout), role: 'body' },
+        { d: R(ellipse(-6, 28, 26, 8)), role: 'belly', kind: 'pattern' },
+        { d: R(band), role: 'accent', kind: 'pattern', alpha: 0.9 },
+        { d: R(falseRing), role: 'white', kind: 'pattern' },
+        { d: R(falseEye), role: 'accent', kind: 'pattern' },
         {
-          d: join(ellipse(-8, -41, 14, 4, 14), ellipse(-8, 40, 13, 4, -14)),
+          d: R(join(ellipse(-8, -41, 14, 4, 14), ellipse(-8, 40, 13, 4, -14))),
           role: 'accent',
           kind: 'pattern',
           alpha: 0.35,
@@ -106,12 +115,12 @@ export default defineArt({
       ],
     },
   ],
-  shine: ellipse(0, -17, 9, 3.4, -24),
+  shine: R(ellipse(0, -17, 9, 3.4, -24)),
   face: {
-    eyes: [[6, 1.5]],
+    eyes: [P(6, 1.5)],
     eye: 9.5,
     zone: [-8, -24, 41, 46],
-    mouth: { at: [33, 6], w: 5, shape: 'smile' },
+    mouth: { at: P(33, 6), w: 5, shape: 'smile' },
     sweet: true,
   },
   idle: {
