@@ -179,3 +179,10 @@ broke, what I decided and why.
 - **Process slip:** I chained `git commit` after an edit that failed loudly, committing a broken
   perf test (e2e isn't in pre-commit). Fixed in the next commit. Rule for myself: verify, then
   commit as a separate step — never `&&` a commit onto a command whose failure I can't see.
+
+## 2026-10-16 03:30 CDT — Wrap-up (user asked to stop)
+- UX critique agent: acted on the menu (split into menu + Settings with real switches, zero stats
+  hidden) and fixed a real bug it surfaced (empty "next:" unlock hint: Glyph wasn't marked
+  unlocked on a fresh profile). The remaining critique items are listed under "Next" in STATUS.
+- Soak test (400 moves): heap +0.16 MB. Bundle budget check added (26 KB gz initial).
+- Final state: `make check` (76) and `make e2e` (55) green; everything committed.
