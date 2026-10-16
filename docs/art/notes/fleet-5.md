@@ -94,3 +94,24 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** A-. The cutest of my set; the back-float reads at 24 px.
 - **Would improve:** it's wide and short, so the L tile fill (by long side) makes it look smaller
   than the turtle; a hint of a water line under it would sell "floating" (no kit part for scenery).
+
+## goldturtle (legendary) — L, turtle
+- **Not a recolour of the sea turtle:** (1) silhouette: a tiara of three rounded points on the
+  dome (middle one tallest, a jewel in each), the whole pose tilted 10° nose-up into a glide, the
+  head held chin-up, and a long wing-like front flipper; (2) pattern: a cream diamond medallion
+  with a white gem and a border of pearls along an ink-trimmed rim (the pilot has scute spots);
+  (3) motion: a grand slow "flight" stroke instead of the head tuck; (4) a star sparkle prop.
+- **Palette:** sun gold `#E8B23E` (deepened from `#F2C14E` so the cream accent clears ΔL 0.15),
+  cream `#FFF1C2`, ivory skin `#F5E2B0`. Golden variant is rose gold (`golden: 'rose'`, R33).
+- **Signature:** both flippers make one big stroke, it rises 6 units, the head lifts, a sparkle
+  star twinkles and turns above its head; slow blink into `proud`. Catch: the stroke plus sparkle.
+- **Rounds (4):**
+  1. Round bumps for a crown (read as warts or a mushroom), a big ring medallion that looked like an
+     eye, too many plates; IoU 0.80 vs the sea turtle (fail).
+  2. Crown as pointed rounded triangles, pearl border instead of plates: 0.78, still failing.
+  3. The whole pose tilted 10° nose-up (`xform` rot on every path): 0.64, and it now looks like it
+     is flying. But the points were too tall: a spiny dragon.
+  4. Lower, wider tiara points; diamond medallion with no ink ring. Turtle IoU 0.66.
+- **Self-grade:** B+. Clearly its own legend, and it glides; regal more than cute.
+- **Would improve:** there's no way to make `proud` its resting face (the rig's idle is fixed), and
+  regal leans on it; the far (second) front flipper raised as a wing would sell flight better.
