@@ -166,3 +166,35 @@ mass *outside* a disc or an ellipse (spine rays, square corners, tall fins, a fo
 - Self-grade: B. Sweet and clearly a limpet next to the cockle, but it reads a little like a dumpling.
 - Would improve: a small rock under it (clingy!) would sell the personality; props are hidden at rest,
   so there is no way to show a resting prop without making it part of the silhouette.
+
+## Summary
+| species | size | grade | closest pair (IoU, limit) |
+|---|---|---|---|
+| puffer | M | B+ | clownfish 0.68 (0.70), sanddollar 0.68 (0.80) |
+| boxfish | M | B+ | sanddollar 0.73 (0.80), puffer 0.67 (0.70) |
+| sunfish | XL | B+ | clownfish 0.68 (0.70), puffer 0.67 (0.70) |
+| urchin | S | A- | sunfish 0.63 (0.80) |
+| cockle | XS | B | clownfish 0.70 (0.80), sanddollar 0.67 (0.70) |
+| giantclam | L | A- | octopus 0.70 (0.80), sanddollar 0.64 (0.70) |
+| periwinkle | XS | B+ | sanddollar 0.66 (0.70) |
+| nautilus | M | B+ | clownfish 0.72 (0.80), turtle 0.70 (0.80), limpet 0.68 (0.70) |
+| limpet | XS | B | turtle 0.69 (0.80), nautilus 0.68 (0.70) |
+
+Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nautilus 0.679 (limit
+0.70). Worst cross-class: boxfish/sanddollar 0.728 (limit 0.80). Art chunk with 14 species: 18.5 KB gz.
+
+### Kit limitations hit
+- **The R12 metric favours spiky/notched shapes over round ones.** Masks are scaled by the long side
+  and centroid-aligned, so any plump round shell or round fish normalises to nearly the same disc as
+  the sand dollar. Every round species in this batch needed a lever that adds or removes mass outside
+  a disc (spines, notches, a foot, a triangle). The cockle's "heart-ish, wider than tall" and a rounder
+  periwinkle were not reachable without failing against the sand dollar.
+- **No per-part scale**: scaling a group scales stroke thickness too, so the puffer's extending spines
+  get fat; I had to keep the extra spine scale small (1.14).
+- **Profile eye placement includes tails/stalks in the body box**, which pushes the boxfish's eye
+  further from its snout than looks best.
+- **Blush colour is fixed** (`#FF8FA3`, or ink for pink bodies): on teal (giant clam) it reads grey.
+- **Props are hidden at rest**, so a resting prop (a rock under the limpet) isn't possible without
+  making it part of the silhouette.
+- Pectoral fins drawn as outlined ellipses next to a low-set profile eye read as a second mouth at
+  54 px (puffer, boxfish); worth a line in the fleet brief's gotchas.
