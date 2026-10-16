@@ -2,10 +2,10 @@ name: ci
 on: [push, pull_request]
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npm run check
@@ -13,17 +13,17 @@ jobs:
       # the shipped puzzle pack must be exactly reproducible from the generator
       - run: npm run puzzles && git diff --exit-code src/content/puzzles.json
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run build
       - run: npm run size
       - run: npx playwright test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playwright

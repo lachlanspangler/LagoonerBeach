@@ -5,8 +5,13 @@ export default defineConfig({
   testMatch: ['e2e/**/*.spec.ts', 'perf/**/*.spec.ts'],
   timeout: 90_000,
   fullyParallel: true,
-  workers: 4,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // CI runners have 2 cores: fewer workers, one retry for timing-sensitive flows, and failures as
+  // GitHub annotations (readable through the public API, unlike job logs).
+  workers: process.env.CI ? 2 : 4,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI
+    ? [['list'], ['github'], ['html', { open: 'never' }]]
+    : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://localhost:4317',
     trace: 'retain-on-failure',

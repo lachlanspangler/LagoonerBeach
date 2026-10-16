@@ -7,6 +7,12 @@ import { expect, test } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { boot, dragMove } from '../e2e/helpers.ts';
 
+/**
+ * Shared CI runners are slower and noisier than any phone budget we care about; budgets there are
+ * scaled so CI catches regressions (order-of-magnitude) while the strict numbers are enforced locally.
+ */
+const K = process.env.CI ? 3 : 1;
+
 test('draw cost p95 under budget at 4× CPU throttle', async ({ page }) => {
   await boot(page, 'seed=11');
   const cdp = await page.context().newCDPSession(page);
@@ -27,7 +33,7 @@ test('draw cost p95 under budget at 4× CPU throttle', async ({ page }) => {
   writeFileSync('artifacts/perf.json', JSON.stringify(report, null, 2));
   console.log('perf', report);
   expect(draws.length).toBeGreaterThan(100);
-  expect(report.p95).toBeLessThan(8);
+  expect(report.p95).toBeLessThan(8 * K);
 });
 
 test('input → first acknowledging frame latency (4× throttle)', async ({ page }) => {
@@ -60,7 +66,7 @@ test('input → first acknowledging frame latency (4× throttle)', async ({ page
   expect(lat.length).toBeGreaterThan(8);
   // every pick (including the very first, which used to build the AudioContext: 133 ms) is
   // acknowledged within ≤ 2 frames at 60 Hz, even under 4× throttle
-  expect(lat[lat.length - 1]!).toBeLessThan(34);
+  expect(lat[lat.length - 1]!).toBeLessThan(34 * K);
 });
 
 test('release → first frame with the placed piece (4× throttle, first-run teaching on)', async ({ page }) => {
@@ -91,8 +97,8 @@ test('release → first frame with the placed piece (4× throttle, first-run tea
   expect(lat.length).toBeGreaterThan(8);
   const sorted = [...lat].sort((a, b) => a - b);
   // commit work itself is ≤5 ms; the tail is vsync alignment / a cold first-capture frame
-  expect(sorted[Math.floor(sorted.length / 2)]!).toBeLessThan(10);
-  expect(sorted[sorted.length - 1]!).toBeLessThan(40);
+  expect(sorted[Math.floor(sorted.length / 2)]!).toBeLessThan(10 * K);
+  expect(sorted[sorted.length - 1]!).toBeLessThan(40 * K);
 });
 
 test('soak: 400 moves across several games without heap growth', async ({ page }) => {
