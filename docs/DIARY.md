@@ -141,3 +141,15 @@ broke, what I decided and why.
   greedy÷search 0.26. Golden snapshot updated deliberately.
 - Trade-off logged: experts now average ~5 min games instead of ~11. If real players find the late
   game too harsh, raise `late.huge` less steeply rather than moving `end`.
+
+## 2026-10-16 02:15 CDT — Independent review → 11 fixes
+- Ran a separate review agent over `src/` (read-only). It found 8 real bugs, 3 plausible; core
+  rules/solver/serialization held up. Worst: a delayed reef-result card could fire after switching
+  to classic, and "Next" then loaded a puzzle *into classic mode* and saved it — a stuck game on
+  every launch. Same class: the game-over card could appear over a fresh game.
+- Root cause: delayed UI read global state at fire time. Fix: `gameToken` bumped in `syncScene`;
+  `later()` drops callbacks from older games; cards snapshot their data when the game ends.
+  Also: drags cancelled on restart and when a dialog opens; hint credit keyed by reef id; save
+  validation checks mode and `over` consistency; daily streak can't rewind; one clock.
+- Wrote regression e2e tests and **proved they fail on the old code** before keeping them.
+- Store screenshot generator (`scripts/store-shots.ts`) — first run caught my own staging bug.
