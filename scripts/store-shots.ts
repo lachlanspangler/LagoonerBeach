@@ -43,7 +43,7 @@ await shot('1-seal', 'Close a loop.', 'light', async (p) => {
   await p.evaluate((bd) => (window as any).__atoll.setup(bd.replace(/1/g, '3'), ['tri-h', 'square', 'cup-up']), LAGOON);
   await dragTo(p, 0, 2, 1);
 });
-await shot('2-pop', 'Everything inside pops.', 'light', async (p) => {
+await shot('2-pop', 'It fills with water. It pops.', 'light', async (p) => {
   await p.evaluate((bd) => (window as any).__atoll.setup(bd.replace(/1/g, '5'), ['tri-h', 'square', 'cup-up']), LAGOON);
   await dragTo(p, 0, 2, 1);
   await p.mouse.up();

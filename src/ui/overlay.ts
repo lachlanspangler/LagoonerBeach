@@ -29,6 +29,10 @@ export interface UiHandlers {
 }
 
 const ICON_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>`;
+let lastInput: 'key' | 'pointer' = 'pointer';
+addEventListener('keydown', () => (lastInput = 'key'), true);
+addEventListener('pointerdown', () => (lastInput = 'pointer'), true);
+
 const ICON_HINT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>`;
 // Daily: a sun coming up over a wave
 const ICON_DAILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14a5 5 0 0 1 10 0"/><path d="M12 5v2M5.5 8.5l1.4 1.4M18.5 8.5l-1.4 1.4"/><path d="M3 18c1.5 0 1.5-1.2 3-1.2S7.5 18 9 18s1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2"/></svg>`;
@@ -142,7 +146,12 @@ export class Ui {
     this.veil = v;
     if (replacing) v.classList.add('show');
     else requestAnimationFrame(() => this.veil === v && v.classList.add('show'));
-    (card.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
+    // keyboard users land on the main action; touch users get no focus ring (focus the dialog itself)
+    if (lastInput === 'key') (card.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
+    else {
+      v.tabIndex = -1;
+      v.focus({ preventScroll: true });
+    }
   }
 
   showMenu(p: Profile, mode: 'classic' | 'daily' | 'puzzle', canResume: boolean, journalCount = 0): void {
@@ -155,7 +164,7 @@ export class Ui {
       [p.puzzle.solved.length, 'Reefs'],
     ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<h2>Lagooner Beach</h2>
-      <div class="sub">Close a loop — everything inside pops.</div>
+      <div class="sub">Close a loop. It fills with water and pops.</div>
       ${stats.length ? `<div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>` : ''}`;
     if (canResume) card.append(this.button('', 'btn primary', 'Resume', 'Resume', () => this.h.onResume()));
     if (mode === 'puzzle') {
@@ -259,7 +268,7 @@ export class Ui {
     card.className = 'card reefs journal';
     const n = found(j);
     const golden = Object.values(j.entries).reduce((a, e) => a + (e.golden ? 1 : 0), 0);
-    card.innerHTML = `<h2>Beach Journal</h2><div class="sub">${n} of ${SPECIES.length} found${golden ? ` · ${golden} golden` : ''}${j.total ? ` · ${j.total} caught and released` : ''}</div>`;
+    card.innerHTML = `<h2>Beach Journal</h2><div class="big" style="font-size:30px;margin:2px 0">${n} / ${SPECIES.length}</div><div class="foot" style="margin:0 0 6px">${[golden ? `${golden} golden` : '', j.total ? `${j.total} caught and released` : ''].filter(Boolean).join(' · ') || 'Close a loop to catch your first creature'}</div>`;
     const scroller = document.createElement('div');
     scroller.className = 'reef-scroll';
     const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
@@ -282,7 +291,7 @@ export class Ui {
         );
         b.append(creatureThumb(sp, 54, e ? undefined : ink, (e?.golden ?? 0) > 0));
         const label = document.createElement('span');
-        label.textContent = e ? sp.name : '???';
+        label.textContent = e ? sp.name : '';
         b.append(label);
         grid.append(b);
       }
@@ -308,8 +317,8 @@ export class Ui {
     const size = (cm: number) => (cm >= 100 ? `${(cm / 100).toFixed(1)} m` : `${cm} cm`);
     info.innerHTML = e
       ? `<div class="big" style="font-size:28px">${sp.name}</div><div class="sub">${sp.flavor}</div>
-         <div class="stats" style="grid-template-columns:repeat(${e.golden ? 3 : 2},1fr)"><div><b>${e.count}</b><span>Caught</span></div><div><b>${size(e.best)}</b><span>Biggest</span></div>${e.golden ? `<div><b>${e.golden}</b><span>Golden</span></div>` : ''}</div>
-         <div class="foot">First caught ${e.first}</div>`
+         <div class="stats" style="grid-template-columns:repeat(3,1fr)"><div><b>${e.count}</b><span>Caught</span></div><div><b>${size(e.best)}</b><span>Biggest</span></div><div><b>${e.golden || '—'}</b><span>Golden</span></div></div>
+         <div class="foot">First caught ${prettyDate(e.first)}</div>`
       : `<div class="big" style="font-size:28px">???</div><div class="sub">Hint: ${sp.hint}</div>`;
     card.append(info);
     card.append(this.button('', 'btn primary', 'Back', 'Back to journal', () => this.showJournal(j)));
@@ -343,6 +352,7 @@ export class Ui {
     const scroller = document.createElement('div');
     scroller.className = 'reef-scroll';
     const names: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
+    const nextUp = list.findIndex((p) => !solved.includes(p.id));
     let lastTier = '';
     let grid: HTMLElement | null = null;
     list.forEach((p, i) => {
@@ -358,9 +368,10 @@ export class Ui {
       }
       const isPure = pure.includes(p.id);
       const isSolved = solved.includes(p.id);
+      const isNext = !isSolved && i === nextUp;
       const b = this.button(
         '',
-        `reef t-${tier}${isSolved ? ' done' : ''}${i === current ? ' cur' : ''}`,
+        `reef t-${tier}${isSolved ? ' done' : ''}${isNext ? ' next' : ''}${i === current ? ' cur' : ''}`,
         `${i + 1}${isPure ? '<sup>★</sup>' : ''}`,
         `Reef ${i + 1}${isSolved ? ', cleared' : ''}`,
         () => this.h.onPuzzlePick(i),
@@ -379,7 +390,7 @@ export class Ui {
     card.innerHTML = o.solved
       ? `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">Cleared</div><div class="sub">${o.cleared} of ${o.total} reefs cleared</div>`
       : `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">So close</div><div class="sub">Every piece must be placed and every pebble popped.</div>`;
-    if (o.newIds?.length) card.append(newSpeciesRow(o.newIds));
+    if (o.newIds?.length) card.append(newSpeciesRow(o.newIds, () => this.h.onJournal()));
     if (o.solved) {
       if (o.index + 1 < o.total)
         card.append(this.button('next-reef', 'btn primary', 'Next reef', 'Next reef', () => this.h.onPuzzleNext()));
@@ -417,7 +428,7 @@ export class Ui {
       <div class="sub">${o.newBest ? '<span class="best-flash">NEW BEST</span>' : nearMiss(o.score, o.best)}</div>
       <div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
       ${o.unlocked.length ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
-    if (o.caught?.newIds.length) card.append(newSpeciesRow(o.caught.newIds));
+    if (o.caught?.newIds.length) card.append(newSpeciesRow(o.caught.newIds, () => this.h.onJournal()));
     if (o.mode === 'daily') {
       card.append(this.button('', 'btn primary', 'Share', 'Share result', () => this.h.onShare()));
       card.append(this.button('', 'btn', 'Play classic', 'Play classic', () => this.h.onClassic()));
@@ -432,7 +443,7 @@ export class Ui {
 
 /** "Best 1200" plus a progress bar toward it — the pull of almost. */
 function nearMiss(score: number, best: number): string {
-  if (best <= 0 || score >= best) return '';
+  if (best <= 0 || score >= best) return `Best ${Math.max(best, score)}`;
   const pct = Math.max(0, Math.min(100, Math.round((score / best) * 100)));
   const gap = best - score;
   return `<div>Best ${best}${gap > 0 && pct >= 70 ? ` · just ${gap} short` : ''}</div>
@@ -454,7 +465,7 @@ export function creatureThumb(sp: Species, px: number, silhouette?: string, gold
 }
 
 /** "New in your journal" strip for end-of-game cards. */
-function newSpeciesRow(ids: readonly string[]): HTMLElement {
+function newSpeciesRow(ids: readonly string[], open?: () => void): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'new-species';
   wrap.innerHTML = '<div class="tier">New in your journal</div>';
@@ -472,5 +483,21 @@ function newSpeciesRow(ids: readonly string[]): HTMLElement {
     row.append(cell);
   }
   wrap.append(row);
+  if (open) {
+    wrap.setAttribute('role', 'button');
+    wrap.setAttribute('aria-label', 'Open the Beach Journal');
+    wrap.tabIndex = 0;
+    wrap.style.cursor = 'pointer';
+    wrap.addEventListener('click', open);
+  }
   return wrap;
+}
+
+/** 2026-10-16 → "Oct 16" (current year) or "Oct 16, 2025". */
+function prettyDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const s = `${months[Number(m[2]) - 1]} ${Number(m[3])}`;
+  return Number(m[1]) === new Date().getFullYear() ? s : `${s}, ${m[1]}`;
 }

@@ -190,6 +190,8 @@ function resize(): void {
   const ins = insets();
   // keep the HUD clear of the menu buttons
   scene.resize(w, h, Math.min(3, window.devicePixelRatio || 1), { ...ins, top: ins.top + 6 });
+  const mb = document.getElementById('menu-btn')?.getBoundingClientRect();
+  scene.journalTarget = mb && mb.width ? { x: mb.left + mb.width / 2, y: mb.top + mb.height / 2 } : null;
   idle(() => scene.warmSprites());
   dirty = true;
 }
@@ -412,6 +414,8 @@ function finishGame(prevBest: number): void {
     if (overShown) return;
     overShown = true;
     if (card.newBest && !bestCelebrated) sfx.newBest();
+    // freeze the score behind the card at the final value (no mid-count-up mismatch)
+    scene.score = scene.shownScore = card.score;
     ui.showGameOver(card);
   });
 }
@@ -614,6 +618,13 @@ const ui = new Ui({
     sfx.click();
   },
 });
+
+scene.onCollect = () => {
+  const b = ui.menuBtn;
+  b.classList.remove('collect');
+  void b.offsetWidth; // restart the animation
+  b.classList.add('collect');
+};
 
 // ------------------------------------------------------------------ input
 let sealKey = '';

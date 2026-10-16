@@ -5,7 +5,7 @@
 import { CELLS, N, xOf, yOf } from '../core/grid.ts';
 import { pieceById, type Piece } from '../core/pieces.ts';
 import type { TrayPiece } from '../core/dealer.ts';
-import { computeLayout, type Insets, type Layout } from './layout.ts';
+import { computeLayout, trayCellFor, type Insets, type Layout } from './layout.ts';
 import { Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, GEOM, MOTION, type Palette } from './theme.ts';
@@ -74,8 +74,9 @@ export interface Fish {
   /** The caught species (drawn with its own art); otherwise a generic fish. */
   species?: string;
   golden?: boolean;
-  /** First time this species was ever caught: sparkle ring + "New!" tag. */
+  /** First time this species was ever caught: a gold ring. */
   isNew?: boolean;
+  arrived?: boolean;
 }
 interface TraySlot {
   t: TrayPiece | null;
@@ -140,24 +141,46 @@ export class Scene {
 
   /** Tray slots whose piece fits nowhere on the current board (drawn faded). */
   misfit: boolean[] = [false, false, false];
-  private toastFree = 0;
-  /** One-line messages in the band above the board, shown one at a time (never overlapping). */
+  /** Chips (catches, milestones) queue strictly: one on screen, the next only after it's gone. */
+  private chips: { text: string; life: number; start: number }[] = [];
   toast(text: string, now: number, life = 1500): void {
-    const l = this.layout;
-    const start = Math.max(now, this.toastFree);
-    this.toastFree = start + life * 0.8;
-    this.texts.push({
-      text,
-      x: l.w / 2,
-      y: Math.max(l.hud.y + l.hud.h + l.cell * 0.05, l.board.y - l.cell * 0.2) - l.cell * 0.75,
-      start,
-      size: l.cell * 0.38,
-      life,
-      strong: false,
-      accent: true,
-      rise: 0.1,
-    });
+    const prev = this.chips[this.chips.length - 1];
+    const start = prev ? Math.max(now, prev.start + prev.life + 80) : now;
+    if (this.chips.length >= 4) return; // never build a backlog of stale news
+    this.chips.push({ text, life, start });
   }
+
+  private drawChips(now: number): void {
+    while (this.chips.length && now > this.chips[0]!.start + this.chips[0]!.life) this.chips.shift();
+    const c = this.chips[0];
+    if (!c || now < c.start) return;
+    const k = (now - c.start) / c.life;
+    const g = this.g;
+    const l = this.layout;
+    const a = k < 0.12 ? k / 0.12 : k > 0.82 ? (1 - k) / 0.18 : 1;
+    const size = Math.round(l.cell * 0.36);
+    g.font = `800 ${size}px ${FONT}`;
+    const w = g.measureText(c.text).width + size * 1.6;
+    const h = size * 1.9;
+    // takes the streak line's slot under the score while it's up (one message at a time)
+    const cy = l.hud.y + l.hud.h * 0.9;
+    const drop = this.reducedMotion ? 0 : (1 - easeOutCubic(Math.min(1, k / 0.12))) * -8;
+    const night = this.palette.name === 'night';
+    g.globalAlpha = a;
+    g.fillStyle = night ? 'rgba(20,38,54,0.92)' : 'rgba(255,250,242,0.95)';
+    g.beginPath();
+    g.roundRect(l.w / 2 - w / 2, cy - h / 2 + drop, w, h, h / 2);
+    g.fill();
+    g.fillStyle = night ? this.palette.waterHi : '#1A86AC';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(c.text, l.w / 2, cy + drop + 1);
+    g.globalAlpha = 1;
+  }
+
+  /** Where caught creatures swim off to (the menu button, where the journal lives). */
+  journalTarget: { x: number; y: number } | null = null;
+  onCollect: (() => void) | null = null;
 
   /** Where the held piece was last drawn (release flight starts here, so nothing jumps). */
   lastDragDraw: { x: number; y: number } | null = null;
@@ -217,7 +240,7 @@ export class Scene {
   /** Top-left CSS px of a tray piece at rest in its slot. */
   trayPieceOrigin(slot: number, p: Piece): [number, number] {
     const s = this.layout.slots[slot]!;
-    const c = this.layout.trayCell;
+    const c = trayCellFor(this.layout, p);
     return [s.cx - (p.w * c) / 2, s.cy - (p.h * c) / 2];
   }
 
@@ -279,6 +302,7 @@ export class Scene {
     this.particles.draw(g, this.sprites.look.colors, p.foam);
     this.drawTexts(now);
     this.drawHud(now);
+    this.drawChips(now);
     this.gc(now);
   }
 
@@ -429,11 +453,17 @@ export class Scene {
         if (this.board[i]) continue;
         const ph = ((now / 900) % 1) * Math.PI;
         const [x, y] = this.cellCenter(i);
-        g.globalAlpha = 0.5 * Math.sin(ph);
-        g.fillStyle = this.palette.waterHi;
-        g.beginPath();
-        g.arc(x + ((h >> 8) % 11) - 5, y + ((h >> 12) % 11) - 5, Math.max(1.6, l.cell * 0.05), 0, Math.PI * 2);
-        g.fill();
+        // a soft glowing mote (a hard dot read as dead pixels)
+        const px = x + ((h >> 8) % 11) - 5;
+        const py = y + ((h >> 12) % 11) - 5;
+        const r = l.cell * 0.16;
+        const gr = g.createRadialGradient(px, py, 0, px, py, r);
+        gr.addColorStop(0, 'rgba(190,250,255,0.9)');
+        gr.addColorStop(0.35, 'rgba(120,230,250,0.35)');
+        gr.addColorStop(1, 'rgba(120,230,250,0)');
+        g.globalAlpha = 0.65 * Math.sin(ph);
+        g.fillStyle = gr;
+        g.fillRect(px - r, py - r, r * 2, r * 2);
       }
     }
     g.restore();
@@ -595,7 +625,7 @@ export class Scene {
         x = lerp(slot.back.x, ox, e);
         y = lerp(slot.back.y, oy, e);
         if (bt >= 1) slot.back = null;
-        const cell = lerp(l.cell, l.trayCell, e);
+        const cell = lerp(l.cell, trayCellFor(l, p), e);
         this.drawPieceAt(p, slot.t.color, x, y, cell);
         return;
       }
@@ -613,7 +643,7 @@ export class Scene {
         this.g.stroke();
         y -= l.cell * 0.15;
       }
-      this.drawPieceAt(p, slot.t.color, x, y, l.trayCell, a * (dimmed ? 0.45 : 1));
+      this.drawPieceAt(p, slot.t.color, x, y, trayCellFor(l, p), a * (dimmed ? 0.45 : 1));
     });
   }
 
@@ -624,7 +654,7 @@ export class Scene {
     if (!slot?.t) return;
     const l = this.layout;
     const p = pieceById(slot.t.pieceId);
-    const cell = lerp(l.trayCell, l.cell, easeOutCubic(d.grow));
+    const cell = lerp(trayCellFor(l, p), l.cell, easeOutCubic(d.grow));
     // magnet: once it has a legal spot, the held piece leans ~20% toward it so snapping feels sticky
     const sn = this.preview && d.grow >= 1 ? this.preview : null;
     const dx0 = sn ? lerp(d.x, l.board.x + sn.ax * l.cell, 0.2) : d.x;
@@ -651,7 +681,8 @@ export class Scene {
 
   private drawHint(now: number): void {
     const h = this.hint;
-    if (!h) return;
+    // out of the way while the player is holding a piece
+    if (!h || this.drag) return;
     const g = this.g;
     const k = (now - h.start) / 1000;
     // dashed lagoon-blue outline, pulsing clearly (was a faint 1.1:1 outline)
@@ -681,7 +712,7 @@ export class Scene {
     const [ox, oy] = this.trayPieceOrigin(d.slot, p);
     const tx = l.board.x + d.ax * l.cell;
     const ty = l.board.y + d.ay * l.cell;
-    const cell = lerp(l.trayCell, l.cell, travel);
+    const cell = lerp(trayCellFor(l, p), l.cell, travel);
     const x = lerp(ox, tx, travel);
     const y = lerp(oy, ty, travel);
     const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
@@ -709,31 +740,50 @@ export class Scene {
       const t = (now - f.start) / 1000;
       if (t < 0 || t > FISH_LIFE) continue;
       const grav = this.layout.cell * 34;
-      const x = f.x + f.vx * t;
-      const y = f.y + f.vy * t + 0.5 * grav * t * t;
-      const ang = Math.atan2(f.vy + grav * t, f.vx);
-      const fade = t > FISH_LIFE - 0.25 ? (FISH_LIFE - t) / 0.25 : 1;
+      // phase 1: a leap out of the water; phase 2: swim off to the journal (menu button) and shrink
+      const T1 = 0.42;
+      const tgt = this.journalTarget;
+      let x: number;
+      let y: number;
+      let ang: number;
+      let scale = 1;
+      let fade = 1;
+      const lx = (tt: number) => f.x + f.vx * tt;
+      const ly = (tt: number) => f.y + f.vy * tt + 0.5 * grav * tt * tt;
+      if (t < T1 || !tgt || !f.species) {
+        x = lx(t);
+        y = ly(t);
+        ang = Math.atan2(f.vy + grav * t, f.vx);
+        if (!tgt || !f.species) fade = t > FISH_LIFE - 0.25 ? (FISH_LIFE - t) / 0.25 : 1;
+      } else {
+        const u = easeInOutSine(Math.min(1, (t - T1) / (FISH_LIFE - T1)));
+        const ax = lx(T1);
+        const ay = ly(T1);
+        const cx1 = (ax + tgt.x) / 2;
+        const cy1 = Math.min(ay, tgt.y) - this.layout.cell * 1.5;
+        x = (1 - u) * (1 - u) * ax + 2 * (1 - u) * u * cx1 + u * u * tgt.x;
+        y = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy1 + u * u * tgt.y;
+        ang = Math.atan2(tgt.y - y, tgt.x - x);
+        scale = 1 - 0.7 * u;
+        fade = u > 0.85 ? (1 - u) / 0.15 : 1;
+        if (u >= 1 && !f.arrived) {
+          f.arrived = true;
+          this.onCollect?.();
+        }
+      }
       const sp = f.species ? SPECIES_BY_ID.get(f.species) : undefined;
       if (sp) {
         if (f.isNew) {
-          g.globalAlpha = 0.55 * fade;
-          g.strokeStyle = '#FFE58A';
-          g.lineWidth = 2.5;
+          g.globalAlpha = 0.6 * fade;
+          g.strokeStyle = '#FFD24A';
+          g.lineWidth = 3;
           g.beginPath();
-          g.arc(x, y, f.size * 0.75 + Math.sin(t * 20) * 2, 0, Math.PI * 2);
+          g.arc(x, y, f.size * 0.8 * scale + Math.sin(t * 18) * 2, 0, Math.PI * 2);
           g.stroke();
         }
         g.globalAlpha = fade;
-        drawCreature(g, sp, x, y, f.size * 1.6, f.vx < 0 ? Math.PI - ang : ang, { golden: f.golden });
-        if (f.isNew) {
-          g.font = `800 ${Math.round(f.size * 0.55)}px ${FONT}`;
-          g.textAlign = 'center';
-          g.lineWidth = 3;
-          g.strokeStyle = 'rgba(255,255,255,0.95)';
-          g.strokeText('New!', x, y - f.size * 1.05);
-          g.fillStyle = '#C98A12';
-          g.fillText('New!', x, y - f.size * 1.05);
-        }
+        const facing = Math.cos(ang) < 0;
+        drawCreature(g, sp, x, y, f.size * 1.6 * scale, facing ? ang - Math.PI : ang, { golden: f.golden });
         g.globalAlpha = 1;
         continue;
       }
@@ -822,7 +872,8 @@ export class Scene {
     g.fillStyle = p.textDim;
     const beat = this.score > this.best && this.best > 0;
     g.fillText(beat ? 'NEW BEST' : `BEST ${this.best}`, cx, l.hud.y + l.hud.h * 0.24);
-    if (this.streak >= 2) {
+    const chipUp = this.chips.length > 0 && now >= this.chips[0]!.start;
+    if (this.streak >= 2 && !chipUp) {
       const k = clamp01((now - this.streakPulse) / 300);
       const sc = this.reducedMotion ? 1 : 1 + 0.25 * (1 - easeOutCubic(k));
       g.font = `800 ${Math.round(big * 0.34 * sc)}px ${FONT}`;
@@ -865,6 +916,7 @@ export class Scene {
       this.lagoons.length > 0 ||
       this.ripples.length > 0 ||
       this.texts.length > 0 ||
+      this.chips.length > 0 ||
       this.placing.length > 0 ||
       this.fish.length > 0 ||
       this.hint !== null ||

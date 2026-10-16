@@ -13,8 +13,8 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
 
 ## App Store (iOS)
 - **Subtitle (30):** Close a loop. Watch it pop.
-- **Promotional text (170):** Holes are the whole point. Seal a loop of blocks, the water inside
-  pops it all — and every lagoon catches a beach creature for your journal.
+- **Promotional text (170):** Holes are the whole point. Seal a loop of blocks, the lagoon fills
+  with water and the ring pops — and every lagoon catches a beach creature for your journal.
 - **Keywords (100):** puzzle,block,blocks,loop,lagoon,beach,calm,brain,daily,relaxing,fish,collect,reef,offline
 - **Description (4000):**
 
@@ -40,7 +40,7 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
 - **What's new (first release):** Welcome to the beach.
 
 ## Google Play (Android)
-- **Short description (80):** Close a loop of blocks and everything inside pops. Catch 47 beach creatures.
+- **Short description (80):** Close a loop of blocks: it fills with water and pops. Catch 47 beach creatures.
 - **Full description (4000):** same as the App Store description above.
 - **Tags:** Puzzle, Casual, Offline, Single player, Relaxing
 - **Feature graphic (1024×500):** _to create from the store shots (logo + "Close a loop." + a lagoon);
@@ -48,7 +48,7 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
 
 ## Screenshot captions (in order)
 1. Close a loop.
-2. Everything inside pops.
+2. It fills with water. It pops.
 3. Calm by day. Glowing by night.
 4. 360 reef puzzles. Every one solvable.
 5. Made for every eye.

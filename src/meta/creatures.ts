@@ -26,7 +26,9 @@ export type Body =
   | 'dollar'
   | 'otter'
   | 'mola'
-  | 'dragon';
+  | 'dragon'
+  | 'hermit'
+  | 'limpet';
 export type Pattern = 'plain' | 'stripes' | 'spots' | 'bands';
 
 /** Shape of a captured lagoon (see catch.ts:classify). */
@@ -112,7 +114,7 @@ export const SPECIES: readonly Species[] = [
     name: 'Hermit Crab',
     habitat: 'shallows',
     rarity: 'common',
-    body: 'crab',
+    body: 'hermit',
     colors: ['#E0784E', '#F2C14E'],
     pattern: 'plain',
     size: [2, 6],
@@ -126,7 +128,7 @@ export const SPECIES: readonly Species[] = [
     name: 'Limpet',
     habitat: 'shallows',
     rarity: 'common',
-    body: 'clam',
+    body: 'limpet',
     colors: ['#A99C8C', '#D9CFC1'],
     pattern: 'bands',
     size: [1, 4],

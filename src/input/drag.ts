@@ -7,7 +7,7 @@ import { N } from '../core/grid.ts';
 import { pieceById, type Piece } from '../core/pieces.ts';
 import type { GameState, Move } from '../core/game.ts';
 import { canPlace } from '../core/rules.ts';
-import { slotAt, type Layout } from '../render/layout.ts';
+import { slotAt, trayCellFor, type Layout } from '../render/layout.ts';
 import { MOTION } from '../render/theme.ts';
 
 export interface DragHost {
@@ -104,10 +104,11 @@ export class DragController {
     const piece = pieceById(t.pieceId);
     // grab offset: where on the (tray-scale) piece the finger landed, clamped onto the piece
     const sl = l.slots[slot]!;
-    const ox = sl.cx - (piece.w * l.trayCell) / 2;
-    const oy = sl.cy - (piece.h * l.trayCell) / 2;
-    const gx = Math.max(0, Math.min(piece.w, (px - ox) / l.trayCell));
-    const gy = Math.max(0, Math.min(piece.h, (py - oy) / l.trayCell));
+    const tc = trayCellFor(l, piece);
+    const ox = sl.cx - (piece.w * tc) / 2;
+    const oy = sl.cy - (piece.h * tc) / 2;
+    const gx = Math.max(0, Math.min(piece.w, (px - ox) / tc));
+    const gy = Math.max(0, Math.min(piece.h, (py - oy) / tc));
     this.a = {
       pointerId: e.pointerId,
       slot,

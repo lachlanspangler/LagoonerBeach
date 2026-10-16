@@ -189,21 +189,6 @@ export class Fx {
           });
           const last = now + flight + (e.waves.length - 1) * MOTION.waveGap;
           const pts = e.score.total;
-          // cascades count up wave by wave (×2 … then the final word shows the total)
-          for (let k = 1; k < e.waves.length - 1; k++) {
-            const tk = now + flight + k * MOTION.waveGap + 60;
-            this.at(tk, () =>
-              sc.texts.push({
-                text: `Ripple ×${k + 1}`,
-                x: l.w / 2,
-                y: Math.max(l.hud.y + l.hud.h + l.cell * 0.05, board.y - l.cell * 0.2),
-                start: performance.now(),
-                size: l.cell * (0.6 + k * 0.08),
-                life: MOTION.waveGap * 1.6,
-                strong: true,
-              }),
-            );
-          }
           if (tier === 3)
             this.at(last + MOTION.lagoonFill, () => {
               sc.sweep = performance.now();
@@ -215,44 +200,50 @@ export class Fx {
               sc.toast(`Streak ×${e.streak}!`, performance.now(), 1200);
               this.sfx.streakMilestone(e.streak);
             });
-          const word = opts.firstCapture ? 'Pop!' : calloutFor(maxArea, e.waves.length, clean);
+          // one feedback channel: the points, once, at the lagoon; a word only for real jackpots
+          const word = tier === 3 ? calloutFor(maxArea, e.waves.length, clean) : null;
           const land = last + MOTION.lagoonFill + 80;
+          const lastCells = e.waves[e.waves.length - 1]!.pockets.flatMap((p) => p.cells);
+          let gx = 0;
+          let gy = 0;
+          for (const c of lastCells) {
+            const [x, y] = sc.cellCenter(c);
+            gx += x;
+            gy += y;
+          }
+          gx /= lastCells.length;
+          gy /= lastCells.length;
           this.at(land, () => {
             const t = performance.now();
             sc.score = sc.pendingScore ?? sc.score;
             if (word) {
-              // big moments: the word rides just above the board, points tucked under it
-              const cy = Math.max(l.hud.y + l.hud.h + l.cell * 0.05, board.y - l.cell * 0.2);
-              const big = tier === 3 && !opts.firstCapture;
               sc.texts.push({
                 text: word,
-                x: l.w / 2,
-                y: cy,
+                x: gx,
+                y: gy - l.cell * 0.45,
                 start: t,
-                size: l.cell * (big ? 0.9 : 0.72),
+                size: l.cell * 0.8,
                 life: MOTION.callout,
                 strong: true,
               });
               sc.texts.push({
                 text: `+${pts}`,
-                x: l.w / 2,
-                y: cy + l.cell * (big ? 0.72 : 0.6),
-                start: t + 50,
-                size: l.cell * 0.46,
-                life: MOTION.callout - 50,
+                x: gx,
+                y: gy + l.cell * 0.25,
+                start: t + 40,
+                size: l.cell * 0.55,
+                life: MOTION.callout - 40,
                 strong: false,
                 accent: true,
                 rise: 0.25,
               });
             } else {
-              const first = e.waves[0]!.pockets.flatMap((p) => p.cells);
-              const [px, py] = sc.cellCenter(first[Math.floor(first.length / 2)]!);
               sc.texts.push({
                 text: `+${pts}`,
-                x: px,
-                y: py,
+                x: gx,
+                y: gy,
                 start: t,
-                size: l.cell * (tier >= 1 ? 0.6 : 0.5),
+                size: l.cell * (tier >= 2 ? 0.66 : tier === 1 ? 0.56 : 0.48),
                 life: MOTION.scorePop,
                 strong: false,
                 accent: true,

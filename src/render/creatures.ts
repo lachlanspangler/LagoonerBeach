@@ -163,10 +163,88 @@ const BODIES: Record<Species['body'], (P: Painter) => void> = {
     }
   },
   flat: (P) => {
-    const { s } = P;
-    fillBody(P, ellipse(s * 0.42, s * 0.26), s, s * 0.6);
-    eyeAt(P, s * 0.18, -s * 0.12, s * 0.045);
-    eyeAt(P, s * 0.26, -s * 0.02, s * 0.045);
+    const { g, s } = P;
+    // tail fan
+    g.fillStyle = P.c2;
+    g.beginPath();
+    g.moveTo(-s * 0.36, 0);
+    g.lineTo(-s * 0.52, -s * 0.13);
+    g.quadraticCurveTo(-s * 0.47, 0, -s * 0.52, s * 0.13);
+    g.closePath();
+    g.fill();
+    // fin fringe all round the body: scalloped edge
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2;
+      if (Math.abs(Math.cos(a)) > 0.92) continue;
+      g.beginPath();
+      g.ellipse(Math.cos(a) * s * 0.36, Math.sin(a) * s * 0.21, s * 0.055, s * 0.035, a, 0, Math.PI * 2);
+      g.fill();
+    }
+    fillBody(P, ellipse(s * 0.36, s * 0.2), s * 0.72, s * 0.4);
+    // both eyes on one side, close together, plus a little mouth
+    eyeAt(P, s * 0.2, -s * 0.07, s * 0.04);
+    eyeAt(P, s * 0.27, -s * 0.01, s * 0.04);
+    g.strokeStyle = P.eye;
+    g.lineWidth = s * 0.015;
+    g.beginPath();
+    g.arc(s * 0.33, s * 0.07, s * 0.03, 0.2, 1.6);
+    g.stroke();
+  },
+  hermit: (P) => {
+    const { g, s } = P;
+    // the borrowed spiral shell behind, the crab peeking out in front
+    const shell = ellipse(s * 0.24, s * 0.21, -s * 0.1, -s * 0.06);
+    g.fillStyle = P.c2;
+    g.fill(shell);
+    g.strokeStyle = P.eye === P.c1 ? P.c1 : 'rgba(0,0,0,0.25)';
+    g.lineWidth = s * 0.025;
+    g.beginPath();
+    for (let t = 0; t < 14; t++) {
+      const a = t * 0.75;
+      const r = s * 0.016 * t;
+      const x = -s * 0.1 + Math.cos(a) * r;
+      const y = -s * 0.06 + Math.sin(a) * r;
+      if (t === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+    g.stroke();
+    g.strokeStyle = P.c1;
+    g.lineWidth = s * 0.035;
+    g.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      g.beginPath();
+      g.moveTo(s * 0.12, s * (0.08 + i * 0.05));
+      g.lineTo(s * (0.2 + i * 0.03), s * (0.2 + i * 0.03));
+      g.stroke();
+    }
+    g.fillStyle = P.c1;
+    g.beginPath();
+    g.ellipse(s * 0.2, s * 0.02, s * 0.12, s * 0.09, 0, 0, Math.PI * 2);
+    g.fill();
+    g.beginPath();
+    g.ellipse(s * 0.34, -s * 0.03, s * 0.08, s * 0.06, -0.4, 0, Math.PI * 2);
+    g.fill();
+    eyeAt(P, s * 0.22, -s * 0.1, s * 0.035);
+    eyeAt(P, s * 0.3, -s * 0.09, s * 0.035);
+  },
+  limpet: (P) => {
+    const { g, s } = P;
+    const p = new Path2D();
+    p.moveTo(-s * 0.34, s * 0.12);
+    p.quadraticCurveTo(-s * 0.1, -s * 0.34, s * 0.02, -s * 0.3);
+    p.quadraticCurveTo(s * 0.14, -s * 0.28, s * 0.34, s * 0.12);
+    p.closePath();
+    fillBody(P, p, s * 0.68, s * 0.42);
+    g.strokeStyle = P.c2;
+    g.lineWidth = s * 0.014;
+    for (let i = -3; i <= 3; i++) {
+      g.beginPath();
+      g.moveTo(s * 0.02, -s * 0.29);
+      g.lineTo(i * s * 0.09, s * 0.11);
+      g.stroke();
+    }
+    g.fillStyle = P.c2;
+    g.fillRect(-s * 0.36, s * 0.11, s * 0.72, s * 0.035);
   },
   eel: (P) => {
     const { g, s } = P;

@@ -81,7 +81,7 @@ export const GEOM = {
   gutter: 0.06,
   cellRadius: 0.26,
   boardRadius: 0.05,
-  trayScale: 0.66,
+  trayScale: 0.74,
   liftCells: 1.4,
   touchSlop: 6,
 } as const;
