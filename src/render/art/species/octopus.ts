@@ -48,7 +48,7 @@ const frontL = tube([
   [-4, 34, 2.8],
 ]);
 const mirror = (d: string) => xform(d, { sx: -1 });
-const suckers = (pts: readonly (readonly [number, number])[]) => join(...pts.map(([x, y]) => circle(x, y, 2)));
+const suckers = (pts: readonly (readonly [number, number])[]) => join(...pts.map(([x, y]) => circle(x, y, 3)));
 const heart = blob(
   [
     [26, -40],
@@ -112,7 +112,7 @@ export default defineArt({
       parts: [
         { d: head, role: 'body' },
         {
-          d: join(circle(-17, -27, 4.2), circle(-24, -16, 2.8), circle(20, -29, 3.2)),
+          d: join(circle(-17, -27, 4.2), circle(-24, -16, 3), circle(20, -29, 3.2)),
           role: 'accent',
           kind: 'pattern',
         },

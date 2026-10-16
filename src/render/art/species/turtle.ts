@@ -66,7 +66,7 @@ export default defineArt({
       pivot: [18, 2],
       parts: [
         { d: head, role: 'belly' },
-        { d: join(circle(26, -10, 2), circle(32, 8, 1.8)), role: 'body', kind: 'pattern', alpha: 0.55 },
+        { d: join(circle(25, -11, 3), circle(31, 9, 3)), role: 'body', kind: 'pattern', alpha: 0.55 },
       ],
     },
     {
@@ -75,7 +75,7 @@ export default defineArt({
         { d: shell, role: 'body' },
         { d: scutes, role: 'accent', kind: 'pattern' },
         { d: ellipse(-6, 15, 32, 6), role: 'belly', kind: 'pattern' },
-        { d: 'M-34 7C-20 11 6 11 22 6', role: 'ink', kind: 'line', w: 1.6, alpha: 0.6 },
+        { d: 'M-34 7C-20 11 6 11 22 6', role: 'ink', kind: 'line', w: 3, alpha: 0.5 },
       ],
     },
     {
@@ -83,7 +83,7 @@ export default defineArt({
       pivot: [12, 7],
       parts: [
         { d: frontFlipper, role: 'belly' },
-        { d: circle(0, 19, 2), role: 'body', kind: 'pattern', alpha: 0.5 },
+        { d: circle(0, 19, 3), role: 'body', kind: 'pattern', alpha: 0.5 },
       ],
     },
   ],
@@ -91,8 +91,8 @@ export default defineArt({
   face: {
     g: 'head',
     eyes: [[32, -1]],
-    eye: 7,
-    zone: [16, -17, 27, 29],
+    eye: 7.8, // the absolute floor for L (4 px in the tile)
+    zone: [16, -18, 27, 32],
     mouth: { at: [39, 6], w: 5, shape: 'smile' },
     sweet: true,
   },
