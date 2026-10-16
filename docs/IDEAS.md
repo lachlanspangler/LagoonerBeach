@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**72 ideas** — chosen: 1 · built: 9 · prototyped: 4 · shortlisted: 0 · backlog: 13 · merged: 4 · rejected: 41
+**78 ideas** — chosen: 1 · built: 10 · prototyped: 4 · shortlisted: 0 · backlog: 17 · merged: 4 · rejected: 42
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -17,13 +17,18 @@
 | I-066 | built | Near-miss bar | Game-over card shows how close you got to your best. | Block Blast best line | 24 | ✗ | 6/1 | est |
 | I-071 | built | Dim misfits | Tray pieces that fit nowhere fade out. | Block Blast | 24 | ✗ | 8/1 | est |
 | I-073 | built | Tap-to-place | Tap a piece, then tap a cell, as an alternative to dragging. | Accessibility modes | 24 | ✗ | 6/3 | est |
+| I-079 | built | No-hint marks | Reefs cleared without a hint get a distinct mark. | Meowdoku stars | 24 | ✗ | 5/1 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
 | I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
+| I-076 | backlog | Points peek | While dragging over a big capture, show its points next to the ghost. | — | 24 | ✗ | 5/1 | est |
+| I-078 | backlog | Reef of the day | One shared reef puzzle per day with its own streak. | Queens daily | 24 | ✗ | 6/2 | est |
+| I-083 | backlog | Best moment card | Game-over card shows your biggest lagoon as a little picture. | — | 24 | ✗ | 5/2 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
+| I-080 | backlog | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
@@ -41,6 +46,7 @@
 | I-054 | merged | Magnet Wall | Clears pull everything toward the magnet. | Tetris | 20 | ✗ | 3/3 | est |
 | I-051 | rejected | Hollow + Lines | Fill a line or close a loop to clear. | Block Blast | 25 | ✗ | 6/1 | meas |
 | I-052 | rejected | Moat | Seal off any space — even against the wall — and it pops. | Qix / Xonix | 24 | ✗ | 5/2 | meas |
+| I-082 | rejected | Puzzle undo | Step back one placement in a reef puzzle. | Meowdoku undo | 23 | ✗ | 3/2 | est |
 | I-021 | rejected | Dartboard | Fill a ring or a spoke on a round board to clear it. | Block Blast | 22 | ✗ | 4/6 | est |
 | I-009 | rejected | Region Pop | Fill a colored region to pop it. | Woodoku boxes + Meowdoku regions | 21 | ✗ | 4/3 | est |
 | I-010 | rejected | Cash Out | Full lines wait for you; tap to cash them — more at once pays more. | Block Blast + push-your-luck dice | 21 | ✗ | 5/2 | est |
@@ -157,6 +163,14 @@
 - **Value/effort:** 6/3
 - **Reason:** Accessibility option; dragging stays the default.
 
+### I-079 — No-hint marks (built)
+- **Pitch:** Reefs cleared without a hint get a distinct mark.
+- **Closest existing:** Meowdoku stars
+- **What's new:** Mastery signal, zero pressure.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** Cheap mastery marker.
+
 ### I-062 — Difficulty ramp (built)
 - **Pitch:** Pieces get chunkier the longer you survive.
 - **Closest existing:** Block Blast generator
@@ -210,6 +224,30 @@
 - **Value/effort:** 5/4
 - **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
 
+### I-076 — Points peek (backlog)
+- **Pitch:** While dragging over a big capture, show its points next to the ghost.
+- **Closest existing:** —
+- **What's new:** Lets you weigh pinch vs lagoon before releasing.
+- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** Might clutter; try only for lagoons ≥3.
+
+### I-078 — Reef of the day (backlog)
+- **Pitch:** One shared reef puzzle per day with its own streak.
+- **Closest existing:** Queens daily
+- **What's new:** Daily puzzle cadence for the puzzle audience.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** Defer: one daily is clearer; revisit if puzzle mode retains better.
+
+### I-083 — Best moment card (backlog)
+- **Pitch:** Game-over card shows your biggest lagoon as a little picture.
+- **Closest existing:** —
+- **What's new:** Ends on a high.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** Pairs with the share picture.
+
 ### I-015 — Square Pop (backlog)
 - **Pitch:** Any filled square, 3×3 or bigger, pops.
 - **Closest existing:** Woodoku
@@ -217,6 +255,14 @@
 - **Scores (R1..R14):** 2 1 2 1 2 1 2 2 2 1 1 2 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 5/2
 - **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later.
+
+### I-080 — Streak haptics (backlog)
+- **Pitch:** Capture haptics grow stronger as your streak builds.
+- **Closest existing:** —
+- **What's new:** Feel the streak.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 0 1 2 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** Small, nice.
 
 ### I-008 — Mirror (backlog)
 - **Pitch:** Everything you place is reflected across the mirror.
@@ -355,6 +401,14 @@
 - **Value/effort:** 5/2
 - **Reason:** Measured: far too forgiving (random survives 158 moves), skill 3.2×; hidden "largest region" rule.
 - **Data:** moat 158/263/500/500.
+
+### I-082 — Puzzle undo (rejected)
+- **Pitch:** Step back one placement in a reef puzzle.
+- **Closest existing:** Meowdoku undo
+- **What's new:** Forgiveness.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** Reefs are ≤3 moves; Restart is already a full undo with less UI.
 
 ### I-021 — Dartboard (rejected)
 - **Pitch:** Fill a ring or a spoke on a round board to clear it.

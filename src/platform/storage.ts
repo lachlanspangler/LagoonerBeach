@@ -35,7 +35,8 @@ export interface Profile {
   daily: DailyStreak;
   dailyBest: Record<string, number>;
   unlocked: string[];
-  puzzle: { index: number; solved: string[] };
+  /** solved = cleared at least once; pure = cleared without using a hint. */
+  puzzle: { index: number; solved: string[]; pure?: string[] };
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -107,6 +108,7 @@ export function loadProfile(): Profile {
     puzzle: {
       index: num(o.puzzle?.index, 0),
       solved: Array.isArray(o.puzzle?.solved) ? o.puzzle.solved.filter((x): x is string => typeof x === 'string') : [],
+      pure: Array.isArray(o.puzzle?.pure) ? o.puzzle.pure.filter((x): x is string => typeof x === 'string') : [],
     },
   };
 }

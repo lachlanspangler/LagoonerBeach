@@ -166,10 +166,12 @@ function syncScene(): void {
     const i = state.seed;
     const p = PACK[i]!;
     const solved = profile.puzzle.solved.includes(p.id);
+    const pure = profile.puzzle.pure?.includes(p.id) ?? false;
+
     scene.hudLabel = {
       top: `REEF ${i + 1} OF ${PACK.length}`,
       big: TIER_LABEL[p.tier ?? ''] ?? 'Reef',
-      sub: solved ? '✓ cleared' : 'clear every pebble',
+      sub: pure ? '✓ cleared · no hints' : solved ? '✓ cleared' : 'clear every pebble',
     };
   }
   ui.setMode(mode, visibleStreak(profile.daily, dayIndex(today())));
@@ -307,6 +309,8 @@ function checkPuzzle(): void {
   if (st === 'solved') {
     const first = !profile.puzzle.solved.includes(p.id);
     if (first) profile.puzzle.solved.push(p.id);
+    profile.puzzle.pure ??= [];
+    if (!hintedThisPuzzle && !profile.puzzle.pure.includes(p.id)) profile.puzzle.pure.push(p.id);
     profile.puzzle.index = Math.min(PACK.length - 1, i + 1);
     saveProfile(profile);
     setTimeout(
@@ -322,6 +326,7 @@ function checkPuzzle(): void {
   }
 }
 
+let hintedThisPuzzle = false;
 /** Solver-backed hint: outline one placement that still leads to a clear (or say it's a dead end). */
 function puzzleHint(): void {
   if (mode !== 'puzzle' || puzzleStatus(state) !== 'playing') return;
@@ -348,6 +353,7 @@ function puzzleHint(): void {
     const p = pieceById(state.tray[slots[m.piece]!]!.pieceId);
     scene.hint = { cells: p.cells.map(([dx, dy]) => (m.y + dy) * N + m.x + dx), start: performance.now() };
     profile.stats.hints = (profile.stats.hints ?? 0) + 1;
+    hintedThisPuzzle = true;
     ui.announce('Hint shown on the board.');
   }
   dirty = true;
@@ -360,6 +366,7 @@ function loadPuzzle(i: number): void {
   profile.puzzle.index = k;
   saveProfile(profile);
   state = newPuzzleGame(PACK[k]!, k);
+  hintedThisPuzzle = false;
   syncScene();
 }
 
