@@ -1,6 +1,6 @@
 # Lagooner Beach
 
-**Close a loop of blocks and everything inside it pops.**
+**Close a loop of blocks: the space inside fills with water and the ring pops.**
 
 A mobile puzzle game in the Block Blast / Meowdoku tier. Drag pieces onto an 8×8 reef; any empty
 space you seal off from the edge fills with water, and the ring of pebbles around it bursts. In every

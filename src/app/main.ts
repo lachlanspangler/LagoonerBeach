@@ -25,6 +25,7 @@ import {
   loadGame,
   loadJournal,
   saveJournal,
+  eraseAll,
   loadProfile,
   saveDaily,
   saveGame,
@@ -149,6 +150,8 @@ function applyTheme(): void {
   document.head.append(m);
   const rm = profile.settings.reducedMotion ?? motionQuery.matches;
   scene.reducedMotion = rm;
+  scene.textScale = profile.settings.largeText ? 1.25 : 1;
+  document.documentElement.dataset.large = profile.settings.largeText ? '1' : '0';
   scene.particles.budget = rm ? 0.3 : 1;
   // always-on styles (e.g. Glyph) and anything earned so far — not only after a game ends
   for (const id of unlockedIds(snapshot())) if (!profile.unlocked.includes(id)) profile.unlocked.push(id);
@@ -266,7 +269,9 @@ function updateHint(): void {
     scene.hint = null; // puzzle hints are on demand only
     return;
   }
-  if (!teaching || state.over) {
+  // second lesson: after the first pinch, point out the first chance at a bigger (2+ cell) lagoon
+  const lesson2 = !teaching && profile.firstRunDone && !profile.lesson2Done && mode === 'classic';
+  if ((!teaching && !lesson2) || state.over) {
     scene.hint = null;
     return;
   }
@@ -286,7 +291,8 @@ function updateHint(): void {
   let best: { m: Move; pts: number } | null = null;
   for (const m of legalMoves(state)) {
     const pv = previewMove(state, m)!;
-    if (pv.pockets.length && (!best || pv.points > best.pts)) best = { m, pts: pv.points };
+    const area = pv.pockets.reduce((x, p) => x + p.cells.length, 0);
+    if (pv.pockets.length && (!lesson2 || area >= 2) && (!best || pv.points > best.pts)) best = { m, pts: pv.points };
   }
   if (best) {
     const p = pieceById(state.tray[best.m.slot]!.pieceId);
@@ -343,6 +349,9 @@ function commit(m: Move, from: { x: number; y: number } | null): boolean {
       if (teaching) {
         teaching = false;
         profile.firstRunDone = true;
+      } else if (!profile.lesson2Done && e.pockets.reduce((x, p) => x + p.cells.length, 0) >= 2) {
+        profile.lesson2Done = true;
+        later(900, () => scene.toast('Bigger lagoons, bigger catches', performance.now(), 1800));
       }
       ui.announce(
         `Captured ${e.pockets.length > 1 ? `${e.pockets.length} lagoons` : 'a lagoon'}, plus ${e.score.total}`,
@@ -558,6 +567,11 @@ const ui = new Ui({
   onOpenMenu: () => ui.showMenu(profile, mode, !state.over, Object.keys(journal.entries).length),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
+  onErase: () => {
+    erasing = true; // don't let the unload handlers write it all back
+    eraseAll();
+    location.reload();
+  },
   onResume: () => ui.close(),
   onNewGame: () => restart(),
   onDaily: () => (mode === 'puzzle' ? puzzleHint() : switchMode(mode === 'daily' ? 'classic' : 'daily')),
@@ -582,6 +596,7 @@ const ui = new Ui({
   onToggle: (k) => {
     if (k === 'reducedMotion')
       profile.settings.reducedMotion = !(profile.settings.reducedMotion ?? motionQuery.matches);
+    else if (k === 'largeText') profile.settings.largeText = !profile.settings.largeText;
     else profile.settings[k] = !profile.settings[k];
     saveProfile(profile);
     applyTheme();
@@ -700,6 +715,7 @@ const drag = new DragController(canvas, {
 // ------------------------------------------------------------------ lifecycle
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    if (erasing) return;
     persist();
     saveProfile(profile);
     music.stop();
@@ -709,7 +725,9 @@ document.addEventListener('visibilitychange', () => {
     if (sfx.graph()) wakeAudio();
   }
 });
+let erasing = false;
 window.addEventListener('pagehide', () => {
+  if (erasing) return;
   persist();
   saveProfile(profile);
 });

@@ -449,3 +449,11 @@ body {
 .veil:focus {
   outline: none;
 }
+/* Larger text setting */
+html[data-large='1'] .card {
+  zoom: 1.12;
+}
+html[data-large='1'] .j-tile,
+html[data-large='1'] .reef {
+  font-size: 13px;
+}

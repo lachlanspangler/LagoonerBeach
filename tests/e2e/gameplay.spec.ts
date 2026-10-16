@@ -221,3 +221,20 @@ test('reef of the day: shown in the reef grid and opens a reef', async ({ page }
   await btn.click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('settings: larger text toggles, erase all progress really erases', async ({ page }) => {
+  await boot(page, 'seed=3&fast=1');
+  await page.evaluate(() => (window as any).__atoll.autoplay('human', 400));
+  expect((await page.evaluate(() => (window as any).__atoll.profile())).stats.games).toBe(1);
+  await page.evaluate(() => (window as any).__atoll.restart());
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('switch', { name: 'Larger text' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-large', '1');
+  await page.getByRole('button', { name: 'Erase all progress' }).click();
+  await page.getByRole('button', { name: 'Erase all progress' }).click();
+  await page.waitForFunction(() => (window as any).__atoll);
+  const p = await page.evaluate(() => (window as any).__atoll.profile());
+  expect(p.stats.games).toBe(0);
+  expect(Object.keys((await page.evaluate(() => (window as any).__atoll.journal())).entries)).toHaveLength(0);
+});

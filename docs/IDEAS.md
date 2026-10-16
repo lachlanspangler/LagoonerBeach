@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**91 ideas** — chosen: 1 · built: 21 · prototyped: 4 · shortlisted: 0 · backlog: 16 · merged: 5 · rejected: 44
+**93 ideas** — chosen: 1 · built: 24 · prototyped: 4 · shortlisted: 0 · backlog: 2 · merged: 5 · rejected: 57
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -24,31 +24,20 @@
 | I-083 | built | Best moment card | Game-over card shows your biggest lagoon as a little picture. | — | 24 | ✗ | 5/2 | est |
 | I-087 | built | Tide dots | Three dots show how many dry moves your streak has left. | — | 24 | ✗ | 7/1 | est |
 | I-088 | built | Last-chance wobble | Pieces that can't fit shake 'no' before game over. | — | 24 | ✗ | 5/1 | est |
+| I-089 | built | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-080 | built | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
 | I-090 | built | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
 | I-091 | built | Best-crossing moment | The instant you pass your best, a callout and chime — mid-game, once. | Block Blast | 23 | ✗ | 7/1 | est |
 | I-095 | built | Welcome back | On launch, a quiet toast with your live streak. | Duolingo-lite | 23 | ✗ | 5/1 | est |
+| I-097 | built | Large text | A setting that scales menus and canvas text. | OS dynamic type | 23 | ✗ | 5/3 | est |
+| I-099 | built | Erase my data | Settings: erase all progress (two taps). | Privacy-respecting apps | 23 | ✗ | 5/1 | est |
 | I-075 | built | Ambient sea | Soft procedural wave bed under the SFX. | Calm puzzle games | 20 | ✗ | 3/3 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
-| I-026 | backlog | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
-| I-089 | backlog | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
-| I-092 | backlog | Goal levels | Short levels with a target: capture a 6-cell lagoon within 15 moves. | Block Blast adventure | 24 | ✗ | 5/4 | est |
-| I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
-| I-097 | backlog | Large text | A setting that scales menus and canvas text. | OS dynamic type | 23 | ✗ | 5/3 | est |
-| I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
-| I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
-| I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
-| I-007 | backlog | Rain Cups | Build cups; when rain fills one, it washes away. | Trapping-rain-water + Tetris | 21 | ✗ | 6/6 | est |
-| I-017 | backlog | Shove | Dropped blocks shove their neighbors; anything pushed off the edge is gone. | Sokoban, Threes | 21 | ✗ | 6/6 | est |
-| I-031 | backlog | Lift | Pick up any group of blocks and put it somewhere better. | Sliding puzzles | 21 | ✗ | 5/4 | est |
-| I-033 | backlog | Outline | Drop a piece exactly on its outline for a bonus pop. | Shape sorters | 21 | ✗ | 3/2 | est |
-| I-039 | backlog | Echo | Every piece you place comes back two turns later. | Block Blast | 21 | ✗ | 4/2 | est |
-| I-049 | backlog | Level Ground | Each block raises the ground; flatten a row to clear it. | Terraforming sims | 21 | ✗ | 4/5 | est |
-| I-045 | backlog | Lasso | Draw a loop around blocks to clear them. | Two Dots squares, Qix | 20 | ✗ | 4/4 | est |
+| I-100 | backlog | Leaderboards | Game Center / Play Games best-score boards. | Block Blast | 23 | ✗ | 5/4 | est |
 | I-098 | backlog | Cell-cursor mode | Play with a keyboard/switch cursor over cells, with spoken previews. | Accessible board games | 20 | ✗ | 4/7 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
 | I-041 | merged | Flip Puzzle | Use these pieces to wipe the pattern clean. | Lights Out | 23 | ✗ | 6/3 | est |
@@ -56,15 +45,27 @@
 | I-022 | merged | Kaleidoscope | Each piece also appears rotated around the center. | Mirror (I-008) | 22 | ✗ | 4/2 | est |
 | I-054 | merged | Magnet Wall | Clears pull everything toward the magnet. | Tetris | 20 | ✗ | 3/3 | est |
 | I-051 | rejected | Hollow + Lines | Fill a line or close a loop to clear. | Block Blast | 25 | ✗ | 6/1 | meas |
+| I-026 | rejected | Loop Pipes | Lay pipe tiles; any closed loop vanishes. | Pipe Mania, Tsuro | 24 | ✗ | 5/4 | est |
 | I-052 | rejected | Moat | Seal off any space — even against the wall — and it pops. | Qix / Xonix | 24 | ✗ | 5/2 | meas |
+| I-092 | rejected | Goal levels | Short levels with a target: capture a 6-cell lagoon within 15 moves. | Block Blast adventure | 24 | ✗ | 5/4 | est |
+| I-015 | rejected | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
 | I-082 | rejected | Puzzle undo | Step back one placement in a reef puzzle. | Meowdoku undo | 23 | ✗ | 3/2 | est |
 | I-096 | rejected | Push reminders | Daily streak reminder notifications. | Most dailies | 23 | ✗ | 3/4 | est |
+| I-008 | rejected | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
+| I-011 | rejected | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-021 | rejected | Dartboard | Fill a ring or a spoke on a round board to clear it. | Block Blast | 22 | ✗ | 4/6 | est |
 | I-094 | rejected | Weekly tide goals | Three small goals a week (catch a seahorse, make a 6-lagoon…). | Mobile quests | 22 | ✗ | 4/3 | est |
+| I-006 | rejected | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
+| I-007 | rejected | Rain Cups | Build cups; when rain fills one, it washes away. | Trapping-rain-water + Tetris | 21 | ✗ | 6/6 | est |
 | I-009 | rejected | Region Pop | Fill a colored region to pop it. | Woodoku boxes + Meowdoku regions | 21 | ✗ | 4/3 | est |
 | I-010 | rejected | Cash Out | Full lines wait for you; tap to cash them — more at once pays more. | Block Blast + push-your-luck dice | 21 | ✗ | 5/2 | est |
+| I-017 | rejected | Shove | Dropped blocks shove their neighbors; anything pushed off the edge is gone. | Sokoban, Threes | 21 | ✗ | 6/6 | est |
 | I-019 | rejected | Cluster Pop | Six touching blocks of one color pop. | Puyo Puyo | 21 | ✗ | 4/2 | est |
+| I-031 | rejected | Lift | Pick up any group of blocks and put it somewhere better. | Sliding puzzles | 21 | ✗ | 5/4 | est |
+| I-033 | rejected | Outline | Drop a piece exactly on its outline for a bonus pop. | Shape sorters | 21 | ✗ | 3/2 | est |
 | I-038 | rejected | Conveyor | Place pieces before the belt carries them away. | Tetris | 21 | ✗ | 2/2 | est |
+| I-039 | rejected | Echo | Every piece you place comes back two turns later. | Block Blast | 21 | ✗ | 4/2 | est |
+| I-049 | rejected | Level Ground | Each block raises the ground; flatten a row to clear it. | Terraforming sims | 21 | ✗ | 4/5 | est |
 | I-063 | rejected | Next-tray peek | Show faint silhouettes of the next tray. | Tetris preview | 21 | ✗ | 4/2 | est |
 | I-013 | rejected | Corner Chain | Each piece must touch the last one only at a corner. | Blokus | 20 | ✗ | 4/2 | est |
 | I-023 | rejected | Punch Out | Punch shapes out of a full board; empty a row to score. | Block Blast | 20 | ✗ | 2/1 | est |
@@ -73,6 +74,7 @@
 | I-032 | rejected | Tilt | Tilt the board and every block slides. | 2048, tilt mazes | 20 | ✗ | 3/3 | est |
 | I-034 | rejected | Keyholes | Fill a keyhole with the exact shape that fits it. | Tetris T-spins, shape sorters | 20 | ✗ | 3/3 | est |
 | I-035 | rejected | Bomb cells | Clear through a bomb and it blasts its neighbors. | Many | 20 | ✗ | 3/2 | est |
+| I-045 | rejected | Lasso | Draw a loop around blocks to clear them. | Two Dots squares, Qix | 20 | ✗ | 4/4 | est |
 | I-046 | rejected | Fuse | Same-color blocks melt together; big ones pop. | Puyo, merge games | 20 | ✗ | 3/3 | est |
 | I-064 | rejected | One undo | Undo your last placement once per game. | Many puzzle games | 20 | ✗ | 3/2 | est |
 | I-012 | rejected | Melt | Blocks melt five turns after you place them. | Block Blast + ice tiles | 19 | ✗ | 4/2 | est |
@@ -232,6 +234,14 @@
 - **Value/effort:** 5/1
 - **Reason:** Fair-fail legibility.
 
+### I-089 — Second lesson (built)
+- **Pitch:** After your first pinch, the next hint suggests a 2-cell lagoon.
+- **Closest existing:** Onboarding ladders
+- **What's new:** Teaches 'bigger is better' without text.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** Second lesson hint until the first 2+ cell lagoon, then a one-time chip.
+
 ### I-062 — Difficulty ramp (built)
 - **Pitch:** Pieces get chunkier the longer you survive.
 - **Closest existing:** Block Blast generator
@@ -273,6 +283,22 @@
 - **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 5/1
 - **Reason:** No push notifications (privacy); a toast is enough.
+
+### I-097 — Large text (built)
+- **Pitch:** A setting that scales menus and canvas text.
+- **Closest existing:** OS dynamic type
+- **What's new:** Low-vision support.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 5/3
+- **Reason:** Larger text setting: canvas text ×1.25, menus zoom 1.12.
+
+### I-099 — Erase my data (built)
+- **Pitch:** Settings: erase all progress (two taps).
+- **Closest existing:** Privacy-respecting apps
+- **What's new:** Control over local data.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** Matches the no-data privacy stance.
 
 ### I-075 — Ambient sea (built)
 - **Pitch:** Soft procedural wave bed under the SFX.
@@ -318,125 +344,13 @@
 - **Reason:** Rejected after prototype: shallow ceiling (search survives 25 moves), and deaths happen with half the board empty because big pieces cannot reach open space — feels unfair.
 - **Data:** skid: 11/13/17/25 moves; skill 3.6×; ≤4-cell variant 13/14/20/29.
 
-### I-026 — Loop Pipes (backlog)
-- **Pitch:** Lay pipe tiles; any closed loop vanishes.
-- **Closest existing:** Pipe Mania, Tsuro
-- **What's new:** Endless tile-laying with loop clears.
-- **Scores (R1..R14):** 2 1 2 1 2 2 2 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 5/4
-- **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow.
-
-### I-089 — Second lesson (backlog)
-- **Pitch:** After your first pinch, the next hint suggests a 2-cell lagoon.
-- **Closest existing:** Onboarding ladders
-- **What's new:** Teaches 'bigger is better' without text.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 5/2
-- **Reason:** Depends on real-player data showing people stay with pinches.
-
-### I-092 — Goal levels (backlog)
-- **Pitch:** Short levels with a target: capture a 6-cell lagoon within 15 moves.
-- **Closest existing:** Block Blast adventure
-- **What's new:** Finite goals using our rule.
-- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 5/4
-- **Reason:** Reef puzzles already cover finite play; revisit if retention data asks for it.
-
-### I-015 — Square Pop (backlog)
-- **Pitch:** Any filled square, 3×3 or bigger, pops.
-- **Closest existing:** Woodoku
-- **What's new:** Squares anywhere at any size, not fixed boxes.
-- **Scores (R1..R14):** 2 1 2 1 2 1 2 2 2 1 1 2 2 2 → **23**/28, gates FAIL (est)
-- **Value/effort:** 5/2
-- **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later.
-
-### I-097 — Large text (backlog)
-- **Pitch:** A setting that scales menus and canvas text.
-- **Closest existing:** OS dynamic type
-- **What's new:** Low-vision support.
+### I-100 — Leaderboards (backlog)
+- **Pitch:** Game Center / Play Games best-score boards.
+- **Closest existing:** Block Blast
+- **What's new:** Social comparison.
 - **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
-- **Value/effort:** 5/3
-- **Reason:** From the accessibility review.
-
-### I-008 — Mirror (backlog)
-- **Pitch:** Everything you place is reflected across the mirror.
-- **Closest existing:** Block Blast
-- **What's new:** Each placement stamps twice (axis changes per tray); symmetry both helps and blocks.
-- **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 2 1 2 2 → **22**/28, gates FAIL (est)
-- **Value/effort:** 5/2
-- **Reason:** Likely collapses to 'half-board Block Blast'; depth suspect.
-
-### I-011 — Collapse (backlog)
-- **Pitch:** When a line clears, the board closes the gap.
-- **Closest existing:** Tetris
-- **What's new:** Rows and columns both collapse toward the cleared line → cascades.
-- **Scores (R1..R14):** 2 2 2 1 2 1 2 2 2 1 1 1 1 2 → **22**/28, gates FAIL (est)
-- **Value/effort:** 5/3
-- **Reason:** Cascades are fun but it reads as Tetris-gravity; novelty gate partial.
-
-### I-006 — Pickup (backlog)
-- **Pitch:** Drop a piece onto blocks and you pick those blocks up as your next piece.
-- **Closest existing:** none direct; Block Blast
-- **What's new:** Placement is always possible; covered cells become a new tray piece in their shape.
-- **Scores (R1..R14):** 2 2 2 1 1 1 2 2 1 2 1 1 1 2 → **21**/28, gates FAIL (est)
-- **Value/effort:** 6/5
-- **Reason:** Picked-up shapes can be disconnected 'constellations' that read poorly; fail state is muddy.
-
-### I-007 — Rain Cups (backlog)
-- **Pitch:** Build cups; when rain fills one, it washes away.
-- **Closest existing:** Trapping-rain-water + Tetris
-- **What's new:** Side-view board; open-top enclosures hold water; full cups clear.
-- **Scores (R1..R14):** 2 1 2 1 1 1 2 2 2 2 1 2 1 1 → **21**/28, gates FAIL (est)
-- **Value/effort:** 6/6
-- **Reason:** Gorgeous theme but floating blocks in a side view conflict with water gravity; siphon edge cases. Possible theme for Hollow instead.
-
-### I-017 — Shove (backlog)
-- **Pitch:** Dropped blocks shove their neighbors; anything pushed off the edge is gone.
-- **Closest existing:** Sokoban, Threes
-- **What's new:** Placement pushes; clearing is ejection.
-- **Scores (R1..R14):** 2 2 2 1 1 1 2 2 2 2 1 1 1 1 → **21**/28, gates FAIL (est)
-- **Value/effort:** 6/6
-- **Reason:** Fun chaos but outcomes are hard to preview; fairness risk.
-
-### I-031 — Lift (backlog)
-- **Pitch:** Pick up any group of blocks and put it somewhere better.
-- **Closest existing:** Sliding puzzles
-- **What's new:** Pieces come from the board itself; no tray.
-- **Scores (R1..R14):** 2 1 2 1 2 1 2 2 1 2 1 1 1 2 → **21**/28, gates FAIL (est)
 - **Value/effort:** 5/4
-- **Reason:** Interesting, but without new input the board never progresses; needs a drip of junk.
-
-### I-033 — Outline (backlog)
-- **Pitch:** Drop a piece exactly on its outline for a bonus pop.
-- **Closest existing:** Shape sorters
-- **What's new:** Targets painted on the board.
-- **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 1 1 2 2 → **21**/28, gates FAIL (est)
-- **Value/effort:** 3/2
-- **Reason:** A feature, not a core idea. Possible daily-challenge objective.
-
-### I-039 — Echo (backlog)
-- **Pitch:** Every piece you place comes back two turns later.
-- **Closest existing:** Block Blast
-- **What's new:** Self-scheduled tray.
-- **Scores (R1..R14):** 2 0 1 1 2 2 2 2 1 2 1 1 2 2 → **21**/28, gates FAIL (est)
-- **Value/effort:** 4/2
-- **Reason:** Fails one-move gate; but 'you know the future' is a nice planning hook.
-
-### I-049 — Level Ground (backlog)
-- **Pitch:** Each block raises the ground; flatten a row to clear it.
-- **Closest existing:** Terraforming sims
-- **What's new:** Heights instead of occupancy.
-- **Scores (R1..R14):** 1 1 1 1 2 2 2 2 1 2 1 1 2 2 → **21**/28, gates FAIL (est)
-- **Value/effort:** 4/5
-- **Reason:** Height readability is hard top-down; paragraph-ish.
-
-### I-045 — Lasso (backlog)
-- **Pitch:** Draw a loop around blocks to clear them.
-- **Closest existing:** Two Dots squares, Qix
-- **What's new:** Draw verb; loops consume ink.
-- **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 1 2 1 1 → **20**/28, gates FAIL (est)
-- **Value/effort:** 4/4
-- **Reason:** Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb.
+- **Reason:** Blocked on the owner: needs developer accounts and Game Center / Play Games setup; would also change the no-data policy (opt-in).
 
 ### I-098 — Cell-cursor mode (backlog)
 - **Pitch:** Play with a keyboard/switch cursor over cells, with spoken previews.
@@ -495,6 +409,14 @@
 - **Reason:** Measured: adding line clears makes Hollow trivially endless (greedy 100% capped) and dilutes novelty.
 - **Data:** hollow+lines 25/50/500/500.
 
+### I-026 — Loop Pipes (rejected)
+- **Pitch:** Lay pipe tiles; any closed loop vanishes.
+- **Closest existing:** Pipe Mania, Tsuro
+- **What's new:** Endless tile-laying with loop clears.
+- **Scores (R1..R14):** 2 1 2 1 2 2 2 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/4
+- **Reason:** Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
 ### I-052 — Moat (rejected)
 - **Pitch:** Seal off any space — even against the wall — and it pops.
 - **Closest existing:** Qix / Xonix
@@ -503,6 +425,22 @@
 - **Value/effort:** 5/2
 - **Reason:** Measured: far too forgiving (random survives 158 moves), skill 3.2×; hidden "largest region" rule.
 - **Data:** moat 158/263/500/500.
+
+### I-092 — Goal levels (rejected)
+- **Pitch:** Short levels with a target: capture a 6-cell lagoon within 15 moves.
+- **Closest existing:** Block Blast adventure
+- **What's new:** Finite goals using our rule.
+- **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 1 1 2 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/4
+- **Reason:** Reef puzzles + journal hints already give finite goals; a level map would add a screen.
+
+### I-015 — Square Pop (rejected)
+- **Pitch:** Any filled square, 3×3 or bigger, pops.
+- **Closest existing:** Woodoku
+- **What's new:** Squares anywhere at any size, not fixed boxes.
+- **Scores (R1..R14):** 2 1 2 1 2 1 2 2 2 1 1 2 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
 
 ### I-082 — Puzzle undo (rejected)
 - **Pitch:** Step back one placement in a reef puzzle.
@@ -520,6 +458,22 @@
 - **Value/effort:** 3/4
 - **Reason:** Needs permissions and native plumbing; conflicts with the no-data, calm stance. Revisit only if the owner wants it.
 
+### I-008 — Mirror (rejected)
+- **Pitch:** Everything you place is reflected across the mirror.
+- **Closest existing:** Block Blast
+- **What's new:** Each placement stamps twice (axis changes per tray); symmetry both helps and blocks.
+- **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 2 1 2 2 → **22**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** Likely collapses to 'half-board Block Blast'; depth suspect. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
+### I-011 — Collapse (rejected)
+- **Pitch:** When a line clears, the board closes the gap.
+- **Closest existing:** Tetris
+- **What's new:** Rows and columns both collapse toward the cleared line → cascades.
+- **Scores (R1..R14):** 2 2 2 1 2 1 2 2 2 1 1 1 1 2 → **22**/28, gates FAIL (est)
+- **Value/effort:** 5/3
+- **Reason:** Cascades are fun but it reads as Tetris-gravity; novelty gate partial. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
 ### I-021 — Dartboard (rejected)
 - **Pitch:** Fill a ring or a spoke on a round board to clear it.
 - **Closest existing:** Block Blast
@@ -535,6 +489,22 @@
 - **Scores (R1..R14):** 2 2 1 2 2 2 1 2 2 0 1 1 2 2 → **22**/28, gates FAIL (est)
 - **Value/effort:** 4/3
 - **Reason:** Journal hints already act as goals; quests add a screen and pressure.
+
+### I-006 — Pickup (rejected)
+- **Pitch:** Drop a piece onto blocks and you pick those blocks up as your next piece.
+- **Closest existing:** none direct; Block Blast
+- **What's new:** Placement is always possible; covered cells become a new tray piece in their shape.
+- **Scores (R1..R14):** 2 2 2 1 1 1 2 2 1 2 1 1 1 2 → **21**/28, gates FAIL (est)
+- **Value/effort:** 6/5
+- **Reason:** Picked-up shapes can be disconnected 'constellations' that read poorly; fail state is muddy. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
+### I-007 — Rain Cups (rejected)
+- **Pitch:** Build cups; when rain fills one, it washes away.
+- **Closest existing:** Trapping-rain-water + Tetris
+- **What's new:** Side-view board; open-top enclosures hold water; full cups clear.
+- **Scores (R1..R14):** 2 1 2 1 1 1 2 2 2 2 1 2 1 1 → **21**/28, gates FAIL (est)
+- **Value/effort:** 6/6
+- **Reason:** Gorgeous theme but floating blocks in a side view conflict with water gravity; siphon edge cases. Possible theme for Hollow instead. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
 
 ### I-009 — Region Pop (rejected)
 - **Pitch:** Fill a colored region to pop it.
@@ -552,6 +522,14 @@
 - **Value/effort:** 5/2
 - **Reason:** Two verbs (drag + tap); fails one-sentence gate. Push-your-luck emerges naturally in Hollow instead.
 
+### I-017 — Shove (rejected)
+- **Pitch:** Dropped blocks shove their neighbors; anything pushed off the edge is gone.
+- **Closest existing:** Sokoban, Threes
+- **What's new:** Placement pushes; clearing is ejection.
+- **Scores (R1..R14):** 2 2 2 1 1 1 2 2 2 2 1 1 1 1 → **21**/28, gates FAIL (est)
+- **Value/effort:** 6/6
+- **Reason:** Fun chaos but outcomes are hard to preview; fairness risk. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
 ### I-019 — Cluster Pop (rejected)
 - **Pitch:** Six touching blocks of one color pop.
 - **Closest existing:** Puyo Puyo
@@ -560,6 +538,22 @@
 - **Value/effort:** 4/2
 - **Reason:** Derivative of Puyo/match-3 hybrids that exist.
 
+### I-031 — Lift (rejected)
+- **Pitch:** Pick up any group of blocks and put it somewhere better.
+- **Closest existing:** Sliding puzzles
+- **What's new:** Pieces come from the board itself; no tray.
+- **Scores (R1..R14):** 2 1 2 1 2 1 2 2 1 2 1 1 1 2 → **21**/28, gates FAIL (est)
+- **Value/effort:** 5/4
+- **Reason:** Interesting, but without new input the board never progresses; needs a drip of junk. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
+### I-033 — Outline (rejected)
+- **Pitch:** Drop a piece exactly on its outline for a bonus pop.
+- **Closest existing:** Shape sorters
+- **What's new:** Targets painted on the board.
+- **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 1 1 2 2 → **21**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** A feature, not a core idea. Possible daily-challenge objective. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
 ### I-038 — Conveyor (rejected)
 - **Pitch:** Place pieces before the belt carries them away.
 - **Closest existing:** Tetris
@@ -567,6 +561,22 @@
 - **Scores (R1..R14):** 2 2 2 2 1 1 1 2 2 1 1 1 1 2 → **21**/28, gates FAIL (est)
 - **Value/effort:** 2/2
 - **Reason:** Time pressure contradicts calm, one-handed, interruptible play.
+
+### I-039 — Echo (rejected)
+- **Pitch:** Every piece you place comes back two turns later.
+- **Closest existing:** Block Blast
+- **What's new:** Self-scheduled tray.
+- **Scores (R1..R14):** 2 0 1 1 2 2 2 2 1 2 1 1 2 2 → **21**/28, gates FAIL (est)
+- **Value/effort:** 4/2
+- **Reason:** Fails one-move gate; but 'you know the future' is a nice planning hook. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
+
+### I-049 — Level Ground (rejected)
+- **Pitch:** Each block raises the ground; flatten a row to clear it.
+- **Closest existing:** Terraforming sims
+- **What's new:** Heights instead of occupancy.
+- **Scores (R1..R14):** 1 1 1 1 2 2 2 2 1 2 1 1 2 2 → **21**/28, gates FAIL (est)
+- **Value/effort:** 4/5
+- **Reason:** Height readability is hard top-down; paragraph-ish. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
 
 ### I-063 — Next-tray peek (rejected)
 - **Pitch:** Show faint silhouettes of the next tray.
@@ -631,6 +641,14 @@
 - **Scores (R1..R14):** 2 1 2 1 1 1 1 2 2 0 1 2 2 2 → **20**/28, gates FAIL (est)
 - **Value/effort:** 3/2
 - **Reason:** Generic power-up; clutter.
+
+### I-045 — Lasso (rejected)
+- **Pitch:** Draw a loop around blocks to clear them.
+- **Closest existing:** Two Dots squares, Qix
+- **What's new:** Draw verb; loops consume ink.
+- **Scores (R1..R14):** 2 2 2 1 1 1 1 2 2 1 1 2 1 1 → **20**/28, gates FAIL (est)
+- **Value/effort:** 4/4
+- **Reason:** Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint).
 
 ### I-046 — Fuse (rejected)
 - **Pitch:** Same-color blocks melt together; big ones pop.

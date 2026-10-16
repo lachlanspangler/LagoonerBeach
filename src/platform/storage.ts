@@ -13,6 +13,7 @@ export interface Settings {
   music: boolean;
   haptics: boolean;
   reducedMotion: boolean | null; // null = follow OS
+  largeText?: boolean;
   theme: ThemePref;
   skin: string;
 }
@@ -31,6 +32,8 @@ export interface Profile {
   v: 1;
   best: number;
   firstRunDone: boolean;
+  /** Second lesson (first 2+ cell lagoon) learned. */
+  lesson2Done?: boolean;
   settings: Settings;
   stats: Stats;
   daily: DailyStreak;
@@ -80,11 +83,13 @@ export function loadProfile(): Profile {
     v: 1,
     best: num(o.best, 0),
     firstRunDone: bool(o.firstRunDone, false),
+    lesson2Done: bool(o.lesson2Done, false),
     settings: {
       sound: bool(s.sound, d.settings.sound),
       music: bool(s.music, d.settings.music),
       haptics: bool(s.haptics, d.settings.haptics),
       reducedMotion: typeof s.reducedMotion === 'boolean' ? s.reducedMotion : null,
+      largeText: bool(s.largeText, false),
       theme: s.theme === 'day' || s.theme === 'night' ? s.theme : 'auto',
       skin: typeof s.skin === 'string' ? s.skin : 'pebble',
     },
@@ -181,6 +186,17 @@ export function loadJournal(): Journal {
 export function saveJournal(j: Journal): void {
   try {
     store()?.setItem(K_JOURNAL, JSON.stringify(j));
+  } catch {
+    /* best-effort */
+  }
+}
+
+/** Erase everything this game stored on the device. */
+export function eraseAll(): void {
+  try {
+    const s = store();
+    if (!s) return;
+    for (const k of Object.keys(s)) if (k.startsWith('atoll.')) s.removeItem(k);
   } catch {
     /* best-effort */
   }

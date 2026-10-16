@@ -33,7 +33,11 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 test('mid-game board after 10 moves', async ({ browser }) => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    reducedMotion: 'reduce',
+  });
   const page = await ctx.newPage();
   await boot(page, 'seed=42');
   await page.evaluate(() => (window as any).__atoll.autoplay('random', 10));
@@ -43,7 +47,11 @@ test('mid-game board after 10 moves', async ({ browser }) => {
 });
 
 test('menu card', async ({ browser }) => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    reducedMotion: 'reduce',
+  });
   const page = await ctx.newPage();
   await boot(page, 'seed=42');
   await page.getByRole('button', { name: 'Menu' }).click();
@@ -53,7 +61,11 @@ test('menu card', async ({ browser }) => {
 });
 
 test('reef puzzle screen', async ({ browser }) => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    reducedMotion: 'reduce',
+  });
   const page = await ctx.newPage();
   await boot(page, 'seed=42');
   await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));

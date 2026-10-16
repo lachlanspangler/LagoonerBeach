@@ -19,11 +19,12 @@ export interface UiHandlers {
   onPuzzleRetry(): void;
   onPuzzleList(): void;
   onPuzzlePick(index: number): void;
-  onToggle(key: 'sound' | 'music' | 'haptics' | 'reducedMotion'): void;
+  onToggle(key: 'sound' | 'music' | 'haptics' | 'reducedMotion' | 'largeText'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
   onSettings(): void;
   onJournal(): void;
+  onErase(): void;
   onShare(): void;
   onClick(): void;
 }
@@ -200,7 +201,7 @@ export class Ui {
     const s = p.settings;
     const rm = s.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
     const rows = document.createElement('div');
-    const sw = (label: string, on: boolean, key: 'sound' | 'music' | 'haptics' | 'reducedMotion') => {
+    const sw = (label: string, on: boolean, key: 'sound' | 'music' | 'haptics' | 'reducedMotion' | 'largeText') => {
       const r = document.createElement('div');
       r.className = 'row';
       r.innerHTML = `<span>${label}</span>`;
@@ -214,6 +215,7 @@ export class Ui {
     sw('Music', s.music, 'music');
     sw('Haptics', s.haptics, 'haptics');
     sw('Reduced motion', rm, 'reducedMotion');
+    sw('Larger text', !!s.largeText, 'largeText');
     const tr = document.createElement('div');
     tr.className = 'row';
     tr.innerHTML = '<span>Theme</span>';
@@ -258,6 +260,18 @@ export class Ui {
       foot.textContent = `${p.stats.games} games · ${p.stats.captures} lagoons captured`;
       card.append(foot);
     }
+    const about = document.createElement('div');
+    about.className = 'foot';
+    about.innerHTML = `Lagooner Beach ${__APP_VERSION__} · no data collected · <a href="./privacy.html" target="_blank" rel="noopener" style="color:inherit">Privacy</a>`;
+    card.append(about);
+    let armed = 0;
+    const erase = this.button('', 'btn ghost', 'Erase all progress', 'Erase all progress', () => {
+      if (Date.now() - armed < 3000) return this.h.onErase();
+      armed = Date.now();
+      erase.textContent = 'Tap again to erase everything';
+      setTimeout(() => (erase.textContent = 'Erase all progress'), 3000);
+    });
+    card.append(erase);
     card.append(this.button('', 'btn primary', 'Done', 'Done', () => this.h.onResume()));
     this.show(card, true);
   }

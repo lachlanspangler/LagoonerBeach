@@ -193,8 +193,8 @@
    "basis": "est",
    "value": 6,
    "effort": 5,
-   "status": "backlog",
-   "reason": "Picked-up shapes can be disconnected 'constellations' that read poorly; fail state is muddy."
+   "status": "rejected",
+   "reason": "Picked-up shapes can be disconnected 'constellations' that read poorly; fail state is muddy. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-007",
@@ -222,8 +222,8 @@
    "basis": "est",
    "value": 6,
    "effort": 6,
-   "status": "backlog",
-   "reason": "Gorgeous theme but floating blocks in a side view conflict with water gravity; siphon edge cases. Possible theme for Hollow instead."
+   "status": "rejected",
+   "reason": "Gorgeous theme but floating blocks in a side view conflict with water gravity; siphon edge cases. Possible theme for Hollow instead. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-008",
@@ -251,8 +251,8 @@
    "basis": "est",
    "value": 5,
    "effort": 2,
-   "status": "backlog",
-   "reason": "Likely collapses to 'half-board Block Blast'; depth suspect."
+   "status": "rejected",
+   "reason": "Likely collapses to 'half-board Block Blast'; depth suspect. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-009",
@@ -338,8 +338,8 @@
    "basis": "est",
    "value": 5,
    "effort": 3,
-   "status": "backlog",
-   "reason": "Cascades are fun but it reads as Tetris-gravity; novelty gate partial."
+   "status": "rejected",
+   "reason": "Cascades are fun but it reads as Tetris-gravity; novelty gate partial. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-012",
@@ -454,8 +454,8 @@
    "basis": "est",
    "value": 5,
    "effort": 2,
-   "status": "backlog",
-   "reason": "Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later."
+   "status": "rejected",
+   "reason": "Solid but feels like a Woodoku variant. Could be a Hollow 'bonus shape' later. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-016",
@@ -512,8 +512,8 @@
    "basis": "est",
    "value": 6,
    "effort": 6,
-   "status": "backlog",
-   "reason": "Fun chaos but outcomes are hard to preview; fairness risk."
+   "status": "rejected",
+   "reason": "Fun chaos but outcomes are hard to preview; fairness risk. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-018",
@@ -773,8 +773,8 @@
    "basis": "est",
    "value": 5,
    "effort": 4,
-   "status": "backlog",
-   "reason": "Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow."
+   "status": "rejected",
+   "reason": "Single-cell tiles lack polyomino tactility; similar 'loop' fantasy is better served by Hollow. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-027",
@@ -918,8 +918,8 @@
    "basis": "est",
    "value": 5,
    "effort": 4,
-   "status": "backlog",
-   "reason": "Interesting, but without new input the board never progresses; needs a drip of junk."
+   "status": "rejected",
+   "reason": "Interesting, but without new input the board never progresses; needs a drip of junk. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-032",
@@ -976,8 +976,8 @@
    "basis": "est",
    "value": 3,
    "effort": 2,
-   "status": "backlog",
-   "reason": "A feature, not a core idea. Possible daily-challenge objective."
+   "status": "rejected",
+   "reason": "A feature, not a core idea. Possible daily-challenge objective. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-034",
@@ -1150,8 +1150,8 @@
    "basis": "est",
    "value": 4,
    "effort": 2,
-   "status": "backlog",
-   "reason": "Fails one-move gate; but 'you know the future' is a nice planning hook."
+   "status": "rejected",
+   "reason": "Fails one-move gate; but 'you know the future' is a nice planning hook. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-040",
@@ -1324,8 +1324,8 @@
    "basis": "est",
    "value": 4,
    "effort": 4,
-   "status": "backlog",
-   "reason": "Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb."
+   "status": "rejected",
+   "reason": "Drawing on touch is imprecise; Hollow captures the loop fantasy with a cleaner verb. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-046",
@@ -1440,8 +1440,8 @@
    "basis": "est",
    "value": 4,
    "effort": 5,
-   "status": "backlog",
-   "reason": "Height readability is hard top-down; paragraph-ish."
+   "status": "rejected",
+   "reason": "Height readability is hard top-down; paragraph-ish. Closed in session 2: an alternative core rule; the game keeps exactly one rule (hard constraint)."
   },
   {
    "id": "I-050",
@@ -2401,8 +2401,8 @@
    "basis": "est",
    "value": 5,
    "effort": 2,
-   "status": "backlog",
-   "reason": "Depends on real-player data showing people stay with pinches."
+   "status": "built",
+   "reason": "Second lesson hint until the first 2+ cell lagoon, then a one-time chip."
   },
   {
    "id": "I-090",
@@ -2489,8 +2489,8 @@
    "basis": "est",
    "value": 5,
    "effort": 4,
-   "status": "backlog",
-   "reason": "Reef puzzles already cover finite play; revisit if retention data asks for it."
+   "status": "rejected",
+   "reason": "Reef puzzles + journal hints already give finite goals; a level map would add a screen."
   },
   {
    "id": "I-093",
@@ -2634,8 +2634,8 @@
    "basis": "est",
    "value": 5,
    "effort": 3,
-   "status": "backlog",
-   "reason": "From the accessibility review."
+   "status": "built",
+   "reason": "Larger text setting: canvas text ×1.25, menus zoom 1.12."
   },
   {
    "id": "I-098",
@@ -2665,6 +2665,64 @@
    "effort": 7,
    "status": "backlog",
    "reason": "Big effort; only worth it with real demand."
+  },
+  {
+   "id": "I-099",
+   "kind": "feature",
+   "name": "Erase my data",
+   "pitch": "Settings: erase all progress (two taps).",
+   "closest": "Privacy-respecting apps",
+   "new": "Control over local data.",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 5,
+   "effort": 1,
+   "status": "built",
+   "reason": "Matches the no-data privacy stance."
+  },
+  {
+   "id": "I-100",
+   "kind": "feature",
+   "name": "Leaderboards",
+   "pitch": "Game Center / Play Games best-score boards.",
+   "closest": "Block Blast",
+   "new": "Social comparison.",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 5,
+   "effort": 4,
+   "status": "backlog",
+   "reason": "Blocked on the owner: needs developer accounts and Game Center / Play Games setup; would also change the no-data policy (opt-in)."
   }
  ]
 }

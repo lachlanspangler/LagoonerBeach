@@ -105,6 +105,8 @@ export class Scene {
   layout: Layout;
   dpr = 1;
   reducedMotion = false;
+  /** Large text setting: scales every piece of canvas text. */
+  textScale = 1;
   readonly sprites: SpriteCache;
   readonly particles = new Particles(700);
 
@@ -158,7 +160,7 @@ export class Scene {
     const g = this.g;
     const l = this.layout;
     const a = k < 0.12 ? k / 0.12 : k > 0.82 ? (1 - k) / 0.18 : 1;
-    const size = Math.round(l.cell * 0.36);
+    const size = Math.round(l.cell * 0.36 * this.textScale);
     g.font = `800 ${size}px ${FONT}`;
     const w = g.measureText(c.text).width + size * 1.6;
     const h = size * 1.9;
@@ -825,7 +827,7 @@ export class Scene {
       const rise = easeOutCubic(k) * this.layout.cell * (t.rise ?? (t.strong ? 0.25 : 0.7));
       const pop = t.strong && !this.reducedMotion ? (k < 0.18 ? easeOutBack(k / 0.18, 2.5) : 1) : 1;
       g.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
-      g.font = `800 ${Math.round(t.size * pop)}px ${FONT}`;
+      g.font = `800 ${Math.round(t.size * pop * this.textScale)}px ${FONT}`;
       g.lineWidth = Math.max(3, t.size * 0.16);
       const night = this.palette.name === 'night';
       g.lineJoin = 'round';
@@ -852,7 +854,7 @@ export class Scene {
     const cx = l.w / 2;
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    const big = Math.round(Math.min(56, l.hud.h * 0.48));
+    const big = Math.round(Math.min(56, l.hud.h * 0.48) * Math.min(1.15, this.textScale));
     if (this.hudLabel) {
       g.fillStyle = p.textDim;
       g.font = `700 ${Math.round(big * 0.3)}px ${FONT}`;

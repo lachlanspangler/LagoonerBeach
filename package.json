@@ -1,7 +1,7 @@
 {
   "name": "lagooner-beach",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -22,7 +22,7 @@
     "vite": "7.3.7",
     "vitest": "3.2.7"
   },
-  "description": "Lagooner Beach \u2014 close a loop of blocks and everything inside it pops.",
+  "description": "Lagooner Beach \u2014 close a loop of blocks; it fills with water and pops.",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -p . && vite build",
