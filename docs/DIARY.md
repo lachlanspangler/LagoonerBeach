@@ -228,3 +228,25 @@ broke, what I decided and why.
 6. Content: larger reef pack with a smooth curve and more cascades.
 7. Store-ready: listing copy (both stores), screenshots, full icon sets (iOS AppIcon + Android
    adaptive), splash, privacy policy, accessibility review, Android release AAB, monetization ADR.
+
+## 2026-10-16 (session 2) — Catch layer, feel, music, store-ready
+- **Catch layer (ADR 0007):** 47 species tied to lagoon *shapes* and conditions; tuned from
+  measured condition rates so the journal fills over weeks; procedural art for 25 body types;
+  creatures leap out and swim into the journal button; Beach Journal with silhouettes + hints.
+  First tuning was far too generous (29 species on day 1) — the fix was data: measure how often each
+  condition happens, derive per-species chances to hit target days, and slow the pity timer.
+- **Feel:** magnetic snap lean, jackpot sweep + swell (the first version blew the day board out to
+  white — additive light only at night now), streak milestones, one-at-a-time chips.
+- **Music:** generative synthesized beach music with its own toggle; offline-measured to sit under
+  SFX; WAVs rendered to `artifacts/audio/` for the owner to listen to (I can only measure).
+- **Second UX review** (fresh agent): main point "one feedback channel". Removed Pop!/per-wave text/
+  per-creature New!; points once at the lagoon; chips in the streak slot; fixed tagline (the ring
+  pops, the inside fills); rebuilt store shots; layout tightened. The perf test then caught a 5-wide
+  piece overflowing its tray slot off-screen (bigger tray scale) → per-piece tray fit + a layout
+  unit test proven to fail without it.
+- **Content:** 360 reefs, 3 hand-made openers (the generator rejected two of my hand-made reefs as
+  unsolvable — correctly), 56 cascade reefs, smooth curve. Reef of the day in the reef grid.
+- **Store-ready:** privacy policy (md + html), listing copy, ADR 0008 monetization, accessibility
+  review with automated sweeps (fixed button contrast and five sub-44 px targets), all native icons +
+  splashes generated, signed Android release AAB verified on the emulator (throwaway key), iOS
+  Simulator build with new assets.
