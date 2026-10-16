@@ -20,7 +20,7 @@ export interface Palette {
   readonly pebbles: readonly string[];
 }
 
-const PEBBLES = ['#000000', '#F2795B', '#F2B93B', '#53C08C', '#3D9BE9', '#A97BE6', '#EC86AE'];
+const PEBBLES = ['#000000', '#F2795B', '#F2B93B', '#53C08C', '#3D9BE9', '#8E5BD8', '#EC86AE'];
 
 export const DAY: Palette = {
   name: 'day',

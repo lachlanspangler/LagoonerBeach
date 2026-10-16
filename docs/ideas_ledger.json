@@ -2430,8 +2430,9 @@
    "basis": "est",
    "value": 4,
    "effort": 1,
-   "status": "backlog",
-   "reason": "Colors are cosmetic, but piece identity still benefits."
+   "status": "built",
+   "reason": "Colors are cosmetic, but piece identity still benefits.",
+   "data": "Pebble deutan min ΔE 3.9 (lagoon vs orchid) → 11.3 after darkening orchid; Glyph ≥16 under all CVDs."
   }
  ]
 }

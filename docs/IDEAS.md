@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**83 ideas** — chosen: 1 · built: 15 · prototyped: 4 · shortlisted: 0 · backlog: 17 · merged: 4 · rejected: 42
+**83 ideas** — chosen: 1 · built: 16 · prototyped: 4 · shortlisted: 0 · backlog: 16 · merged: 4 · rejected: 42
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -24,6 +24,7 @@
 | I-088 | built | Last-chance wobble | Pieces that can't fit shake 'no' before game over. | — | 24 | ✗ | 5/1 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-080 | built | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
+| I-090 | built | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
@@ -33,7 +34,6 @@
 | I-089 | backlog | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
 | I-015 | backlog | Square Pop | Any filled square, 3×3 or bigger, pops. | Woodoku | 23 | ✗ | 5/2 | est |
 | I-084 | backlog | Living atoll | Your best lagoons grow a little island collection on the home screen. | Meowdoku cat collection | 23 | ✗ | 6/5 | est |
-| I-090 | backlog | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
 | I-008 | backlog | Mirror | Everything you place is reflected across the mirror. | Block Blast | 22 | ✗ | 5/2 | est |
 | I-011 | backlog | Collapse | When a line clears, the board closes the gap. | Tetris | 22 | ✗ | 5/3 | est |
 | I-006 | backlog | Pickup | Drop a piece onto blocks and you pick those blocks up as your next piece. | none direct; Block Blast | 21 | ✗ | 6/5 | est |
@@ -225,6 +225,15 @@
 - **Value/effort:** 5/1
 - **Reason:** Small, nice.
 
+### I-090 — Colorblind audit (built)
+- **Pitch:** Simulate deuteranopia/protanopia on every skin; flag pairs that collide.
+- **Closest existing:** —
+- **What's new:** Measured accessibility.
+- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 1 1 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 4/1
+- **Reason:** Colors are cosmetic, but piece identity still benefits.
+- **Data:** Pebble deutan min ΔE 3.9 (lagoon vs orchid) → 11.3 after darkening orchid; Glyph ≥16 under all CVDs.
+
 ### I-005 — Overgrowth (growing tray) (prototyped)
 - **Pitch:** Every piece you skip grows one block.
 - **Closest existing:** Block Blast
@@ -300,14 +309,6 @@
 - **Scores (R1..R14):** 2 2 2 2 1 1 1 2 2 2 1 1 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 6/5
 - **Reason:** Charming retention layer; needs a home screen, which we don't have yet (by design).
-
-### I-090 — Colorblind audit (backlog)
-- **Pitch:** Simulate deuteranopia/protanopia on every skin; flag pairs that collide.
-- **Closest existing:** —
-- **What's new:** Measured accessibility.
-- **Scores (R1..R14):** 2 2 2 2 2 2 1 2 1 1 1 1 2 2 → **23**/28, gates FAIL (est)
-- **Value/effort:** 4/1
-- **Reason:** Colors are cosmetic, but piece identity still benefits.
 
 ### I-008 — Mirror (backlog)
 - **Pitch:** Everything you place is reflected across the mirror.

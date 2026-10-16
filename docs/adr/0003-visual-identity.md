@@ -10,7 +10,7 @@ with light-water, then the ring of pebbles bursts into foam. Calm by default, pu
 glow). Default follows the OS (`prefers-color-scheme`); user can override.
 
 **Pebble palette (6):** coral `#F2795B`, sun `#F2B93B`, kelp `#53C08C`, lagoon `#3D9BE9`,
-orchid `#A97BE6`, shell `#EC86AE`. Colors are *cosmetic only* (piece identity); no rule depends on
+orchid `#8E5BD8` (darkened from #A97BE6: it merged with lagoon blue under deuteranopia, ΔE 3.9 → 11.3), shell `#EC86AE`. Colors are *cosmetic only* (piece identity); no rule depends on
 hue, so the game is fully playable with any color vision. The one state that matters — "this will
 be captured" — is shown with shape + motion (lagoon shimmer fills the pocket, ring pebbles lift and
 gain a white outline), not color alone.
