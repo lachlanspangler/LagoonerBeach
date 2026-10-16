@@ -11,11 +11,11 @@ entries of `docs/DIARY.md`, then `docs/WORKFLOW.md` (the loop to run).
 ## Commands
 | | |
 |---|---|
-| `make setup` | install deps + Playwright Chromium |
-| `make dev` | dev server http://localhost:5317 (`?debug=1` shows FPS/debug HUD, `?seed=N` fixes the seed) |
+| `make setup` | install deps + Playwright Chromium + git hooks |
+| `make dev` | dev server http://localhost:5317 (`?debug=1` exposes `window.__atoll` test hooks, `?seed=N` fixes the seed, `?mode=daily`) |
 | `make test` | unit + property + balance tests (Vitest, ~5 s) |
 | `make check` | typecheck + lint + format + tests + ideas ledger sync — run before every commit |
-| `make e2e` | build, then Playwright: gameplay flows, screenshots, perf budget |
+| `make e2e` | build, then Playwright (Chromium + WebKit): gameplay, visual baselines, layouts, perf, audio |
 | `make tune` | bot balance report → `artifacts/tune.json` |
 | `make ideas` | regenerate `docs/IDEAS.md` from `docs/ideas_ledger.json` |
 | `npm run puzzles` | regenerate the 200-reef pack (deterministic; CI diffs it) |

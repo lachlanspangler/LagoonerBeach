@@ -3,7 +3,7 @@
 
 setup:            ## install deps + browsers
 	npm ci || npm install
-	npx playwright install chromium
+	npx playwright install chromium webkit
 	git config core.hooksPath .githooks
 
 dev:              ## dev server on :5317
