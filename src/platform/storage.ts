@@ -6,6 +6,8 @@ import { NO_STREAK, type DailyStreak } from '../core/daily.ts';
 import { decodeGame, encodeGame } from '../core/serialize.ts';
 import type { GameState } from '../core/game.ts';
 import { MAX_REEF } from '../core/endless.ts';
+import { sanitizeLbProfile, type LbProfile } from '../meta/boards.ts';
+import { unpackMoves } from '../core/movelog.ts';
 
 export type ThemePref = 'auto' | 'day' | 'night';
 
@@ -43,6 +45,8 @@ export interface Profile {
   /** solved = cleared at least once; pure = cleared without using a hint. */
   /** hinted = a hint was used on it before a no-hint clear (blocks the no-hint mark). */
   puzzle: { index: number; solved: string[]; pure?: string[]; hinted?: string[]; dailyDone?: string[] };
+  /** Leaderboards: random install id + chosen name, both created only when the player first posts. */
+  lb?: LbProfile;
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -128,6 +132,7 @@ export function loadProfile(): Profile {
         ? o.puzzle.dailyDone.filter((x): x is string => typeof x === 'string').slice(-60)
         : [],
     },
+    lb: sanitizeLbProfile(o.lb),
   };
 }
 
@@ -148,14 +153,42 @@ function safeParse(s: string | null | undefined): unknown {
   }
 }
 
+/**
+ * The move log of an in-progress game, saved in the same record as the game (so a resumed game can
+ * still be posted to a leaderboard). Saves from before leaderboards have none and load as before.
+ */
+export interface RunRecord {
+  /** Packed move log (core/movelog.ts). */
+  moves: string;
+  /** The game began with the teaching tray (changes the replay). */
+  teach: boolean;
+  /** Endless: the server-issued run token whose seed this game uses. */
+  runToken?: string;
+}
+
+/** A stored run record, if it is well-formed and covers exactly the game's `moves` moves. */
+export function sanitizeRun(raw: unknown, moves: number): RunRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.moves !== 'string' || typeof o.teach !== 'boolean') return null;
+  if (unpackMoves(o.moves)?.length !== moves) return null;
+  const tok = typeof o.runToken === 'string' && o.runToken.length <= 1024 ? o.runToken : undefined;
+  return { moves: o.moves, teach: o.teach, ...(tok ? { runToken: tok } : {}) };
+}
+
 export function loadGame(): GameState | null {
   return decodeGame(safeParse(store()?.getItem(K_GAME)), 'classic');
 }
 
-export function saveGame(s: GameState | null): void {
+/** The saved classic game's move log (null for saves made before leaderboards). */
+export function loadGameRun(s: GameState): RunRecord | null {
+  return sanitizeRun((safeParse(store()?.getItem(K_GAME)) as { run?: unknown } | null)?.run, s.moves);
+}
+
+export function saveGame(s: GameState | null, run?: RunRecord | null): void {
   try {
     if (!s || s.over) store()?.removeItem(K_GAME);
-    else store()?.setItem(K_GAME, JSON.stringify(encodeGame(s)));
+    else store()?.setItem(K_GAME, JSON.stringify({ ...encodeGame(s), ...(run ? { run } : {}) }));
   } catch {
     /* best-effort */
   }
@@ -168,10 +201,15 @@ export function loadDaily(date: string): GameState | null {
   return decodeGame(raw.game, 'daily');
 }
 
-export function saveDaily(date: string, s: GameState | null): void {
+export function loadDailyRun(date: string, s: GameState): RunRecord | null {
+  const raw = safeParse(store()?.getItem(K_DAILY)) as { date?: unknown; run?: unknown } | null;
+  return raw && raw.date === date ? sanitizeRun(raw.run, s.moves) : null;
+}
+
+export function saveDaily(date: string, s: GameState | null, run?: RunRecord | null): void {
   try {
     if (!s || s.over) store()?.removeItem(K_DAILY);
-    else store()?.setItem(K_DAILY, JSON.stringify({ date, game: encodeGame(s) }));
+    else store()?.setItem(K_DAILY, JSON.stringify({ date, game: encodeGame(s), ...(run ? { run } : {}) }));
   } catch {
     /* best-effort */
   }
