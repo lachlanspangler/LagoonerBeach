@@ -19,7 +19,9 @@ Run this forever. Each pass should end with a commit and an updated diary/status
    `make ideas`.
 8. **Ideate** — add at least one new idea to the ledger (feature, polish, or a fix for something
    that felt off during play). Reject explicitly with a reason when appropriate.
-9. **Commit** — one logical change per commit, descriptive message.
+9. **Commit** — one logical change per commit, descriptive message. Commit as its own step
+   *after* reading the test output; never chain a commit onto a command whose failure you can't
+   see (pre-commit runs `make check`, not e2e — run `make e2e` yourself for UI/input changes).
 10. Repeat.
 
 ## Self-healing checks (what catches regressions)
