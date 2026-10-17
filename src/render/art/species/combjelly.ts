@@ -1,9 +1,11 @@
 /**
- * Comb Jelly — JELLY class (S), night species.
- * Silhouette: a plain upright egg, no tentacles at all (R10: the egg, and the beaded comb rows
- * that run pole to pole). The comb plates are light organs, so the rows glow on Night.
- * Personality: shimmery, delicate, quiet. Signature: a slow little twirl while sparks of
- * light wink on all around it.
+ * Comb Jelly — JELLY class (S), night species. Redo after CRITIQUE-1.
+ * Silhouette: an upright translucent egg (narrow top) with a small apical nub, no tentacles
+ * (R10: the egg + its rainbow comb rows). Six visible bold comb rows (of eight) run pole to pole,
+ * each 5 units wide, in the pebble rainbow — kelp, lagoon, orchid, sun — so even a static tile
+ * shows the shimmer. A soft glow halo on Night.
+ * Personality: shimmery, delicate, quiet. Signature: the rainbow ripple — the rib colours roll
+ * around the egg while it does a slow little twirl, sparks winking on around it.
  */
 import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
 
@@ -21,52 +23,64 @@ const egg = blob([
   [-24, -20],
   [-14, -34],
 ]);
-// the little sense-organ knob on the top pole
-const knob = circle(0, -39, 4);
-// four visible comb rows (meridians), drawn as a faint line with beaded plates on it
-const rows = join(
-  'M-8 -36Q-28.7 0 -8 36',
-  'M8 -36Q28.7 0 8 36',
-  'M-11.9 -36Q-42.7 0 -11.9 36',
-  'M11.9 -36Q42.7 0 11.9 36',
-);
-const plates = (ys: readonly number[], xs: readonly number[]) =>
-  join(...ys.flatMap((y, i) => [circle(-xs[i]!, y, 2.4), circle(xs[i]!, y, 2.4)]));
-const inner = plates([-30, -18, -6, 6, 18, 30], [12.2, 16.4, 18.3, 18.3, 16.4, 12.2]);
-const outer = plates([-30, -18, -6, 6, 18, 30], [18, 24.4, 27, 27, 24.4, 18]);
-// the shimmer: little sparks that wink on around it during the signature
-const shimmer = join(circle(-34, -22, 2.6), circle(35, -8, 3), circle(-33, 14, 2.2), circle(31, 26, 2.4));
+// the little sense-organ nub on the top pole
+const nub = circle(0, -39.5, 3.6);
+const RIBS = [
+  'M-14.8 -35Q-40.8 0 -14.8 35L-9.6 35Q-35.6 0 -9.6 -35Z',
+  'M-10.4 -35Q-26.9 0 -10.4 35L-5.2 35Q-21.7 0 -5.2 -35Z',
+  'M-5.4 -35Q-11.3 0 -5.4 35L-0.2 35Q-6.1 0 -0.2 -35Z',
+  'M0.2 -35Q6.1 0 0.2 35L5.4 35Q11.3 0 5.4 -35Z',
+  'M5.2 -35Q21.7 0 5.2 35L10.4 35Q26.9 0 10.4 -35Z',
+  'M9.6 -35Q35.6 0 9.6 35L14.8 35Q40.8 0 14.8 -35Z',
+];
+const RAINBOW = ['#53C08C', '#3D9BE9', '#8E5BD8', '#F2B93B'];
+// sparks that wink on around it during the signature (soft light, no outline)
+const sparks = join(circle(-35, -22, 2.8), circle(36, -8, 3.2), circle(-34, 14, 2.6), circle(33, 26, 2.8));
 
 export default defineArt({
   id: 'combjelly',
   klass: 'jelly',
   size: 'S',
-  feature: 'a plain upright egg with beaded comb rows pole to pole, no tentacles',
+  feature: 'a translucent upright egg with six bold rainbow comb rows pole to pole, no tentacles',
   personality: ['shimmery', 'delicate', 'quiet'],
   palette: { body: '#F4AECB', accent: '#A8F4FF' },
+  cycle: { rate: 7, during: 'signature' },
   groups: [
     {
       id: 'body',
       parts: [
-        { d: egg, role: 'body', alpha: 0.88 },
-        { d: knob, role: 'body' },
-        { d: rows, role: 'light', kind: 'line', w: 1.4, alpha: 0.7 },
-        { d: inner, role: 'light', kind: 'pattern' },
-        { d: outer, role: 'light', kind: 'pattern' },
-        { d: ellipse(0, 30, 18, 8), role: 'belly', kind: 'pattern', alpha: 0.6 },
+        // Night glow halo behind the egg
+        { d: ellipse(0, 0, 35, 46), role: 'accent', outline: false, alpha: 0.24 },
+        { d: egg, role: 'body', alpha: 0.85 },
+        { d: nub, role: 'body' },
+        ...RIBS.map((d, i) => ({
+          d,
+          role: 'accent' as const,
+          kind: 'pattern' as const,
+          alpha: 0.9,
+          cycle: RAINBOW,
+          cycleOffset: i % 4,
+        })),
+        { d: ellipse(0, 31, 18, 7), role: 'belly', kind: 'pattern', alpha: 0.5 },
       ],
     },
-    { id: 'shimmer', prop: true, pivot: [0, 0], parts: [{ d: shimmer, role: 'light' }] },
+    {
+      id: 'sparks',
+      prop: true,
+      followRoot: true,
+      pivot: [0, 0],
+      parts: [{ d: sparks, role: 'light', outline: false }],
+    },
   ],
-  shine: ellipse(-10, -24, 5, 9, 25),
+  shine: ellipse(-12, -24, 5, 9, 25),
   face: {
     eyes: [
-      [-8.5, 6],
-      [8.5, 6],
+      [-10.4, 6],
+      [10.4, 6],
     ],
     eye: 11.2,
-    zone: [-30, -40, 60, 80],
-    mouth: { at: [0, 13], w: 4, shape: 'smile' },
+    zone: [-28.6, -40, 57.2, 80],
+    mouth: { at: [0, 14], w: 4, shape: 'smile' },
     front: true,
   },
   idle: {
@@ -79,7 +93,7 @@ export default defineArt({
       dur: 1.4,
       tracks: [
         {
-          g: 'shimmer',
+          g: 'sparks',
           p: 's',
           k: [
             [0, 0.8],
@@ -90,7 +104,7 @@ export default defineArt({
           ],
         },
         {
-          g: 'shimmer',
+          g: 'sparks',
           p: 'rot',
           k: [
             [0, -10],
