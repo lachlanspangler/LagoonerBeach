@@ -4,7 +4,8 @@
  * (R10: the egg + its rainbow comb rows). Six visible bold comb rows (of eight) run pole to pole,
  * each 5 units wide, in the pebble rainbow — kelp, lagoon, orchid, sun — so even a static tile
  * shows the shimmer. A soft glow halo on Night.
- * Personality: shimmery, delicate, quiet. Signature: the rainbow ripple — the rib colours roll
+ * CRITIQUE-2: a pale face window where the rows fade, so the eyes never sit on stripes.
+ * Personality: shimmery, delicate, quiet. Resting mouth: the tiniest shy smile, blushing. Signature: the rainbow ripple — the rib colours roll
  * around the egg while it does a slow little twirl, sparks winking on around it.
  */
 import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
@@ -62,6 +63,9 @@ export default defineArt({
           cycleOffset: i % 4,
         })),
         { d: ellipse(0, 31, 18, 7), role: 'belly', kind: 'pattern', alpha: 0.5 },
+        // CRITIQUE-2: a pale face window (upper-middle) where the comb rows fade, two steps for a soft edge
+        { d: ellipse(0, 7, 20, 16), role: 'body', kind: 'pattern', alpha: 0.55 },
+        { d: ellipse(0, 7, 15.5, 12.5), role: 'body', kind: 'pattern', alpha: 0.92 },
       ],
     },
     {
@@ -75,13 +79,14 @@ export default defineArt({
   shine: ellipse(-12, -24, 5, 9, 25),
   face: {
     eyes: [
-      [-10.4, 6],
-      [10.4, 6],
+      [-9.2, 5],
+      [9.2, 5],
     ],
     eye: 11.2,
     zone: [-28.6, -40, 57.2, 80],
-    mouth: { at: [0, 14], w: 4, shape: 'smile' },
+    mouth: { at: [0, 12.5], w: 3.2, shape: 'smile' },
     front: true,
+    sweet: true,
   },
   idle: {
     ambient: [
