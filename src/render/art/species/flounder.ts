@@ -1,72 +1,58 @@
 /**
- * Flounder — FISH class (flatfish lying on the sand, seen from above-front). Silhouette: a wide, flat
- * oval inside a pale frilled rim fin, with BOTH eyes on little turrets poking up from the top edge,
- * one higher than the other (R10: the stacked eyes — the joke). Wide (≈ 1.6 : 1) and flat with a fan
- * tail, so it never reads as a round puffer. Personality: wry, flat, watchful.
- * Signature: the eyes glance down and around, then it flops flat (squash 1.1 / 0.85).
+ * Flounder — FISH class (flatfish lying on the sand, seen from above-front). Silhouette: a flat
+ * pancake (2 : 1) in a pale scalloped rim fin with TWO BIG EYE TURRETS on the top edge, the front one
+ * 8 units lower than the back one (R10: the stacked eyes — the joke — exaggerated 1.6×), and only a
+ * stub of a tail. Never a puffer: flat, spineless, wide. Personality: wry, flat, watchful.
+ * Signature: the eyes glance down, then up surprised, then it flops flat (squash 1.1 / 0.85) and winks.
  */
 import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
 
-const body = ellipse(0, 6, 33, 13);
+const body = ellipse(0, 9, 33, 12.5);
 // the rim fin: a softly scalloped frill all the way round (18 lobes, alternating radius)
 const rim = blob(
   Array.from({ length: 18 }, (_, i) => {
     const a = (i / 18) * Math.PI * 2;
     const k = i % 2 ? 0.93 : 1;
-    return [-2 + 39 * k * Math.cos(a), 6 + 17.5 * k * Math.sin(a)] as const;
+    return [-2 + 38.5 * k * Math.cos(a), 9 + 16.5 * k * Math.sin(a)] as const;
   }),
 );
-const turrets = join(circle(8, -11, 7), circle(20, -6, 6.4));
+// eye turrets: big domes on the top edge; the back one sits 8 units higher
+const turrets = join(circle(6, -10, 8.6), circle(21, -2, 8));
 const tail = blob([
-  [-36, 2],
-  [-42, -5],
-  [-46, -2],
-  [-45, 6],
-  [-46, 14],
-  [-42, 17],
-  [-36, 10],
+  [-37, 4],
+  [-41, 0],
+  [-44, 3],
+  [-43, 9],
+  [-44, 15],
+  [-41, 18],
+  [-37, 14],
 ]);
-const spots = join(
-  circle(-18, 2, 3.4),
-  circle(-6, 12, 3.4),
-  circle(-24, 10, 2.8),
-  circle(-6, 0, 3),
-  circle(8, 10, 3),
-  circle(20, 12, 2.6),
-);
+const spots = join(circle(-24, 10, 3.6), circle(-12, 15, 3.2), circle(-14, 4, 3), circle(2, 16, 3));
 const rays = join(
-  'M-30 -4L-34 -8',
-  'M-18 -7L-20 -11',
-  'M-6 -8L-6 -12',
-  'M-30 16L-34 20',
-  'M-16 19L-18 23',
-  'M0 20L0 24',
-  'M16 18L18 22',
-  'M28 13L32 16',
+  'M-30 -1L-34 -5',
+  'M-17 -4L-19 -9',
+  'M-30 19L-34 23',
+  'M-16 22L-18 27',
+  'M0 23L0 28',
+  'M16 21L18 26',
+  'M29 16L33 19',
 );
 
 export default defineArt({
   id: 'flounder',
   klass: 'fish',
   size: 'M',
-  feature: 'a wide flat oval in a frilled rim fin, with both eyes on turrets along the top edge, one higher',
+  feature: 'a flat pancake in a pale rim fin with two big eye turrets on top, one 8 units higher',
   personality: ['wry', 'flat', 'watchful'],
-  palette: { body: '#B49A72', accent: '#7E6A4A', belly: '#E3D2B0' },
+  palette: { body: '#B78A5C', accent: '#7A5636', belly: '#E9D4AE' },
   groups: [
-    {
-      id: 'tail',
-      pivot: [-36, 5],
-      parts: [
-        { d: tail, role: 'belly' },
-        { d: 'M-38 5L-46 5M-39 1L-45 -4M-39 9L-45 14', role: 'ink', kind: 'line', w: 1.1, alpha: 0.35 },
-      ],
-    },
+    { id: 'tail', pivot: [-37, 9], parts: [{ d: tail, role: 'belly' }] },
     {
       id: 'rim',
-      pivot: [-2, 5],
+      pivot: [-2, 9],
       parts: [
         { d: rim, role: 'belly' },
-        { d: rays, role: 'ink', kind: 'line', w: 1.1, alpha: 0.35 },
+        { d: rays, role: 'ink', kind: 'line', w: 3, alpha: 0.25 },
       ],
     },
     {
@@ -75,28 +61,28 @@ export default defineArt({
         { d: body, role: 'body' },
         { d: turrets, role: 'body' },
         { d: spots, role: 'accent', kind: 'pattern' },
-        { d: ellipse(0, 18, 26, 4), role: 'ink', kind: 'pattern', alpha: 0.1 },
+        { d: ellipse(-2, 20, 26, 3.5), role: 'ink', kind: 'pattern', alpha: 0.1 },
       ],
     },
   ],
-  shine: ellipse(-8, -1, 11, 2.8, -4),
+  shine: ellipse(-10, 3, 11, 2.8, -4),
   face: {
     eyes: [
-      [8, -11],
-      [20, -6],
+      [6, -10],
+      [21, -2],
     ],
-    eye: 7,
+    eye: 9.6,
     front: true,
-    zone: [0, -22, 34, 24],
-    mouth: { at: [30, 6], w: 5, shape: 'smile' },
+    zone: [-4, -30, 36, 40],
+    mouth: { at: [30, 10], w: 6, shape: 'smile' },
   },
   deviations: {
-    R7: 'flounder eyes sit stacked on the top edge, one higher (appendix: "Eyes stacked: the joke")',
+    R7: 'flounder eyes sit stacked on the top edge, one 8 units higher (appendix: "Eyes stacked: the joke")',
   },
   ground: true,
   idle: {
     ambient: [
-      { m: 'bob', amp: 1.2, period: 2.8 },
+      { m: 'bob', amp: 1, period: 2.8 },
       { m: 'wag', g: 'tail', amp: 8, period: 1.2 },
       { m: 'pulse', g: 'rim', amp: 0.02, period: 1.1 },
     ],
