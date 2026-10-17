@@ -225,3 +225,12 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - `pout` moved to 0.6 eye-heights below the eye and close under it (it read as a stray dot at the
   snout); eye up to 12.3 (22 % of the zone).
 - Lint clean; IoU unchanged (sanddollar 0.73 cross-class, puffer 0.67 same class). Self-grade A-.
+
+## sunfish (graded B → redo)
+- Clavus rebuilt as a smooth frill of three big round scallops (the many-point blob read as a bite mark).
+- XL frame-break: each long fin ends in a short `extra` capsule that pokes 3.5 px past the tile's
+  art box (lint overhang 3.5 px); the fins themselves stay in the body box so the silhouette keeps
+  its tall proportions (making the whole fins `extra` re-scaled the mask and hit the sand dollar at 0.81).
+- Warm sun-blush `#FFB3A0` always on (`face.blush`), eye 9.4 (22 %), mouth `o` a touch larger.
+- R16S deviation: silver identity at chroma 0.05 (the mola is silver-grey); it reads on sand and mint.
+- IoU: lionfish 0.68, clownfish 0.68 (same class, limit 0.70). Self-grade A-.

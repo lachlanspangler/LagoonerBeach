@@ -7,41 +7,42 @@
  * then rights itself with a happy face.
  * Groups (back to front): dorsal, anal, body (disc + clavus).
  */
-import { blob, defineArt, ellipse, join } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join } from '../kit.ts';
 
 const disc = ellipse(2, 0, 28, 24);
-// the clavus: a soft scalloped frill instead of a tail
-const clavus = blob([
-  [-18, -18],
-  [-28, -16],
-  [-33, -9],
-  [-30, -3],
-  [-34, 3],
-  [-31, 9],
-  [-33, 15],
-  [-27, 19],
-  [-17, 18],
-]);
+// the clavus: a smooth frill of three big round scallops instead of a tail
+const clavus = join(
+  blob([
+    [-14, -18],
+    [-24, -16],
+    [-26, 0],
+    [-24, 16],
+    [-14, 18],
+  ]),
+  circle(-26, -11, 8),
+  circle(-29, 1, 8.5),
+  circle(-26, 13, 8),
+);
 const dorsal = blob([
   [2, -19],
-  [-4, -32],
-  [-10, -40],
-  [-17, -39],
+  [-4, -30],
+  [-9, -39],
+  [-16, -39],
   [-17, -28],
   [-14, -17],
 ]);
 const anal = blob([
   [2, 19],
-  [-4, 32],
-  [-10, 40],
-  [-17, 39],
+  [-4, 30],
+  [-9, 39],
+  [-16, 39],
   [-17, 28],
   [-14, 17],
 ]);
 // darker fin tips and frill edge (accent), so the shape reads on the silver body
-const dorsalTip = ellipse(-13, -39, 7, 6, 20);
-const analTip = ellipse(-13, 39, 7, 6, -20);
-const frillEdge = join(ellipse(-33, -9, 4, 5), ellipse(-34, 3, 4, 5), ellipse(-33, 15, 4, 5));
+const dorsalTip = ellipse(-13, -41, 7, 6.5, 10);
+const analTip = ellipse(-13, 41, 7, 6.5, -10);
+const frillEdge = join(ellipse(-31, -12, 4, 5.5), ellipse(-34, 1, 4, 6), ellipse(-31, 14, 4, 5.5));
 
 export default defineArt({
   id: 'sunfish',
@@ -49,13 +50,15 @@ export default defineArt({
   size: 'XL',
   feature: 'a tall disc with no tail, a scalloped frill and long fins up and down',
   personality: ['sunny', 'dopey', 'gentle'],
-  palette: { body: '#A9C2D1', accent: '#6B8BA2', belly: '#D9E6EE' },
+  palette: { body: '#9FC0D4', accent: '#6B8BA2', belly: '#D9E6EE' },
   groups: [
     {
       id: 'dorsal',
       pivot: [-6, -22],
       parts: [
         { d: dorsal, role: 'body' },
+        // XL frame-break (R28): the fin tip pokes 2–4 px past the tile's art box
+        { d: capsule(-11, -34, 6, -12.5, -43.5, 4.4), role: 'body', extra: true },
         { d: dorsalTip, role: 'accent', kind: 'pattern' },
       ],
     },
@@ -64,6 +67,7 @@ export default defineArt({
       pivot: [-6, 22],
       parts: [
         { d: anal, role: 'body' },
+        { d: capsule(-11, 34, 6, -12.5, 43.5, 4.4), role: 'body', extra: true },
         { d: analTip, role: 'accent', kind: 'pattern' },
       ],
     },
@@ -81,10 +85,14 @@ export default defineArt({
   shine: ellipse(14, -16, 10, 4.4, -24),
   face: {
     eyes: [[10, 2]],
-    eye: 8.4,
+    eye: 9.4,
     zone: [-2, -22, 32, 42],
-    mouth: { at: [29, 8], w: 4, shape: 'o' },
+    mouth: { at: [27, 8.5], w: 5, shape: 'o' },
     sweet: true,
+    blush: { color: '#FFB3A0', always: true },
+  },
+  deviations: {
+    R16S: 'silver identity (the mola is silver-grey); chroma 0.05 still reads on sand and mint, warmth comes from the sun-blush',
   },
   idle: {
     ambient: [
