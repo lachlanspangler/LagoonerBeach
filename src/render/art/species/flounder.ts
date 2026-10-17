@@ -7,17 +7,17 @@
  */
 import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
 
-const body = ellipse(0, 9, 33, 12.5);
+const body = ellipse(0, 11, 34, 9);
 // the rim fin: a softly scalloped frill all the way round (18 lobes, alternating radius)
 const rim = blob(
   Array.from({ length: 18 }, (_, i) => {
     const a = (i / 18) * Math.PI * 2;
     const k = i % 2 ? 0.93 : 1;
-    return [-2 + 38.5 * k * Math.cos(a), 9 + 16.5 * k * Math.sin(a)] as const;
+    return [-2 + 40 * k * Math.cos(a), 11 + 12.5 * k * Math.sin(a)] as const;
   }),
 );
 // eye turrets: big domes on the top edge; the back one sits 8 units higher
-const turrets = join(circle(6, -10, 8.6), circle(21, -2, 8));
+const turrets = join(circle(6, -8, 9), circle(22, 0, 8.4));
 const tail = blob([
   [-37, 4],
   [-41, 0],
@@ -57,19 +57,22 @@ export default defineArt({
     },
     {
       id: 'body',
+      seamless: true,
       parts: [
         { d: body, role: 'body' },
-        { d: turrets, role: 'body' },
         { d: spots, role: 'accent', kind: 'pattern' },
         { d: ellipse(-2, 20, 26, 3.5), role: 'ink', kind: 'pattern', alpha: 0.1 },
       ],
     },
+    // the eye turrets ride their own seamless layer (the face draws on it), so the pancake rests level
+    { id: 'eyes', pivot: [13, 2], seamless: true, parts: [{ d: turrets, role: 'body' }] },
   ],
   shine: ellipse(-10, 3, 11, 2.8, -4),
   face: {
+    g: 'eyes',
     eyes: [
-      [6, -10],
-      [21, -2],
+      [6, -8],
+      [22, 0],
     ],
     eye: 9.6,
     front: true,
