@@ -59,7 +59,7 @@ export default defineArt({
   size: 'XS',
   feature: 'a low wide volcano cone on a skirt of foot',
   personality: ['clingy', 'stubborn', 'sweet'],
-  palette: { body: '#D5B397', accent: '#A3745A', belly: '#F6E3D2' },
+  palette: { body: '#CD976F', accent: '#946043', belly: '#F1E2CC' },
   groups: [
     { id: 'skirt', parts: [{ d: skirt, role: 'belly' }] },
     {
@@ -76,12 +76,12 @@ export default defineArt({
   ground: true,
   face: {
     eyes: [
-      [-7, 7],
-      [7, 7],
+      [-8.5, 5],
+      [8.5, 5],
     ],
-    eye: 7.6,
-    zone: [-34, -11, 68, 32],
-    mouth: { at: [0, 13], w: 5, shape: 'smile' },
+    eye: 12.4,
+    zone: [-34, -20, 68, 41],
+    mouth: { at: [0, 13.5], w: 6, shape: 'smile' },
     front: true,
     sweet: true,
   },

@@ -248,3 +248,10 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - Mantle spots all ≥ 6.2 units (R18W); the tiny pearl highlight dot is gone (the white pearl reads alone).
 - Eyes 9.6 (24 % of a slightly taller face zone) so the face holds at 54 px. Lint clean.
 - IoU: octopus 0.70, kraken 0.69 (cross-class, limit 0.80); sand dollar 0.64 (same class). Self-grade A-.
+
+## limpet (graded B → redo)
+- Face moved up onto the cone flank at 60 % of its height, eyes 12.4 units (the XS floor; 30 % of the
+  zone, allowed by the floor rule) 17 apart, mouth 0.7 eye-heights below.
+- Body `#CD976F` (chroma 0.08; `#C49A78` from the critique measures 0.069, under the new floor),
+  ridges `#946043`, cream skirt `#F1E2CC`. Lint clean.
+- IoU: flounder 0.72, cuttle 0.70 (cross-class), nautilus/cockle checked below. Self-grade A-.
