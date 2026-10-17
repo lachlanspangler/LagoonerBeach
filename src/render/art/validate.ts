@@ -34,7 +34,7 @@ export interface Issue {
 }
 
 /** Flip to `true` (or run tests with ART_LINT_STRICT=1) to make every warning an error. */
-export const LINT_AS_ERRORS = false;
+export const LINT_AS_ERRORS = true; // flipped after the CRITIQUE-1 redo: all 47 species clean
 export const failing = (issues: readonly Issue[], strict = LINT_AS_ERRORS) =>
   issues.filter((i) => i.level === 'error' || strict);
 
