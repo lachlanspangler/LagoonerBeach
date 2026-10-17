@@ -25,17 +25,21 @@ const fan = blob([
   [-6, 26],
 ]);
 const rostrum = capsule(28, -6, 3.8, 37, -10, 2.6);
+// two thin antennae that sweep back over the curl as nested arcs (never upright bunny ears)
 const antennae = join(
   tube([
-    [25, -9, 2.6],
-    [24, -21, 2.6],
-    [15, -30, 2.5],
-    [4, -33, 2.5],
+    [28, -8, 2.2],
+    [34, -20, 1.9],
+    [28, -33, 1.7],
+    [12, -39, 1.6],
+    [-6, -38, 1.5],
+    [-20, -32, 1.4],
   ]),
   tube([
-    [23, -7, 2.6],
-    [32, -19, 2.6],
-    [34, -30, 2.5],
+    [26, -8, 2.2],
+    [28, -19, 1.9],
+    [20, -27, 1.7],
+    [6, -29, 1.5],
   ]),
 );
 const legs = join(capsule(14, 12, 2.8, 15, 19, 2.5), capsule(22, 11, 2.8, 24, 17, 2.5));
