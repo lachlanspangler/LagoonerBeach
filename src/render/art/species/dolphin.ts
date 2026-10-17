@@ -5,37 +5,44 @@
  * Personality: joyful, friendly, showy. Its mouth line is a permanent smile.
  * Signature: a little spin-leap inside the tile (hop + full roll), landing with a happy face.
  */
-import { blob, defineArt, ellipse, tube } from '../kit.ts';
+import { blob, defineArt, ellipse, tube, xform } from '../kit.ts';
 
+const FLUKE_DX = -5;
+
+// long and sleek (about 2 : 1 with the dorsal): a round melon, a short beak, a slim tail stock
 const body = blob([
   [42, 5],
   [39, 2],
   [34, 0],
   [33, -8],
-  [26, -16],
-  [12, -19],
-  [-4, -17],
-  [-18, -12],
-  [-29, -8],
-  [-31, -3],
-  [-22, 3],
-  [-6, 11],
-  [12, 15],
-  [28, 13],
+  [26, -15],
+  [12, -18],
+  [-6, -16],
+  [-22, -11],
+  [-34, -6],
+  [-39, -2],
+  [-34, 2],
+  [-20, 6],
+  [-4, 11],
+  [12, 14],
+  [28, 12],
   [37, 9],
   [41, 8],
 ]);
 // whale-style flukes: two round lobes fanned up and down from a slim stock
-const flukes = blob([
-  [-27, -8],
-  [-33, -15],
-  [-38, -23],
-  [-42, -20],
-  [-38, -7],
-  [-42, 4],
-  [-37, 6],
-  [-31, -2],
-]);
+const flukes = xform(
+  blob([
+    [-27, -8],
+    [-33, -15],
+    [-38, -23],
+    [-42, -20],
+    [-38, -7],
+    [-42, 4],
+    [-37, 6],
+    [-31, -2],
+  ]),
+  { tx: FLUKE_DX },
+);
 // a low, hooked dorsal (a shark's is tall and straight)
 const dorsal = blob([
   [6, -17],
@@ -56,13 +63,15 @@ export default defineArt({
   size: 'XL',
   feature: 'a sleek arched body with a round melon, short beak, swept dorsal and up-tipped flukes',
   personality: ['joyful', 'friendly', 'showy'],
-  palette: { body: '#7FA8C9', belly: '#EEF3F7' },
+  palette: { body: '#74A6D2', belly: '#EEF3F7' },
   groups: [
-    { id: 'tail', pivot: [-28, -5], parts: [{ d: flukes, role: 'body' }] },
+    // the flukes are `extra`: they break the XL frame (R28)
+    { id: 'tail', pivot: [-36, -2], parts: [{ d: flukes, role: 'body', extra: true }] },
+    // the dorsal is its own layer so the body rests level (R5T)
+    { id: 'dorsal', pivot: [-6, -16], parts: [{ d: dorsal, role: 'body' }] },
     {
       id: 'body',
       parts: [
-        { d: dorsal, role: 'body' },
         { d: body, role: 'body' },
         { d: ellipse(12, 16, 34, 9, -4), role: 'belly', kind: 'pattern' },
       ],

@@ -135,3 +135,12 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
      eye 8 → 8.4.
 - **Self-grade:** A-. Earnest and wide-eyed; the scan swings the hammer with both eyes.
 - **Tight pair:** dolphin 0.697 (limit 0.70), so the dolphin redo moves away from it.
+
+## dolphin — A, frame-break + lint
+- **Fixes:** flukes are `extra` and break the XL frame by 3.7 px (R28); the dorsal moved to its own
+  layer and the body was lengthened to ~2 : 1 with a slim tail stock, so it rests level (13° → 4°,
+  R5T); body `#74A6D2` (chroma 0.084, R16S).
+- **Rounds (2):** (1) extra flukes + level body, but the smaller body box made it as round as the
+  clownfish (IoU 0.74, fail); (2) longer, slimmer body: clownfish 0.63, hammerhead 0.66, flounder
+  0.68. Lint-clean.
+- **Self-grade:** A. Same joyful dolphin, now big in the tile with its flukes past the edge.
