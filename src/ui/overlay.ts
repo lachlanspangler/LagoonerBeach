@@ -1,19 +1,28 @@
 /**
- * DOM overlays: menu button, daily button, menu sheet, game-over card. DOM (not canvas) so they're
- * accessible (focus, screen readers) and crisp. Kept tiny: the board is the interface.
+ * DOM overlays: the top bar (menu · journal/hint), the home sheet, settings, the Beach Journal,
+ * species pages, reef cards and the results card. DOM (not canvas) so they're accessible (focus,
+ * screen readers) and crisp. Components and tokens: docs/research/UI_DESIGN.md §6, style.css.
+ *
+ * Two containers: bottom *sheets* for destinations (spring slide-up, grabber, drag or scrim to
+ * dismiss) and centered *cards* for moments (results, reef cleared). One primary button per view.
  */
 import type { Profile, ThemePref } from '../platform/storage.ts';
-import { SKINS } from '../meta/unlocks.ts';
-import { HABITATS, SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
+import { loadSeen, saveSeen } from '../platform/storage.ts';
+import { SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
 import { drawCreature, hasNewArt, whenArtReady } from '../render/creatures.ts';
-import { buildReefList, type ReefListModel } from './reefList.ts';
+import { fmt } from '../render/theme.ts';
+import type { ReefListModel } from './reefList.ts';
+import type * as Sheets from './sheets.ts';
 import { resultsHero } from './results.ts';
+import { icon, type IconName } from './icons.ts';
+import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
   onResume(): void;
   onNewGame(): void;
+  /** Play today's Daily (from Classic: switch; from the Daily: replay it). */
   onDaily(): void;
   onClassic(): void;
   onPuzzles(): void;
@@ -21,6 +30,8 @@ export interface UiHandlers {
   onPuzzleRetry(): void;
   onPuzzleList(): void;
   onPuzzlePick(index: number): void;
+  /** Reef mode's top-bar button. */
+  onHint(): void;
   onToggle(key: 'sound' | 'music' | 'haptics' | 'reducedMotion' | 'largeText'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
@@ -43,14 +54,29 @@ export interface UiHandlers {
   ): void;
 }
 
-const ICON_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>`;
+type Mode = 'classic' | 'daily' | 'puzzle';
+
+let sheetsMod: Promise<typeof Sheets> | null = null;
+
+/** The Ui surface the lazy sheets module uses. */
+export interface SheetKit {
+  h: UiHandlers;
+  button(id: string, cls: string, html: string, label: string, fn: () => void): HTMLButtonElement;
+  show(card: HTMLElement, dismiss: boolean | (() => void), kind?: string): void;
+  sheet(
+    title: string,
+    o: { back?: () => void; full?: boolean; kind: string; close?: boolean },
+  ): { card: HTMLElement; head: HTMLElement; body: HTMLElement; title: HTMLElement };
+  seenFor(j: Journal): Set<string>;
+  markUnseen(j: Journal): void;
+}
+
 let lastInput: 'key' | 'pointer' = 'pointer';
 addEventListener('keydown', () => (lastInput = 'key'), true);
 addEventListener('pointerdown', () => (lastInput = 'pointer'), true);
 
-const ICON_HINT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>`;
-// Daily: a sun coming up over a wave
-const ICON_DAILY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14a5 5 0 0 1 10 0"/><path d="M12 5v2M5.5 8.5l1.4 1.4M18.5 8.5l-1.4 1.4"/><path d="M3 18c1.5 0 1.5-1.2 3-1.2S7.5 18 9 18s1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2"/></svg>`;
+/** A soft wave under the wordmark. */
+const WAVE = `<svg class="wave" viewBox="0 0 92 10" aria-hidden="true"><path d="M2 6c5-4 10-4 15 0s10 4 15 0 10-4 15 0 10 4 15 0 10-4 15 0 10 4 13 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
 
 /**
  * What Tab should visit inside `root`, in order: enabled buttons, links and `tabindex="0"` elements
@@ -66,33 +92,38 @@ export function tabbable(root: HTMLElement): HTMLElement[] {
   );
 }
 
+const night = (): boolean => document.documentElement.dataset.theme === 'night';
+/** Journal fun unit: one board pebble ≈ 4 cm (CREATURE_ART R28). */
+export const PEBBLE_CM = 4;
+
 export class Ui {
   private root: HTMLElement;
   private veil: HTMLElement | null = null;
+  private kind = '';
   readonly menuBtn: HTMLButtonElement;
-  readonly dailyBtn: HTMLButtonElement;
-  private modeTag: HTMLElement;
+  /** Right of the score: the Beach Journal (Classic, Daily) or the hint bulb (Reefs). */
+  readonly sideBtn: HTMLButtonElement;
+  private mode: Mode = 'classic';
   private sr: HTMLElement;
+  /** null until first used: an existing journal starts "seen" (no wall of dots after an update). */
+  private seen: Set<string> | null = loadSeen();
+  private journalCount = 0;
 
   constructor(private readonly h: UiHandlers) {
     this.root = document.getElementById('ui')!;
     this.sr = document.getElementById('sr')!;
-    this.menuBtn = this.button('menu-btn', 'icon-btn', ICON_MENU, 'Menu', () => h.onOpenMenu());
-    this.dailyBtn = this.button(
-      'daily-btn',
-      'icon-btn',
-      ICON_DAILY + '<span class="badge"></span>',
-      'Daily challenge',
-      () => h.onDaily(),
+    this.menuBtn = this.button('menu-btn', 'icon-btn', icon('menu'), 'Menu', () => h.onOpenMenu());
+    this.sideBtn = this.button('side-btn', 'icon-btn', '', 'Journal', () =>
+      this.mode === 'puzzle' ? h.onHint() : h.onJournal(),
     );
-    this.modeTag = document.createElement('div');
-    this.modeTag.className = 'mode-tag';
-    this.root.append(this.menuBtn, this.dailyBtn, this.modeTag);
+    this.root.append(this.menuBtn, this.sideBtn);
+    this.setMode('classic', 0);
   }
 
   private button(id: string, cls: string, html: string, label: string, fn: () => void): HTMLButtonElement {
     const b = document.createElement('button');
     if (id) b.id = id;
+    b.type = 'button';
     b.className = cls;
     b.innerHTML = html;
     b.setAttribute('aria-label', label);
@@ -108,19 +139,42 @@ export class Ui {
     this.sr.textContent = text;
   }
 
-  setMode(mode: 'classic' | 'daily' | 'puzzle', streak: number): void {
-    this.dailyBtn.innerHTML = (mode === 'puzzle' ? ICON_HINT : ICON_DAILY) + '<span class="badge"></span>';
-    // the reef HUD already says where you are; the tag only marks the Daily
-    this.modeTag.textContent = mode === 'daily' ? 'Daily' : '';
-    (this.dailyBtn.querySelector('.badge') as HTMLElement).textContent = streak > 0 ? String(streak) : '';
-    if (mode === 'puzzle') {
-      this.dailyBtn.setAttribute('aria-label', 'Hint');
-      return;
+  /** Top bar for a mode; `unseen` = journal pages not looked at yet (a dot on the journal). */
+  setMode(mode: Mode, _streak: number, journal?: Journal): void {
+    this.mode = mode;
+    if (journal) this.journalCount = found(journal);
+    const puzzle = mode === 'puzzle';
+    this.sideBtn.innerHTML = icon(puzzle ? 'hint' : 'journal') + '<span class="dot" aria-hidden="true"></span>';
+    this.sideBtn.setAttribute('aria-label', puzzle ? 'Hint' : 'Journal');
+    if (journal) this.markUnseen(journal);
+  }
+
+  /** The journal button wears a dot while a caught species hasn't been looked at. */
+  markUnseen(j: Journal): void {
+    const seen = this.seenFor(j);
+    const any = this.mode !== 'puzzle' && Object.keys(j.entries).some((id) => !seen.has(id));
+    this.sideBtn.classList.toggle('has-new', any);
+  }
+
+  /** Debug/screenshots: treat these species as already looked at. */
+  markSeen(ids: readonly string[], j: Journal): void {
+    const seen = this.seenFor(j);
+    for (const id of ids) seen.add(id);
+    saveSeen(seen);
+    this.markUnseen(j);
+  }
+
+  private seenFor(j: Journal): Set<string> {
+    if (!this.seen) {
+      this.seen = new Set(Object.keys(j.entries));
+      saveSeen(this.seen);
     }
-    this.dailyBtn.setAttribute(
-      'aria-label',
-      mode === 'daily' ? 'Back to classic' : `Daily challenge${streak ? `, streak ${streak}` : ''}`,
-    );
+    return this.seen;
+  }
+
+  /** The creatures' destination on screen (they swim into the journal). */
+  journalButton(): HTMLButtonElement {
+    return this.mode === 'puzzle' ? this.menuBtn : this.sideBtn;
   }
 
   get open(): boolean {
@@ -131,6 +185,8 @@ export class Ui {
     const v = this.veil;
     if (!v) return;
     this.veil = null;
+    this.kind = '';
+    this.setTopBarInert(false);
     if (!immediate) {
       this.returnFocus?.focus?.({ preventScroll: true });
       this.returnFocus = null;
@@ -142,28 +198,44 @@ export class Ui {
     setTimeout(() => v.remove(), 200);
   }
 
+  private setTopBarInert(on: boolean): void {
+    for (const b of [this.menuBtn, this.sideBtn]) b.toggleAttribute('inert', on);
+  }
+
   private returnFocus: HTMLElement | null = null;
 
   /** Show a card built elsewhere (leaderboard sheets). `dismiss`: true = Resume, or a custom action. */
   present(card: HTMLElement, dismiss: boolean | (() => void)): void {
-    this.show(card, dismiss);
+    this.show(card, dismiss, card.dataset.kind ?? card.className);
   }
 
-  private show(card: HTMLElement, dismiss: boolean | (() => void)): void {
+  private show(card: HTMLElement, dismiss: boolean | (() => void), kind = ''): void {
     const dismissable = dismiss !== false;
     const onDismiss = typeof dismiss === 'function' ? dismiss : () => this.h.onResume();
     const replacing = this.veil !== null;
+    const same = replacing && kind !== '' && kind === this.kind;
+    // re-rendering the same screen (a settings toggle) keeps its scroll and doesn't replay the entrance
+    const keepScroll = same ? (this.veil!.querySelector('.sheet-body')?.scrollTop ?? 0) : 0;
     if (!replacing) this.returnFocus = document.activeElement as HTMLElement | null;
     this.close(true);
     const v = document.createElement('div');
     v.className = 'veil';
     v.setAttribute('role', 'dialog');
     v.setAttribute('aria-modal', 'true');
+    const isSheet = card.classList.contains('sheet');
+    if (isSheet && !card.querySelector(':scope > .grab')) {
+      const grab = document.createElement('div');
+      grab.className = 'grab';
+      grab.setAttribute('aria-hidden', 'true');
+      card.prepend(grab);
+    }
     v.append(card);
+    stagger(card, same);
     if (dismissable)
       v.addEventListener('click', (e) => {
         if (e.target === v) onDismiss();
       });
+    if (isSheet && dismissable) dragToDismiss(card, onDismiss);
     v.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && dismissable) {
         e.preventDefault();
@@ -180,6 +252,12 @@ export class Ui {
     });
     this.root.append(v);
     this.veil = v;
+    this.kind = kind;
+    this.setTopBarInert(true);
+    if (keepScroll) {
+      const body = card.querySelector('.sheet-body');
+      if (body) body.scrollTop = keepScroll;
+    }
     if (replacing) v.classList.add('show');
     else requestAnimationFrame(() => this.veil === v && v.classList.add('show'));
     // keyboard users land on the main action; touch users get no focus ring (focus the dialog itself)
@@ -190,215 +268,172 @@ export class Ui {
     }
   }
 
-  showMenu(p: Profile, mode: 'classic' | 'daily' | 'puzzle', canResume: boolean, journalCount = 0): void {
+  /** A sheet with a title row (title, optional leading back button, close button) and a body. */
+  private sheet(title: string, o: { back?: () => void; full?: boolean; kind: string; close?: boolean }) {
     const card = document.createElement('div');
-    card.className = 'card';
-    const stats = [
-      [p.best, 'Best'],
-      [p.stats.bestPocket, 'Top lagoon'],
-      [p.daily.current, 'Streak'],
-      [p.puzzle.solved.length, 'Reefs'],
-    ].filter(([v]) => (v as number) > 0);
-    card.innerHTML = `<h2>Lagooner Beach</h2>
-      <div class="sub">Close a loop. Water fills it, the ring pops.</div>
-      ${stats.length ? `<div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>` : ''}`;
-    if (canResume) card.append(this.button('', 'btn primary', 'Resume', 'Resume', () => this.h.onResume()));
-    if (mode === 'puzzle') {
-      card.append(
-        this.button('', canResume ? 'btn' : 'btn primary', 'Restart reef', 'Restart reef', () =>
-          this.h.onPuzzleRetry(),
-        ),
+    card.className = `sheet${o.full ? ' full' : ''}`;
+    card.dataset.kind = o.kind;
+    const head = document.createElement('div');
+    head.className = 'sheet-head';
+    if (o.back) head.append(this.button('', 'round', icon('back'), 'Back to journal', o.back));
+    const t = document.createElement('h2');
+    t.className = 'title-m';
+    t.textContent = title;
+    head.append(t);
+    if (o.close !== false) head.append(this.button('', 'round', icon('close'), 'Close', () => this.h.onResume()));
+    const body = document.createElement('div');
+    body.className = 'sheet-body stagger';
+    card.append(head, body);
+    return { card, head, body, title: t };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────── home
+  showMenu(p: Profile, mode: Mode, canResume: boolean, journalCount = 0, dailyDone = false): void {
+    const card = document.createElement('div');
+    card.className = 'sheet home stagger';
+    card.dataset.kind = 'menu';
+    const top = document.createElement('div');
+    top.className = 'home-top';
+    top.innerHTML = `<div><h2 class="wordmark">Lagooner Beach${WAVE}</h2><p class="callout tagline">Close a loop. Water fills it, the ring pops.</p></div>`;
+    card.append(top);
+    const chips: string[] = [];
+    if (p.best > 0)
+      chips.push(
+        `<span class="chip gold">${icon('crown', { filled: true })}Best <b class="num">${fmt(p.best)}</b></span>`,
       );
-      card.append(this.button('', 'btn', 'All reefs', 'All reefs', () => this.h.onPuzzleList()));
-      card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
-    } else {
-      card.append(this.button('', canResume ? 'btn' : 'btn primary', 'New game', 'New game', () => this.h.onNewGame()));
-      card.append(
-        mode === 'daily'
-          ? this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic())
-          : this.button('', 'btn', 'Daily challenge', 'Daily challenge', () => this.h.onDaily()),
-      );
-      card.append(this.button('', 'btn', 'Reef puzzles', 'Reef puzzles', () => this.h.onPuzzles()));
+    if (p.daily.current > 0)
+      chips.push(`<span class="chip accent">${icon('streak')}${p.daily.current}-day streak</span>`);
+    if (chips.length) {
+      const c = document.createElement('div');
+      c.className = 'home-chips';
+      c.innerHTML = chips.join('');
+      card.append(c);
     }
-    card.append(
-      this.button('', 'btn', `Beach Journal · ${journalCount}/${SPECIES.length}`, 'Beach Journal', () =>
-        this.h.onJournal(),
+    if (canResume)
+      card.append(
+        this.button('', 'btn primary', `${icon('play', { filled: true })}Resume`, 'Resume', () => this.h.onResume()),
+      );
+    if (mode === 'puzzle')
+      card.append(
+        this.button('', 'btn', `${icon('restart')}Restart reef`, 'Restart reef', () => this.h.onPuzzleRetry()),
+      );
+    const modes = document.createElement('div');
+    modes.className = 'modes';
+    const card3 = (
+      ic: IconName,
+      title: string,
+      line: string,
+      status: string,
+      label: string,
+      current: boolean,
+      go: () => void,
+      statusCls = '',
+    ) => {
+      const b = this.button(
+        '',
+        `mode-card${current ? ' current' : ''}`,
+        `<span class="mc-ic">${icon(ic)}</span><span><span class="mc-title">${title}</span><span class="mc-line">${line}</span></span><span class="mc-status ${statusCls}">${status}</span>`,
+        label,
+        go,
+      );
+      modes.append(b);
+    };
+    card3(
+      'endless',
+      'Endless',
+      'Play on for a high score',
+      mode === 'classic' ? 'New game' : 'Play',
+      mode === 'classic' ? 'New game' : 'Classic mode',
+      mode === 'classic',
+      () => (mode === 'classic' ? this.h.onNewGame() : this.h.onClassic()),
+      'go',
+    );
+    card3(
+      'daily',
+      'Daily',
+      'One board for everyone today',
+      dailyDone ? `${icon('check', { size: 16 })}` : p.daily.current > 0 ? `Day ${p.daily.current + 1}` : 'Today',
+      mode === 'daily' ? 'Replay the daily challenge' : 'Daily challenge',
+      mode === 'daily',
+      () => this.h.onDaily(),
+      dailyDone ? '' : 'go',
+    );
+    card3(
+      'reef',
+      'Reefs',
+      'Clear every pebble',
+      `${p.puzzle.solved.length} cleared`,
+      mode === 'puzzle' ? 'All reefs' : 'Reef puzzles',
+      mode === 'puzzle',
+      () => (mode === 'puzzle' ? this.h.onPuzzleList() : this.h.onPuzzles()),
+    );
+    card.append(modes);
+    const links = document.createElement('div');
+    links.className = 'home-links';
+    links.append(
+      this.button(
+        '',
+        'link-tile',
+        `${icon('journal')}<span>Journal</span><small class="num tile-badge">${journalCount}/${SPECIES.length}</small>`,
+        `Beach Journal, ${journalCount} of ${SPECIES.length} found`,
+        () => this.h.onJournal(),
       ),
     );
     if (this.h.onLeaderboards)
-      card.append(this.button('menu-lb', 'btn', 'Leaderboards', 'Leaderboards', () => this.h.onLeaderboards?.()));
-    card.append(this.button('', 'btn ghost', 'Settings', 'Settings', () => this.h.onSettings()));
-    this.show(card, canResume);
-  }
-
-  showSettings(p: Profile): void {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = '<h2>Settings</h2>';
-    const s = p.settings;
-    const rm = s.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const rows = document.createElement('div');
-    const sw = (label: string, on: boolean, key: 'sound' | 'music' | 'haptics' | 'reducedMotion' | 'largeText') => {
-      const r = document.createElement('div');
-      r.className = 'row';
-      r.innerHTML = `<span>${label}</span>`;
-      const b = this.button('', 'switch', '<i></i>', label, () => this.h.onToggle(key));
-      b.setAttribute('role', 'switch');
-      b.setAttribute('aria-checked', String(on));
-      r.append(b);
-      rows.append(r);
-    };
-    sw('Sound', s.sound, 'sound');
-    sw('Music', s.music, 'music');
-    sw('Haptics', s.haptics, 'haptics');
-    sw('Reduced motion', rm, 'reducedMotion');
-    sw('Larger text', !!s.largeText, 'largeText');
-    const tr = document.createElement('div');
-    tr.className = 'row';
-    tr.innerHTML = '<span>Theme</span>';
-    const seg = document.createElement('div');
-    seg.className = 'seg';
-    seg.setAttribute('role', 'radiogroup');
-    seg.setAttribute('aria-label', 'Theme');
-    for (const [t, l] of [
-      ['auto', 'Auto'],
-      ['day', 'Day'],
-      ['night', 'Night'],
-    ] as const) {
-      const b = this.button('', 'seg-b', l, `Theme ${l}`, () => this.h.onTheme(t));
-      b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', String(s.theme === t));
-      seg.append(b);
-    }
-    tr.append(seg);
-    rows.append(tr);
-    const sk = document.createElement('div');
-    sk.className = 'row';
-    sk.innerHTML = '<span>Style</span>';
-    const cur = SKINS.find((k) => k.id === p.settings.skin)?.name ?? 'Pebble';
-    sk.append(
-      this.button('', 'toggle', `${cur.replace(' (high contrast)', '')} ›`, `Style: ${cur}. Change`, () =>
-        this.h.onSkin(),
-      ),
+      links.append(
+        this.button('menu-lb', 'link-tile', `${icon('leaderboard')}<span>Leaderboards</span>`, 'Leaderboards', () =>
+          this.h.onLeaderboards?.(),
+        ),
+      );
+    links.append(
+      this.button('', 'link-tile', `${icon('settings')}<span>Settings</span>`, 'Settings', () => this.h.onSettings()),
     );
-    rows.append(sk);
-    card.append(rows);
-    const next = SKINS.find((k) => !p.unlocked.includes(k.id) && k.hint);
-    if (next) {
-      const hint = document.createElement('div');
-      hint.className = 'foot';
-      const left = SKINS.filter((k) => !p.unlocked.includes(k.id)).length;
-      hint.textContent = `${left} more style${left > 1 ? 's' : ''} to find · next: ${next.hint.toLowerCase()}`;
-      card.append(hint);
-    }
-    if (p.stats.games) {
-      const foot = document.createElement('div');
-      foot.className = 'foot';
-      foot.textContent = `${p.stats.games} games · ${p.stats.captures} lagoons captured`;
-      card.append(foot);
-    }
-    const about = document.createElement('div');
-    about.className = 'foot';
-    about.innerHTML = `Lagooner Beach ${__APP_VERSION__} · no ads, no tracking · <a href="./privacy.html" target="_blank" rel="noopener" style="color:inherit">Privacy</a>`;
-    card.append(about);
-    let armed = 0;
-    const erase = this.button('', 'btn ghost', 'Erase all progress', 'Erase all progress', () => {
-      if (Date.now() - armed < 3000) return this.h.onErase();
-      armed = Date.now();
-      erase.textContent = 'Tap again to erase everything';
-      setTimeout(() => (erase.textContent = 'Erase all progress'), 3000);
-    });
-    card.append(erase);
-    card.append(this.button('', 'btn primary', 'Done', 'Done', () => this.h.onResume()));
-    this.show(card, true);
+    card.append(links);
+    this.show(card, canResume, 'menu');
   }
 
-  /** The Beach Journal: every creature by habitat; found ones in colour, unknowns as silhouettes with a hint. */
+  // ─────────────────────────────────────────────────────────────────────────── reefs
+  // ─────────────────────────────────────────────────────────────────────────── sheets (lazy)
+  /** Settings, the Beach Journal, species pages and the reef list live in a lazy chunk (sheets.ts). */
+  private sheets(): Promise<typeof Sheets> {
+    return (sheetsMod ??= import('./sheets.ts'));
+  }
+  /** Fetch the sheets chunk ahead of the first tap (idle after boot). */
+  prefetchSheets(): void {
+    void this.sheets().catch(() => undefined);
+  }
+  showSettings(p: Profile): void {
+    void this.sheets().then((m) => m.showSettings(this.kit(), p));
+  }
   showJournal(j: Journal): void {
-    const card = document.createElement('div');
-    card.className = 'card reefs journal';
-    const n = found(j);
-    const golden = Object.values(j.entries).reduce((a, e) => a + (e.golden ? 1 : 0), 0);
-    card.innerHTML = `<h2>Beach Journal</h2><div class="big" style="font-size:30px;margin:2px 0">${n} / ${SPECIES.length}</div><div class="foot" style="margin:0 0 6px">${[golden ? `${golden} golden` : '', j.total ? `${j.total} caught and released` : ''].filter(Boolean).join(' · ') || 'Close a loop to catch your first creature'}</div>`;
-    const scroller = document.createElement('div');
-    scroller.className = 'reef-scroll';
-    const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
-    for (const h of HABITATS) {
-      const list = SPECIES.filter((sp) => sp.habitat === h.id);
-      const got = list.filter((sp) => j.entries[sp.id]).length;
-      const head = document.createElement('div');
-      head.className = 'tier';
-      head.textContent = `${h.name} · ${got}/${list.length}`;
-      const grid = document.createElement('div');
-      grid.className = 'j-grid';
-      for (const sp of list) {
-        const e = j.entries[sp.id];
-        const b = this.button(
-          '',
-          `j-tile${e ? ' got' : ''}`,
-          '',
-          e ? `${sp.name}, caught ${e.count}` : `Unknown creature. Hint: ${sp.hint}`,
-          () => this.showSpecies(sp, j),
-        );
-        b.append(creatureThumb(sp, 54, e ? undefined : ink, (e?.golden ?? 0) > 0));
-        const label = document.createElement('span');
-        label.textContent = e ? sp.name : '';
-        b.append(label);
-        grid.append(b);
-      }
-      scroller.append(head, grid);
-    }
-    card.append(scroller);
-    card.append(this.button('', 'btn', 'Close', 'Close', () => this.h.onResume()));
-    this.show(card, true);
+    void this.sheets().then((m) => m.showJournal(this.kit(), j));
   }
-
-  private showSpecies(sp: Species, j: Journal): void {
-    const e = j.entries[sp.id];
-    const card = document.createElement('div');
-    card.className = 'card';
-    const ink = getComputedStyle(document.documentElement).getPropertyValue('--dim').trim() || '#8A7B69';
-    const rarity = sp.rarity[0]!.toUpperCase() + sp.rarity.slice(1);
-    card.innerHTML = `<h2>${e ? rarity : 'Not found yet'}</h2>`;
-    const art = creatureThumb(sp, 150, e ? undefined : ink, (e?.golden ?? 0) > 0, {
-      animate: true,
-      shy: e?.count === 1,
-    });
-    art.style.margin = '6px auto';
-    art.style.display = 'block';
-    card.append(art);
-    const info = document.createElement('div');
-    const size = (cm: number) => (cm >= 100 ? `${(cm / 100).toFixed(1)} m` : `${cm} cm`);
-    info.innerHTML = e
-      ? `<div class="big" style="font-size:28px">${sp.name}</div><div class="sub">${sp.flavor}</div>
-         <div class="stats" style="grid-template-columns:repeat(3,1fr)"><div><b>${e.count}</b><span>Caught</span></div><div><b>${size(e.best)}</b><span>Biggest</span></div><div><b>${e.golden || '—'}</b><span>Golden</span></div></div>
-         <div class="foot">First caught ${prettyDate(e.first)}</div>`
-      : `<div class="big" style="font-size:28px">???</div><div class="sub">Hint: ${sp.hint}</div>`;
-    card.append(info);
-    card.append(this.button('', 'btn primary', 'Back', 'Back to journal', () => this.showJournal(j)));
-    this.show(card, true);
-  }
-
   /** Reefs by chapter, shipped and endless (src/ui/reefList.ts); tap one to play it. */
   showReefs(m: ReefListModel): void {
-    const card = buildReefList(
-      m,
-      (id, cls, html, label, fn) => this.button(id, cls, html, label, fn),
-      (i) => this.h.onPuzzlePick(i),
-      () => this.h.onResume(),
-    );
-    this.show(card, true);
+    void this.sheets().then((s) => s.showReefs(this.kit(), m));
+  }
+
+  /** What the sheets module needs from the Ui (kept narrow). */
+  private kit(): SheetKit {
+    return {
+      h: this.h,
+      button: (id, cls, html, label, fn) => this.button(id, cls, html, label, fn),
+      show: (card, dismiss, kind) => this.show(card, dismiss, kind),
+      sheet: (title, o) => this.sheet(title, o),
+      seenFor: (j) => this.seenFor(j),
+      markUnseen: (j) => this.markUnseen(j),
+    };
   }
 
   /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Classic. */
   showReefError(index: number, retry: () => void): void {
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'card stagger';
     card.setAttribute('data-testid', 'reef-error');
-    card.innerHTML = `<h2>Reef ${index + 1}</h2><div class="sub">This reef couldn't be charted just now.</div>`;
+    card.innerHTML = `<div class="overline">Reef ${index + 1}</div><h2 class="res-word" style="font-size:30px">Uncharted</h2><p class="callout">This reef couldn't be charted just now.</p>`;
     card.append(this.button('retry-chart', 'btn primary', 'Try again', `Try charting reef ${index + 1} again`, retry));
-    card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
-    this.show(card, true);
+    card.append(this.button('', 'btn ghost', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    this.show(card, true, 'reef-error');
     this.announce(`Reef ${index + 1} couldn't be charted. Try again.`);
   }
 
@@ -410,32 +445,46 @@ export class Ui {
     newIds?: string[];
     /** Replaces "N of M reefs cleared" (endless reefs: chapter progress). */
     progress?: string;
+    /** Chapter segments (20; true = cleared). */
+    segs?: readonly boolean[];
   }): void {
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'card stagger';
+    const segs = o.segs
+      ? `<div class="segs" aria-hidden="true">${o.segs.map((s) => `<i${s ? ' class="on"' : ''}></i>`).join('')}</div>`
+      : '';
     card.innerHTML = o.solved
-      ? `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">Cleared</div><div class="sub">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`
-      : `<h2>Reef ${o.index + 1}</h2><div class="big" data-testid="puzzle-result">So close</div><div class="sub">Every piece must be placed and every pebble popped.</div>`;
-    if (o.newIds?.length) card.append(newSpeciesRow(o.newIds, () => this.h.onJournal()));
+      ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2><div class="chapter-progress"><div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>${segs}</div>`
+      : `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word" data-testid="puzzle-result">So close</h2><p class="callout">Every piece must be placed and every pebble popped.</p>`;
+    if (o.newIds?.length) card.append(journalStrip(o.newIds, () => this.h.onJournal()));
     if (o.solved) {
       if (o.index + 1 < o.total)
-        card.append(this.button('next-reef', 'btn primary', 'Next reef', 'Next reef', () => this.h.onPuzzleNext()));
-      card.append(this.button('', 'btn', 'Classic', 'Classic mode', () => this.h.onClassic()));
+        card.append(
+          this.button('next-reef', 'btn primary', `Next reef${icon('chevronRight')}`, 'Next reef', () =>
+            this.h.onPuzzleNext(),
+          ),
+        );
+      card.append(this.button('', 'btn ghost', 'Classic', 'Classic mode', () => this.h.onClassic()));
     } else {
-      card.append(this.button('retry-reef', 'btn primary', 'Try again', 'Try again', () => this.h.onPuzzleRetry()));
-      card.append(this.button('', 'btn', 'Skip', 'Skip to next reef', () => this.h.onPuzzleNext()));
+      card.append(
+        this.button('retry-reef', 'btn primary', `${icon('restart')}Try again`, 'Try again', () =>
+          this.h.onPuzzleRetry(),
+        ),
+      );
+      card.append(this.button('', 'btn ghost', 'Skip', 'Skip to next reef', () => this.h.onPuzzleNext()));
     }
-    this.show(card, false);
+    this.show(card, false, 'reef-result');
     this.announce(o.solved ? `Reef ${o.index + 1} cleared` : 'Not cleared. Try again.');
   }
 
+  // ─────────────────────────────────────────────────────────────────────────── results
   showGameOver(o: {
     score: number;
     best: number;
     newBest: boolean;
     moves: number;
     lagoon: number;
-    mode: 'classic' | 'daily' | 'puzzle';
+    mode: Mode;
     dailyStreak: number;
     unlocked: string[];
     shape?: { cells: readonly number[]; ring: readonly number[] } | null;
@@ -448,7 +497,7 @@ export class Ui {
     reducedMotion?: boolean;
   }): HTMLElement {
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'card results stagger';
     const hero = resultsHero({
       score: o.score,
       best: o.best,
@@ -465,39 +514,88 @@ export class Ui {
       [o.caught?.count ?? 0, 'Caught'],
       [o.dailyStreak, 'Streak'],
     ].filter(([v]) => (v as number) > 0);
-    card.innerHTML = `<h2>${o.mode === 'daily' ? 'Daily complete' : 'No room left'}</h2>
+    card.innerHTML = `<div class="overline">${o.mode === 'daily' ? 'Daily · complete' : 'Endless'}</div>
+      <h2 class="res-head">${o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
       <div class="hero-slot"></div>
-      <div class="stats" style="grid-template-columns:repeat(${stats.length},1fr)">${stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
-      ${o.unlocked.length ? `<div class="sub best-flash" data-testid="unlock">New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
+      ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
+      ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
     card.querySelector('.hero-slot')!.replaceWith(hero.el);
-    if (o.caught?.newIds.length) card.append(newSpeciesRow(o.caught.newIds, () => this.h.onJournal()));
+    if (o.caught?.newIds.length) card.append(journalStrip(o.caught.newIds, () => this.h.onJournal()));
     if (o.mode === 'daily') {
-      card.append(this.button('', 'btn primary', 'Share', 'Share result', () => this.h.onShare()));
-      card.append(this.button('', 'btn', 'Play classic', 'Play classic', () => this.h.onClassic()));
+      card.append(this.button('', 'btn primary', `${icon('share')}Share`, 'Share result', () => this.h.onShare()));
     } else {
       card.append(this.button('play-again', 'btn primary', 'Play again', 'Play again', () => this.h.onNewGame()));
-      card.append(this.button('', 'btn', 'Daily challenge', 'Daily challenge', () => this.h.onDaily()));
     }
     if (o.leaderboard) {
       const lb = o.leaderboard;
-      const b = this.button('lb-open', 'btn', lb.label, lb.label, () => lb.open());
-      card.querySelector('.btn.primary')!.after(b);
+      const b = this.button('lb-open', 'btn small', lb.label, lb.label, () => lb.open());
+      card.append(b);
       lb.mount?.(b);
     }
-    this.show(card, false);
+    card.append(
+      o.mode === 'daily'
+        ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play classic', () => this.h.onClassic())
+        : this.button('', 'btn ghost', `${icon('daily')}Daily challenge`, 'Daily challenge', () => this.h.onDaily()),
+    );
+    this.show(card, false, 'results');
     hero.start();
     this.announce(`Game over. Score ${o.score}.${o.newBest ? ' New high score!' : ''}`);
     return card;
   }
 }
 
-/** "Best 1200" plus a progress bar toward it — the pull of almost. */
+/** Assign the entrance stagger order to a container's blocks (35 ms apart, capped at 8). */
+function stagger(card: HTMLElement, still: boolean): void {
+  for (const box of [card, ...card.querySelectorAll<HTMLElement>(':scope > .stagger')]) {
+    if (!box.classList.contains('stagger')) continue;
+    box.classList.toggle('static', still);
+    [...box.children].forEach((c, i) => (c as HTMLElement).style.setProperty('--i', String(Math.min(i, 8))));
+  }
+}
+
+/** Drag a sheet down by its grabber/header to dismiss (> 30% of its height or a fast flick). */
+function dragToDismiss(sheet: HTMLElement, dismiss: () => void): void {
+  let y0 = 0;
+  let t0 = 0;
+  let id = -1;
+  let dy = 0;
+  const handle = (e: PointerEvent) => !!(e.target as HTMLElement).closest('.grab, .sheet-head, .home-top');
+  sheet.addEventListener('pointerdown', (e) => {
+    if (!handle(e) || (e.target as HTMLElement).closest('button, a')) return;
+    id = e.pointerId;
+    y0 = e.clientY;
+    t0 = performance.now();
+    dy = 0;
+    sheet.setPointerCapture(id);
+    sheet.classList.add('dragging');
+  });
+  sheet.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== id) return;
+    dy = Math.max(0, e.clientY - y0);
+    sheet.style.setProperty('--drag', `${dy}px`);
+  });
+  const end = (e: PointerEvent) => {
+    if (e.pointerId !== id) return;
+    id = -1;
+    sheet.classList.remove('dragging');
+    const v = (dy / Math.max(1, performance.now() - t0)) * 1000;
+    if (dy > sheet.offsetHeight * 0.3 || (v > 600 && dy > 24)) {
+      sheet.style.setProperty('--drag', `${sheet.offsetHeight}px`);
+      dismiss();
+    } else sheet.style.setProperty('--drag', '0px');
+  };
+  sheet.addEventListener('pointerup', end);
+  sheet.addEventListener('pointercancel', end);
+}
+
+/** "Best 12,480 · 2,840 to go" + a track toward it — the pull of almost. */
 function nearMiss(score: number, best: number): string {
-  if (best <= 0 || score >= best) return `Best ${Math.max(best, score)}`;
+  if (best <= 0 || score >= best)
+    return `<div class="callout">Best <b class="num">${fmt(Math.max(best, score))}</b></div>`;
   const pct = Math.max(0, Math.min(100, Math.round((score / best) * 100)));
   const gap = best - score;
-  return `<div>Best ${best}${gap > 0 && pct >= 70 ? ` · just ${gap} short` : ''}</div>
-    <div class="bar-label">${pct}% of best</div><div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
+  return `<div class="callout">Best <b class="num">${fmt(best)}</b>${gap > 0 && pct >= 70 ? ` · just <b class="num">${fmt(gap)}</b> short` : ''}</div>
+    <div class="track" role="progressbar" aria-label="${pct}% of best" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
 }
 
 /**
@@ -526,12 +624,12 @@ export function creatureThumb(
   if (bleed) c.style.margin = `-${bleed}px`;
   const g = c.getContext('2d')!;
   g.scale(dpr, dpr);
-  const night = document.documentElement.dataset.theme === 'night';
+  const nite = night();
   const expression = o.shy && !silhouette ? 'shy' : undefined;
   const draw = (t?: number) => {
     g.clearRect(0, 0, W, W);
     const still = document.documentElement.dataset.motion === 'reduced';
-    drawCreature(g, sp, W / 2, W / 2, px, 0, { silhouette, golden, night, fit, t, still, expression });
+    drawCreature(g, sp, W / 2, W / 2, px, 0, { silhouette, golden, night: nite, fit, t, still, expression });
   };
   draw();
   const animate = () => {
@@ -557,43 +655,48 @@ export function creatureThumb(
       draw();
       animate();
     });
+  (c as HTMLCanvasElement & { redraw?: (t?: number, sig?: number) => void }).redraw = (t, sig) => {
+    g.clearRect(0, 0, W, W);
+    drawCreature(g, sp, W / 2, W / 2, px, 0, {
+      golden,
+      night: nite,
+      fit,
+      t,
+      ...(sig !== undefined ? { signatureAt: sig } : {}),
+    });
+  };
   return c;
 }
 
-/** "New in your journal" strip for end-of-game cards. */
-function newSpeciesRow(ids: readonly string[], open?: () => void): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'new-species';
-  wrap.innerHTML = '<div class="tier">New in your journal</div>';
+/** "New in your journal" strip for end-of-game cards: framed 56 px tiles, max 4 + "+N". */
+function journalStrip(ids: readonly string[], open?: () => void): HTMLElement {
+  const wrap = document.createElement('button');
+  wrap.type = 'button';
+  wrap.className = 'jstrip';
+  wrap.setAttribute(
+    'aria-label',
+    `New in your journal: ${ids.map((id) => SPECIES_BY_ID.get(id)?.name).join(', ')}. Open the Beach Journal`,
+  );
+  wrap.innerHTML = '<div class="overline">New in your journal</div>';
   const row = document.createElement('div');
-  row.className = 'ns-row';
-  for (const id of ids.slice(0, 6)) {
+  row.className = 'jstrip-row';
+  const shown = ids.slice(0, ids.length > 4 ? 3 : 4);
+  for (const id of shown) {
     const sp = SPECIES_BY_ID.get(id);
     if (!sp) continue;
-    const cell = document.createElement('div');
-    cell.className = 'ns';
-    cell.append(creatureThumb(sp, 52));
-    const n = document.createElement('span');
-    n.textContent = sp.name;
-    cell.append(n);
-    row.append(cell);
+    const t = document.createElement('span');
+    t.className = `j-tile got r-${sp.rarity}`;
+    t.style.cssText = `--hab:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};--hab-ring:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};min-height:0;width:64px;padding:4px 2px 5px;gap:2px`;
+    t.append(creatureThumb(sp, 44));
+    t.insertAdjacentHTML('beforeend', pipsHtml(RARITY_RANK[sp.rarity]));
+    row.append(t);
   }
+  if (ids.length > 4) row.insertAdjacentHTML('beforeend', `<span class="more num">+${ids.length - 3}</span>`);
   wrap.append(row);
-  if (open) {
-    wrap.setAttribute('role', 'button');
-    wrap.setAttribute('aria-label', 'Open the Beach Journal');
-    wrap.tabIndex = 0;
-    wrap.style.cursor = 'pointer';
-    wrap.addEventListener('click', open);
-  }
+  if (open)
+    wrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      open();
+    });
   return wrap;
-}
-
-/** 2026-10-16 → "Oct 16" (current year) or "Oct 16, 2025". */
-function prettyDate(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return iso;
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const s = `${months[Number(m[2]) - 1]} ${Number(m[3])}`;
-  return Number(m[1]) === new Date().getFullYear() ? s : `${s}, ${m[1]}`;
 }

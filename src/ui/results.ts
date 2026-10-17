@@ -6,8 +6,10 @@
  * Never delays the buttons: they're pressable from the first frame.
  */
 import './results.css';
+import { fmt } from '../render/theme.ts';
+import { icon } from './icons.ts';
 
-const CROWN = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 8l4.5 3.5L12 5l4.5 6.5L21 8l-2 10H5L3 8z"/></svg>`;
+const CROWN = icon('crown', { filled: true });
 
 export interface HeroOpts {
   score: number;
@@ -30,10 +32,10 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
   const el = document.createElement('div');
   el.className = 'res-hero';
   // the visible digits count up; the real value is always in the DOM (screen readers, tests)
-  el.innerHTML = `<div class="big res-score"><span class="res-count" aria-hidden="true">${o.reducedMotion ? o.score : 0}</span><span class="sr-only" data-testid="final-score">${o.score}</span></div>
-    <div class="sub res-sub">${
+  el.innerHTML = `<div class="big res-score"><span class="res-count" aria-hidden="true">${o.reducedMotion ? fmt(o.score) : 0}</span><span class="sr-only" data-testid="final-score">${o.score}</span></div>
+    <div class="res-sub">${
       o.newBest
-        ? `<div class="res-ribbon" data-testid="new-high-score">${CROWN}NEW HIGH SCORE</div>${o.prevBest > 0 ? `<div class="res-was">was <s>${o.prevBest}</s></div>` : ''}`
+        ? `<div class="res-ribbon" data-testid="new-high-score">${CROWN}NEW HIGH SCORE</div>${o.prevBest > 0 ? `<div class="res-was">was <s class="num">${fmt(o.prevBest)}</s></div>` : ''}`
         : o.nearMiss
     }</div>`;
   const scoreEl = el.querySelector('.res-count') as HTMLElement;
@@ -48,7 +50,7 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
   };
   const start = () => {
     if (o.reducedMotion || o.score <= 0) {
-      scoreEl.textContent = String(o.score);
+      scoreEl.textContent = fmt(o.score);
       land();
       o.onSettled?.();
       return;
@@ -59,11 +61,11 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
       const k = Math.min(1, (performance.now() - t0) / COUNT_MS);
       const e = 1 - Math.pow(1 - k, 3);
       const v = Math.round(o.score * e);
-      scoreEl.textContent = String(v);
+      scoreEl.textContent = fmt(v);
       if (o.newBest && v > o.prevBest) land();
       if (k < 1) requestAnimationFrame(step);
       else {
-        scoreEl.textContent = String(o.score);
+        scoreEl.textContent = fmt(o.score);
         land();
         setTimeout(() => o.onSettled?.(), o.newBest ? 420 : 0);
       }

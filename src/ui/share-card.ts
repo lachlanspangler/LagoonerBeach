@@ -3,65 +3,26 @@
  * and rarity, with the game's name. Spoiler-free: no hint of how it was caught.
  * Canvas → PNG blob → Web Share (files) → Capacitor Share (if the plugins exist) → download.
  */
-import type { Habitat, Rarity, Species } from '../meta/creatures.ts';
+import type { Species } from '../meta/creatures.ts';
 import { SPECIES } from '../meta/creatures.ts';
 import { drawCreature, type DrawOpts } from '../render/creatures.ts';
 import { DISPLAY_STACK, FONT_STACK } from '../render/theme.ts';
+import { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK } from './rarity.ts';
 
-export const RARITY_COLOR: Record<Rarity, string> = {
-  common: '#B8A88F',
-  uncommon: '#53C08C',
-  rare: '#3D9BE9',
-  epic: '#8E5BD8',
-  legendary: '#F2B93B',
-};
-export const RARITY_RANK: Record<Rarity, number> = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
-
-/** Habitat backdrop: top → bottom. */
-export const HABITAT_TINT: Record<Habitat, readonly [string, string]> = {
-  shallows: ['#F6EBD6', '#E2CFAE'],
-  lagoon: ['#DDF4F8', '#9ED8E6'],
-  deep: ['#D5DEEE', '#7E97BE'],
-  night: ['#1F3A57', '#0B1622'],
-  reef: ['#FBE3DA', '#EDB3A0'],
-  legend: ['#FFF4D6', '#F0C978'],
-};
+export { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK };
 
 export const W = 1080;
 export const H = 1350;
 
-/** Little shell pips: `n` filled of 5 (rarity never by hue alone). */
-export function drawPips(
-  g: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  r: number,
-  n: number,
-  on: string,
-  off: string,
-): void {
-  const gap = r * 3.2;
-  const x0 = cx - gap * 2;
-  for (let i = 0; i < 5; i++) {
-    const x = x0 + i * gap;
-    g.beginPath();
-    g.moveTo(x, cy + r * 0.9);
-    g.arc(x, cy + r * 0.15, r, Math.PI * 1.05, Math.PI * 1.95);
-    g.closePath();
-    if (i < n) {
-      g.fillStyle = on;
-      g.fill();
-    } else {
-      g.strokeStyle = off;
-      g.lineWidth = Math.max(1.5, r * 0.3);
-      g.stroke();
-    }
-  }
-}
-
 export function renderShareCard(
   sp: Species,
-  o: { golden?: boolean; date?: string; /** Collects every string drawn (tests). */ log?: string[] } = {},
+  o: {
+    golden?: boolean;
+    date?: string;
+    /** The player's beach name ("Found by CORAL"); omitted when they haven't chosen one. */
+    name?: string;
+    /** Collects every string drawn (tests). */ log?: string[];
+  } = {},
 ): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = W;
@@ -79,7 +40,7 @@ export function renderShareCard(
   g.fillStyle = bg;
   g.fillRect(0, 0, W, H);
   // soft pool of light behind the creature
-  const pool = g.createRadialGradient(W / 2, 560, 40, W / 2, 560, 520);
+  const pool = g.createRadialGradient(W / 2, 530, 40, W / 2, 530, 500);
   pool.addColorStop(0, night ? 'rgba(160,240,255,0.35)' : 'rgba(255,255,255,0.75)');
   pool.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = pool;
@@ -88,7 +49,7 @@ export function renderShareCard(
   const rank = RARITY_RANK[sp.rarity];
   if (rank >= 3) {
     g.save();
-    g.translate(W / 2, 560);
+    g.translate(W / 2, 530);
     const n = rank >= 5 ? 16 : rank >= 4 ? 12 : 8;
     for (let i = 0; i < n; i++) {
       g.rotate((Math.PI * 2) / n);
@@ -120,15 +81,16 @@ export function renderShareCard(
   g.stroke();
   // overline
   const ink = night ? '#EEF3F6' : '#2B231C';
-  const ink2 = night ? '#A3B5C3' : '#6B5C4B';
+  // the habitat gradient darkens toward the bottom: secondary lines use full ink there (≥ 4.5:1)
+  const ink2 = night ? '#C9D6E0' : '#2B231C';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.fillStyle = ink2;
   g.font = `800 34px ${FONT_STACK}`;
   g.fillText(o.golden ? 'GOLDEN FIND' : 'NEW DISCOVERY', W / 2, 140);
   // the creature, big and happy
-  drawCreature(g, sp, W / 2, 570, 560, 0, { golden: o.golden, expression: 'happy', t: 0.4, night } as DrawOpts);
-  if (o.golden) sparkles(g, W / 2, 570, 330, 7);
+  drawCreature(g, sp, W / 2, 520, 600, 0, { golden: o.golden, expression: 'happy', t: 0.4, night } as DrawOpts);
+  if (o.golden) sparkles(g, W / 2, 530, 320, 7);
   // name: display caps, outlined like the in-game callouts
   const name = sp.name.toUpperCase();
   let size = 96;
@@ -140,28 +102,66 @@ export function renderShareCard(
   g.lineJoin = 'round';
   g.lineWidth = size * 0.16;
   g.strokeStyle = night ? '#04212D' : '#2B231C';
-  g.strokeText(name, W / 2, 1000);
-  const fill = g.createLinearGradient(0, 1000 - size / 2, 0, 1000 + size / 2);
-  const [f0, f1, f2] = o.golden || rank >= 5 ? ['#FFF4C2', '#F2C14E', '#B9821F'] : ['#FFFFFF', '#E8FCFF', '#9ED8E6'];
+  g.strokeText(name, W / 2, 950);
+  const fill = g.createLinearGradient(0, 950 - size / 2, 0, 950 + size / 2);
+  const [f0, f1, f2] = o.golden || rank >= 5 ? ['#FFF4C2', '#F2C14E', '#B9821F'] : ['#E8FCFF', '#6FD3EC', '#2B8FC0'];
   fill.addColorStop(0, f0);
   fill.addColorStop(0.5, f1);
   fill.addColorStop(1, f2);
   g.fillStyle = fill;
-  g.fillText(name, W / 2, 1000);
-  drawPips(g, W / 2, 1100, 16, rank, frame, ink2);
+  g.fillText(name, W / 2, 950);
+  drawPips(g, W / 2, 1042, 16, rank, frame, ink2);
   g.fillStyle = ink2;
   g.font = `800 32px ${FONT_STACK}`;
-  g.fillText(`${sp.rarity.toUpperCase()} · No. ${SPECIES.indexOf(sp) + 1} of ${SPECIES.length}`, W / 2, 1160);
-  // the game's mark
+  g.fillText(`${sp.rarity.toUpperCase()} · No. ${SPECIES.indexOf(sp) + 1} of ${SPECIES.length}`, W / 2, 1096);
+  // who found it, and the game's mark (UI_DESIGN §6.9: no URL soup, no QR)
+  if (o.name) {
+    g.fillStyle = ink2;
+    g.font = `700 34px ${FONT_STACK}`;
+    const lead = 'Found by ';
+    g.textAlign = 'left';
+    g.font = `700 34px ${FONT_STACK}`;
+    const lw = g.measureText(lead).width;
+    g.font = `900 36px ${DISPLAY_STACK}`;
+    const nw = g.measureText(o.name.toUpperCase()).width;
+    const x0 = W / 2 - (lw + nw) / 2;
+    g.font = `700 34px ${FONT_STACK}`;
+    g.fillText(lead, x0, 1166);
+    g.fillStyle = ink;
+    g.font = `900 36px ${DISPLAY_STACK}`;
+    g.fillText(o.name.toUpperCase(), x0 + lw, 1166);
+    g.textAlign = 'center';
+  }
   g.fillStyle = ink;
   g.font = `900 46px ${DISPLAY_STACK}`;
-  g.fillText('Lagooner Beach', W / 2, 1250);
+  g.fillText('Lagooner Beach', W / 2, o.name ? 1226 : 1210);
   if (o.date) {
     g.fillStyle = ink2;
     g.font = `700 26px ${FONT_STACK}`;
-    g.fillText(o.date, W / 2, 1296);
+    g.fillText(longDate(o.date), W / 2, o.name ? 1268 : 1254);
   }
   return c;
+}
+
+/** 2026-10-16 → "16 October 2026" (unambiguous everywhere). */
+function longDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return `${Number(m[3])} ${months[Number(m[2]) - 1]} ${m[1]}`;
 }
 
 /** Four-point twinkles around a center (golden finds). */

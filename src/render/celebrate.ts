@@ -14,6 +14,7 @@ import { comboLevel, comboStyle, LIMITS, type ComboLevel, type Tier, type WordSt
 import { clamp01, easeInCubic, easeInOutSine, easeOutCubic, lerp } from './tween.ts';
 import { DISPLAY_STACK as FONT_DISPLAY, FONT_STACK as FONT_UI, type Palette } from './theme.ts';
 import { STREAK_GRACE } from '../core/scoring.ts';
+import { drawShell } from '../ui/icons.ts';
 
 export type TextStyle = WordStyle | 'points';
 
@@ -454,7 +455,11 @@ export class Celebrate {
     g.globalAlpha = 1;
   }
 
-  /** HUD-level: COMBO ×N badge with grace shells, or the NEW BEST banner while it's up. */
+  /**
+   * HUD-level: COMBO ×N badge with grace shells, or the NEW BEST banner while it's up. The slot is
+   * the badge's alone (chips moved to the strip between board and tray); `hide` stays for callers
+   * that need the slot empty.
+   */
   drawHud(
     g: CanvasRenderingContext2D,
     now: number,
@@ -464,7 +469,7 @@ export class Celebrate {
     ts: number,
     hide: boolean,
   ): void {
-    const cy = l.hud.y + l.hud.h * 0.97;
+    const cy = l.hud.y + l.hud.h * 0.9;
     const night = p.name === 'night';
     const bk = (now - this.bestAt) / BEST_LIFE;
     const bannerUp = bk >= 0 && bk < 1;
@@ -513,12 +518,12 @@ export class Celebrate {
       g.globalAlpha = 1;
     } else if (!rm && now - c.levelAt < 900) {
       const lk = (now - c.levelAt) / 900;
-      g.globalAlpha = alpha * 0.5 * (1 - lk);
-      g.strokeStyle = p.water;
-      g.lineWidth = 2;
+      // level-up: a soft glow swells behind the badge (a stroked ring read as a stray line)
+      g.globalAlpha = alpha * 0.22 * (1 - lk) * Math.min(1, lk * 6);
+      g.fillStyle = p.water;
       g.beginPath();
-      g.ellipse(x0 + overlapW / 2, y, overlapW * (0.5 + lk * 0.4), size * (0.6 + lk * 0.5), 0, 0, Math.PI * 2);
-      g.stroke();
+      g.ellipse(x0 + overlapW / 2, y, overlapW * (0.55 + lk * 0.25), size * (0.75 + lk * 0.3), 0, 0, Math.PI * 2);
+      g.fill();
       g.globalAlpha = 1;
     }
     this.blit(g, label, x0 + (label.w * scale) / 2, y + size * 0.05, scale, 0, alpha);
@@ -540,7 +545,7 @@ export class Celebrate {
       if (dimming) r *= 1 + 0.4 * (1 - (now - c.dryAt) / 400);
       if (on && lit === 1 && !rm) r *= 1 + 0.12 * Math.sin(now / 160);
       g.globalAlpha = alpha * (on ? 1 : 0.32);
-      shell(g, x, y + size * 0.02, r, on ? (night ? p.waterHi : '#1A86AC') : p.textDim, on);
+      drawShell(g, x, y + size * 0.02, r * 1.05, on ? (night ? p.waterHi : p.accent) : p.textDim, on);
     }
     g.globalAlpha = 1;
   }
@@ -594,22 +599,6 @@ export class Celebrate {
 export const BEST_LIFE = 1700;
 /** Spotless tide wash (ms). */
 export const WASH_MS = 700;
-
-/** A little scallop shell: a fan with ribs (filled) or an outline (used up). */
-function shell(g: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, filled: boolean): void {
-  g.beginPath();
-  g.moveTo(x, y + r * 0.9);
-  g.arc(x, y + r * 0.15, r, Math.PI * 1.05, Math.PI * 1.95);
-  g.closePath();
-  if (filled) {
-    g.fillStyle = color;
-    g.fill();
-  } else {
-    g.strokeStyle = color;
-    g.lineWidth = Math.max(1, r * 0.35);
-    g.stroke();
-  }
-}
 
 function ribbon(g: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number): void {
   const x0 = cx - w / 2;

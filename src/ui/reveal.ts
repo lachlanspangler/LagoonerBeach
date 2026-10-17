@@ -52,7 +52,14 @@ export interface RevealDeps {
   now?: () => number;
   /** False while the player is mid-drag or a menu is open: the reveal waits (never interrupts). */
   canOpen?: () => boolean;
+  /** The player's beach name for the share card, if they chose one. */
+  playerName?: () => string | undefined;
+  /** A common pop takes the strip between board and tray for `ms` (chips wait for it). */
+  onStrip?: (ms: number) => void;
 }
+
+/** How long the common pop stays settled before it leaves by itself (ms after REVEAL_MS). */
+export const POP_HOLD_MS = 600;
 
 /** Settled time per rarity (ms): the reveal is skippable at any point before. */
 export const REVEAL_MS: Record<Rarity, number> = {
@@ -183,7 +190,8 @@ export class Reveal {
       el.innerHTML = `<div class="rp-text"><div class="rp-over">New in your journal</div><div class="rp-name">${sp.name}</div></div>`;
       stage.className = 'rp-stage';
       el.prepend(stage);
-      this.sizeCanvas(stage, 64, 64);
+      this.sizeCanvas(stage, 48, 48);
+      this.d.onStrip?.(REVEAL_MS[rarity] + POP_HOLD_MS + 200);
     } else {
       el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}`;
       el.setAttribute('role', 'dialog');
@@ -273,9 +281,9 @@ export class Reveal {
     const rarity: Rarity = a.item.firstGolden ? 'rare' : a.sp.rarity;
     const total = REVEAL_MS[rarity];
     if (!a.modal) {
-      this.drawStage(a, t, 64, 64, rm, 0);
+      this.drawStage(a, t, 48, 48, rm, 0);
       // the quick pop leaves by itself (no tap needed, no input blocked)
-      if (t > total + 1100) this.finish();
+      if (t > total + POP_HOLD_MS) this.finish();
       return;
     }
     const popAt = rm ? 0 : POP_MS[rarity];
@@ -508,7 +516,7 @@ export class Reveal {
 
   private async share(sp: Species, item: RevealItem): Promise<void> {
     await document.fonts?.ready;
-    const c = renderShareCard(sp, { golden: item.golden, date: this.d.date() });
+    const c = renderShareCard(sp, { golden: item.golden, date: this.d.date(), name: this.d.playerName?.() });
     const how = await shareCanvas(c, `lagooner-beach-${sp.id}.png`, `I found a ${sp.name} on Lagooner Beach!`);
     this.d.announce(how === 'downloaded' ? 'Saved the picture' : how === 'shared' ? 'Shared' : 'Could not share');
   }

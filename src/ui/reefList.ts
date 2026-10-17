@@ -13,6 +13,7 @@ import {
   nextUnsolved,
   reefId,
 } from '../core/endless.ts';
+import { icon } from './icons.ts';
 
 export interface ReefListModel {
   /** Tier per shipped reef (index = reef number − 1). */
@@ -52,36 +53,45 @@ export function buildReefList(
   const solved = new Set(m.solved);
   const pure = new Set(m.pure);
   const card = document.createElement('div');
-  card.className = 'card reefs';
+  card.className = 'sheet reefs';
+  card.dataset.kind = 'reefs';
   const deepest = deepestChapter(solved);
   const head = document.createElement('div');
-  head.innerHTML = `<h2>Reefs</h2><div class="sub" data-testid="reef-depth">${solved.size} cleared${
+  head.className = 'sheet-head';
+  head.innerHTML = `<div style="flex:1;min-width:0"><h2 class="title-m">Reefs</h2><div class="callout" data-testid="reef-depth">${solved.size} cleared${
     deepest ? ` · Depth: chapter ${deepest}` : ''
-  }${pure.size ? ' · ★ = no hints' : ''}</div>`;
+  }${pure.size ? ` · ${pure.size} without hints` : ''}</div></div>`;
+  head.append(button('', 'round', icon('close'), 'Close', onClose));
   card.append(head);
 
   const next = nextUnsolved(solved); // 1-based
   // new players keep climbing the curve; past the pack, Continue is the way on into the endless reefs
   const climbing = solved.size < 20 || next > SHIPPED_REEFS;
-  if (climbing) {
-    const c = button('reef-continue', 'btn primary', `Continue · Reef ${next}`, `Continue, reef ${next}`, () =>
-      onPick(next - 1),
+  const cta = document.createElement('div');
+  cta.className = 'reef-cta';
+  if (climbing)
+    cta.append(
+      button(
+        'reef-continue',
+        'btn primary',
+        `Continue · Reef ${next}${icon('chevronRight')}`,
+        `Continue, reef ${next}`,
+        () => onPick(next - 1),
+      ),
     );
-    c.style.marginBottom = '6px';
-    card.append(c);
-  }
   if (m.daily) {
     const tierName = TIER_NAME[m.shipped[m.daily.index]?.tier ?? ''] ?? '';
-    const b = button(
-      'reef-of-day',
-      `btn ${m.daily.done || climbing ? '' : 'primary'}`,
-      `${m.daily.done ? '✓ ' : ''}Reef of the day · ${m.daily.index + 1} · ${tierName}`,
-      `Reef of the day, reef ${m.daily.index + 1}${m.daily.done ? ', done' : ''}`,
-      () => onPick(m.daily!.index),
+    cta.append(
+      button(
+        'reef-of-day',
+        `btn ${m.daily.done || climbing ? '' : 'primary'}`,
+        `${m.daily.done ? icon('check') : icon('daily')}Reef of the day · ${m.daily.index + 1} · ${tierName}`,
+        `Reef of the day, reef ${m.daily.index + 1}${m.daily.done ? ', done' : ''}`,
+        () => onPick(m.daily!.index),
+      ),
     );
-    b.style.marginBottom = '6px';
-    card.append(b);
   }
+  card.append(cta);
 
   const top = maxChapter(m);
   let chapter = Math.min(top, chapterOf(m.current + 1).chapter);
@@ -90,14 +100,22 @@ export function buildReefList(
   const title = document.createElement('div');
   title.className = 'chapter-title';
   title.setAttribute('aria-live', 'polite');
-  const prev = button('chapter-prev', 'chapter-step', '‹', 'Previous chapter', () => go(chapter - 1));
-  const fwd = button('chapter-next', 'chapter-step', '›', 'Next chapter', () => go(chapter + 1));
+  const prev = button('chapter-prev', 'round', icon('chevronLeft'), 'Previous chapter', () => go(chapter - 1));
+  const fwd = button('chapter-next', 'round', icon('chevronRight'), 'Next chapter', () => go(chapter + 1));
   nav.append(prev, title, fwd);
   const scroller = document.createElement('div');
-  scroller.className = 'reef-scroll';
+  scroller.className = 'sheet-body';
   const grid = document.createElement('div');
   grid.className = 'reef-grid';
-  scroller.append(grid);
+  const key = document.createElement('div');
+  key.className = 'tier-key caption';
+  key.innerHTML = ['calm', 'tricky', 'deep', 'abyss']
+    .map(
+      (t) =>
+        `<span class="reef t-${t}" style="all:unset;display:inline-flex;align-items:center;gap:5px"><i style="background:var(--tier-c)"></i>${TIER_NAME[t]}</span>`,
+    )
+    .join('');
+  scroller.append(grid, key);
   card.append(nav, scroller);
 
   const render = (): void => {
@@ -106,9 +124,9 @@ export function buildReefList(
     const segs = Array.from({ length: CHAPTER_SIZE }, (_, k) =>
       solved.has(reefId(first + k)) ? '<i class="on"></i>' : '<i></i>',
     ).join('');
-    title.innerHTML = `<b data-testid="chapter-title">Chapter ${chapter} · ${chapterName(chapter)}</b><span>${done}/${CHAPTER_SIZE} cleared${
+    title.innerHTML = `<b data-testid="chapter-title">Chapter ${chapter} · ${chapterName(chapter)}</b><span class="caption num">${done}/${CHAPTER_SIZE} cleared${
       chapter >= FIRST_ENDLESS_CHAPTER ? ' · endless' : ''
-    }</span><span class="chapter-bar" aria-hidden="true">${segs}</span>`;
+    }</span><span class="segs" aria-hidden="true">${segs}</span>`;
     prev.disabled = chapter <= 1;
     fwd.disabled = chapter >= top;
     grid.replaceChildren();
@@ -119,8 +137,14 @@ export function buildReefList(
       const isSolved = solved.has(id);
       const cls = `reef t-${tier}${isSolved ? ' done' : ''}${n === next ? ' next' : ''}${i === m.current ? ' cur' : ''}`;
       grid.append(
-        button('', cls, `${n}${pure.has(id) ? '<sup>★</sup>' : ''}`, `Reef ${n}${isSolved ? ', cleared' : ''}`, () =>
-          onPick(i),
+        button(
+          '',
+          cls,
+          `<span class="num">${n}</span>${
+            pure.has(id) ? icon('star', { filled: true, cls: 'star' }) : isSolved ? icon('check', { cls: 'tick' }) : ''
+          }`,
+          `Reef ${n}${isSolved ? ', cleared' : ''}${pure.has(id) ? ', no hints' : ''}`,
+          () => onPick(i),
         ),
       );
     }
@@ -130,6 +154,5 @@ export function buildReefList(
     render();
   };
   render();
-  card.append(button('', 'btn', 'Close', 'Close', onClose));
   return card;
 }

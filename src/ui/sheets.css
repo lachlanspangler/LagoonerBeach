@@ -1,0 +1,347 @@
+/* Destination sheets (src/ui/sheets.ts, lazy chunk): settings, journal header/grid, species, reefs. */
+/* ═══ Settings: inset groups ═══ */
+.group {
+  margin-top: var(--s5);
+}
+.group:first-child {
+  margin-top: 0;
+}
+.group-label {
+  margin: 0 var(--s1) var(--s2);
+}
+.group-box {
+  background: var(--surface-sunk);
+  border-radius: var(--r-lg);
+  padding: 0 var(--s3) 0 var(--s4);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 52px;
+  font: 700 16px var(--font);
+  color: var(--ink);
+}
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+.row-ic {
+  color: var(--ink-2);
+}
+.row-ic .ic {
+  width: 22px;
+  height: 22px;
+}
+.row-label {
+  flex: 1;
+  min-width: 0;
+}
+.row-label small {
+  display: block;
+  margin-top: 2px;
+  font: 700 13px/1.3 var(--font);
+  color: var(--ink-2);
+}
+.row .seg {
+  flex: none;
+}
+.row .seg-b {
+  padding: 0 9px;
+  min-width: 44px;
+}
+.row-link {
+  border: 0;
+  background: none;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.row-link .chev {
+  color: var(--ink-3);
+}
+.swatches {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 10px);
+  gap: 3px;
+}
+.swatches i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+.style-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 44px;
+  padding: 0 var(--s2) 0 var(--s3);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: 800 15px var(--font);
+  box-shadow: var(--e1);
+  cursor: pointer;
+}
+.style-btn .ic {
+  width: 18px;
+  height: 18px;
+  color: var(--ink-3);
+}
+.about {
+  font: 700 13px/1.5 var(--font);
+  color: var(--ink-2);
+  padding: var(--s3) 0;
+}
+.about b {
+  color: var(--ink);
+}
+
+/* ═══ Beach Journal ═══ */
+.j-ring {
+  position: relative;
+  flex: none;
+  width: 64px;
+  height: 64px;
+}
+.j-ring svg {
+  display: block;
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+.j-ring circle {
+  fill: none;
+  stroke-width: 6;
+}
+.j-ring .bg {
+  stroke: var(--surface-sunk);
+}
+.j-ring .fg {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 900ms var(--ease-enter);
+}
+.j-ring b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 900 19px/1 var(--font);
+  letter-spacing: -0.02em;
+}
+.j-ring b small {
+  display: block;
+  font: 800 10px var(--font);
+  color: var(--ink-2);
+  letter-spacing: 0;
+  margin-top: -6px;
+}
+.j-sub {
+  margin: 2px 0 0;
+}
+.j-sec {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0 var(--s3);
+  margin: var(--s6) 2px var(--s3);
+}
+.j-sec:first-child {
+  margin-top: var(--s2);
+}
+.j-sec .track {
+  grid-column: 1 / -1;
+  height: 4px;
+  margin-top: 8px;
+}
+.j-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s2);
+}
+/* ═══ Species page ═══ */
+.sp-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 200px;
+  margin: 0 0 var(--s3);
+  border-radius: var(--r-xl);
+  background:
+    radial-gradient(60% 70% at 50% 58%, color-mix(in srgb, var(--hab) 85%, transparent), transparent 72%),
+    var(--surface-sunk);
+  box-shadow: inset 0 0 0 var(--fw, 1px) var(--frame, var(--line));
+}
+.sp-art.golden {
+  box-shadow: inset 0 0 0 3px #e2b24a;
+}
+.sp-name {
+  margin: 0;
+  font: 900 34px/1.05 var(--font-display);
+  text-align: center;
+}
+.sp-rarity {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+.sp-flavor {
+  margin: var(--s3) auto 0;
+  max-width: 300px;
+  text-align: center;
+  font: 650 17px/1.4 var(--font);
+  color: var(--ink-2);
+}
+.sp-size {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  margin: var(--s4) 0 0;
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-lg);
+  background: var(--surface-sunk);
+  font: 700 14px/1.35 var(--font);
+  color: var(--ink-2);
+}
+.sp-size b {
+  color: var(--ink);
+}
+.sp-size canvas {
+  flex: none;
+}
+.sp-first {
+  margin-top: var(--s3);
+  text-align: center;
+}
+
+/* ═══ Reefs list ═══ */
+.reef-cta {
+  display: grid;
+  gap: 0;
+}
+.chapter-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin: var(--s4) 0 var(--s3);
+}
+.chapter-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.chapter-title b {
+  font: 600 18px/1.2 var(--font-display);
+  color: var(--ink);
+}
+.chapter-title .segs {
+  width: 100%;
+  max-width: 220px;
+  margin-top: 4px;
+}
+.reef-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--s2);
+}
+.reef {
+  position: relative;
+  min-height: 52px;
+  border: none;
+  border-radius: var(--r-md);
+  font: 800 16px var(--font);
+  background: var(--surface-sunk);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 var(--tier-c, transparent);
+  transition: transform var(--dur-press) var(--spring-press);
+}
+.reef:active {
+  transform: scale(0.94);
+  transition-duration: var(--dur-instant);
+}
+.reef.t-calm {
+  --tier-c: color-mix(in srgb, var(--success) 45%, transparent);
+}
+.reef.t-tricky {
+  --tier-c: color-mix(in srgb, var(--water) 70%, transparent);
+}
+.reef.t-deep {
+  --tier-c: color-mix(in srgb, #3d6fd0 75%, transparent);
+}
+.reef.t-abyss {
+  --tier-c: #6a4a9a;
+}
+.reef.done {
+  background: var(--surface);
+  color: var(--ink-2);
+  box-shadow:
+    inset 0 -3px 0 var(--tier-c, transparent),
+    var(--e1);
+}
+.reef .tick {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 13px;
+  height: 13px;
+  color: var(--success);
+  stroke-width: 3;
+}
+.reef.next {
+  background: var(--accent-tint);
+  color: var(--accent);
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    inset 0 -3px 0 var(--tier-c, transparent);
+  animation: next-pulse 2.4s var(--ease-standard) infinite;
+}
+@keyframes next-pulse {
+  50% {
+    box-shadow:
+      inset 0 0 0 2px var(--accent),
+      0 0 0 5px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+}
+.reef.cur:not(.next) {
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--ink) 35%, transparent),
+    inset 0 -3px 0 var(--tier-c, transparent);
+}
+.reef .star {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  color: var(--gold);
+}
+.tier-key {
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+.tier-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.tier-key i {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--tier-c);
+}

@@ -1,43 +1,91 @@
-/** Text contrast for every text/background pairing the UI uses (WCAG AA: 4.5 normal, 3 large/bold UI). */
+/**
+ * Design tokens (UI_DESIGN §3, §10): every text/background pair the UI uses meets WCAG AA (4.5:1
+ * normal text, 3:1 large/bold text and meaningful graphics), in Day and Night; and the CSS
+ * variables in src/ui/style.css match the TS mirror in src/render/theme.ts (one source of truth
+ * for DOM and canvas).
+ */
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { contrast } from '../../src/render/color.ts';
-import { DAY, NIGHT } from '../../src/render/theme.ts';
+import { CSS_VARS, DAY, NIGHT, type Palette } from '../../src/render/theme.ts';
 
-// CSS panel colours from src/ui/style.css
-const PANEL = { day: '#FFFAF2', night: '#142636' };
-const ACCENT = { day: '#2673BD', night: '#2A78C2' }; // keep in sync with --accent in style.css
-const INK = { day: '#1A86AC', night: NIGHT.waterHi }; // points, chips, callouts
+/** Flatten an rgba() over a hex background to a hex (what the eye sees). */
+function over(fg: string, bg: string): string {
+  const m = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/.exec(fg.replace(/\s/g, ''));
+  if (!m) return fg;
+  const a = Number(m[4]);
+  const b = parseInt(bg.slice(1), 16);
+  const ch = (i: number, sh: number) => Math.round(Number(m[i]) * a + ((b >> sh) & 255) * (1 - a));
+  return '#' + [ch(1, 16), ch(2, 8), ch(3, 0)].map((v) => v.toString(16).padStart(2, '0')).join('');
+}
 
-describe('text contrast', () => {
-  for (const [name, p] of [
-    ['day', DAY],
-    ['night', NIGHT],
-  ] as const) {
-    it(`${name}: score and body text on the background and panels ≥ 4.5`, () => {
-      expect(contrast(p.text, p.bg)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(p.text, PANEL[name])).toBeGreaterThanOrEqual(4.5);
-    });
-    it(`${name}: secondary (dim) labels ≥ 3 (large/bold UI text)`, () => {
-      expect(contrast(p.textDim, p.bg)).toBeGreaterThanOrEqual(3);
-      expect(contrast(p.textDim, PANEL[name])).toBeGreaterThanOrEqual(3);
-    });
-    it(`${name}: points/chips ink on background and panels ≥ 3`, () => {
-      expect(contrast(INK[name], p.bg)).toBeGreaterThanOrEqual(3);
-      expect(contrast(INK[name], PANEL[name])).toBeGreaterThanOrEqual(3);
-    });
-    it(`${name}: white on the primary button ≥ 4.5`, () => {
-      expect(contrast('#FFFFFF', ACCENT[name])).toBeGreaterThanOrEqual(4.5);
-    });
-  }
+/** [label, foreground, background, minimum] for one theme. */
+function pairs(p: Palette): [string, string, string, number][] {
+  const tint = over(p.accentTint, p.surface);
+  const goldTint = over(p.goldTint, p.surface);
+  return [
+    // body and titles
+    ['ink / bg', p.text, p.bg, 4.5],
+    ['ink / surface', p.text, p.surface, 4.5],
+    ['ink / surface.sunk (rows, mode cards)', p.text, p.surfaceSunk, 4.5],
+    // secondary text: the old #8A7B69 was 3.53:1
+    ['ink.2 / bg (HUD best line, tier line)', p.textDim, p.bg, 4.5],
+    ['ink.2 / surface (labels, captions)', p.textDim, p.surface, 4.5],
+    ['ink.2 / surface.sunk (row subtitles, reef chip)', p.textDim, p.surfaceSunk, 4.5],
+    // the one accent: links, chip text, strip chips, "+N" peek on its halo
+    ['accent / surface (links, strip chips)', p.accent, p.surface, 4.5],
+    ['accent / bg', p.accent, p.bg, 4.5],
+    ['accent / accent.tint (chips, current mode)', p.accent, tint, 4.5],
+    ['ink / accent.tint (your row)', p.text, tint, 4.5],
+    ['on-accent / accent (primary buttons)', p.onAccent, p.accent, 4.5],
+    // gold is for records and rank 1 only
+    ['gold.ink / gold.tint (NEW HIGH SCORE ribbon, best chip)', p.goldInk, goldTint, 4.5],
+    ['gold.ink / bg (HUD NEW BEST)', p.goldInk, p.bg, 4.5],
+    ['danger / surface (erase, errors)', p.danger, p.surface, 4.5],
+    // non-text: focus rings, switch tracks, segment fills are the accent; 3:1 against what they sit on
+    ['accent / surface.sunk (switch on, focus ring)', p.accent, p.surfaceSunk, 3],
+    ['hint outline (accent) / board cell', p.name === 'night' ? p.waterHi : p.accent, p.cell, 3],
+  ];
+}
+
+describe('text contrast (tokens)', () => {
+  for (const p of [DAY, NIGHT])
+    for (const [label, fg, bg, min] of pairs(p))
+      it(`${p.name}: ${label} ≥ ${min}`, () => {
+        expect(contrast(over(fg, bg), bg)).toBeGreaterThanOrEqual(min);
+      });
+
+  it('water cyan is never small text on light (it is material): 1.9:1 by day', () => {
+    expect(contrast(DAY.water, DAY.surface)).toBeLessThan(3);
+  });
+
   it('prints the table', () => {
     const rows: string[] = [];
-    for (const [name, p] of [
-      ['day', DAY],
-      ['night', NIGHT],
-    ] as const)
-      rows.push(
-        `${name}: text/bg ${contrast(p.text, p.bg).toFixed(2)} dim/bg ${contrast(p.textDim, p.bg).toFixed(2)} dim/panel ${contrast(p.textDim, PANEL[name]).toFixed(2)} ink/bg ${contrast(INK[name], p.bg).toFixed(2)} white/accent ${contrast('#FFFFFF', ACCENT[name]).toFixed(2)}`,
-      );
+    for (const p of [DAY, NIGHT])
+      for (const [label, fg, bg] of pairs(p))
+        rows.push(`${p.name.padEnd(5)} ${contrast(over(fg, bg), bg).toFixed(2).padStart(6)}  ${label}`);
     console.log('\n' + rows.join('\n'));
   });
+});
+
+describe('CSS tokens mirror theme.ts', () => {
+  const css = readFileSync('src/ui/style.css', 'utf8');
+  const block = (sel: string) => {
+    const i = css.indexOf(sel);
+    expect(i, sel).toBeGreaterThanOrEqual(0);
+    return css.slice(i, css.indexOf('\n}', i));
+  };
+  const norm = (v: string) => v.replace(/\s/g, '').toLowerCase();
+  const read = (src: string, name: string) => new RegExp(`${name}:\\s*([^;]+);`).exec(src)?.[1];
+  for (const [theme, p, src] of [
+    ['day', DAY, block(':root {')],
+    ['night', NIGHT, block("html[data-theme='night'] {")],
+  ] as const)
+    it(`${theme}: every mapped variable equals the palette`, () => {
+      for (const [field, name] of Object.entries(CSS_VARS)) {
+        const v = read(src, name!);
+        expect(v, `${name} in ${theme}`).toBeDefined();
+        expect(norm(v!), `${name} (${field})`).toBe(norm(String(p[field as keyof Palette])));
+      }
+    });
 });

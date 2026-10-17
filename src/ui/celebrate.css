@@ -36,11 +36,11 @@
   position: relative;
   width: min(88vw, 340px);
   background: linear-gradient(180deg, var(--hab, var(--panel)) 0, var(--panel) 52%);
-  border-radius: 28px;
-  padding: 18px 20px 16px;
+  border-radius: var(--r-xl);
+  padding: var(--s5) var(--s6) var(--s5);
   text-align: center;
   box-shadow:
-    0 18px 48px var(--shadow),
+    var(--e3),
     0 0 0 2px var(--tier) inset;
   transform: scale(0.8);
   transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -54,15 +54,21 @@
     0 0 0 3px #e2b24a inset;
   background: linear-gradient(180deg, #fff8e2, var(--panel) 45%);
 }
+html[data-theme='night'] .rv-card {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--hab, var(--panel)) 32%, var(--panel)) 0,
+    var(--panel) 52%
+  );
+}
 html[data-theme='night'] .r-golden .rv-card {
   background: linear-gradient(180deg, #2c2a1c, var(--panel) 45%);
 }
 .rv-over {
-  font-size: 12px;
-  font-weight: 800;
+  font: 800 12px/1.2 var(--font);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--dim);
+  color: var(--ink-2);
 }
 .rv-pool {
   display: grid;
@@ -85,20 +91,23 @@ html[data-theme='night'] .r-golden .rv-card {
   transform: none;
 }
 .rv-name {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 32px;
-  line-height: 1.05;
-  margin: 4px 0 2px;
+  font: 900 36px/1.05 var(--font-display);
+  margin: 6px 0 2px;
 }
+/* rarity as a chip: shell pips + the word (never hue alone) */
 .rv-rarity {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--dim);
+  gap: 8px;
+  height: 28px;
+  padding: 0 12px 0 10px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--tier) 14%, var(--surface));
+  font: 800 12px/1 var(--font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
 }
 .rv-facts {
   display: grid;
@@ -110,6 +119,7 @@ html[data-theme='night'] .r-golden .rv-card {
 .rv-facts div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
   border-left: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   padding-left: 10px;
 }
@@ -185,7 +195,8 @@ html[data-theme='night'] .r-golden .rv-card {
   pointer-events: none;
   position: absolute;
   left: 50%;
-  top: calc(var(--safe-top) + 92px);
+  /* in the strip between board and tray: never over the board's top row (or the HUD) */
+  top: var(--strip-y);
   width: max-content;
   max-width: 92vw;
   white-space: nowrap;
@@ -196,20 +207,21 @@ html[data-theme='night'] .r-golden .rv-card {
   border-radius: 999px;
   background: var(--panel);
   box-shadow: 0 6px 16px var(--shadow);
-  transform: translate(-50%, -6px) scale(0.85);
+  transform: translate(-50%, calc(-50% + 8px)) scale(0.85);
   opacity: 0;
   transition:
-    transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 140ms ease;
+    transform var(--dur-bouncy) var(--spring-bouncy),
+    opacity var(--dur-quick) ease;
   z-index: 25;
 }
 .reveal-pop.show {
-  transform: translate(-50%, 0);
+  transform: translate(-50%, -50%);
   opacity: 1;
 }
 .reveal-pop.leaving {
   opacity: 0;
-  transform: translate(-50%, -6px) scale(0.96);
+  transform: translate(-50%, calc(-50% - 6px)) scale(0.96);
+  transition-duration: var(--dur-exit);
 }
 .rp-over {
   font-size: 10px;

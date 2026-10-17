@@ -248,6 +248,21 @@ export function saveJournal(j: Journal): void {
   }
 }
 
+const K_SEEN = 'atoll.v1.seen';
+/** Species the player has already looked at in the journal (the "new" dots); null = never stored. */
+export function loadSeen(): Set<string> | null {
+  const raw = safeParse(store()?.getItem(K_SEEN));
+  if (!Array.isArray(raw)) return null;
+  return new Set(raw.filter((x): x is string => typeof x === 'string').slice(0, 200));
+}
+export function saveSeen(ids: Iterable<string>): void {
+  try {
+    store()?.setItem(K_SEEN, JSON.stringify([...ids]));
+  } catch {
+    /* best-effort */
+  }
+}
+
 /** Erase everything this game stored on the device. */
 export function eraseAll(): void {
   try {

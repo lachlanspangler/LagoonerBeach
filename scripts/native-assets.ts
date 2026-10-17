@@ -4,10 +4,10 @@
  *  - Android legacy + round launcher icons (mdpi…xxxhdpi), adaptive foreground (108dp canvas,
  *    art inside the 72dp safe zone) + background colour, splash.png at every existing size
  *  - Play Store: 512 icon and 1024×500 feature graphic → artifacts/store/
- *   npx tsx scripts/native-assets.ts
+ *   npx tsx scripts/native-assets.ts [--play-only]   (LB_URL dev server: the creature on the feature graphic)
  */
 import { chromium } from '@playwright/test';
-import { readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
 const SEA = '#0F2233';
@@ -40,104 +40,157 @@ async function render(markup: string, w: number, h: number, path: string, transp
   await p.setContent(
     `<html><body style="margin:0;background:${transparent ? 'transparent' : SEA}">${markup}</body></html>`,
   );
+  await p.evaluate(() => document.fonts.ready);
   await p.screenshot({ path, omitBackground: transparent });
 }
 const sized = (s: string, w: number, h: number) =>
   s.replace('width="512" height="512"', `width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"`);
 
-// iOS
-await render(
-  sized(svg({ bg: true, rx: 0, scale: 1.0 }), 1024, 1024),
-  1024,
-  1024,
-  'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
-);
-// strip alpha (App Store requirement) with sips
-execFileSync(
-  'sips',
-  [
-    '-s',
-    'format',
-    'jpeg',
+// --play-only: just the Play Store icon + feature graphic (leaves the native projects alone)
+if (!process.argv.includes('--play-only')) await natives();
+async function natives(): Promise<void> {
+  // iOS
+  await render(
+    sized(svg({ bg: true, rx: 0, scale: 1.0 }), 1024, 1024),
+    1024,
+    1024,
     'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
-    '--out',
-    '/tmp/appicon.jpg',
-  ],
-  { stdio: 'ignore' },
-);
-execFileSync(
-  'sips',
-  [
-    '-s',
-    'format',
-    'png',
-    '/tmp/appicon.jpg',
-    '--out',
-    'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
-  ],
-  { stdio: 'ignore' },
-);
-const splash = (
-  w: number,
-  h: number,
-) => `<div style="width:${w}px;height:${h}px;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#1B4E6B,#0B1622 70%)">
+  );
+  // strip alpha (App Store requirement) with sips
+  execFileSync(
+    'sips',
+    [
+      '-s',
+      'format',
+      'jpeg',
+      'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
+      '--out',
+      '/tmp/appicon.jpg',
+    ],
+    { stdio: 'ignore' },
+  );
+  execFileSync(
+    'sips',
+    [
+      '-s',
+      'format',
+      'png',
+      '/tmp/appicon.jpg',
+      '--out',
+      'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
+    ],
+    { stdio: 'ignore' },
+  );
+  const splash = (
+    w: number,
+    h: number,
+  ) => `<div style="width:${w}px;height:${h}px;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#1B4E6B,#0B1622 70%)">
   ${sized(svg({ bg: false, rx: 0, scale: 1 }), Math.round(Math.min(w, h) * 0.22), Math.round(Math.min(w, h) * 0.22))}</div>`;
-for (const f of readdirSync('ios/App/App/Assets.xcassets/Splash.imageset').filter((x) => x.endsWith('.png')))
-  await render(splash(2732, 2732), 2732, 2732, `ios/App/App/Assets.xcassets/Splash.imageset/${f}`);
+  for (const f of readdirSync('ios/App/App/Assets.xcassets/Splash.imageset').filter((x) => x.endsWith('.png')))
+    await render(splash(2732, 2732), 2732, 2732, `ios/App/App/Assets.xcassets/Splash.imageset/${f}`);
 
-// Android launcher icons
-const RES = 'android/app/src/main/res';
-const D: Record<string, number> = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
-for (const [d, k] of Object.entries(D)) {
-  const dir = `${RES}/mipmap-${d}`;
-  const s48 = Math.round(48 * k);
-  await render(sized(svg({ bg: true, rx: 512 * 0.18, scale: 1 }), s48, s48), s48, s48, `${dir}/ic_launcher.png`, true);
-  await render(
-    sized(svg({ bg: true, rx: 256, scale: 0.92 }), s48, s48),
-    s48,
-    s48,
-    `${dir}/ic_launcher_round.png`,
-    true,
+  // Android launcher icons
+  const RES = 'android/app/src/main/res';
+  const D: Record<string, number> = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
+  for (const [d, k] of Object.entries(D)) {
+    const dir = `${RES}/mipmap-${d}`;
+    const s48 = Math.round(48 * k);
+    await render(
+      sized(svg({ bg: true, rx: 512 * 0.18, scale: 1 }), s48, s48),
+      s48,
+      s48,
+      `${dir}/ic_launcher.png`,
+      true,
+    );
+    await render(
+      sized(svg({ bg: true, rx: 256, scale: 0.92 }), s48, s48),
+      s48,
+      s48,
+      `${dir}/ic_launcher_round.png`,
+      true,
+    );
+    const s108 = Math.round(108 * k);
+    // adaptive foreground: art fits the 72/108 safe zone (and a bit inside it)
+    await render(
+      sized(svg({ bg: false, rx: 0, scale: 0.74 }), s108, s108),
+      s108,
+      s108,
+      `${dir}/ic_launcher_foreground.png`,
+      true,
+    );
+  }
+  writeFileSync(
+    `${RES}/values/ic_launcher_background.xml`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">${SEA}</color>\n</resources>\n`,
   );
-  const s108 = Math.round(108 * k);
-  // adaptive foreground: art fits the 72/108 safe zone (and a bit inside it)
-  await render(
-    sized(svg({ bg: false, rx: 0, scale: 0.74 }), s108, s108),
-    s108,
-    s108,
-    `${dir}/ic_launcher_foreground.png`,
-    true,
-  );
-}
-writeFileSync(
-  `${RES}/values/ic_launcher_background.xml`,
-  `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">${SEA}</color>\n</resources>\n`,
-);
-// Android splash: regenerate every existing splash.png at its own size
-const { default: sizeOf } = {
-  default: (f: string) => {
-    const out = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', f]).toString();
-    return { w: Number(/pixelWidth: (\d+)/.exec(out)![1]), h: Number(/pixelHeight: (\d+)/.exec(out)![1]) };
-  },
-};
-for (const dir of readdirSync(RES).filter((x) => x.startsWith('drawable'))) {
-  const f = `${RES}/${dir}/splash.png`;
-  if (!existsSync(f)) continue;
-  const { w, h } = sizeOf(f);
-  await render(splash(w, h), w, h, f);
+  // Android splash: regenerate every existing splash.png at its own size
+  const { default: sizeOf } = {
+    default: (f: string) => {
+      const out = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', f]).toString();
+      return { w: Number(/pixelWidth: (\d+)/.exec(out)![1]), h: Number(/pixelHeight: (\d+)/.exec(out)![1]) };
+    },
+  };
+  for (const dir of readdirSync(RES).filter((x) => x.startsWith('drawable'))) {
+    const f = `${RES}/${dir}/splash.png`;
+    if (!existsSync(f)) continue;
+    const { w, h } = sizeOf(f);
+    await render(splash(w, h), w, h, f);
+  }
 }
 
 // Play Store assets
 mkdirSync('artifacts/store', { recursive: true });
 await render(sized(svg({ bg: true, rx: 0, scale: 1 }), 512, 512), 512, 512, 'artifacts/store/play-icon-512.png');
+
+/**
+ * A creature for the feature graphic, drawn by the game's own art kit on the dev server (LB_URL).
+ * Without a server the graphic still renders, pebbles only.
+ */
+async function creaturePng(id: string, px: number): Promise<string | null> {
+  const base = process.env.LB_URL ?? 'http://localhost:5317';
+  const q = await b.newPage();
+  try {
+    await q.goto(`${base}/?debug=1`, { timeout: 8000 });
+    // a string body: tsx would inject `__name` helpers into a function passed to the page
+    return (await q.evaluate(`(async () => {
+      const m = await import('/src/render/creatures.ts');
+      await m.loadCreatureArt();
+      const { SPECIES_BY_ID } = await import('/src/meta/creatures.ts');
+      const c = document.createElement('canvas');
+      c.width = c.height = ${px};
+      m.drawCreature(c.getContext('2d'), SPECIES_BY_ID.get('${id}'), ${px / 2}, ${px / 2}, ${px * 0.92}, -0.32,
+        { expression: 'happy', t: 0.4, fit: 'detail' });
+      return c.toDataURL('image/png');
+    })()`)) as string;
+  } catch {
+    return null;
+  } finally {
+    await q.close();
+  }
+}
+const fish = await creaturePng('clownfish', 420);
+const font = (f: string) => `data:font/woff2;base64,${readFileSync(`public/fonts/${f}`).toString('base64')}`;
 await render(
-  `<div style="width:1024px;height:500px;display:flex;align-items:center;gap:48px;padding:0 70px;box-sizing:border-box;background:linear-gradient(120deg,#0B1622,#1B4E6B);font-family:ui-rounded,system-ui,sans-serif">
-    ${sized(svg({ bg: false, rx: 0, scale: 1 }), 300, 300)}
-    <div style="color:#E8EEF2"><div style="font-size:72px;font-weight:800;line-height:1">Lagooner Beach</div>
-    <div style="font-size:36px;font-weight:700;color:#9BF0FF;margin-top:18px">Close a loop. Water fills it, the ring pops.</div></div></div>`,
+  `<style>
+    @font-face{font-family:'Lagoon Display';src:url(${font('lagoon-display-900.woff2')}) format('woff2');font-weight:900}
+    @font-face{font-family:'Lagoon UI';src:url(${font('lagoon-ui.woff2')}) format('woff2');font-weight:200 1000}
+  </style>
+  <div style="position:relative;width:1024px;height:500px;overflow:hidden;box-sizing:border-box;
+    background:radial-gradient(80% 120% at 22% 55%,#1E5A7A 0%,#0F2D44 45%,#0A1520 100%)">
+    <div style="position:absolute;left:58px;top:92px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))">
+      ${sized(svg({ bg: false, rx: 0, scale: 1 }), 300, 300)}</div>
+    ${fish ? `<img src="${fish}" style="position:absolute;left:150px;top:-6px;width:290px;height:290px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))">` : ''}
+    <div style="position:absolute;left:440px;top:0;bottom:0;right:48px;display:flex;flex-direction:column;justify-content:center">
+      <div style="font:900 84px/0.98 'Lagoon Display',Georgia,serif;color:#EEF3F6;letter-spacing:-1px">Lagooner<br>Beach</div>
+      <div style="margin-top:22px;font:800 30px/1.3 'Lagoon UI',system-ui,sans-serif;color:#9BF0FF">Close a loop. Water fills it.<br>Every lagoon catches a creature.</div>
+    </div>
+  </div>`,
   1024,
   500,
   'artifacts/store/play-feature-1024x500.png',
 );
 await b.close();
-console.log('native icons + splashes regenerated; Play assets in artifacts/store/');
+console.log(
+  'Play assets in artifacts/store/' +
+    (process.argv.includes('--play-only') ? '' : '; native icons + splashes regenerated'),
+);

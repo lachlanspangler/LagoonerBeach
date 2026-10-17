@@ -99,9 +99,12 @@ errors. Passing on Playwright's WebKit build; `make ios-sim` remains the on-devi
   the leap as drawn in game, checks), `scripts/gallery.ts` (before/after, silhouettes, filmstrips),
   `scripts/art-journal.ts` (the real journal and species page).
 - During the migration the journal mixes old and new styles. Accepted; it ends when the fleet lands.
-- Not in this ADR (later work in the guide): rarity frames/pips (R29), the bubble-pearl "present"
-  reveal (R30), the XS double-hop / XL-XXL breach leap variants (R26), the size line on the species page
-  (R28), the journal grid's one-signature-at-a-time ambient life (R37).
+- Not in this ADR (later work in the guide): the bubble-pearl "present" reveal (R30, since done by
+  ADR 0012), the XS double-hop / XL-XXL breach leap variants (R26). Done in the session-3 aesthetic
+  pass (`src/ui/sheets.ts`): rarity frames + 1–5 shell pips on journal tiles, locked tiles included
+  (R29); the species-page size line "Caught 12 cm · record 31 cm · about 8 pebbles" with a pebble
+  at true relative scale (R28); the journal grid's ambient life, one signature move at a time on a
+  random visible caught tile every 3–5 s, none under reduced motion (R37).
 
 ## Amendment 1 (2026-10-16): kit pass after CRITIQUE-1
 All 47 species landed (5 fleets); an independent art director graded them 11 A / 22 B / 13 C / 1 D

@@ -8,6 +8,8 @@ export interface Entry {
   golden: number;
   /** Local date first caught (YYYY-MM-DD). */
   first: string;
+  /** Size of the latest catch (cm); absent in journals saved before it existed. */
+  last?: number;
 }
 
 export interface Journal {
@@ -34,7 +36,7 @@ export function record(j: Journal, catches: readonly Catch[], date: string): Rec
     if (!SPECIES_BY_ID.has(c.id)) continue;
     const e = entries[c.id];
     if (!e) {
-      entries[c.id] = { count: 1, best: c.size, golden: c.golden ? 1 : 0, first: date };
+      entries[c.id] = { count: 1, best: c.size, golden: c.golden ? 1 : 0, first: date, last: c.size };
       newSpecies.push(c.id);
     } else {
       if (c.size > e.best) records.push(c.id);
@@ -43,6 +45,7 @@ export function record(j: Journal, catches: readonly Catch[], date: string): Rec
         best: Math.max(e.best, c.size),
         golden: e.golden + (c.golden ? 1 : 0),
         first: e.first,
+        last: c.size,
       };
     }
   }
@@ -67,6 +70,7 @@ export function sanitizeJournal(raw: unknown): Journal {
         best: num(x.best),
         golden: Math.floor(num(x.golden)),
         first: typeof x.first === 'string' ? x.first : '',
+        ...(typeof x.last === 'number' && Number.isFinite(x.last) && x.last > 0 ? { last: x.last } : {}),
       };
     }
   return { entries, dry: Math.floor(num(o.dry)), total: Math.floor(num(o.total)) };

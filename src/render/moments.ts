@@ -178,10 +178,10 @@ export interface ComboStyle {
 export function comboStyle(level: ComboLevel): ComboStyle {
   return [
     { size: 0, style: 'water', weight: 600, glow: false },
-    { size: 0.4, style: 'water', weight: 600, glow: false },
-    { size: 0.47, style: 'water', weight: 900, glow: false },
-    { size: 0.54, style: 'warm', weight: 900, glow: true },
-    { size: 0.6, style: 'gold', weight: 900, glow: true },
+    { size: 0.5, style: 'water', weight: 900, glow: false },
+    { size: 0.56, style: 'water', weight: 900, glow: false },
+    { size: 0.62, style: 'warm', weight: 900, glow: true },
+    { size: 0.68, style: 'gold', weight: 900, glow: true },
   ][level] as ComboStyle;
 }
 
