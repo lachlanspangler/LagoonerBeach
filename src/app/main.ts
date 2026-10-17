@@ -1043,7 +1043,24 @@ const taskTimes: number[] = [];
 const pickDrawnAt: number[] = [];
 const dropDrawnAt: number[] = [];
 let lastDrawnMoves = -1;
+/** Errors already logged by the loop (each message once, so a bad frame can't flood the console). */
+const loopErrors = new Set<string>();
 function frame(): void {
+  // schedule first: one throwing draw (an unsupported canvas call, a bad sprite) must not freeze
+  // the game — the next frame still comes, and the error is logged once
+  requestAnimationFrame(frame);
+  try {
+    step();
+  } catch (e) {
+    const msg = String((e as Error)?.stack ?? e);
+    if (!loopErrors.has(msg) && loopErrors.size < 20) {
+      loopErrors.add(msg);
+      console.error('frame failed', e);
+    }
+    dirty = true; // redraw once the fault clears
+  }
+}
+function step(): void {
   // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
   const f0 = performance.now();
   const now = clock();
@@ -1069,7 +1086,6 @@ function frame(): void {
     taskTimes.push(performance.now() - f0);
     if (taskTimes.length > 1200) taskTimes.shift();
   }
-  requestAnimationFrame(frame);
 }
 
 // welcome back: once per launch, a quiet nudge if a streak is alive and today's daily isn't done yet

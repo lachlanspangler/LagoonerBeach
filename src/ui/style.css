@@ -19,6 +19,7 @@
   font-display: swap;
 }
 
+/* color-mix() needs Safari 16.2: each use is preceded by a plain-colour fallback declaration. */
 /* ═══ Design tokens (UI_DESIGN §10; mirrored in src/render/theme.ts, checked by contrast.test.ts) ═══ */
 :root {
   --bg: #f6efe4;
@@ -252,6 +253,7 @@ a {
   border-radius: 50%;
   border: none;
   padding: 0;
+  background: var(--surface);
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   box-shadow: var(--e1);
   color: var(--ink-2);
@@ -374,6 +376,7 @@ a {
   height: 5px;
   border-radius: 3px;
   margin: 0 auto 10px;
+  background: var(--lip-2);
   background: color-mix(in srgb, var(--ink) 18%, transparent);
 }
 .sheet-head {
@@ -717,6 +720,7 @@ html[data-theme='night'] .segs i.on {
   width: 52px;
   height: 32px;
   border-radius: 16px;
+  background: var(--lip-2);
   background: color-mix(in srgb, var(--ink) 16%, transparent);
   transition: background var(--dur-quick) var(--ease-standard);
 }
@@ -929,6 +933,7 @@ html[data-theme='night'] .round {
   white-space: nowrap;
 }
 .inline-stats > div + div {
+  border-left: 1px solid var(--lip-2);
   border-left: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 .inline-stats b {
@@ -1013,6 +1018,7 @@ html[data-theme='night'] .round {
   width: 58px;
   height: 52px;
   border-radius: 50%;
+  background: radial-gradient(closest-side, var(--hab), transparent);
   background: radial-gradient(closest-side, color-mix(in srgb, var(--hab) 70%, transparent), transparent);
 }
 .j-name {
@@ -1025,6 +1031,7 @@ html[data-theme='night'] .round {
 }
 .j-tile.locked {
   background: var(--surface-sunk);
+  box-shadow: inset 0 0 0 var(--fw) var(--frame);
   box-shadow: inset 0 0 0 var(--fw) color-mix(in srgb, var(--frame) 55%, transparent);
   color: var(--ink-3);
 }
@@ -1054,12 +1061,14 @@ html[data-theme='night'] .round {
   position: absolute;
   inset: 4px;
   border-radius: 11px;
+  border: 1px dashed var(--frame);
   border: 1px dashed color-mix(in srgb, var(--frame) 55%, transparent);
   pointer-events: none;
 }
 .j-tile.golden {
   --frame: #e2b24a;
   --fw: 2px;
+  background: linear-gradient(180deg, var(--gold-tint), var(--surface) 70%);
   background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 16%, var(--surface)), var(--surface) 70%);
 }
 .j-tile .spark {
@@ -1114,6 +1123,7 @@ html[data-theme='night'] .round {
   color: var(--ink);
 }
 .res-word.win {
+  background: linear-gradient(180deg, var(--accent), var(--accent-lip));
   background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 60%, var(--water)));
   -webkit-background-clip: text;
   background-clip: text;
