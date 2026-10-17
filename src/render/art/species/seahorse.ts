@@ -7,7 +7,7 @@
 import { blob, capsule, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
 const head = ellipse(1, -24, 14, 13, -10);
-const snout = capsule(10, -22, 6, 24, -19.5, 4.4);
+const snout = capsule(10, -22, 6, 26, -19, 4.4);
 const coronet = capsule(-4, -33, 5.6, -7, -37.5, 4.2);
 const torso = blob([
   [-8, -14],
@@ -29,12 +29,13 @@ const tail = tube([
   [10, 28, 3.2],
   [5, 28, 2.8],
 ]);
+// a small fan low on the back (bigger and higher, it read as an ear)
 const dorsal = blob([
-  [-11, -6],
-  [-20, -9],
-  [-25, -1],
-  [-23, 8],
-  [-12, 8],
+  [-11, 1],
+  [-18, -1.5],
+  [-23, 5],
+  [-21.5, 12.5],
+  [-12, 12],
 ]);
 const bands = join(
   tube([
@@ -64,11 +65,8 @@ export default defineArt({
   groups: [
     {
       id: 'finA',
-      pivot: [-12, 1],
-      parts: [
-        { d: dorsal, role: 'belly' },
-        { d: 'M-13 -2L-21 -3M-13 3L-22 4', role: 'ink', kind: 'line', w: 1.2, alpha: 0.45 },
-      ],
+      pivot: [-12, 6],
+      parts: [{ d: dorsal, role: 'belly' }],
     },
     {
       id: 'tail',
@@ -78,8 +76,8 @@ export default defineArt({
         {
           d: join(
             tube([
-              [-12, 26, 1.6],
-              [0, 26, 1.6],
+              [-12, 26, 2.4],
+              [0, 26, 2.4],
             ]),
           ),
           role: 'accent',
@@ -100,20 +98,17 @@ export default defineArt({
     },
     {
       id: 'bubble',
-      pivot: [30, -22],
+      pivot: [32, -22],
       prop: true,
-      parts: [
-        { d: circle(30, -26, 4), role: 'white' },
-        { d: circle(28.6, -27.4, 1.2), role: 'ink', kind: 'pattern', alpha: 0.2 },
-      ],
+      parts: [{ d: circle(32, -26, 4), role: 'white' }],
     },
   ],
   shine: ellipse(-4, -31, 6, 2.8, -24),
   face: {
-    eyes: [[9, -23]],
-    eye: 7.2,
-    zone: [-10, -40, 26, 30],
-    mouth: { at: [24, -15.5], w: 4.4, shape: 'smile' },
+    eyes: [[11, -24]],
+    eye: 10.4,
+    zone: [-10, -51, 26, 47],
+    mouth: { at: [26, -15.5], w: 5, shape: 'smile' },
     sweet: true,
   },
   idle: {
