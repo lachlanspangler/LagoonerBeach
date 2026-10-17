@@ -1,45 +1,62 @@
 /**
- * Cuttlefish — CHIBI class in profile (M), facing right. Redo after CRITIQUE-1.
- * Silhouette: a big round head (chibi: the head is half the creature) with a large W-pupil eye,
- * a short mantle oval wrapped in a thin, uniform rippling fin skirt (6 units), and a beard of
- * four short arm capsules under the snout (R10: the rippling skirt + the W eye).
- * Palette: warm brown with two bold cream zebra bands that ripple through colours.
- * Personality: moody, clever, shifty. Signature: the colour ripple — the bands flash peach, rose
- * and lilac one after the other while it scoots back with a shifty tilt and a smug look.
+ * Cuttlefish — CHIBI class in profile (M), facing right. Round 3 after CRITIQUE-2.
+ * Silhouette: a big round head (45 % of the length) with a 13 u W-pupil eye, an oval mantle in a
+ * thin (4 u) lighter fin skirt that ripples, and a beard of four arms splayed in a fan under the
+ * snout (R10: the round head + W eye + arm fan; the old fist read as a bread roll).
+ * Palette (CRITIQUE-2): dusty rose #C98FA8 (owning the colour-changer hue, out of the brown
+ * cluster), three tapering cream bands #F7E6EE that follow the mantle's curve.
+ * Personality: moody, clever, shifty. Resting mouth: a flat, unimpressed line.
+ * Signature: the colour ripple — the bands flash gold, lilac and mint one after the other while it
+ * scoots back with a shifty tilt and a smug look, then a wink.
  */
-import { capsule, circle, defineArt, ellipse, join } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
-const skirt =
-  'M22.0 0.0A4.1 4.1 0 0 1 20.7 6.5A4.4 4.4 0 0 1 16.9 12.4A4.8 4.8 0 0 1 11.0 17.4A5.3 5.3 0 0 1 3.3 20.9A5.6 5.6 0 0 1 -5.4 22.8A5.7 5.7 0 0 1 -14.6 22.8A5.6 5.6 0 0 1 -23.3 20.9A5.3 5.3 0 0 1 -31.0 17.4A4.8 4.8 0 0 1 -36.9 12.4A4.4 4.4 0 0 1 -40.7 6.5A4.1 4.1 0 0 1 -42.0 0.0A4.1 4.1 0 0 1 -40.7 -6.5A4.4 4.4 0 0 1 -36.9 -12.4A4.8 4.8 0 0 1 -31.0 -17.4A5.3 5.3 0 0 1 -23.3 -20.9A5.6 5.6 0 0 1 -14.6 -22.8A5.7 5.7 0 0 1 -5.4 -22.8A5.6 5.6 0 0 1 3.3 -20.9A5.3 5.3 0 0 1 11.0 -17.4A4.8 4.8 0 0 1 16.9 -12.4A4.4 4.4 0 0 1 20.7 -6.5A4.1 4.1 0 0 1 22.0 0.0Z';
-const mantle = ellipse(-10, 0, 27, 17);
-const head = circle(15, 2, 15);
-// a beard of four short arm capsules under the snout
-// (two parts, so no subpaths overlap inside one part: WebKit fills those differently)
-const armsA = join(capsule(26, 0, 5, 37, 3, 3.4), capsule(20, 12, 5, 26, 24, 3.2));
-const armsB = join(capsule(23, 7, 5, 33, 14, 3.4), capsule(16, 15, 5, 19, 26, 3.2));
-// two bold zebra bands across the mantle's back (6 units wide), clipped to the body
+const MX = -11; // mantle centre
+// the fin skirt: a soft ripple 4 u outside the mantle (16 even lobes)
+const skirt = blob(
+  Array.from({ length: 16 }, (_, i) => {
+    const t = (i / 16) * Math.PI * 2;
+    const r = i % 2 ? 0 : 2.4;
+    return [MX + Math.cos(t) * (24.5 + r), Math.sin(t) * (20 + r)] as [number, number];
+  }),
+);
+const mantle = ellipse(MX, 0, 21, 16.5);
+const head = circle(11, 0, 19);
+// four arms splayed in a fan under the snout (two parts so no subpaths overlap inside one part)
+const arm = (deg: number, len: number) => {
+  const t = (deg * Math.PI) / 180;
+  return capsule(25, 8, 4.2, 25 + Math.cos(t) * len, 8 + Math.sin(t) * len, 2.5);
+};
+const armsA = join(arm(-12, 17), arm(36, 17));
+const armsB = join(arm(12, 18), arm(62, 15));
+// three cream bands that taper and bow with the mantle's curve
 const band = (x: number) =>
-  `M${x - 2} -20C${x + 3} -12 ${x - 1} -4 ${x + 2} 4C${x + 3} 7 ${x + 7} 7 ${x + 8} 4C${x + 6} -4 ${x + 9} -12 ${x + 4} -20Z`;
-const C = '#F2E2CF',
-  P = '#F7BE93',
-  R = '#EE9FB9',
-  V = '#B9A7EC';
+  tube([
+    [x + 3, -17, 3.4],
+    [x - 1, -8, 2.9],
+    [x - 2, 1, 2.2],
+    [x, 9, 1.4],
+  ]);
+const C = '#F7E6EE',
+  G = '#F7D58A',
+  L = '#B9A7EC',
+  M = '#9ED8C8';
 // each band rests cream (step 0) and flashes in turn, front band first: a ripple running backward
-const ripple = (k: number) => [C, ...Array<string>(k).fill(C), P, R, V, ...Array<string>(2 - k).fill(C)];
+const ripple = (k: number) => [C, ...Array<string>(k).fill(C), G, L, M, ...Array<string>(3 - k).fill(C)];
 
 export default defineArt({
   id: 'cuttle',
   klass: 'chibi',
   size: 'M',
-  feature: 'big round head with a W-pupil eye, short mantle in a thin rippling fin skirt, arm beard',
+  feature: 'big round head with a W-pupil eye, banded oval mantle in a thin fin skirt, fanned arms',
   personality: ['moody', 'clever', 'shifty'],
-  palette: { body: '#B57A55', accent: '#F2E2CF', belly: '#E9C2A6' },
+  palette: { body: '#CC8AA8', accent: '#F7E6EE', belly: '#E9C3D3' },
   cycle: { rate: 8, during: 'signature' },
   groups: [
-    { id: 'skirt', pivot: [-10, 0], parts: [{ d: skirt, role: 'belly' }] },
+    { id: 'skirt', pivot: [MX, 0], parts: [{ d: skirt, role: 'belly' }] },
     {
       id: 'arms',
-      pivot: [22, 8],
+      pivot: [25, 8],
       parts: [
         { d: armsA, role: 'body' },
         { d: armsB, role: 'body' },
@@ -50,20 +67,21 @@ export default defineArt({
       parts: [
         { d: mantle, role: 'body' },
         { d: head, role: 'body' },
-        { d: band(-28), role: 'accent', kind: 'pattern', cycle: ripple(1) },
-        { d: band(-16), role: 'accent', kind: 'pattern', cycle: ripple(0) },
-        { d: ellipse(-2, 18, 26, 5), role: 'belly', kind: 'pattern', alpha: 0.7 },
-        // the collar where the mantle meets the head
-        { d: 'M-4 -16C-9 -6 -9 8 -4 18', role: 'ink', kind: 'line', w: 3, alpha: 0.35 },
+        { d: band(-31), role: 'accent', kind: 'pattern', cycle: ripple(2) },
+        { d: band(-20), role: 'accent', kind: 'pattern', cycle: ripple(1) },
+        { d: band(-9), role: 'accent', kind: 'pattern', cycle: ripple(0) },
+        { d: ellipse(4, 17, 22, 4.5), role: 'belly', kind: 'pattern', alpha: 0.7 },
+        // the collar where the mantle meets the round head
+        { d: 'M-1 -15C-6 -6 -6 7 -1 16', role: 'ink', kind: 'line', w: 3, alpha: 0.3 },
       ],
     },
   ],
-  shine: ellipse(2, -12, 9, 4, -20),
+  shine: ellipse(3, -12, 8, 3.6, -25),
   face: {
-    eyes: [[16, 3.5]],
-    eye: 11,
-    zone: [-9, -23, 46, 46],
-    mouth: { at: [25, 10], w: 4, shape: 'smile' },
+    eyes: [[13, 1]],
+    eye: 13,
+    zone: [-8, -29, 42, 54],
+    mouth: { at: [23.5, 7], w: 4, shape: 'flat' },
     pupil: 'w',
   },
   idle: {
