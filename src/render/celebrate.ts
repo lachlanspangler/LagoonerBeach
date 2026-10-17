@@ -321,7 +321,12 @@ export class Celebrate {
     c.dry = 0;
   }
 
-  busy(now: number): boolean {
+  /**
+   * Something on the board is animating. `ambient` = the breathing last grace shell may keep the
+   * loop running (it only moves with motion on and the board in view: never under reduced motion
+   * or behind an open sheet, which would redraw at 60 fps for nothing).
+   */
+  busy(now: number, ambient = true): boolean {
     const c = this.combo;
     return (
       (this.word !== null && now < this.word.start + this.word.life) ||
@@ -332,7 +337,7 @@ export class Celebrate {
       now - c.dryAt < 400 ||
       now - this.bestAt < BEST_LIFE ||
       now - this.washAt < WASH_MS ||
-      (c.n >= 2 && c.dry === STREAK_GRACE - 1)
+      (ambient && c.n >= 2 && c.dry === STREAK_GRACE - 1)
     );
   }
 

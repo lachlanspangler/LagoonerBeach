@@ -72,7 +72,7 @@ test.describe('baselines', () => {
       const ctx = await browser.newContext(rmContext);
       const page = await ctx.newPage();
       await boot(page, 'seed=42');
-      await page.evaluate((id) => (window as any).__atoll.revealSpecies(id, { size: 31.4 }), id);
+      await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
       await page.waitForTimeout(300);
       await page.evaluate(() => (window as any).__atoll.revealFreeze(2400));
       await page.waitForTimeout(400);
@@ -169,6 +169,131 @@ test('a discovery reveal: tap skips the animation, Continue returns to the board
   await page.mouse.move(plan.up.x, plan.up.y, { steps: 4 });
   await page.mouse.up();
   await expect.poll(() => page.evaluate(() => (window as any).__atoll.state().moves)).toBe(1);
+});
+
+test('a tap mid-reveal on where Continue will be only skips the animation (never closes it)', async ({ page }) => {
+  await boot(page, 'seed=42');
+  await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  const t0 = Date.now();
+  const pt = await page.evaluate(() => {
+    const r = document.querySelector('.reveal .btn.primary')!.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  // hidden and not pressable until settled
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('.reveal .rv-btns')!).visibility)).toBe(
+    'hidden',
+  );
+  await page.waitForTimeout(Math.max(0, 250 - (Date.now() - t0)));
+  expect(await page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(false);
+  await page.mouse.click(pt.x, pt.y);
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
+  await page.waitForTimeout(300);
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  // now Continue does close it
+  await page.locator('.reveal .btn.primary').click();
+  await expect(page.locator('.reveal')).toHaveCount(0);
+});
+
+test('reveal a11y: the rest is inert, Tab stays in the dialog, focus returns; read once', async ({ page }) => {
+  await boot(page, 'seed=42');
+  const menu = page.locator('#menu-btn');
+  await menu.focus();
+  await page.keyboard.press('Shift'); // a keyboard user
+  await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  await expect(menu).toHaveAttribute('inert', '');
+  await expect(page.locator('#game')).toHaveAttribute('inert', '');
+  // one announcement: the dialog's name carries it, the live region doesn't repeat it
+  await expect(page.locator('.reveal')).toHaveAttribute('aria-label', /Baby Kraken, legendary/);
+  expect(await page.locator('#sr').textContent()).not.toContain('Baby Kraken');
+  // Enter skips the animation; focus lands on Continue only once it can be pressed
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
+  await expect(page.locator('.reveal .btn.primary')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.reveal .btn.ghost')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.reveal .btn.primary')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.reveal')).toHaveCount(0);
+  await expect(menu).toBeFocused();
+  await expect(menu).not.toHaveAttribute('inert', '');
+  await expect(page.locator('#game')).not.toHaveAttribute('inert', '');
+});
+
+test('reduced motion: a modal reveal settles at once (never blocks the board for REVEAL_MS)', async ({ browser }) => {
+  const ctx = await browser.newContext(rmContext);
+  const page = await ctx.newPage();
+  await boot(page, 'seed=42');
+  await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  const st = await page.evaluate(() => (window as any).__atoll.revealState());
+  expect(st).toMatchObject({ id: 'kraken', modal: true, settled: true });
+  await ctx.close();
+});
+
+/** Record when the chapter word and the first discovery (pop or card) appear, page-side. */
+async function watchMoments(page: Page) {
+  await page.evaluate(() => {
+    const w = window as any;
+    w.__seen = {};
+    const tick = () => {
+      const now = performance.now();
+      const word = w.__atoll.celebrateWord();
+      if (word && !w.__seen[word]) w.__seen[word] = now;
+      if (!w.__seen.reveal && document.querySelector('.reveal, .reveal-pop')) w.__seen.reveal = now;
+      if (!w.__seen.result && document.querySelector('[data-testid="puzzle-result"]')) w.__seen.result = now;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+/** A reef one dot away from the end: the dot closes a ring around one cell (captures, discovers). */
+async function stageReefEnd(page: Page, rows: string[], solvedOthers: boolean) {
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.evaluate(
+    ([board, others]) => {
+      const a = (window as any).__atoll;
+      a.setup(board, ['dot', null, null], 1); // reef 2 (seed 1)
+      // every other reef of chapter 1 already cleared: clearing this one completes the chapter
+      if (others)
+        a.profile().puzzle.solved = Array.from({ length: 20 }, (_, k) => `R${String(k + 1).padStart(3, '0')}`).filter(
+          (id) => id !== 'R002',
+        );
+    },
+    [rows.join(''), solvedOthers] as const,
+  );
+  await page.waitForTimeout(400);
+  await watchMoments(page);
+  await page.evaluate(() => (window as any).__atoll.commitMove({ slot: 0, x: 3, y: 2 }));
+}
+
+test('a discovery that completes a chapter is revealed after the chapter moment, then the card', async ({ page }) => {
+  await boot(page, 'seed=42');
+  const ring = ['........', '........', '..1.1...', '..1.1...', '..111...', '........', '........', '........'];
+  await stageReefEnd(page, ring, true);
+  await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
+  const seen = await page.evaluate(() => (window as any).__seen);
+  expect(seen['Chapter 1!'], 'chapter moment played').toBeGreaterThan(0);
+  expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);
+  // the chapter word lives 1.5 s; the discovery waits for it (never over it), the card for both
+  expect(seen.reveal - seen['Chapter 1!']).toBeGreaterThanOrEqual(1400);
+  expect(seen.result).toBeGreaterThan(seen.reveal);
+});
+
+test('a discovery on a failed reef ("So close") is still revealed before the card', async ({ page }) => {
+  await boot(page, 'seed=42');
+  // the ring captures, but another pebble stays: the tray is empty and the board isn't → failed
+  const ring = ['........', '........', '..1.1...', '..1.1...', '..111...', '........', '........', '......2.'];
+  await stageReefEnd(page, ring, false);
+  await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId('puzzle-result')).not.toHaveText('Cleared');
+  const seen = await page.evaluate(() => (window as any).__seen);
+  expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);
+  expect(seen.result).toBeGreaterThan(seen.reveal);
 });
 
 test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page }) => {

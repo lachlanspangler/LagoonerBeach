@@ -106,6 +106,8 @@ export class Scene {
   layout: Layout;
   dpr = 1;
   reducedMotion = false;
+  /** A sheet or modal covers the board: purely ambient animation needn't keep the loop running. */
+  covered = false;
   /** Large text setting: scales every piece of canvas text. */
   textScale = 1;
   readonly sprites: SpriteCache;
@@ -1041,7 +1043,7 @@ export class Scene {
       this.preview !== null ||
       this.particles.count > 0 ||
       this.burst.active(now) ||
-      this.celebrate.busy(now) ||
+      this.celebrate.busy(now, !this.reducedMotion && !this.covered) ||
       this.lagoons.length > 0 ||
       this.ripples.length > 0 ||
       this.texts.length > 0 ||
