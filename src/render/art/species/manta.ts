@@ -8,36 +8,36 @@
 import { blob, capsule, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
 const wingU = blob([
-  [26, -9],
-  [10, -22],
-  [-10, -36],
-  [-22, -42],
-  [-25, -37],
-  [-16, -24],
-  [-14, -10],
-  [0, -6],
+  [22, -9],
+  [8, -21],
+  [-8, -35],
+  [-20, -42],
+  [-24, -37],
+  [-15, -24],
+  [-10, -10],
+  [2, -6],
 ]);
 const wingL = xform(wingU, { sy: -1 });
 // a broad rounded diamond body the wings flow out of (not a sausage)
 const torso = blob([
-  [35, 0],
-  [30, -12],
-  [14, -19],
-  [-6, -15],
-  [-20, -5],
-  [-20, 5],
-  [-6, 15],
-  [14, 19],
-  [30, 12],
+  [28, 0],
+  [24, -11],
+  [10, -16],
+  [-2, -13],
+  [-12, -5],
+  [-12, 5],
+  [-2, 13],
+  [10, 16],
+  [24, 11],
 ]);
-// cephalic lobes: two short horns pointing forward, curling in at the tips
+// cephalic lobes: two clear horns pointing forward and curling inward at the tips
 const lobe = tube([
-  [27, -10, 4.8],
-  [35, -11, 4.2],
-  [40, -8, 3.6],
+  [20, -9.5, 4.8],
+  [28, -12.5, 4.2],
+  [33.5, -10.5, 3.6],
 ]);
 const lobes = join(lobe, xform(lobe, { sy: -1 }));
-const tail = capsule(-20, 0, 3, -36, 1, 2.5);
+const tail = capsule(-11, 0, 3, -30, 1, 2.5);
 
 export default defineArt({
   id: 'manta',
@@ -45,25 +45,28 @@ export default defineArt({
   size: 'XL',
   feature: 'a tall swept-back chevron of great rounded wings with two curled head fins and a stub tail',
   personality: ['majestic', 'friendly', 'waving'],
-  palette: { body: '#6681A6', belly: '#E8EEF2' },
+  palette: { body: '#5E82B5', belly: '#E8EEF2' },
   groups: [
-    { id: 'tail', pivot: [-20, 0], parts: [{ d: tail, role: 'body', extra: true }] },
+    { id: 'tail', pivot: [-11, 0], parts: [{ d: tail, role: 'body', extra: true }] },
     {
       id: 'wingU',
-      pivot: [4, -8],
+      pivot: [2, -8],
       parts: [
         { d: wingU, role: 'body' },
-        { d: ellipse(-20, -28, 4, 14, 8), role: 'belly', kind: 'pattern' },
-        { d: ellipse(4, -15, 9, 4, -36), role: 'white', kind: 'pattern', alpha: 0.55 },
+        // R28: the wingtip breaks the tile frame by ~3 px (extra: outside the body box)
+        { d: capsule(-17, -35, 4.8, -21.5, -44.4, 3.6), role: 'body', extra: true },
+        { d: ellipse(-18, -23.4, 3.6, 16, -27), role: 'belly', kind: 'pattern' },
+        { d: ellipse(0, -16, 9, 4, -36), role: 'white', kind: 'pattern', alpha: 0.55 },
       ],
     },
     {
       id: 'wingL',
-      pivot: [4, 8],
+      pivot: [2, 8],
       parts: [
         { d: wingL, role: 'body' },
-        { d: ellipse(-20, 28, 4, 14, -8), role: 'belly', kind: 'pattern' },
-        { d: ellipse(4, 15, 9, 4, 36), role: 'white', kind: 'pattern', alpha: 0.55 },
+        { d: capsule(-17, 35, 4.8, -21.5, 44.4, 3.6), role: 'body', extra: true },
+        { d: ellipse(-18, 23.4, 3.6, 16, 27), role: 'belly', kind: 'pattern' },
+        { d: ellipse(0, 16, 9, 4, 36), role: 'white', kind: 'pattern', alpha: 0.55 },
       ],
     },
     {
@@ -71,20 +74,20 @@ export default defineArt({
       parts: [
         { d: lobes, role: 'body' },
         { d: torso, role: 'body' },
-        { d: ellipse(-2, 0, 16, 6), role: 'ink', kind: 'pattern', alpha: 0.08 },
+        { d: ellipse(-4, 0, 12, 5), role: 'ink', kind: 'pattern', alpha: 0.08 },
       ],
     },
   ],
-  shine: ellipse(8, -11, 9, 3, -10),
+  shine: ellipse(4, -10, 8, 2.6, -10),
   face: {
     eyes: [
-      [17, -4],
-      [27, -4],
+      [10, -2],
+      [21, -2],
     ],
-    eye: 6.6,
+    eye: 8,
     front: true,
-    zone: [8, -20, 30, 28],
-    mouth: { at: [22, 6], w: 5, shape: 'smile' },
+    zone: [1, -21, 30, 33],
+    mouth: { at: [15.5, 7], w: 5, shape: 'smile' },
     sweet: true,
   },
   idle: {

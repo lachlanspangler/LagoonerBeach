@@ -27,7 +27,23 @@ const tail = tube([
   [-38, 1, 2.8],
   [-45, 5, 2.5],
 ]);
-const spots = join(circle(-6, -12, 3), circle(-11, 2, 3.4), circle(-4, 14, 3), circle(3, -23, 2.8), circle(5, 24, 2.8));
+const spots = join(
+  circle(-6, -12, 3.2),
+  circle(-11, 2, 3.6),
+  circle(-4, 14, 3.2),
+  circle(3, -22, 3.1),
+  circle(5, 23, 3.1),
+);
+// a cream rim along the leading edge (the belly peeking round the front, not a wedge)
+const rim = tube([
+  [3, -30.5, 2.6],
+  [14, -23, 2.8],
+  [27, -10, 2.8],
+  [32.5, 0, 2.8],
+  [27, 10, 2.8],
+  [14, 23, 2.8],
+  [3, 30.5, 2.6],
+]);
 
 export default defineArt({
   id: 'stingray',
@@ -35,22 +51,18 @@ export default defineArt({
   size: 'L',
   feature: 'a plump rounded diamond disc, as wide as long, trailing a long thin whip tail',
   personality: ['serene', 'gliding', 'aloof'],
-  palette: { body: '#879CB2', accent: '#D6DEE6', belly: '#EEF2F5' },
+  palette: { body: '#7C9FD0', accent: '#D6DEE6', belly: '#F3EEDF' },
   groups: [
     {
       id: 'tail',
       pivot: [-17, 0],
-      parts: [
-        { d: tail, role: 'body' },
-        { d: ellipse(-31, 0, 10, 1.2, 0), role: 'ink', kind: 'pattern', alpha: 0.18 },
-      ],
+      parts: [{ d: tail, role: 'body' }],
     },
     {
       id: 'body',
       parts: [
         { d: disc, role: 'body' },
-        { d: ellipse(2, 34, 32, 8), role: 'belly', kind: 'pattern' },
-        { d: ellipse(2, -35, 30, 6), role: 'belly', kind: 'pattern', alpha: 0.5 },
+        { d: rim, role: 'belly', kind: 'pattern' },
         { d: spots, role: 'accent', kind: 'pattern' },
         { d: ellipse(-2, 0, 18, 8), role: 'ink', kind: 'pattern', alpha: 0.08 },
       ],
@@ -62,9 +74,9 @@ export default defineArt({
       [14, -4],
       [25, -4],
     ],
-    eye: 7,
+    eye: 7.8,
     front: true,
-    zone: [4, -21, 32, 30],
+    zone: [4, -22, 32, 33],
     mouth: { at: [19.5, 5], w: 5, shape: 'smile' },
   },
   idle: {

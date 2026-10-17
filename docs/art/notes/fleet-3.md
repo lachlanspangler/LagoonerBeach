@@ -4,6 +4,36 @@ Nine species: sandeel, moray, gardeneel, seahorse, seadragon, flounder, stingray
 Final sheets are in `docs/media/art/<id>.jpg`. Every round below was rendered with
 `scripts/art-sheet.ts` and looked at before the next change.
 
+## Redo round (after CRITIQUE-1 and the kit pass)
+CRITIQUE-1 graded this batch: sandeel C, moray C, seadragon C, flounder C; gardeneel, seahorse,
+stingray, manta and shrimp B. All nine are now lint-clean (LINT.md ✓, no new deviations). They were
+judged on the mint-tile sheets and in the whole-cast lineup, after rebasing on the full cast.
+
+| id | was | now (self) | what changed |
+|---|---|---|---|
+| sandeel | C | A− | A level needle (84 × 24) with a big round head, a jaw jutting past the snout and a silver belly under sand `#D9C489`. Three seamless segments carry a travelling wave. Eye 9.4 u. |
+| moray | C | A− | It leans out of a dark hole in a round rock (rock behind, front lip in front, both hidden in the leap). Huge head (1.4× the body), wide grin with two teeth, heavy brow, 5 yellow spots in 3 sizes. Body lifted to `#668A42` for the Night contrast check. |
+| gardeneel | B | A | Head 1.8× the stalk, eye 9.6 u (24 %), upright. Warm cream `#EED595` sits off the mint tile. The mound is hidden in the leap. |
+| seahorse | B | A− | Dorsal fan shrunk ~30 % and moved low (no ear), snout +15 %, eye 10.4 u. |
+| flounder | C | A− | Two big eye turrets on the top edge, the back one 8 u higher, on their own seamless `eyes` layer so the pancake (2.4 : 1) rests level. `#B78A5C` body, spots kept off the face, pale rim, tail stub. |
+| stingray | B | A | Cream rim along the leading edge instead of the belly "stain". Body `#7C9FD0` (C 0.08) reads on mint. |
+| manta | B | A− | Wingspan ≈ 1.65× the body, a round head with two forward horns, wingtips breaking the XL frame by 2.3 px, slate `#5E82B5`. |
+| shrimp | B | A | Level curl. Eye 11.2 u on the front-top of the head, clear of the curl. Antennae −20 %. |
+| seadragon | C | A− | Upright S with a seahorse-sized head (eye 10.2 u), a small pipette snout and six big forked fronds at the outline (none over the face). Gold `#E0B84A`, leaves `#8AB17D`, rests `proud`, fronds sway in two lagging layers, then a bow. |
+
+Lessons for the kit and fleet:
+- **Self-crossing paths fill differently on WebKit.** A blob with two close points (a leaf's
+  narrow stalk) or a capsule and an ellipse joined into one path made WebKit's `Path2D` fill
+  differently from the rasteriser (mask parity 8.5–9.4 %, limit 8 %). Use one root point per leaf,
+  and keep overlapping shapes as separate parts.
+- **The e2e "draws something" floor still rejects true needles.** It needs more than 20 % of an 80 px
+  box drawn, while the unit mask floor is now needle-friendly. The 84 × 20 needle the critique asked
+  for drew 1206 px against a floor of 1280, so the sand eel is 84 × 24.
+- **There is no way to scale a legendary up within its size class.** The critique's "1.05 bump over
+  M" for the seadragon couldn't be authored. Wider fronds fill the tile instead.
+- **A proud resting face reads as asleep at 54 px.** That's the critique's ask for the seadragon, but
+  it's worth a second look in the lineup.
+
 ## Silhouettes (R12, 24 px masks, at hand-in, against the 5 pilots and each other)
 - Eels (long class, limit 0.70): moray/sandeel 0.51, gardeneel/moray 0.19, gardeneel/sandeel 0.17.
 - Seahorse/seadragon (long class): 0.38.
