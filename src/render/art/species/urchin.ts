@@ -49,7 +49,7 @@ export default defineArt({
   size: 'S',
   feature: 'a halo of 12 long spines with round tips',
   personality: ['prickly', 'shy', 'huggable'],
-  palette: { body: '#8A68AE', accent: '#C8ACE9', belly: '#EBDEFB' },
+  palette: { body: '#8A68AE', accent: '#C8ACE9', belly: '#B9A0D6' },
   groups: [
     spineGroup(0),
     spineGroup(1),
@@ -59,10 +59,10 @@ export default defineArt({
       parts: [
         { d: circle(0, 0, R), role: 'body' },
         // the pale face patch (belly role): low and wide, so the low-set eyes sit on it
-        { d: ellipse(0, 7, 17, 13.5), role: 'belly', kind: 'pattern' },
+        { d: ellipse(0, 7, 19, 14), role: 'belly', kind: 'pattern' },
         // little spine bases (tubercles) on the crown, hand placed
         {
-          d: join(circle(-11, -12, 2.2), circle(0, -17, 2.4), circle(11, -12, 2.2)),
+          d: join(circle(-11, -13, 3.1), circle(0, -17.5, 3.2), circle(11, -13, 3.1)),
           role: 'accent',
           kind: 'pattern',
           alpha: 0.8,
@@ -73,10 +73,10 @@ export default defineArt({
   shine: ellipse(-9, -13, 7, 3.6, -30),
   face: {
     eyes: [
-      [-7, 4],
-      [7, 4],
+      [-8.5, 4],
+      [8.5, 4],
     ],
-    eye: 8.6,
+    eye: 10,
     zone: [-23, -23, 46, 46],
     mouth: { at: [0, 11.5], w: 5, shape: 'smile' },
     front: true,

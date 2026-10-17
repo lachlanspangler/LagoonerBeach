@@ -234,3 +234,10 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - Warm sun-blush `#FFB3A0` always on (`face.blush`), eye 9.4 (22 %), mouth `o` a touch larger.
 - R16S deviation: silver identity at chroma 0.05 (the mola is silver-grey); it reads on sand and mint.
 - IoU: lionfish 0.68, clownfish 0.68 (same class, limit 0.70). Self-grade A-.
+
+## urchin (graded B → redo)
+- Face disc `#B9A0D6` (was near-white `#EBDEFB`: with the half-lids on Night it read as a skull),
+  widened to 38×28 under eyes now 17 units apart (2.0 widths; the closed sleepy arcs read as a
+  moustache when the eyes were close).
+- Eye 10 (above the 9.7 floor); crown tubercles ≥ 6 units (R18W). Lint clean.
+- IoU: clownfish 0.62, puffer 0.61 (cross-class). Self-grade A-.
