@@ -1,74 +1,75 @@
 /**
- * Shore Shrimp — LONG class, XS (profile). Silhouette: a plump C-curl comma — big round head, a
- * banded tail that curls under into a little fan — with two long filled antennae sweeping back
- * (R10: the curl and the antennae). Personality: jumpy, startled, silly.
+ * Shore Shrimp — LONG class, XS (profile, level). Silhouette: a plump C-curl comma lying level — a
+ * big round head on the right, a banded tail arching over and curling under into a little fan —
+ * with two filled antennae sweeping back (R10: the curl and the antennae). A big eye (24 %) on the
+ * front-top of the head, clear of the curl. Personality: jumpy, startled, silly.
  * Signature: the backward flick — the tail snaps and it recoils 8 units, startled, then grins.
  */
 import { blob, capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
-const head = ellipse(15, -6, 17, 14, -8);
+const head = ellipse(17, 1, 16, 14);
 const abdomen = tube([
-  [4, -9, 12.5],
-  [-10, -12, 11.5],
-  [-22, -6, 10],
-  [-27, 6, 8.6],
-  [-22, 17, 7],
-  [-13, 22, 5.6],
+  [6, -7, 12],
+  [-8, -11, 11.5],
+  [-20, -6, 10.2],
+  [-25, 6, 8.8],
+  [-19, 16, 7.2],
+  [-8, 20, 5.8],
 ]);
 const fan = blob([
-  [-14, 18],
-  [-5, 16],
-  [3, 19],
-  [5, 26],
-  [-2, 30],
-  [-11, 28],
+  [-9, 16],
+  [0, 14],
+  [7, 17],
+  [9, 24],
+  [2, 28],
+  [-6, 26],
 ]);
-const rostrum = capsule(27, -14, 3.6, 37, -20, 2.6);
+const rostrum = capsule(28, -6, 3.8, 37, -10, 2.6);
 const antennae = join(
   tube([
-    [26, -14, 2.6],
-    [26, -28, 2.6],
-    [16, -39, 2.5],
-    [2, -43, 2.5],
+    [25, -9, 2.6],
+    [24, -21, 2.6],
+    [15, -30, 2.5],
+    [4, -33, 2.5],
   ]),
   tube([
-    [24, -12, 2.6],
-    [34, -26, 2.6],
-    [36, -40, 2.5],
+    [23, -7, 2.6],
+    [32, -19, 2.6],
+    [34, -30, 2.5],
   ]),
 );
-const legs = join(capsule(0, 6, 2.8, -1, 14, 2.5), capsule(8, 7, 2.8, 9, 15, 2.5));
-// cream bands: radial bars across the curl (centre of the C ≈ (-11, 5))
+const legs = join(capsule(14, 12, 2.8, 15, 19, 2.5), capsule(22, 11, 2.8, 24, 17, 2.5));
+// cream bands: radial bars across the curl (centre of the C ≈ (-8, 5))
 const band = (deg: number) => {
   const a = (deg * Math.PI) / 180;
   const c = Math.cos(a),
     s = Math.sin(a);
   return tube([
-    [-11 + 7 * c, 5 + 7 * s, 2.4],
-    [-11 + 30 * c, 5 + 30 * s, 2.6],
+    [-8 + 6 * c, 5 + 6 * s, 2.4],
+    [-8 + 30 * c, 5 + 30 * s, 2.6],
   ]);
 };
-const bands = join(band(-95), band(-135), band(-178), band(140));
+const bands = join(band(-80), band(-125), band(-170), band(145));
 
 export default defineArt({
   id: 'shrimp',
   klass: 'long',
   size: 'XS',
-  feature: 'a plump C-curl comma with a big round head, a fan tail tucked under and two long antennae',
+  feature: 'a plump level C-curl comma with a big round head, a fan tail tucked under and two antennae',
   personality: ['jumpy', 'startled', 'silly'],
   palette: { body: '#F59A8B', accent: '#FFF0DC' },
   groups: [
     {
       id: 'antennae',
-      pivot: [25, -13],
+      pivot: [24, -8],
       parts: [{ d: antennae, role: 'body', extra: true }],
     },
     {
       id: 'tail',
-      pivot: [-16, 20],
+      pivot: [-10, 18],
       parts: [
         { d: fan, role: 'body' },
-        { d: 'M-7 19L-4 28M-1 18L2 25', role: 'ink', kind: 'line', w: 1.2, alpha: 0.4 },
+        { d: 'M-1 17L2 26', role: 'ink', kind: 'line', w: 3, alpha: 0.25 },
       ],
     },
     {
@@ -79,16 +80,16 @@ export default defineArt({
         { d: rostrum, role: 'body' },
         { d: head, role: 'body' },
         { d: bands, role: 'accent', kind: 'pattern' },
-        { d: ellipse(14, 6, 13, 4, -6), role: 'accent', kind: 'pattern', alpha: 0.45 },
+        { d: ellipse(18, 13, 13, 4.4), role: 'accent', kind: 'pattern', alpha: 0.45 },
       ],
     },
   ],
-  shine: ellipse(10, -15, 7, 3, -20),
+  shine: ellipse(11, -8, 7, 3, -16),
   face: {
-    eyes: [[18, -4]],
-    eye: 6.7,
-    zone: [2, -20, 30, 28],
-    mouth: { at: [29, 2], w: 4.5, shape: 'smile' },
+    eyes: [[17, -3]],
+    eye: 11.2,
+    zone: [3, -31, 32, 47],
+    mouth: { at: [30, 7], w: 5, shape: 'smile' },
     sweet: true,
     blushInk: true,
   },
