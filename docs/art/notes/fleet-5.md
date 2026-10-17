@@ -168,3 +168,18 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** A-. Lint-clean; closest flounder 0.71 (cross-class), cuttle 0.67 (chibi, < 0.70).
 - **Would improve:** the back-float is wide and short, so it still fills less of the tile than the
   other L species.
+
+## goldturtle — B → redo of the crest and pose
+- **Brief:** the spiked ridge read as a famous video-game villain's shell (originality risk) →
+  3 rounded jewel domes (`#FFF1C2`, `#7FD1E8` gem centres); a pose distinct from the turtle (head
+  up 15°, both flippers out like wings).
+- **Build:** cream domes with blue gems along the shell top; palette is now gold body, cream
+  `#FFF1C2` (skin, domes, pearls, medallion) and gem blue `#7FD1E8` (gems, medallion gem), still 3
+  colours. Body tilted 10° nose-up, head lifted another 15° at the neck (face anchors computed
+  through the same transforms), the far front flipper raised up-back behind the shell as a second
+  wing (new `wing` group, strokes with the near flipper in the signature), eye 7.4 (floor 7.06),
+  pearls/gems ≥ 6 units, rim line 3 units. Sparkle is now white.
+- **Rounds (2):** (1) the raised far flipper was wide with a round tip and read as a bunny ear;
+  (2) tapered and tip-curled like a flipper, domes enlarged so the gems sit inside cream jewels.
+- **Self-grade:** A-. Lint-clean; it now flies. Closest: sunfish 0.66 (cross-class); the sea turtle
+  is no longer among its 10 closest.
