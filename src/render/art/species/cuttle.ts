@@ -10,16 +10,13 @@
 import { capsule, circle, defineArt, ellipse, join } from '../kit.ts';
 
 const skirt =
-  'M13.0 0.0A4.5 4.5 0 0 1 11.7 7.1A4.7 4.7 0 0 1 7.8 13.5A4.9 4.9 0 0 1 1.9 18.6A5.1 5.1 0 0 1 -5.7 21.9A5.3 5.3 0 0 1 -14.0 23.0A5.3 5.3 0 0 1 -22.3 21.9A5.1 5.1 0 0 1 -29.9 18.6A4.9 4.9 0 0 1 -35.8 13.5A4.7 4.7 0 0 1 -39.7 7.1A4.5 4.5 0 0 1 -41.0 0.0A4.5 4.5 0 0 1 -39.7 -7.1A4.7 4.7 0 0 1 -35.8 -13.5A4.9 4.9 0 0 1 -29.9 -18.6A5.1 5.1 0 0 1 -22.3 -21.9A5.3 5.3 0 0 1 -14.0 -23.0A5.3 5.3 0 0 1 -5.7 -21.9A5.1 5.1 0 0 1 1.9 -18.6A4.9 4.9 0 0 1 7.8 -13.5A4.7 4.7 0 0 1 11.7 -7.1A4.5 4.5 0 0 1 13.0 0.0Z';
-const mantle = ellipse(-14, 0, 22, 17);
-const head = circle(10, 1, 19);
+  'M22.0 0.0A4.1 4.1 0 0 1 20.7 6.5A4.4 4.4 0 0 1 16.9 12.4A4.8 4.8 0 0 1 11.0 17.4A5.3 5.3 0 0 1 3.3 20.9A5.6 5.6 0 0 1 -5.4 22.8A5.7 5.7 0 0 1 -14.6 22.8A5.6 5.6 0 0 1 -23.3 20.9A5.3 5.3 0 0 1 -31.0 17.4A4.8 4.8 0 0 1 -36.9 12.4A4.4 4.4 0 0 1 -40.7 6.5A4.1 4.1 0 0 1 -42.0 0.0A4.1 4.1 0 0 1 -40.7 -6.5A4.4 4.4 0 0 1 -36.9 -12.4A4.8 4.8 0 0 1 -31.0 -17.4A5.3 5.3 0 0 1 -23.3 -20.9A5.6 5.6 0 0 1 -14.6 -22.8A5.7 5.7 0 0 1 -5.4 -22.8A5.6 5.6 0 0 1 3.3 -20.9A5.3 5.3 0 0 1 11.0 -17.4A4.8 4.8 0 0 1 16.9 -12.4A4.4 4.4 0 0 1 20.7 -6.5A4.1 4.1 0 0 1 22.0 0.0Z';
+const mantle = ellipse(-10, 0, 27, 17);
+const head = circle(15, 2, 15);
 // a beard of four short arm capsules under the snout
-const arms = join(
-  capsule(24, -1, 5, 37, -3, 3.4),
-  capsule(25, 6, 5, 38, 6, 3.4),
-  capsule(23, 12, 5, 36, 16, 3.4),
-  capsule(18, 16, 5, 28, 23, 3.2),
-);
+// (two parts, so no subpaths overlap inside one part: WebKit fills those differently)
+const armsA = join(capsule(26, 0, 5, 37, 3, 3.4), capsule(20, 12, 5, 26, 24, 3.2));
+const armsB = join(capsule(23, 7, 5, 33, 14, 3.4), capsule(16, 15, 5, 19, 26, 3.2));
 // two bold zebra bands across the mantle's back (6 units wide), clipped to the body
 const band = (x: number) =>
   `M${x - 2} -20C${x + 3} -12 ${x - 1} -4 ${x + 2} 4C${x + 3} 7 ${x + 7} 7 ${x + 8} 4C${x + 6} -4 ${x + 9} -12 ${x + 4} -20Z`;
@@ -39,8 +36,15 @@ export default defineArt({
   palette: { body: '#B57A55', accent: '#F2E2CF', belly: '#E9C2A6' },
   cycle: { rate: 8, during: 'signature' },
   groups: [
-    { id: 'skirt', pivot: [-14, 0], parts: [{ d: skirt, role: 'belly' }] },
-    { id: 'arms', pivot: [22, 8], parts: [{ d: arms, role: 'body' }] },
+    { id: 'skirt', pivot: [-10, 0], parts: [{ d: skirt, role: 'belly' }] },
+    {
+      id: 'arms',
+      pivot: [22, 8],
+      parts: [
+        { d: armsA, role: 'body' },
+        { d: armsB, role: 'body' },
+      ],
+    },
     {
       id: 'body',
       parts: [
@@ -56,10 +60,10 @@ export default defineArt({
   ],
   shine: ellipse(2, -12, 9, 4, -20),
   face: {
-    eyes: [[15, 3.5]],
+    eyes: [[16, 3.5]],
     eye: 11,
     zone: [-9, -23, 46, 46],
-    mouth: { at: [24, 10], w: 4, shape: 'smile' },
+    mouth: { at: [25, 10], w: 4, shape: 'smile' },
     pupil: 'w',
   },
   idle: {
