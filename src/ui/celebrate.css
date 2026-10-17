@@ -119,6 +119,7 @@ html[data-theme='night'] .r-golden .rv-card {
 .rv-facts div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
   border-left: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   padding-left: 10px;
 }

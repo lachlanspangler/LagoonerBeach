@@ -81,14 +81,15 @@ export function renderShareCard(
   g.stroke();
   // overline
   const ink = night ? '#EEF3F6' : '#2B231C';
-  const ink2 = night ? '#A3B5C3' : '#6B5C4B';
+  // the habitat gradient darkens toward the bottom: secondary lines use full ink there (≥ 4.5:1)
+  const ink2 = night ? '#C9D6E0' : '#2B231C';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.fillStyle = ink2;
   g.font = `800 34px ${FONT_STACK}`;
   g.fillText(o.golden ? 'GOLDEN FIND' : 'NEW DISCOVERY', W / 2, 140);
   // the creature, big and happy
-  drawCreature(g, sp, W / 2, 530, 540, 0, { golden: o.golden, expression: 'happy', t: 0.4, night } as DrawOpts);
+  drawCreature(g, sp, W / 2, 520, 600, 0, { golden: o.golden, expression: 'happy', t: 0.4, night } as DrawOpts);
   if (o.golden) sparkles(g, W / 2, 530, 320, 7);
   // name: display caps, outlined like the in-game callouts
   const name = sp.name.toUpperCase();
@@ -103,7 +104,7 @@ export function renderShareCard(
   g.strokeStyle = night ? '#04212D' : '#2B231C';
   g.strokeText(name, W / 2, 950);
   const fill = g.createLinearGradient(0, 950 - size / 2, 0, 950 + size / 2);
-  const [f0, f1, f2] = o.golden || rank >= 5 ? ['#FFF4C2', '#F2C14E', '#B9821F'] : ['#FFFFFF', '#E8FCFF', '#9ED8E6'];
+  const [f0, f1, f2] = o.golden || rank >= 5 ? ['#FFF4C2', '#F2C14E', '#B9821F'] : ['#E8FCFF', '#6FD3EC', '#2B8FC0'];
   fill.addColorStop(0, f0);
   fill.addColorStop(0.5, f1);
   fill.addColorStop(1, f2);

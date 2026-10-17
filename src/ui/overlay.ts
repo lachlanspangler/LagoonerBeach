@@ -303,8 +303,6 @@ export class Ui {
       );
     if (p.daily.current > 0)
       chips.push(`<span class="chip accent">${icon('streak')}${p.daily.current}-day streak</span>`);
-    if (p.stats.bestPocket > 0)
-      chips.push(`<span class="chip">${icon('endless')}Top lagoon ${p.stats.bestPocket}</span>`);
     if (chips.length) {
       const c = document.createElement('div');
       c.className = 'home-chips';
@@ -376,7 +374,7 @@ export class Ui {
       this.button(
         '',
         'link-tile',
-        `${icon('journal')}<span>Journal</span><small class="num">${journalCount}/${SPECIES.length}</small>`,
+        `${icon('journal')}<span>Journal</span><small class="num tile-badge">${journalCount}/${SPECIES.length}</small>`,
         `Beach Journal, ${journalCount} of ${SPECIES.length} found`,
         () => this.h.onJournal(),
       ),
@@ -530,7 +528,7 @@ export class Ui {
     }
     if (o.leaderboard) {
       const lb = o.leaderboard;
-      const b = this.button('lb-open', 'btn', lb.label, lb.label, () => lb.open());
+      const b = this.button('lb-open', 'btn small', lb.label, lb.label, () => lb.open());
       card.append(b);
       lb.mount?.(b);
     }

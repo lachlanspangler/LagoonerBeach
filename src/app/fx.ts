@@ -265,7 +265,9 @@ export class Fx {
             if (tier >= 2) sc.scorePunch = { at: t, amp: [0, 0, 0.08, 0.14, 0.2][tier]! };
             const ts = sc.textScale;
             const word = m.word && this.guard.claimWord(tier, t, life) ? m.word : null;
-            const numH = l.cell * (word ? 0.5 : tier >= 1 ? 0.56 : 0.48) * ts;
+            // the +N never under 24 px; 0.2 cell of air between the word's descenders and it
+            const numH = Math.max(24, l.cell * (word ? 0.56 : tier >= 1 ? 0.58 : 0.5)) * ts;
+            const gap = word ? l.cell * 0.2 : 0;
             const night = sc.palette.name === 'night';
             const wm = word ? cel.measure(word, l.cell * WORD_SIZE[tier]! * ts, m.style, night) : null;
             // sprites carry padding for the outline; the visible line is about one text height
@@ -275,7 +277,7 @@ export class Fx {
             const pos =
               tier === 4 && clean
                 ? { x: board.x + board.w / 2, y: board.y + board.h * 0.42 }
-                : placeStack(l, lastCells, wordH, numH, wordW);
+                : placeStack(l, lastCells, wordH + gap, numH, wordW);
             if (word) {
               cel.showWord({ text: word, style: m.style, tier, x: pos.x, y: pos.y, start: t, life }, l, ts);
               if (m.sound.sting !== 'none') this.sfx.sting(m.sound.sting);
@@ -283,7 +285,7 @@ export class Fx {
             cel.showNumber({
               text: `+${pts}`,
               x: pos.x,
-              y: word ? pos.y + wordH * 0.5 + numH * 0.55 : pos.y,
+              y: word ? pos.y + wordH * 0.5 + gap + numH * 0.5 : pos.y,
               size: numH,
               start: t + (word ? 60 : 0),
               life: word ? life - 60 : MOTION.scorePop,

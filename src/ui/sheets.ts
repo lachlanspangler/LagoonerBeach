@@ -24,7 +24,7 @@ const sizeText = (cm: number): string =>
 
 // ─────────────────────────────────────────────────────────────────────────── settings
 export function showSettings(k: SheetKit, p: Profile): void {
-  const { card, body } = k.sheet('Settings', { kind: 'settings' });
+  const { card, body } = k.sheet('Settings', { kind: 'settings', close: false });
   const s = p.settings;
   const rm = s.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
   const group = (label: string) => {
@@ -94,7 +94,7 @@ export function showSettings(k: SheetKit, p: Profile): void {
   );
   const next = SKINS.find((k) => !p.unlocked.includes(k.id) && k.hint);
   const left = SKINS.filter((k) => !p.unlocked.includes(k.id)).length;
-  row(look, 'style', 'Style', style, next ? `${left} more to find · next: ${next.hint.toLowerCase()}` : undefined);
+  row(look, 'style', 'Style', style, next ? `${left} more to find` : undefined);
   sw(look, 'motion', 'Reduced motion', rm, 'reducedMotion');
   sw(look, 'textSize', 'Larger text', !!s.largeText, 'largeText');
 
@@ -155,9 +155,8 @@ export function showJournal(k: SheetKit, j: Journal): void {
   const sub = document.createElement('p');
   sub.className = 'callout j-sub';
   sub.textContent =
-    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught and released` : '']
-      .filter(Boolean)
-      .join(' · ') || 'Close a loop to catch your first creature';
+    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} released` : ''].filter(Boolean).join(' · ') ||
+    'Close a loop to catch your first creature';
   head.querySelector('.title-m')!.append(sub);
   const ink = night() ? '#6C8193' : '#968672'; // ink.3; silhouettes at 45%
   const life = new JournalLife();
@@ -185,7 +184,7 @@ export function showJournal(k: SheetKit, j: Journal): void {
       b.style.setProperty('--hab-ring', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
       const pool = document.createElement('span');
       pool.className = 'j-pool';
-      const thumb = creatureThumb(sp, 52, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
+      const thumb = creatureThumb(sp, 58, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
       pool.append(thumb);
       b.append(pool);
       if (e && hasNewArt(sp.id)) life.add(thumb, sp, (e.golden ?? 0) > 0);
@@ -240,7 +239,7 @@ function showSpecies(k: SheetKit, sp: Species, j: Journal): void {
     info.innerHTML = `<h3 class="sp-name">${sp.name}</h3>
       <div class="sp-rarity" style="--frame:${frame[sp.rarity]![0]}">${pipsHtml(RARITY_RANK[sp.rarity], 'lg')}<span class="overline">${isGolden ? 'Golden · ' : ''}${sp.rarity}</span></div>
       <p class="sp-flavor">${sp.flavor}</p>
-      <div class="sp-size" data-testid="size-line"><span class="sp-scale"></span><span>Caught <b class="num">${sizeText(last)}</b> · record <b class="num">${sizeText(e.best)}</b> · ${pebbleLine(e.best)}</span></div>
+      <div class="sp-size" data-testid="size-line"><span class="sp-scale"></span><span>Caught <b class="num">${sizeText(last)}</b> · record <b class="num">${sizeText(e.best)}</b><br>${pebbleLine(e.best)}</span></div>
       <div class="inline-stats"><div><b class="num">${fmt(e.count)}</b><span>Caught</span></div><div><b class="num">${e.golden || '—'}</b><span>Golden</span></div><div><b>${prettyDate(e.first)}</b><span>First</span></div></div>`;
     info.querySelector('.sp-scale')!.append(sizeScale(sp, e.best));
   } else {

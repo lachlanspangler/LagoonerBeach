@@ -52,7 +52,8 @@ async function open(night: boolean, query = 'seed=42', fresh = false): Promise<P
       pr.stats.captures = 388;
       pr.stats.bestPocket = 14;
       pr.daily.current = 6;
-      pr.puzzle.solved = Array.from({ length: 27 }, (_, i) => `r${String(i + 1).padStart(3, '0')}`);
+      pr.puzzle.solved = Array.from({ length: 27 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`);
+      pr.puzzle.index = 27;
       a.stageJournal(ids);
       a.markSeen(ids.slice(0, -2)); // two fresh pages wear the "new" dot
       if (a.mode() !== 'puzzle') a.restart();
@@ -283,10 +284,13 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
   'chapter-complete': async (p) => {
     await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
     await p.waitForTimeout(1200);
+    // reef 40 closes chapter 2 (Ebbtide Bight): the moment over its own reef
+    await p.evaluate(() => (window as any).__atoll.loadPuzzle(39));
+    await p.waitForTimeout(600);
     await p.evaluate(() => {
       const a = (window as any).__atoll;
       a.freezeNow();
-      a.chapterMoment(23, 'Heron Narrows');
+      a.chapterMoment(2, 'Ebbtide Bight');
     });
     await p.evaluate(() => (window as any).__atoll.freeze(1200));
     await frames(p);

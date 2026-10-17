@@ -63,6 +63,9 @@
   cursor: pointer;
   transition: background 140ms ease;
 }
+html[data-theme='night'] .lb-tab[aria-selected='true'] {
+  background: var(--raised);
+}
 .lb-tab[aria-selected='true'] {
   background: var(--panel);
   color: var(--text);
@@ -154,7 +157,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 2px 0;
+  padding: 2px 0 12px;
 }
 .lb-row {
   display: grid;
@@ -251,12 +254,18 @@
 }
 /* your row: tinted, accent bar, pinned to the list edge when scrolled away */
 .lb-row.me {
-  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  box-shadow:
+    inset 3px 0 0 var(--accent),
+    var(--e2);
   position: sticky;
   top: 0;
   bottom: 0;
   z-index: 1;
+}
+.lb-pin .lb-row {
+  position: static;
+  margin-top: 6px;
 }
 .lb-gap {
   text-align: center;

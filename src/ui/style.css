@@ -45,6 +45,8 @@
   --silver: #b9c3cc;
   --bronze: #c98a5a;
   --lip-2: rgba(43, 35, 28, 0.12);
+  /* secondary controls: sunk by day, raised (lighter) by night (UI_DESIGN §4) */
+  --raised: var(--surface-sunk);
   --scrim: rgba(246, 239, 228, 0.6);
   --font: 'Lagoon UI', ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Lagoon Display', 'Iowan Old Style', Georgia, serif;
@@ -166,8 +168,8 @@ html[data-theme='night'] {
   --accent-lip: #2b8fc0;
   --accent-tint: rgba(111, 211, 236, 0.14);
   --on-accent: #04212d;
-  --water: #2fb8d8;
-  --water-hi: #9bf0ff;
+  --water: #3fcbea;
+  --water-hi: #a8f5ff;
   --gold: #f5c451;
   --gold-ink: #f5c451;
   --gold-tint: rgba(245, 196, 81, 0.14);
@@ -176,6 +178,7 @@ html[data-theme='night'] {
   --success: #6fd6a0;
   --danger: #ff7a70;
   --lip-2: rgba(0, 0, 0, 0.35);
+  --raised: #1b3150;
   --scrim: rgba(10, 21, 32, 0.6);
   --e1: 0 1px 2px rgba(0, 0, 0, 0.4);
   --e2: 0 6px 16px rgba(0, 0, 0, 0.45);
@@ -386,6 +389,8 @@ a {
 .sheet-body {
   flex: 1;
   min-height: 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
@@ -521,7 +526,7 @@ a {
   border-radius: var(--r-lg);
   font: 800 18px/1.1 var(--font);
   cursor: pointer;
-  background: var(--surface-sunk);
+  background: var(--raised);
   color: var(--ink);
   box-shadow: 0 4px 0 var(--lip-2);
   transform: translateY(-2px);
@@ -570,6 +575,10 @@ a {
   box-shadow: none;
   transform: none;
   cursor: default;
+}
+.btn.small {
+  min-height: 48px;
+  font-size: 16px;
 }
 .btn-row {
   display: grid;
@@ -727,8 +736,17 @@ html[data-theme='night'] .segs i.on {
 .switch[aria-checked='true'] i::after {
   transform: translateX(20px);
 }
-html[data-theme='night'] .switch[aria-checked='true'] i::after {
-  background: var(--on-accent);
+html[data-theme='night'] .btn:not(.primary, .ghost),
+html[data-theme='night'] .seg-b[aria-checked='true'],
+html[data-theme='night'] .round {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 4px 0 var(--lip-2);
+}
+html[data-theme='night'] .seg-b[aria-checked='true'],
+html[data-theme='night'] .round {
+  background: var(--raised);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 /* ═══ Home (menu) ═══ */
@@ -800,11 +818,8 @@ html[data-theme='night'] .switch[aria-checked='true'] i::after {
   box-shadow: 0 0 0 var(--lip-2);
   transition-duration: var(--dur-instant);
 }
-.mode-card.current {
+.mode-card.current .mc-ic {
   background: var(--accent-tint);
-  box-shadow:
-    0 3px 0 color-mix(in srgb, var(--accent) 30%, transparent),
-    inset 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .mc-ic {
   width: 48px;
@@ -871,9 +886,15 @@ html[data-theme='night'] .switch[aria-checked='true'] i::after {
   transform: scale(0.95);
   transition-duration: var(--dur-instant);
 }
-.link-tile small {
+.link-tile .tile-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
   font: 800 11px var(--font);
-  color: var(--ink-2);
+  color: var(--accent);
 }
 
 /* ═══ Results (game over): whitespace instead of boxes (§6.6) ═══ */
@@ -899,7 +920,7 @@ html[data-theme='night'] .switch[aria-checked='true'] i::after {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  margin: var(--s5) 0 var(--s1);
+  margin: var(--s5) 0 var(--s4);
 }
 .inline-stats > div {
   padding: 0 var(--s1);
@@ -984,6 +1005,7 @@ html[data-theme='night'] .switch[aria-checked='true'] i::after {
   transition-duration: var(--dur-instant);
 }
 .j-pool {
+  margin-top: -2px;
   display: grid;
   place-items: center;
   width: 58px;
@@ -994,7 +1016,8 @@ html[data-theme='night'] .switch[aria-checked='true'] i::after {
 .j-name {
   min-height: 2.3em;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: center;
   text-align: center;
   padding: 0 2px;
 }
@@ -1061,8 +1084,8 @@ html[data-theme='night'] .switch[aria-checked='true'] i::after {
   color: var(--frame, var(--ink-3));
 }
 .pips i {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   background: currentColor;
   -webkit-mask: var(--shell-off) center / contain no-repeat;
   mask: var(--shell-off) center / contain no-repeat;

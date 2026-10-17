@@ -512,7 +512,11 @@ export class LeaderboardUi {
     list.className = 'lb-list';
     list.setAttribute('role', 'list');
     list.setAttribute('aria-label', 'Rankings');
-    panel.append(target, list);
+    // "you" when you're not on the board yet: pinned under the list, outside the scroller (a sticky
+    // row inside it let the rows behind show around it)
+    const pin = document.createElement('div');
+    pin.className = 'lb-pin';
+    panel.append(target, list, pin);
     const foot = document.createElement('div');
     foot.className = 'foot lb-foot';
 
@@ -561,6 +565,7 @@ export class LeaderboardUi {
       const t = current;
       list.setAttribute('aria-busy', 'true');
       target.replaceChildren();
+      pin.replaceChildren();
       list.replaceChildren(...Array.from({ length: 6 }, () => skeleton()));
       if (o.pending && t === tab) {
         const r = await o.pending;
@@ -707,10 +712,11 @@ export class LeaderboardUi {
           const upto = v.me ? Math.max(10, v.me.rank + 5) : 10;
           rows.push(...v.top.filter((e) => e.rank <= upto).map(row));
         }
-        if (!v.me)
-          rows.push(
-            this.youRow(t, v, (p) => this.showBoards(current, p ? { ...o, outcome: undefined, pending: p } : o)),
-          );
+        pin.replaceChildren(
+          ...(v.me
+            ? []
+            : [this.youRow(t, v, (p) => this.showBoards(current, p ? { ...o, outcome: undefined, pending: p } : o))]),
+        );
         list.replaceChildren(...rows);
         list.querySelector('.me')?.scrollIntoView?.({ block: 'nearest' });
       }

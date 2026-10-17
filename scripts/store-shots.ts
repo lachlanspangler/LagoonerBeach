@@ -221,9 +221,9 @@ for (const s of shots) {
     background:${night ? 'radial-gradient(120% 60% at 50% 0%,#17324A,#0A1520 70%)' : 'radial-gradient(120% 60% at 50% 0%,#FFFBF5,#F6EFE4 55%,#E9DCC6)'}">
     <div style="height:560px;display:flex;align-items:center;justify-content:center;text-align:center;
       color:${night ? '#EEF3F6' : '#2B231C'};font:900 112px/1.04 'Lagoon Display',Georgia,serif;letter-spacing:-1px;padding:20px 70px 0"><div style="white-space:pre-line">${caption}</div></div>
-    <div style="position:absolute;left:80px;top:580px;width:1130px;height:2452px;border-radius:96px;overflow:hidden;
+    <div style="position:absolute;left:115px;top:580px;width:1060px;height:2300px;border-radius:96px;overflow:hidden;
       box-shadow:0 40px 120px rgba(${night ? '0,0,0,0.6' : '74,52,30,0.28'}),0 0 0 14px ${night ? '#1C3550' : '#FFFFFF'}">
-      <img src="data:image/png;base64,${img}" style="width:1130px;display:block"/></div>
+      <img src="data:image/png;base64,${img}" style="width:1060px;display:block"/></div>
   </body></html>`);
   await comp.evaluate(() => document.fonts.ready);
   await comp.waitForTimeout(150);

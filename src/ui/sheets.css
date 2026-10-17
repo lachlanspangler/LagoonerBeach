@@ -300,21 +300,24 @@
   background: var(--water);
 }
 .reef.next {
-  background: var(--accent);
-  color: var(--on-accent);
-  box-shadow: 0 3px 0 var(--accent-lip);
+  background: var(--accent-tint);
+  color: var(--accent);
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    inset 0 -3px 0 var(--tier-c, transparent);
   animation: next-pulse 2.4s var(--ease-standard) infinite;
 }
 @keyframes next-pulse {
   50% {
     box-shadow:
-      0 3px 0 var(--accent-lip),
-      0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
+      inset 0 0 0 2px var(--accent),
+      0 0 0 5px color-mix(in srgb, var(--accent) 18%, transparent);
   }
 }
-.reef.cur {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
+.reef.cur:not(.next) {
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--ink) 35%, transparent),
+    inset 0 -3px 0 var(--tier-c, transparent);
 }
 .reef .star {
   position: absolute;
@@ -328,6 +331,7 @@
   display: none;
 }
 .tier-key {
+  font-size: 12px;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;

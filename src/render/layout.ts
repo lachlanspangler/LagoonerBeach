@@ -57,7 +57,7 @@ export function computeLayout(w: number, h: number, inset: Insets = { top: 0, ri
   // the old layout left ~22% of a tall phone as dead sand under the tray.
   let above = Math.min(slack * 0.3, cell * 1.3);
   const below = Math.min(slack * 0.22, cell * 1.0); // under the tray (implicit: what's left)
-  const between = Math.min(slack - above - below, cell * 2.4);
+  const between = Math.min(slack - above - below, cell * 1.9);
   // tablets: whatever is left centers the whole stack instead of opening a canyon in the middle
   const rest = slack - above - below - between;
   above += rest / 2;
@@ -68,12 +68,12 @@ export function computeLayout(w: number, h: number, inset: Insets = { top: 0, ri
   // tall phones: the hand grows a little (bigger thumb targets) instead of floating in empty sand
   const trayCell = Math.round(cell * Math.min(0.82, GEOM.trayScale + (slack / cell) * 0.025));
   // tray spans the board (a little wider on phones for big hit areas), never the whole tablet
-  const span = Math.min(usableW, boardSize * 1.12);
+  const span = Math.min(usableW - margin * 2 + 8, boardSize * 1.12);
   const slotW = span / 3;
   const sx = inset.left + (usableW - span) / 2;
   const slots = [0, 1, 2].map((i) => ({
     cx: sx + slotW * (i + 0.5),
-    cy: trayY + trayH / 2,
+    cy: trayY + trayH * 0.46,
     w: slotW,
     h: trayH,
   }));

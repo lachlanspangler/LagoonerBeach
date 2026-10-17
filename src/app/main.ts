@@ -252,7 +252,7 @@ function resize(): void {
   root.setProperty('--board-top', `${l.board.y}px`);
   root.setProperty('--board-bottom', `${l.board.y + l.board.h}px`);
   // the common-discovery pop (≈56 px tall) centers in the strip, never over the board's last row
-  root.setProperty('--strip-y', `${Math.max(scene.stripY(), l.board.y + l.board.h + 32)}px`);
+  root.setProperty('--strip-y', `${Math.max(scene.stripY(), l.board.y + l.board.h + 38)}px`);
   idle(() => scene.warmSprites());
   dirty = true;
 }
@@ -603,7 +603,7 @@ function checkPuzzle(): void {
     const newIds = [...gameCatch.newIds];
     const ch = chapterOf(i + 1).chapter;
     const done = chapterCleared(new Set(profile.puzzle.solved), ch);
-    const progress = `${chapterName(ch)} · ${done} of ${CHAPTER_SIZE}`;
+    const progress = `${chapterName(ch)} · ${done} of ${CHAPTER_SIZE} cleared`;
     const hold = chapterHold;
     chapterHold = 0;
     const chFirst = (ch - 1) * CHAPTER_SIZE + 1;
