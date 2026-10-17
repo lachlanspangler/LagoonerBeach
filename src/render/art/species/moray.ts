@@ -1,31 +1,31 @@
 /**
  * Moray Eel — LONG class (profile, level). Silhouette: a thick eel leaning out of a dark hole in a
  * round rock, with a huge blunt head (1.4× the body's thickness) and a wide toothy grin (R10: the
- * head and the grin). A lighter frill band rides the back; five big yellow spots in three sizes.
- * Personality: toothy, grinning, friendly — a grumpy brow over a sunny grin.
+ * head and the grin). A lighter frill band rides the back; four big yellow spots in three sizes.
+ * Personality: toothy, grinning, friendly — a sunny grin whose rear corner curls up 6 u.
  * Signature: leans further out of its hole, the grin opens wide, then a wink.
  * Groups: rock (with the hole) behind, the eel, then the rock's front lip that hides its tail.
  */
 import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
 const rock = blob([
-  [-43, 6],
-  [-40, -14],
-  [-29, -22],
-  [-16, -19],
-  [-9, -6],
-  [-9, 16],
-  [-17, 28],
-  [-33, 29],
-  [-43, 20],
+  [-43, 8],
+  [-40, -9],
+  [-31, -15],
+  [-21, -12],
+  [-16, 0],
+  [-16, 17],
+  [-23, 26],
+  [-36, 26],
+  [-43, 19],
 ]);
 const lip = blob([
-  [-33, 15],
-  [-22, 12],
-  [-10, 14],
-  [-9, 22],
-  [-18, 29],
-  [-31, 28],
+  [-36, 16],
+  [-26, 13],
+  [-16, 15],
+  [-17, 22],
+  [-24, 26],
+  [-35, 25],
 ]);
 // out of the hole, a small dip, then the head rises: the body narrows at the hole (a neck)
 const body = tube([
@@ -42,7 +42,7 @@ const frill = tube([
   [3, -2, 3.4],
   [10, -9, 2.6],
 ]);
-const spots = join(circle(-12, 7, 3.4), circle(-1, 4, 4.6), circle(9, 9, 3.2), circle(13, -5, 3.6), circle(29, -12, 3));
+const spots = join(circle(-12, 7, 3.4), circle(-1, 4, 4.6), circle(9, 9, 3.2), circle(13, -5, 3.6));
 
 export default defineArt({
   id: 'moray',
@@ -50,15 +50,15 @@ export default defineArt({
   size: 'L',
   feature: 'a thick eel leaning out of a hole in a round rock, with a huge blunt head and a wide toothy grin',
   personality: ['toothy', 'grinning', 'friendly'],
-  palette: { body: '#668A42', accent: '#E8D84A', belly: '#B9AE9A' },
+  palette: { body: '#668A42', accent: '#E8D84A', belly: '#B7A58E' },
   groups: [
     {
       id: 'rock',
       pivot: [-26, 26],
       parts: [
         { d: rock, role: 'belly' },
-        { d: ellipse(-20, 3, 9.5, 16), role: 'ink', kind: 'pattern', alpha: 0.85 },
-        { d: ellipse(-33, -11, 5, 2.6, -30), role: 'white', kind: 'pattern', alpha: 0.35 },
+        { d: ellipse(-25, 4, 7.5, 13), role: 'ink', kind: 'pattern', alpha: 0.85 },
+        { d: ellipse(-35, -7, 4, 2.2, -30), role: 'white', kind: 'pattern', alpha: 0.35 },
       ],
     },
     {
@@ -81,8 +81,8 @@ export default defineArt({
           alpha: 0.35,
         },
         { d: spots, role: 'accent', kind: 'pattern' },
-        // the grumpy brow: a short ink ridge sloping down toward the snout
-        { d: 'M16.5 -17C21 -20 26 -20 30.5 -16.5', role: 'ink', kind: 'line', w: 3.2 },
+        // the grin's rear corner rises 6 u: a smile crease, never a scowl
+        { d: 'M20.6 5.4Q17 4.2 15.6 -1.6', role: 'ink', kind: 'line', w: 3.4 },
       ],
     },
     { id: 'lip', pivot: [-22, 26], parts: [{ d: lip, role: 'belly' }] },
@@ -90,9 +90,10 @@ export default defineArt({
   shine: ellipse(18, -13, 7, 2.6, -10),
   face: {
     eyes: [[23.5, -9]],
-    eye: 9,
+    eye: 10.5,
     zone: [7, -31, 34, 38],
-    mouth: { at: [29.5, 5], w: 13, shape: 'grin' },
+    mouth: { at: [28, 6], w: 14, shape: 'grin' },
+    sweet: true,
   },
   ground: true,
   deviations: {
