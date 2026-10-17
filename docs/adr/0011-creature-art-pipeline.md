@@ -105,3 +105,35 @@ errors. Passing on Playwright's WebKit build; `make ios-sim` remains the on-devi
   (R29); the species-page size line "Caught 12 cm · record 31 cm · about 8 pebbles" with a pebble
   at true relative scale (R28); the journal grid's ambient life, one signature move at a time on a
   random visible caught tile every 3–5 s, none under reduced motion (R37).
+
+## Amendment 1 (2026-10-16): kit pass after CRITIQUE-1
+All 47 species landed (5 fleets); an independent art director graded them 11 A / 22 B / 13 C / 1 D
+(`docs/art/CRITIQUE-1.md`). The systemic findings were kit problems, so they're fixed once, in the kit:
+- **`sleepy` redrawn** as closed, contented ‿ eyes (3 units), a soft smile (or `o`), blush 0.25, and a
+  drifting "z" in the detail view only. The old half-lid read grumpy; it survives as **`drowsy`**, used
+  only as a per-species **`restExpression`** (the grouper). **`neverSleepy`** keeps the kraken awake.
+- **Absolute eye floor**: the renderer never draws an eye below `eyeFloorUnits` (≥ 4 CSS px in the
+  54 px tile, ≥ 9 % of the body-box height); `face.eye` is optional (profile fish default 22 % of the
+  face zone). R7's 24 % cap gives way to the floor on small heads.
+- **Fill table** XS 0.50 · S 0.60 · M 0.70 · L 0.82 · XL 0.95 · XXL 1.15. Journal tile canvases bleed
+  8 px past the 54 px art box (negative margins, layout unchanged) so XL fins can break the frame
+  (2–4 px, validated); XXL is clipped to the art box by the kit, head-anchored (`crop: 'center'` opt-out).
+- **Face**: Night blush `#FF9DB0` α 0.45 on bodies with L < 0.65; per-species `blush` override (colour,
+  alpha, `always`); `open`/`toothy`/`grin` mouths fall back to a filled D below 6 px, `w` to a smile
+  below 4 px; `pupil: 'w'` (cuttlefish); `profile: true` for two eyes in profile (hammerhead).
+- **Fleet-reported gaps**: `outline: false` (glow-only parts, also out of the silhouette and body box);
+  props with `followRoot`; `scaleSteps` (layers pre-rasterised per scale step so an inflate keeps its
+  outline weight); `seamless` groups (all their outlines drawn in one pass behind all their fills: no
+  seams between moving eel segments); `Part.cycle` colours with `SpeciesArt.cycle` timing (cached
+  steps; always or only during the signature: comb-jelly ribs, cuttle bands); `leap: { point, hide }`
+  (lean instead of point; drop the garden eel's mound in the leap); a needle-friendly silhouette floor.
+- **Validator**: issues carry a level. New CRITIQUE-1 rules are **warnings** (eye floor R7F, rest tilt
+  ≤ 10° R5T, XL frame-break R28, eye-coloured pattern near the eye R18E, pattern strokes ≥ 4 u / dots
+  ≥ 6 u R18W, detail lines ≥ 3 u R2L, body chroma ≥ 0.08 R16S, contrast on the real mint journal tile
+  R16M), listed per species in `docs/art/LINT.md` (`npm run art:lint`) and made errors by flipping
+  `LINT_AS_ERRORS` (or `ART_LINT_STRICT=1`). Body lightness: < 0.45 is always an error, 0.45–0.55 needs a
+  deviation note; deviation keys no longer waive the contrast checks (`R16K`).
+- **Review**: sheets show the real journal tile (mint) Day/Night next to sand, all 8 expressions,
+  errors vs warnings; `?cast` renders the whole cast as the journal shows it (`cast-{day,night}.png`).
+- Measured after the pass (47 species): art chunk **37.2 KB gz** (budget 60); **0.028 ms** mean per
+  animated creature at 4× throttle, 6 leapers p95 0.7 ms; game draw p95 1.2 ms; Chromium + WebKit green.

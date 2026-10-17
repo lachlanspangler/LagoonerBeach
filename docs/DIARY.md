@@ -459,6 +459,54 @@ SCORE) on our rule, clean and never chaotic; discoveries as moments scaled by ra
   flight (sparkly, slightly busy); the common pop overlaps the board's top row for ~2 s; chips still
   hide the badge while up; reveal baselines will change when the art fleet redraws box crab / kraken.
 
+## 2026-10-16 (session 3) — Integration: celebrations, all 47 creatures, review fixes
+- Merged: combo/celebration/discovery (ADR 0012), creature art pipeline (ADR 0011) + five fleet
+  batches (47/47 species, one file each, no conflicts), leaderboard review fixes, name filter
+  hardening. main: 410 unit tests; e2e 101 passed before the baseline/test fixes below.
+- **Cross-batch silhouette collision** only showed after merging fleets B and D (nautilus vs
+  cuttle IoU 0.877 > 0.80). Sent back to the nautilus artist (redesigned: hangs nose-down 40°, the
+  way a real nautilus does). Fleet A then rebased onto the full cast before finishing and found two
+  more of its own (grouper/flounder, butterfly/sunfish). Lesson: give every fleet the full cast
+  before the last round.
+- Margins are thin (fish-class pairs at 0.68–0.70): the centroid-aligned mask metric punishes round
+  bodies. Kit backlog from the fleet (to do with the critic's fixes): glow-only props, per-species
+  resting expression, head-anchored XXL crop, per-part scale without outline thickening, blush per
+  species, validator lightness floor 0.55 vs guide 0.45, segmented eels without seams.
+- **Flaky e2e under load:** a WebKit leaderboard test typed before the lazily loaded name sheet
+  existed (real players can't type before they see it) → tests wait for the sheet. Perf tests miss
+  budgets only when ~8 agents load the machine; re-run serial before calling a regression.
+- Name-filter hardening was done by me after an agent session was cut off by a safety classifier
+  (the task carried the reviewer's list of offensive names). Kept test data ROT13 and stopped
+  extending the list by hand; ADR 0010 records the remaining gap and the moderation the owner should
+  add before launch.
+
+## 2026-10-16 (session 3) — Creature kit pass after CRITIQUE-1 (ADR 0011 amendment 1)
+All 47 species landed; the art director graded 11 A / 22 B / 13 C / 1 D and named five systemic
+causes. They were kit problems, so they were fixed once in `src/render/art/`, before the fleet redo.
+- **Sleepy** is now closed ‿ eyes + soft smile + blush 0.25 (+ a drifting "z" on the species page).
+  The cast sheet on Night went from "half the journal looks grumpy" to "half the journal is napping";
+  that's the biggest single improvement of the pass. The half-lid lives on as `drowsy`, the grouper's
+  awake personality (`restExpression`); the kraken got `neverSleepy`.
+- **Eye floor** (≥ 4 px in the 54 px tile) is applied by the renderer, so every profile fish got a
+  readable face immediately; the validator still warns where the authored eye is below it (22 species).
+- **Fill table** flattened at the bottom (XS 0.50) and steepened at the top (XL 0.95 + frame-break,
+  XXL cropped head-first by the kit). Tile canvases bleed 8 px (negative margins) so XL fins break the
+  art box; the hermit and limpet are no longer smudges.
+- **Lints as warnings** (R7F, R5T, R28, R18E, R18W, R2L, R16S, R16M) in `docs/art/LINT.md` via
+  `npm run art:lint`; `LINT_AS_ERRORS` flips them. The tilt rule reproduces the critique's list (plus
+  gardeneel, damsel, dolphin, wrasse); R28 finds the XL break offenders (hammerhead, dolphin, sunfish,
+  kraken). Deviation keys no longer waive contrast (`R16K`).
+- **Fleet gaps closed**: glow-only parts, root-following props, scale steps (no outline thickening),
+  seamless chains, colour cycles, W pupil, two-eye profile, leap point/hide, needle-friendly mask floor,
+  lightness floor 0.45 with a note. Smoke-tested in Chromium + WebKit (`tests/e2e/art-kit.spec.ts`).
+- **Pilots**: hermit got the critique's B fixes (claw down 6, eyes up 4 at the floor, `#F2A27E` face
+  patch); the A pilots only needed lint hygiene (6-unit dots, 3-unit lines, the turtle eye at its floor,
+  two documented sand-dollar deviations). All five are lint-clean.
+- Numbers: art chunk 37.2 KB gz for 47 species (budget 60); 0.028 ms per animated creature at 4×
+  throttle; game draw p95 1.2 ms; full e2e 106 passed.
+- Open: frame-break is measured against the 54 px art box, not the ~75 px button; a true break of the
+  button edge needs a CSS decision in overlay.ts. Silhouette IoU is getting tight (clownfish/cuttle 0.77,
+  butterfly/combjelly 0.76): the redo must widen it, not narrow it.
 ## 2026-10-16 (session 3) — aesthetic pass (UI_DESIGN.md, every screen)
 Owner brief: "incredibly aesthetic, incredibly high class … top of the App Store charts." Built on
 what exists (no feature rebuilds); every test's intent kept.

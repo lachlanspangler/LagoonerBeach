@@ -19,9 +19,21 @@ export type Role = 'body' | 'belly' | 'accent' | 'white' | 'ink' | 'light';
 export type SizeClass = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
 /** R23 idle class (also selects the R12 body class for the silhouette test, see `bodyClassOf`). */
 export type Klass = 'fish' | 'shark' | 'long' | 'chibi' | 'jelly' | 'wing' | 'object' | 'horse' | 'turtle' | 'snail';
-/** R19 closed expression set. */
-export type Expression = 'idle' | 'blink' | 'happy' | 'surprised' | 'proud' | 'sleepy' | 'shy';
-export const EXPRESSIONS: readonly Expression[] = ['idle', 'blink', 'happy', 'surprised', 'proud', 'sleepy', 'shy'];
+/**
+ * R19 closed expression set. `sleepy` = closed, contented ‿ eyes (CRITIQUE-1 #1: the old half-lid
+ * read grumpy); `drowsy` = the half-lid, kept only as a per-species `restExpression` (grouper).
+ */
+export type Expression = 'idle' | 'blink' | 'happy' | 'surprised' | 'proud' | 'sleepy' | 'shy' | 'drowsy';
+export const EXPRESSIONS: readonly Expression[] = [
+  'idle',
+  'blink',
+  'happy',
+  'surprised',
+  'proud',
+  'sleepy',
+  'shy',
+  'drowsy',
+];
 /** R8 mouth vocabulary (grin/underbite/toothy are signature exceptions). */
 export type Mouth = 'none' | 'smile' | 'w' | 'o' | 'open' | 'flat' | 'pout' | 'grin' | 'underbite' | 'toothy';
 /** R18 closed pattern set. */
@@ -42,6 +54,15 @@ export interface Part {
   /** Excluded from the body box (tail tips, antennae, spines — R1). */
   readonly extra?: boolean;
   readonly alpha?: number;
+  /** `false`: no ink outline / Night rim for this fill (glow halos, soft light props). */
+  readonly outline?: boolean;
+  /**
+   * Animated colour: the part cycles through these colours (cached steps, never per-frame work).
+   * Step k shows `cycle[(k + cycleOffset) % n]`; offsets make ripples (comb-jelly ribs, cuttle bands).
+   * Timing is `SpeciesArt.cycle`. A static tile shows step 0.
+   */
+  readonly cycle?: readonly string[];
+  readonly cycleOffset?: number;
 }
 
 export interface Group {
@@ -56,6 +77,19 @@ export interface Group {
    * silhouette or body box.
    */
   readonly prop?: boolean;
+  /** Props only: move with the creature (root transform) instead of staying put. */
+  readonly followRoot?: boolean;
+  /**
+   * Scale steps (e.g. [1, 1.2, 1.4]): the layer is pre-rasterised at each so a `s`/`sx`/`sy` track
+   * (puffer inflate) scales the shape without thickening the outline; the nearest step is used and
+   * the remainder applied as a transform.
+   */
+  readonly scaleSteps?: readonly number[];
+  /**
+   * Seamless chain (segmented eels/tentacles): the outlines of all seamless groups are drawn in one
+   * pass behind all their fills, so joints between moving segments show no seam.
+   */
+  readonly seamless?: boolean;
 }
 
 export interface Face {
@@ -63,8 +97,20 @@ export interface Face {
   readonly g?: string;
   /** Eye centres (1 for profile species, 2 for front-facing ones). */
   readonly eyes: readonly (readonly [number, number])[];
-  /** Eye height in units (R7: 18 % of face-zone height; 14–24 %). Width = 0.85 × height. */
-  readonly eye: number;
+  /**
+   * Eye height in units (R7: 14–24 % of face-zone height). Width = 0.85 × height. Default: 22 % of the
+   * zone for profile fish/sharks, 18 % otherwise. The renderer never draws an eye below the absolute
+   * floor (`eyeFloorUnits`: ≥ 4 CSS px in a 54 px tile and ≥ 9 % of the body-box height) unless
+   * `eyeFloor: false`; the validator warns when the authored eye is below it (R7F).
+   */
+  readonly eye?: number;
+  readonly eyeFloor?: boolean;
+  /** Pupil shape: `round` (default, the solid oval) or `w` (cuttlefish: light eye with a W pupil). */
+  readonly pupil?: 'round' | 'w';
+  /** Profile view even with two eyes (hammerhead eyes on the hammer tips). */
+  readonly profile?: boolean;
+  /** Blush override: colour, alpha, and `always` (on in every expression, e.g. the sunfish's sun-blush). */
+  readonly blush?: { readonly color?: string; readonly alpha?: number; readonly always?: boolean };
   /** Face zone [x, y, w, h] — used to validate eye size/placement (R7). */
   readonly zone: readonly [number, number, number, number];
   /** Idle mouth: anchor (centre), width in units, shape. */
@@ -143,14 +189,47 @@ export interface SpeciesArt {
   readonly ground?: boolean;
   /** Golden variant palette: `rose` for the Golden Turtle (R33). */
   readonly golden?: 'gold' | 'rose';
+  /** Resting face in the journal when awake (default `idle`; e.g. the grouper's `drowsy` half-lid). */
+  readonly restExpression?: Expression;
+  /** Never shown `sleepy`, on either theme (the kraken). */
+  readonly neverSleepy?: boolean;
+  /** Timing of `Part.cycle` colours: steps per second, always or only during the signature. */
+  readonly cycle?: { readonly rate: number; readonly during?: 'always' | 'signature' };
+  /**
+   * Leap options: `point: false` = lean into the arc instead of pointing along it (default: fish,
+   * sharks, eels, seahorses, rays point); `hide` = groups not drawn in the leap (the garden eel's mound).
+   */
+  readonly leap?: { readonly point?: boolean; readonly hide?: readonly string[] };
+  /** XXL tile crop: keep the head in frame (default) or crop both ends evenly. */
+  readonly crop?: 'head' | 'center';
   /** R-number → one-line reason for each deliberate deviation from the guide. */
   readonly deviations?: Readonly<Partial<Record<string, string>>>;
 }
 
 // ─── tables (style guide numbers) ─────────────────────────────────────────────────────────────
 
-/** R27 journal tile fill: share of the tile taken by the body box's long side. */
-export const TILE_FILL: Record<SizeClass, number> = { XS: 0.38, S: 0.52, M: 0.66, L: 0.8, XL: 0.92, XXL: 1.15 };
+/**
+ * R27 journal tile fill: share of the 54 px art box taken by the body box's long side. CRITIQUE-1 #4:
+ * flatter at the bottom (XS were 22–30 px smudges), steeper at the top; XL must break the art box by
+ * 2–4 px with fins/tips (validated, R28), XXL is cropped.
+ */
+export const TILE_FILL: Record<SizeClass, number> = { XS: 0.5, S: 0.6, M: 0.7, L: 0.82, XL: 0.95, XXL: 1.15 };
+/** The journal art box (CSS px) the fill table refers to, and the bleed the tile canvas allows past it. */
+export const TILE_PX = 54;
+export const TILE_BLEED = 8;
+/** R28: XL frame-break past the art box, in CSS px at TILE_PX. */
+export const FRAME_BREAK: readonly [number, number] = [2, 4];
+
+/** CRITIQUE-1 #2: absolute eye floor in units — ≥ 4 CSS px in a 54 px tile and ≥ 9 % of the body-box height. */
+export function eyeFloorUnits(size: SizeClass, long: number, boxH: number): number {
+  const ppu = (TILE_FILL[size] * TILE_PX) / long;
+  return Math.max(4 / ppu, 0.09 * boxH);
+}
+/** Default eye height when a species omits `face.eye`. */
+export function defaultEye(klass: Klass, face: Pick<Face, 'eyes' | 'zone' | 'profile'>): number {
+  const profile = face.eyes.length === 1 || !!face.profile;
+  return (profile && (klass === 'fish' || klass === 'shark') ? 0.22 : 0.18) * face.zone[3];
+}
 /** Detail (species page) fill: everything large enough to admire, size still legible. */
 export const DETAIL_FILL: Record<SizeClass, number> = { XS: 0.46, S: 0.56, M: 0.66, L: 0.76, XL: 0.86, XXL: 1.1 };
 /** R27 leap scale (× today's leaping fish). */

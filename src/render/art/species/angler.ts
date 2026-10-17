@@ -2,7 +2,7 @@
  * Anglerfish — FISH class, profile, night habitat (awake and glowing at night, sleepy by day).
  * Silhouette: one big round head-body, a jutting underbite with three rounded teeth, and the lure
  * on a curved stalk over the forehead (R10: lure + underbite, both exaggerated).
- * Dark identity lifted (R16): `#3B3240` → purple-grey L 0.59, pale lilac belly, lure `#F2E97A`
+ * Dark identity lifted (R16): `#3B3240` → purple-grey L 0.59 (chroma 0.08), pale lilac belly, lure `#F2E97A`
  * as a `light` part (baked glow at night). Cute-spooky: big round eye, teeth like baby teeth.
  * Personality: gruff, secretly sweet, hosty. Signature: the lure brightens and swings forward
  * to offer its light to the viewer, and it beams.
@@ -60,7 +60,7 @@ export default defineArt({
   size: 'L',
   feature: 'a big round head-body with a jutting toothy underbite and a glowing lure on a stalk',
   personality: ['gruff', 'secretly sweet', 'hosty'],
-  palette: { body: '#8A7494', accent: '#F2E97A', belly: '#D9CCE0' },
+  palette: { body: '#8E6E9F', accent: '#F2E97A', belly: '#D9CCE0' },
   groups: [
     { id: 'tail', pivot: [-32, 0], parts: [{ d: tail, role: 'body' }] },
     {
@@ -69,7 +69,7 @@ export default defineArt({
       parts: [
         { d: stalk, role: 'body', extra: true },
         { d: bulb, role: 'light', extra: true },
-        { d: circle(30.5, -36.5, 2.4), role: 'white', kind: 'pattern', alpha: 0.8 },
+        { d: circle(30.5, -36.5, 3.1), role: 'white', kind: 'pattern', alpha: 0.8 },
       ],
     },
     {
@@ -93,8 +93,8 @@ export default defineArt({
   shine: ellipse(-14, -17, 10, 5, -30),
   face: {
     eyes: [[11, -4]],
-    eye: 10,
-    zone: [-4, -30, 43, 46],
+    eye: 11.5,
+    zone: [-4, -31, 43, 48],
     mouth: { at: [24, 5], w: 6, shape: 'none' },
     sweet: true,
   },

@@ -2,7 +2,7 @@
  * Whale Shark — SHARK class, profile, XXL (the tile crops its tail on purpose, R27/R28).
  * Silhouette: a huge deep body behind a wide, flat, blunt head with a long gentle mouth across the
  * front (R10: the broad box of a head and the wide smile), small dorsal, crescent tail.
- * Dark identity lifted (R16): slate blue at L 0.58, white belly, an authored grid of white spots.
+ * Dark identity lifted (R16): slate blue at L 0.60 (chroma 0.09), white belly, an authored grid of white spots.
  * Personality: gentle, huge, kind. Signature: an enormous slow blink and a tiny smile while three
  * plankton specks drift into its mouth.
  */
@@ -71,12 +71,12 @@ const spots = join(
   circle(28, -9, 3.1),
   circle(16, -11, 3.3),
   circle(4, -10, 3.2),
-  circle(-8, -7, 3),
-  circle(-20, -4, 2.8),
-  circle(10, -1, 3),
-  circle(-2, 1, 3),
-  circle(-14, 2, 2.8),
-  circle(22, 0, 2.9),
+  circle(-8, -7, 3.1),
+  circle(-20, -4, 3.1),
+  circle(10, -1, 3.1),
+  circle(-2, 1, 3.1),
+  circle(-14, 2, 3.1),
+  circle(22, 0, 3.1),
 );
 // the long mouth across the front of the flat head (a part, not the rig mouth: it's 3× wider)
 const mouthLine = 'M46 2C42 8 35 10 29 9';
@@ -88,7 +88,7 @@ export default defineArt({
   size: 'XXL',
   feature: 'a wide flat blunt head with a long smile across the front, deep spotted body',
   personality: ['gentle', 'huge', 'kind'],
-  palette: { body: '#5F7F9C', accent: '#F2F6F9', belly: '#E8EEF2' },
+  palette: { body: '#5A84B5', accent: '#F2F6F9', belly: '#E8EEF2' },
   groups: [
     // the tail is `extra`: outside the body box, so the XXL tile crops it (R28 "it doesn't fit")
     { id: 'tail', pivot: [-31, 0], parts: [{ d: tail, role: 'body', extra: true }] },
@@ -100,8 +100,7 @@ export default defineArt({
         { d: head, role: 'body' },
         { d: ellipse(12, 16, 40, 8, -2), role: 'belly', kind: 'pattern' },
         { d: spots, role: 'accent', kind: 'pattern', alpha: 0.9 },
-        { d: mouthLine, role: 'ink', kind: 'line', w: 1.8 },
-        { d: 'M8 -6C10 -2 10 2 8 6M3 -5C5 -1 5 3 3 7', role: 'ink', kind: 'line', w: 1.3, alpha: 0.4 },
+        { d: mouthLine, role: 'ink', kind: 'line', w: 3 },
       ],
     },
     { id: 'finA', pivot: [8, 10], parts: [{ d: pectoral, role: 'body' }] },

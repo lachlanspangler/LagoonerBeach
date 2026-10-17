@@ -612,19 +612,24 @@ export function creatureThumb(
 ): HTMLCanvasElement {
   const c = document.createElement('canvas');
   const dpr = Math.min(3, window.devicePixelRatio || 1);
-  c.width = Math.round(px * dpr);
-  c.height = Math.round(px * dpr);
-  c.style.width = `${px}px`;
-  c.style.height = `${px}px`;
+  const fit = o.avatar ? 'avatar' : px >= 100 ? 'detail' : 'tile'; // avatars: identity, not size
+  // tiles bleed 8 px past the art box (= kit TILE_BLEED) so XL fins can break the frame (R28);
+  // negative margins keep the layout box at px × px
+  const bleed = fit === 'tile' ? 8 : 0;
+  const W = px + 2 * bleed;
+  c.width = Math.round(W * dpr);
+  c.height = Math.round(W * dpr);
+  c.style.width = `${W}px`;
+  c.style.height = `${W}px`;
+  if (bleed) c.style.margin = `-${bleed}px`;
   const g = c.getContext('2d')!;
   g.scale(dpr, dpr);
   const nite = night();
-  const fit = o.avatar ? 'avatar' : px >= 100 ? 'detail' : 'tile'; // avatars: identity, not size
   const expression = o.shy && !silhouette ? 'shy' : undefined;
   const draw = (t?: number) => {
-    g.clearRect(0, 0, px, px);
+    g.clearRect(0, 0, W, W);
     const still = document.documentElement.dataset.motion === 'reduced';
-    drawCreature(g, sp, px / 2, px / 2, px, 0, { silhouette, golden, night: nite, fit, t, still, expression });
+    drawCreature(g, sp, W / 2, W / 2, px, 0, { silhouette, golden, night: nite, fit, t, still, expression });
   };
   draw();
   const animate = () => {
@@ -651,8 +656,8 @@ export function creatureThumb(
       animate();
     });
   (c as HTMLCanvasElement & { redraw?: (t?: number, sig?: number) => void }).redraw = (t, sig) => {
-    g.clearRect(0, 0, px, px);
-    drawCreature(g, sp, px / 2, px / 2, px, 0, {
+    g.clearRect(0, 0, W, W);
+    drawCreature(g, sp, W / 2, W / 2, px, 0, {
       golden,
       night: nite,
       fit,
