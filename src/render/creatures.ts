@@ -29,6 +29,13 @@ export function loadCreatureArt(): Promise<typeof ArtChunk> {
 
 /** True when this species will be drawn with new art right now. */
 export const hasNewArt = (id: string): boolean => chunk?.ART.has(id) ?? false;
+/** The species' R27 size class when it has new art (XS … XXL), else undefined. */
+export const artSizeOf = (id: string): 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | undefined => chunk?.ART.get(id)?.size;
+/** The species dozes on this theme (its journal tile rests `drowsy` and may wake for a look). */
+export const dozesNow = (sp: Species, night: boolean): boolean => {
+  const art = chunk?.ART.get(sp.id);
+  return !!(chunk && art && chunk.dozing(art, sp, night));
+};
 /** Run `cb` once the art chunk is in (immediately if it already is). */
 export function whenArtReady(cb: () => void): void {
   if (chunk) cb();

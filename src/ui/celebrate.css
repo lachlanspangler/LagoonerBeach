@@ -98,7 +98,14 @@ html[data-theme='night'] .r-golden .rv-card {
   text-transform: uppercase;
   color: var(--ink-2);
 }
+.rv-over,
+.rv-rarity,
+.rv-lower {
+  position: relative;
+  z-index: 1;
+}
 .rv-pool {
+  position: relative;
   display: grid;
   place-items: center;
   margin: 2px auto 0;
@@ -106,6 +113,68 @@ html[data-theme='night'] .r-golden .rv-card {
   height: 168px;
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--tier) 22%, transparent), transparent 75%);
+}
+/* the stage canvas is bigger than the pool: big creatures break out of it (and the card top) */
+/* a legendary XL breaks the card top: the overline gives way (the dialog's name still says it) */
+.rv-break .rv-over {
+  display: none;
+}
+.rv-pool canvas {
+  position: absolute;
+  pointer-events: none;
+}
+/* the lower card while the pearl wobbles: a faint shimmer where the name and facts will land */
+.rv-lower {
+  display: grid;
+}
+.rv-lower > * {
+  grid-area: 1 / 1;
+}
+.rv-ph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  transition: opacity 180ms ease;
+}
+.rv-ph i {
+  display: block;
+  height: 14px;
+  width: 64%;
+  border-radius: 7px;
+  background-color: color-mix(in srgb, var(--text) 7%, transparent);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--panel) 70%, #fff) 50%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: rv-shimmer 1.3s linear infinite;
+}
+.rv-ph i.n {
+  height: 30px;
+  width: 58%;
+  border-radius: 10px;
+}
+.rv-ph i.f {
+  width: 78%;
+}
+.rv-ph i.j {
+  width: 52%;
+  margin-top: 4px;
+}
+@keyframes rv-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+.reveal.info .rv-ph {
+  opacity: 0;
 }
 .rv-info {
   opacity: 0;
@@ -204,11 +273,18 @@ html[data-theme='night'] .r-golden .rv-card {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
+  /* not pressable (or focusable) until the card settles: a tap mid-animation only skips it */
   opacity: 0;
-  transition: opacity 200ms ease;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    visibility 0s;
 }
 .reveal.settled .rv-btns {
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 .rv-btns .btn {
   margin: 0;
@@ -279,4 +355,12 @@ html[data-rm='1'] .reveal-pop,
 html[data-rm='1'] .rv-stamp,
 html[data-rm='1'] .rv-info {
   transition-duration: 1ms !important;
+}
+html[data-rm='1'] .rv-ph i {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rv-ph i {
+    animation: none;
+  }
 }
