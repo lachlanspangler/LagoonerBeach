@@ -7,40 +7,39 @@
  * Personality: earnest, curious, wide-eyed. Signature: scans left and right with the hammer
  * ("sees every direction"), then a pleased little nod.
  */
-import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
+import { blob, capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
 // the body seen from the front-left: a plump teardrop running back and up behind the hammer
 const body = blob([
-  [26, 2],
-  [18, -10],
-  [2, -16],
-  [-16, -14],
-  [-28, -7],
-  [-33, 0],
-  [-27, 6],
-  [-12, 12],
-  [6, 15],
-  [20, 12],
+  [27.5, 2],
+  [21, -10],
+  [5, -16],
+  [-13, -14],
+  [-25, -7],
+  [-30, 0],
+  [-24, 6],
+  [-9, 12],
+  [9, 15],
+  [21.5, 12],
 ]);
 const dorsal = blob([
-  [2, -14],
-  [-4, -28],
-  [-9, -37],
-  [-14, -33],
-  [-16, -13],
+  [5, -14],
+  [-1, -28],
+  [-6, -37],
+  [-11, -33],
+  [-13, -13],
 ]);
 const tail = blob([
-  [-29, -3],
-  [-36, -14],
-  [-42, -25],
-  [-45, -19],
-  [-42, -4],
-  [-44, 9],
-  [-40, 11],
-  [-31, 4],
+  [-26, -3],
+  [-31.9, -14],
+  [-37, -25],
+  [-39.6, -19],
+  [-37, -4],
+  [-38.8, 9],
+  [-35.4, 11],
+  [-27.7, 4],
 ]);
-// the hammer: a wide bar, a touch smile-curved, with round lobes at the tips; the lobes are `extra`
-// so the bar's span can break the frame without shrinking the shark
+// the hammer: a wide bar, a touch smile-curved, with tall round lobes at the tips
 const bar = blob([
   [-14, -4],
   [4, -1.5],
@@ -53,7 +52,11 @@ const bar = blob([
   [4, 10.5],
   [-14, 10],
 ]);
-const lobes = join(circle(-16, 3, 8.6), circle(36.5, 1.5, 8.2));
+// tall rounded lobes at the tips (≈ 2× the bar's depth): the eyes sit at their outer edges. The far
+// (left) lobe is a touch smaller and shaded so the hammer reads in 3D, not as goggles
+const farLobe = ellipse(-17.5, 2.5, 7.5, 12.5);
+const nearLobe = ellipse(35.5, 1.5, 8.5, 14);
+const lobes = join(farLobe, nearLobe);
 // the chin under the middle of the hammer carries the little smile
 const chin = ellipse(12, 11, 9, 6);
 const pectoral = tube([
@@ -68,9 +71,17 @@ export default defineArt({
   size: 'XL',
   feature: 'a wide horizontal T hammer with an eye on each round tip, tall dorsal behind',
   personality: ['earnest', 'curious', 'wide-eyed'],
-  palette: { body: '#6889BA', belly: '#E6ECF4' },
+  palette: { body: '#4FA0AE', belly: '#E6F0EF' },
   groups: [
-    { id: 'tail', pivot: [-30, 0], parts: [{ d: tail, role: 'body' }] },
+    {
+      id: 'tail',
+      pivot: [-27, 0],
+      parts: [
+        { d: tail, role: 'body' },
+        // R28: the lower tail tip breaks the XL tile frame by ~3 px (extra: outside the body box)
+        { d: capsule(-36, 6, 3, -44, 10.5, 2.4), role: 'body', extra: true },
+      ],
+    },
     // the dorsal is its own layer behind the body, so the body itself rests level (R5T)
     { id: 'dorsal', pivot: [-8, -14], parts: [{ d: dorsal, role: 'body' }] },
     {
@@ -87,8 +98,9 @@ export default defineArt({
       parts: [
         { d: chin, role: 'belly' },
         { d: bar, role: 'body' },
-        { d: lobes, role: 'body', extra: true },
+        { d: lobes, role: 'body' },
         { d: ellipse(12, 11, 30, 3.4), role: 'belly', kind: 'pattern' },
+        { d: ellipse(-17.5, 2.5, 9, 14), role: 'ink', kind: 'pattern', alpha: 0.12 },
       ],
     },
   ],
@@ -96,8 +108,8 @@ export default defineArt({
   face: {
     g: 'head',
     eyes: [
-      [-16, 1.5],
-      [36.5, 0],
+      [-19, 1.5],
+      [37.5, 0],
     ],
     eye: 8.4,
     zone: [-24, -20, 70, 36],
