@@ -1225,6 +1225,11 @@ function debugDeps(): DebugDeps {
         const c = renderShareCard(sp, { date: today(), log });
         return { w: c.width, h: c.height, png: c.toDataURL('image/png').length, text: log, hint: sp.hint };
       },
+      shareTry: async (id) => {
+        const { renderShareCard, shareCanvas } = await import('../ui/share-card.ts');
+        const c = renderShareCard(SPECIES_BY_ID.get(id)!, { date: today() });
+        return shareCanvas(c, `lagooner-beach-${id}.png`, 'test');
+      },
       showResults: (o) =>
         ui.showGameOver({
           score: o.score,

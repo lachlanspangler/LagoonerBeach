@@ -1,7 +1,7 @@
 /**
  * Share card for a discovery (UI_DESIGN §6.9): a 1080×1350 (4:5) picture of the creature, its name
  * and rarity, with the game's name. Spoiler-free: no hint of how it was caught.
- * Canvas → PNG blob → Web Share (files) → Capacitor Share (if the plugins exist) → download.
+ * Canvas → PNG → native: Filesystem + Share plugins; web: Web Share (files) → download.
  */
 import type { Species } from '../meta/creatures.ts';
 import { SPECIES } from '../meta/creatures.ts';
@@ -10,6 +10,8 @@ import { DISPLAY_STACK, FONT_STACK } from '../render/theme.ts';
 import { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK } from './rarity.ts';
 
 export { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK };
+
+let lastCard: { key: string; c: HTMLCanvasElement } | null = null;
 
 export const W = 1080;
 export const H = 1350;
@@ -24,9 +26,14 @@ export function renderShareCard(
     /** Collects every string drawn (tests). */ log?: string[];
   } = {},
 ): HTMLCanvasElement {
+  // the same card again (prepared when the reveal settled) → the same, already encoded canvas
+  const key = o.log ? null : `${sp.id}|${!!o.golden}|${o.date ?? ''}|${o.name ?? ''}`;
+  if (key && lastCard?.key === key) return lastCard.c;
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
+  // fonts still loading → don't keep this rendering (it would use fallback faces)
+  if (key && document.fonts?.status !== 'loading') lastCard = { key, c };
   const g = c.getContext('2d')!;
   if (o.log) {
     const fill = g.fillText.bind(g);
@@ -184,44 +191,83 @@ export function sparkles(g: CanvasRenderingContext2D, cx: number, cy: number, r:
   g.restore();
 }
 
-type CapPlugins = {
-  Share?: { share(o: { title?: string; text?: string; url?: string; files?: string[] }): Promise<unknown> };
-  Filesystem?: {
-    writeFile(o: { path: string; data: string; directory: string }): Promise<{ uri: string }>;
-  };
-};
+export type ShareOutcome = 'shared' | 'downloaded' | 'cancelled' | 'failed';
 
-/** Share a rendered card. Returns how it went out. */
-export async function shareCanvas(
-  c: HTMLCanvasElement,
-  file: string,
-  text: string,
-): Promise<'shared' | 'downloaded' | 'failed'> {
-  const blob = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/png'));
-  if (!blob) return 'failed';
-  const f = new File([blob], file, { type: 'image/png' });
+/** What to tell the player (screen readers) after a share; '' when they simply closed the sheet. */
+export function shareAnnouncement(how: ShareOutcome): string {
+  return { shared: 'Shared', downloaded: 'Saved the picture', cancelled: '', failed: 'Could not share' }[how];
+}
+
+const isNative = (): boolean =>
+  !!(globalThis as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+
+/** Encoded cards (PNG base64), by canvas: encode once, ahead of the tap when we can. */
+const encoded = new WeakMap<HTMLCanvasElement, string>();
+const base64Of = (c: HTMLCanvasElement): string => {
+  let b = encoded.get(c);
+  if (b === undefined) {
+    b = c.toDataURL('image/png').split(',')[1] ?? '';
+    encoded.set(c, b);
+  }
+  return b;
+};
+function fileOf(c: HTMLCanvasElement, name: string): File | null {
+  const b64 = base64Of(c);
+  if (!b64) return null;
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new File([bytes], name, { type: 'image/png' });
+}
+
+/**
+ * Render and encode a card ahead of the Share tap (call when the reveal settles, on idle). iOS only
+ * shares from a live user activation, so the tap itself must not wait on rendering or `toBlob`.
+ * `renderShareCard` with the same arguments then returns this canvas, already encoded.
+ */
+export function prepareShareCard(sp: Species, o: Parameters<typeof renderShareCard>[1] = {}): void {
+  void base64Of(renderShareCard(sp, o));
+}
+
+const isAbort = (e: unknown): boolean =>
+  (e as Error)?.name === 'AbortError' || /cancel/i.test(String((e as Error)?.message ?? e));
+
+/**
+ * Share a rendered card. Native shells: write the PNG to the cache dir (Filesystem) and open the
+ * system sheet (Share) — WebViews have no working `<a download>` (Android has no navigator.share).
+ * Web: navigator.share with the file when the browser can, else a download. Synchronous up to the
+ * share call (no toBlob await), so the click's user activation survives.
+ */
+export async function shareCanvas(c: HTMLCanvasElement, file: string, text: string): Promise<ShareOutcome> {
+  if (isNative()) {
+    try {
+      const data = base64Of(c);
+      if (!data) return 'failed';
+      const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+        import('@capacitor/filesystem'),
+        import('@capacitor/share'),
+      ]);
+      const w = await Filesystem.writeFile({ path: file, data, directory: Directory.Cache });
+      await Share.share({ title: 'Lagooner Beach', text, files: [w.uri] });
+      return 'shared';
+    } catch (e) {
+      return isAbort(e) ? 'cancelled' : 'failed';
+    }
+  }
+  const f = fileOf(c, file);
+  if (!f) return 'failed';
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  try {
-    if (nav.share && nav.canShare?.({ files: [f] })) {
+  if (nav.share && nav.canShare?.({ files: [f] })) {
+    try {
       await nav.share({ files: [f], text, title: 'Lagooner Beach' });
       return 'shared';
-    }
-  } catch (e) {
-    if ((e as Error).name === 'AbortError') return 'shared'; // the player closed the sheet
-  }
-  const cap = (globalThis as { Capacitor?: { Plugins?: CapPlugins } }).Capacitor?.Plugins;
-  if (cap?.Share && cap.Filesystem) {
-    try {
-      const data = c.toDataURL('image/png').split(',')[1]!;
-      const w = await cap.Filesystem.writeFile({ path: file, data, directory: 'CACHE' });
-      await cap.Share.share({ title: 'Lagooner Beach', text, files: [w.uri] });
-      return 'shared';
-    } catch {
-      /* fall through to download */
+    } catch (e) {
+      if (isAbort(e)) return 'cancelled'; // the player closed the sheet
+      /* NotAllowedError etc.: fall back to a download */
     }
   }
   try {
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(f);
     const a = document.createElement('a');
     a.href = url;
     a.download = file;
