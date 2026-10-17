@@ -7,7 +7,7 @@
  * Signature: the lid slowly lifts to reveal a pearl, then closes with a satisfied, smug smile.
  * Groups (back to front): mantle (the face rides on it), base valve, lid valve, pearl (prop).
  */
-import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
+import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
 // top valve: a dome with a waved lower lip, crowned by five fluted lobes
 const lid = join(
@@ -56,15 +56,22 @@ const base = blob(
 const mantle = ellipse(0, -1, 27, 21);
 // fluted ridges: four radial lines per valve (R18: ribs as 3–5 ridges)
 const lidRibs = 'M-25 -16L-25 -28M-8 -20L-8 -33M8 -20L8 -33M25 -16L25 -28';
-const baseRibs = 'M-24 15L-25 30M-8 18L-7 34M8 18L7 34M24 15L25 30';
+// four wide, gently wavy ridges on the bowl (hairlines here read as teeth)
+const ridge = (x: number, dx: number) =>
+  tube([
+    [x, 14, 2.2],
+    [x + dx, 22, 2.6],
+    [x - dx * 0.5, 30, 2.4],
+  ]);
+const baseRibs = join(ridge(-25, -2), ridge(-8.5, 1.5), ridge(8.5, -1.5), ridge(25, 2));
 // blue mantle spots, hand placed clear of the face
 const spots = join(
   circle(-24, -2, 3.4),
   circle(24, -2, 3.4),
-  circle(-17, 10, 2.8),
-  circle(17, 10, 2.8),
-  circle(-14, -12, 2.6),
-  circle(14, -12, 2.6),
+  circle(-18, 10, 3.2),
+  circle(18, 10, 3.2),
+  circle(-15, -12, 3.1),
+  circle(15, -12, 3.1),
 );
 
 export default defineArt({
@@ -73,7 +80,7 @@ export default defineArt({
   size: 'L',
   feature: 'a huge scalloped shell parted like lips around a teal mantle',
   personality: ['wise', 'sleepy', 'ancient'],
-  palette: { body: '#3BC9A0', accent: '#2E6FD8', belly: '#F2E6C8' },
+  palette: { body: '#3BC9A0', accent: '#2E6FD8', belly: '#F3E3BC' },
   groups: [
     {
       id: 'mantle',
@@ -87,7 +94,7 @@ export default defineArt({
       pivot: [0, 20],
       parts: [
         { d: base, role: 'belly' },
-        { d: baseRibs, role: 'ink', kind: 'line', w: 1.6, alpha: 0.4 },
+        { d: baseRibs, role: 'ink', kind: 'pattern', alpha: 0.13 },
         { d: ellipse(0, 36, 40, 7), role: 'ink', kind: 'pattern', alpha: 0.1 },
       ],
     },
@@ -103,10 +110,7 @@ export default defineArt({
       id: 'pearl',
       pivot: [21, 4],
       prop: true,
-      parts: [
-        { d: circle(21, 4, 5.4), role: 'white' },
-        { d: circle(19.4, 2.4, 1.6), role: 'accent', kind: 'pattern', alpha: 0.25 },
-      ],
+      parts: [{ d: circle(21, 4, 5.4), role: 'white' }],
     },
   ],
   shineOn: 'lid',
@@ -117,8 +121,8 @@ export default defineArt({
       [-7.5, 2],
       [7.5, 2],
     ],
-    eye: 8.6,
-    zone: [-28, -19, 56, 36],
+    eye: 9.6,
+    zone: [-28, -20, 56, 40],
     mouth: { at: [0, 10], w: 6, shape: 'smile' },
     front: true,
     sweet: true,

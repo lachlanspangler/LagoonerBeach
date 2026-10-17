@@ -241,3 +241,10 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
   moustache when the eyes were close).
 - Eye 10 (above the 9.7 floor); crown tubercles ≥ 6 units (R18W). Lint clean.
 - IoU: clownfish 0.62, puffer 0.61 (cross-class). Self-grade A-.
+
+## giantclam (graded B → redo)
+- The bowl's hairline ribs (read as taco teeth) are now four wide, gently wavy ridges (tubes 4.4–5.2
+  units, ink at 13 %); shell `#F3E3BC`.
+- Mantle spots all ≥ 6.2 units (R18W); the tiny pearl highlight dot is gone (the white pearl reads alone).
+- Eyes 9.6 (24 % of a slightly taller face zone) so the face holds at 54 px. Lint clean.
+- IoU: octopus 0.70, kraken 0.69 (cross-class, limit 0.80); sand dollar 0.64 (same class). Self-grade A-.
