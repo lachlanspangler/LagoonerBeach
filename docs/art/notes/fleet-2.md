@@ -211,3 +211,10 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - New closest pairs: hermit 0.70, combjelly 0.68 (cross-class, limit 0.80), cockle 0.66 (same class,
   limit 0.70); cuttle dropped out of the top list. Every fish is ≤ 0.65 against it.
 - Self-grade stays B+: it reads as a little nautilus peering down, and the coil stripes still lead.
+
+# Redo round (after CRITIQUE-1 and the kit pass)
+
+## puffer (graded A, lint only)
+- R18W: the six spots are now all ≥ 6.4 units across (the two smallest were 5–5.8).
+- R2L: the pectoral fin rays are 3-unit lines at 30 % alpha (soft detail; they were 1.4 u).
+- Lint clean; silhouette unchanged (closest: combjelly 0.73 cross-class, clownfish 0.68 same class).
