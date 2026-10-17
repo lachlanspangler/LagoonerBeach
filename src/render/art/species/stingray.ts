@@ -23,9 +23,9 @@ const disc = blob([
 ]);
 const tail = tube([
   [-17, 0, 4.4],
-  [-28, -2, 3.4],
-  [-38, 1, 2.8],
-  [-45, 5, 2.5],
+  [-26, -2, 3.4],
+  [-34, 0.5, 2.8],
+  [-40, 5, 2.5],
 ]);
 const spots = join(
   circle(-6, -12, 3.2),
@@ -56,6 +56,7 @@ export default defineArt({
     {
       id: 'tail',
       pivot: [-17, 0],
+      // a shorter whip (box 77 × 67, was 82) so the disc reads L in the tile
       parts: [{ d: tail, role: 'body' }],
     },
     {
