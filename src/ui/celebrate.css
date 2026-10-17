@@ -49,10 +49,32 @@
   transform: none;
 }
 .r-golden .rv-card {
-  box-shadow:
-    0 18px 48px var(--shadow),
-    0 0 0 3px #e2b24a inset;
-  background: linear-gradient(180deg, #fff8e2, var(--panel) 45%);
+  /* gold foil: a moving metallic gradient in the border, the warm panel inside */
+  border: 3px solid transparent;
+  box-shadow: 0 18px 48px var(--shadow);
+  background:
+    linear-gradient(180deg, #fff8e2, var(--panel) 45%) padding-box,
+    linear-gradient(115deg, #c9922b, #f7d77a 22%, #fff4cc 30%, #c9922b 45%, #f2c14e 70%, #fff1c2 78%, #b8862b)
+      border-box;
+  background-size:
+    100% 100%,
+    220% 220%;
+  animation: rv-foil 2.4s ease-in-out infinite alternate;
+}
+@keyframes rv-foil {
+  from {
+    background-position:
+      0 0,
+      0% 50%;
+  }
+  to {
+    background-position:
+      0 0,
+      100% 50%;
+  }
+}
+html[data-rm='1'] .r-golden .rv-card {
+  animation: none;
 }
 html[data-theme='night'] .rv-card {
   background: linear-gradient(
@@ -62,7 +84,13 @@ html[data-theme='night'] .rv-card {
   );
 }
 html[data-theme='night'] .r-golden .rv-card {
-  background: linear-gradient(180deg, #2c2a1c, var(--panel) 45%);
+  background:
+    linear-gradient(180deg, #2c2a1c, var(--panel) 45%) padding-box,
+    linear-gradient(115deg, #c9922b, #f7d77a 22%, #fff4cc 30%, #c9922b 45%, #f2c14e 70%, #fff1c2 78%, #b8862b)
+      border-box;
+  background-size:
+    100% 100%,
+    220% 220%;
 }
 .rv-over {
   font: 800 12px/1.2 var(--font);
