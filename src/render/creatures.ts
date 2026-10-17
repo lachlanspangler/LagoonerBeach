@@ -16,15 +16,20 @@ type G = CanvasRenderingContext2D;
 let chunk: typeof ArtChunk | null = null;
 let loading: Promise<typeof ArtChunk> | null = null;
 
-/** Load the art chunk (idempotent). Resolves once new art can be drawn. */
+/**
+ * Load the art chunk (idempotent). Resolves once new art can be drawn. A failed fetch isn't
+ * cached (legacy art keeps drawing meanwhile); the next call tries again.
+ */
 export function loadCreatureArt(): Promise<typeof ArtChunk> {
-  loading ??= import('./art/creature-art.ts').then((m) => {
+  if (loading) return loading;
+  const p = import('./art/creature-art.ts').then((m) => {
     chunk = m;
     if (typeof location !== 'undefined' && /[?&]debug=1/.test(location.search))
       (globalThis as { __lbArt?: unknown }).__lbArt = m;
     return m;
   });
-  return loading;
+  p.catch(() => loading === p && (loading = null));
+  return (loading = p);
 }
 
 /** True when this species will be drawn with new art right now. */
@@ -39,8 +44,9 @@ export function whenArtReady(cb: () => void): void {
 if (typeof window !== 'undefined' && typeof requestAnimationFrame === 'function') {
   const w = window as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void };
   requestAnimationFrame(() => {
-    if (w.requestIdleCallback) w.requestIdleCallback(() => void loadCreatureArt(), { timeout: 2500 });
-    else setTimeout(() => void loadCreatureArt(), 600);
+    const warm = () => void loadCreatureArt().catch(() => undefined);
+    if (w.requestIdleCallback) w.requestIdleCallback(warm, { timeout: 2500 });
+    else setTimeout(warm, 600);
   });
 }
 

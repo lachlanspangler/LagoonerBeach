@@ -16,6 +16,8 @@ import type { ReefListModel } from './reefList.ts';
 import type * as Sheets from './sheets.ts';
 import { resultsHero } from './results.ts';
 import { icon, type IconName } from './icons.ts';
+import { retryable } from '../platform/lazy.ts';
+import { showRetry } from './retry.ts';
 import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
 
 export interface UiHandlers {
@@ -56,7 +58,8 @@ export interface UiHandlers {
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 
-let sheetsMod: Promise<typeof Sheets> | null = null;
+/** The sheets chunk; a failed fetch isn't cached (the next tap retries). */
+const loadSheets = retryable(() => import('./sheets.ts'));
 
 /** The Ui surface the lazy sheets module uses. */
 export interface SheetKit {
@@ -396,21 +399,25 @@ export class Ui {
   // ─────────────────────────────────────────────────────────────────────────── sheets (lazy)
   /** Settings, the Beach Journal, species pages and the reef list live in a lazy chunk (sheets.ts). */
   private sheets(): Promise<typeof Sheets> {
-    return (sheetsMod ??= import('./sheets.ts'));
+    return loadSheets();
+  }
+  /** Open a sheet from the chunk; if it can't load, offer a retry chip instead of a dead tap. */
+  private withSheets(open: (m: typeof Sheets) => void): void {
+    this.sheets().then(open, () => showRetry(() => this.withSheets(open)));
   }
   /** Fetch the sheets chunk ahead of the first tap (idle after boot). */
   prefetchSheets(): void {
     void this.sheets().catch(() => undefined);
   }
   showSettings(p: Profile): void {
-    void this.sheets().then((m) => m.showSettings(this.kit(), p));
+    this.withSheets((m) => m.showSettings(this.kit(), p));
   }
   showJournal(j: Journal): void {
-    void this.sheets().then((m) => m.showJournal(this.kit(), j));
+    this.withSheets((m) => m.showJournal(this.kit(), j));
   }
   /** Reefs by chapter, shipped and endless (src/ui/reefList.ts); tap one to play it. */
   showReefs(m: ReefListModel): void {
-    void this.sheets().then((s) => s.showReefs(this.kit(), m));
+    this.withSheets((s) => s.showReefs(this.kit(), m));
   }
 
   /** What the sheets module needs from the Ui (kept narrow). */

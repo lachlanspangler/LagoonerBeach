@@ -1154,3 +1154,24 @@ html[data-rm='1'] .reef.next,
 html[data-rm='1'] .icon-btn.collect {
   animation: none;
 }
+
+/* ═══ Retry chip (a lazy chunk failed to load; src/ui/retry.ts) ═══ */
+.retry-chip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--s6));
+  transform: translateX(-50%);
+  z-index: 50;
+}
+.retry-btn {
+  min-height: 44px;
+  padding: 0 var(--s5);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--surface);
+  box-shadow: var(--e2);
+  font: 800 calc(14px * var(--fs)) var(--font);
+  white-space: nowrap;
+  cursor: pointer;
+}

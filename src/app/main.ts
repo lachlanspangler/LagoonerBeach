@@ -54,6 +54,8 @@ import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } 
 import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf, reefId } from '../core/endless.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
+import { showRetry } from '../ui/retry.ts';
+import { installPreloadRecovery } from '../platform/lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
@@ -402,7 +404,11 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
   if (mode === 'classic' && state.moves === 0 && LB_ON && LB_URL) {
     // a ticketed run starts its server clock at the first move (offline: the run isn't speed-checked)
     const tok = runLog.get('classic')?.runToken;
-    if (tok) void lbui().then((l) => l.client.markStarted(tok));
+    if (tok)
+      void lbui().then(
+        (l) => l.client.markStarted(tok),
+        () => undefined,
+      );
   }
   const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   const prevScore = state.score;
@@ -533,7 +539,8 @@ let lbMod: Promise<LeaderboardUi> | null = null;
 /** The last results card, so leaderboard sheets opened from it can go back to it. */
 let resultCard: HTMLElement | null = null;
 function lbui(): Promise<LeaderboardUi> {
-  lbMod ??= import('../ui/leaderboard.ts').then((m) =>
+  if (lbMod) return lbMod;
+  const p = import('../ui/leaderboard.ts').then((m) =>
     m.createLeaderboardUi({
       ui,
       url: LB_URL,
@@ -549,7 +556,9 @@ function lbui(): Promise<LeaderboardUi> {
       reducedMotion: () => scene.reducedMotion,
     }),
   );
-  return lbMod;
+  // a failed chunk fetch isn't cached: the next use retries
+  p.catch(() => lbMod === p && (lbMod = null));
+  return (lbMod = p);
 }
 /** Results-card hook: Leaderboard button (name entry → board), auto-post when already named. */
 /** The last finished run ("Choose a name" on a boards sheet posts it if it wasn't posted or declined). */
@@ -560,21 +569,46 @@ function lbResult(run: FinishedRun | null, m: 'classic' | 'daily') {
   let hook: Promise<Hook> | null = null;
   let btn: HTMLButtonElement | null = null;
   // the leaderboard module loads only for players who have opted in, or when the button is tapped
-  const get = () =>
-    (hook ??= lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false))));
+  const get = () => {
+    if (hook) return hook;
+    const p = lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false)));
+    p.catch(() => hook === p && (hook = null));
+    return (hook = p);
+  };
   const named = !!profile.lb?.name;
   if (named) void get(); // opted in: post now, so the rank is ready when the card shows
   return {
     label: named ? 'Leaderboard' : 'Post your score',
-    open: () => void get().then((x) => (btn && x.mount(btn), x.open())),
+    open: function open(): void {
+      get().then(
+        (x) => (btn && x.mount(btn), x.open()),
+        () => showRetry(open),
+      );
+    },
     mount: (b: HTMLButtonElement) => {
       btn = b;
-      if (named) void get().then((x) => x.mount(b));
+      if (named)
+        get().then(
+          (x) => x.mount(b),
+          () => undefined,
+        );
     },
   };
 }
+function openBoards(): void {
+  lbui().then(
+    (l) => l.showBoards(mode === 'daily' ? 'daily' : 'week'),
+    () => showRetry(openBoards),
+  );
+}
 /** Queued scores, pending deletions, a spare Endless seed: only touches the network when needed. */
-const lbBackground = () => LB_ON && (LB_URL || hasPendingLbWork()) && void lbui().then((l) => l.background());
+const lbBackground = () =>
+  LB_ON &&
+  (LB_URL || hasPendingLbWork()) &&
+  void lbui().then(
+    (l) => l.background(),
+    () => undefined,
+  );
 addEventListener('online', lbBackground);
 
 function checkPuzzle(): void {
@@ -804,7 +838,7 @@ const ui = new Ui({
     ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
-  onLeaderboards: LB_ON ? () => void lbui().then((l) => l.showBoards(mode === 'daily' ? 'daily' : 'week')) : undefined,
+  onLeaderboards: LB_ON ? openBoards : undefined,
   onErase: () => {
     erasing = true; // don't let the unload handlers write it all back
     const lbId = profile.lb?.installId;
@@ -1049,6 +1083,8 @@ function frame(): void {
     );
 }
 
+// a lazy chunk 404s after a deploy → reload once onto the new index (guarded against loops)
+installPreloadRecovery();
 void initNative();
 // warm up audio off the input path (see Sfx.prepare)
 const idle =

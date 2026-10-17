@@ -5,6 +5,7 @@
  */
 import type { Reveal, RevealDeps, RevealItem } from './reveal.ts';
 import { loadCreatureArt } from '../render/creatures.ts';
+import { showRetry } from './retry.ts';
 
 export class LazyReveal {
   private impl: Reveal | null = null;
@@ -25,12 +26,15 @@ export class LazyReveal {
     void this.load().catch(() => undefined);
   }
 
+  /** A failed chunk fetch isn't cached: the next load() tries the network again. */
   private load(): Promise<Reveal> {
-    this.loading ??= Promise.all([import('./reveal.ts'), loadCreatureArt().catch(() => null)]).then(([m]) => {
-      this.impl = new m.Reveal(this.root, this.deps);
+    if (this.loading) return this.loading;
+    const p = Promise.all([import('./reveal.ts'), loadCreatureArt().catch(() => null)]).then(([m]) => {
+      this.impl ??= new m.Reveal(this.root, this.deps);
       return this.impl;
     });
-    return this.loading;
+    p.catch(() => this.loading === p && (this.loading = null));
+    return (this.loading = p);
   }
 
   get blocking(): boolean {
@@ -53,6 +57,8 @@ export class LazyReveal {
       () => {
         this.inFlight--;
         this.flush();
+        // the discovery is already in the journal; offer to show it once the chunk can load
+        if (gen === this.gen) showRetry(() => gen === this.gen && this.enqueue(items, performance.now()));
       },
     );
   }
