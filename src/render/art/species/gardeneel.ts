@@ -8,23 +8,23 @@
 import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
 const stalk = tube([
-  [-6, 38, 6.6],
-  [-8, 24, 6.8],
-  [-7, 8, 6.8],
-  [-4, -8, 7],
-  [0, -20, 7.6],
+  [-4, 38, 6],
+  [-5, 24, 6.2],
+  [-5, 8, 6.2],
+  [-4, -8, 6.4],
+  [-2, -18, 6.8],
 ]);
-// one smooth head with a rounded snout (two ellipses read as a lump)
+// one smooth, big round head (≈ 1.8× the stalk) with a rounded snout: a periscope, not a cane
 const head = blob([
-  [-8, -27],
-  [-4, -35],
-  [5, -38],
-  [14, -34],
-  [20, -28],
+  [-11, -26],
+  [-7, -35],
+  [3, -39.5],
+  [13, -36],
+  [19, -29],
   [19, -22],
-  [10, -18],
-  [0, -18],
-  [-6, -20],
+  [12, -16],
+  [1, -14.5],
+  [-8, -18],
 ]);
 const mound = join(ellipse(-4, 36, 30, 8.5), ellipse(-20, 38, 12, 6), ellipse(13, 38, 12, 6));
 
@@ -34,7 +34,7 @@ export default defineArt({
   size: 'M',
   feature: 'a thin upright stalk rising out of a wide sand mound, hooked into a round head on top',
   personality: ['swaying', 'social', 'timid'],
-  palette: { body: '#E3D9BE', accent: '#4A3E33', belly: '#CDB78A' },
+  palette: { body: '#EED595', accent: '#4A3E33', belly: '#CDB78A' },
   groups: [
     {
       id: 'body',
@@ -42,7 +42,7 @@ export default defineArt({
       parts: [
         { d: stalk, role: 'body' },
         { d: head, role: 'body' },
-        { d: join(circle(-2, -33, 3.4), circle(-10, 2, 3.4), circle(-8, 22, 3.4)), role: 'accent', kind: 'pattern' },
+        { d: join(circle(-7.5, -29, 3.2), circle(-8, 0, 3.4), circle(-7, 20, 3.4)), role: 'accent', kind: 'pattern' },
       ],
     },
     {
@@ -50,28 +50,24 @@ export default defineArt({
       pivot: [-4, 40],
       parts: [
         { d: mound, role: 'belly' },
-        {
-          d: join(circle(-18, 40, 1.6), circle(8, 42, 1.4), circle(20, 38, 1.2)),
-          role: 'ink',
-          kind: 'pattern',
-          alpha: 0.25,
-        },
-        { d: ellipse(-6, 30, 10, 2.6), role: 'ink', kind: 'pattern', alpha: 0.35 },
+        { d: join(circle(-20, 40, 3), circle(14, 41, 3)), role: 'ink', kind: 'pattern', alpha: 0.12 },
+        { d: ellipse(-4, 30, 10, 3), role: 'ink', kind: 'pattern', alpha: 0.35 },
       ],
     },
   ],
   shine: ellipse(0, -36, 6, 2.6, -16),
   face: {
-    eyes: [[9, -25]],
-    eye: 6.6,
-    zone: [-8, -41, 29, 28],
-    mouth: { at: [16, -21], w: 5, shape: 'smile' },
+    eyes: [[8, -26]],
+    eye: 9.6,
+    zone: [-11, -49, 31, 40],
+    mouth: { at: [15.5, -19], w: 5, shape: 'smile' },
     sweet: true,
   },
   deviations: {
     R7: 'the body box is set by the burrow mound; the profile eye sits in the head at the top of the stalk',
   },
   ground: true,
+  leap: { hide: ['mound'] },
   idle: {
     ambient: [
       { m: 'sway', g: 'body', amp: 5, period: 2.2 },
