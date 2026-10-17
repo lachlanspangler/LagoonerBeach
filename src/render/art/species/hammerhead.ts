@@ -1,106 +1,116 @@
 /**
- * Hammerhead — SHARK class (profile body, the hammer turned a little toward us).
- * Silhouette: a plump torpedo with a tall rounded dorsal, a crescent shark tail, and the
- * signature T: a wide rounded hammer bar across the front (R10, exaggerated ~2×).
- * Personality: earnest, curious, wide-eyed. Signature: scans side to side with the hammer
+ * Hammerhead — SHARK class, three-quarter front view (it swims toward us and a little right).
+ * Silhouette: the signature T (R10, exaggerated): a wide horizontal hammer across the front, its
+ * span ≈ 1.3× the body, with an eye on each round tip (`face.profile`: two eyes, profile rules);
+ * the plump body recedes behind it with a tall rounded dorsal and a crescent tail. The right tip
+ * breaks the XL tile frame by ~3 px (R28).
+ * Personality: earnest, curious, wide-eyed. Signature: scans left and right with the hammer
  * ("sees every direction"), then a pleased little nod.
  */
-import { blob, defineArt, ellipse, tube } from '../kit.ts';
+import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
+// the body seen from the front-left: a plump teardrop running back and up behind the hammer
 const body = blob([
-  [30, -2],
-  [22, -10],
-  [8, -17],
-  [-4, -18],
+  [26, 2],
+  [18, -10],
+  [2, -16],
   [-16, -14],
-  [-30, -6],
-  [-35, -1],
-  [-30, 5],
-  [-14, 13],
-  [4, 16],
-  [20, 9],
-]);
-// a gentle forward crescent, one piece with the snout: round lobes top and bottom, the eye on the top one
-const hammer = blob([
-  [27, -29],
-  [34, -30],
-  [38.5, -21],
-  [38.5, -5],
-  [38.5, 11],
-  [35, 21],
-  [28, 22],
-  [25, 12],
-  [27, 0],
-  [24.5, -14],
+  [-28, -7],
+  [-33, 0],
+  [-27, 6],
+  [-12, 12],
+  [6, 15],
+  [20, 12],
 ]);
 const dorsal = blob([
-  [6, -14],
-  [-2, -30],
-  [-8, -38],
-  [-13, -33],
-  [-14, -14],
+  [2, -14],
+  [-4, -28],
+  [-9, -37],
+  [-14, -33],
+  [-16, -13],
 ]);
 const tail = blob([
-  [-31, -3],
-  [-38, -15],
-  [-42.5, -26],
-  [-44.5, -19],
-  [-41.5, -3],
-  [-42.5, 11],
-  [-40, 13],
-  [-32, 5],
+  [-29, -3],
+  [-36, -14],
+  [-42, -25],
+  [-45, -19],
+  [-42, -4],
+  [-44, 9],
+  [-40, 11],
+  [-31, 4],
 ]);
+// the hammer: a wide bar, a touch smile-curved, with round lobes at the tips; the lobes are `extra`
+// so the bar's span can break the frame without shrinking the shark
+const bar = blob([
+  [-14, -4],
+  [4, -1.5],
+  [12, -0.5],
+  [22, -1.5],
+  [35, -5],
+  [35, 8],
+  [22, 10.5],
+  [12, 11.5],
+  [4, 10.5],
+  [-14, 10],
+]);
+const lobes = join(circle(-16, 3, 8.6), circle(36.5, 1.5, 8.2));
+// the chin under the middle of the hammer carries the little smile
+const chin = ellipse(12, 11, 9, 6);
 const pectoral = tube([
-  [4, 10, 5.4],
-  [-2, 18, 4.6],
-  [-8, 23, 3.2],
+  [-6, 12, 5.4],
+  [-12, 19, 4.6],
+  [-18, 23, 3.2],
 ]);
 
 export default defineArt({
   id: 'hammerhead',
   klass: 'shark',
   size: 'XL',
-  feature: 'a wide T-shaped hammer across the front, eye at its tip, tall dorsal',
+  feature: 'a wide horizontal T hammer with an eye on each round tip, tall dorsal behind',
   personality: ['earnest', 'curious', 'wide-eyed'],
-  palette: { body: '#7A8DA3', belly: '#E6ECF2' },
+  palette: { body: '#6889BA', belly: '#E6ECF4' },
   groups: [
-    { id: 'tail', pivot: [-33, 0], parts: [{ d: tail, role: 'body' }] },
+    { id: 'tail', pivot: [-30, 0], parts: [{ d: tail, role: 'body' }] },
+    // the dorsal is its own layer behind the body, so the body itself rests level (R5T)
+    { id: 'dorsal', pivot: [-8, -14], parts: [{ d: dorsal, role: 'body' }] },
     {
       id: 'body',
       parts: [
-        { d: dorsal, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(-2, 15, 34, 8, -4), role: 'belly', kind: 'pattern' },
-        { d: 'M8 -2C10 1 10 5 8 8M13 -2C15 1 15 5 13 8', role: 'ink', kind: 'line', w: 1.4, alpha: 0.5 },
+        { d: ellipse(-6, 16, 26, 7, -6), role: 'belly', kind: 'pattern' },
       ],
     },
+    { id: 'finA', pivot: [-6, 11], parts: [{ d: pectoral, role: 'body' }] },
     {
       id: 'head',
-      pivot: [26, 0],
+      pivot: [12, 6],
       parts: [
-        { d: hammer, role: 'body' },
-        { d: ellipse(32, 23, 12, 6), role: 'belly', kind: 'pattern' },
+        { d: chin, role: 'belly' },
+        { d: bar, role: 'body' },
+        { d: lobes, role: 'body', extra: true },
+        { d: ellipse(12, 11, 30, 3.4), role: 'belly', kind: 'pattern' },
       ],
     },
-    { id: 'finA', pivot: [4, 9], parts: [{ d: pectoral, role: 'body' }] },
   ],
-  shine: ellipse(8, -10, 10, 3.2, -8),
+  shine: ellipse(-2, -9, 10, 3.2, -10),
   face: {
     g: 'head',
-    eyes: [[32, -17]],
-    eye: 9,
-    zone: [24, -32, 18, 56],
-    mouth: { at: [33, -9.5], w: 6, shape: 'smile' },
+    eyes: [
+      [-16, 1.5],
+      [36.5, 0],
+    ],
+    eye: 8.4,
+    zone: [-24, -20, 70, 36],
+    mouth: { at: [12, 13], w: 6, shape: 'smile' },
+    profile: true,
     sweet: true,
-  },
-  deviations: {
-    R7: 'the appendix puts the eye at the hammer tip, far forward and high, not 34 % back along the body',
   },
   idle: {
     ambient: [
       { m: 'bob', amp: 1.5, period: 3.2 },
       { m: 'wag', g: 'tail', amp: 7, period: 1.4 },
       { m: 'flutter', g: 'finA', amp: 8, period: 1.6 },
+      { m: 'sway', g: 'head', amp: 2, period: 3.2, phase: 0.25 },
     ],
     signature: {
       dur: 1.5,
@@ -111,33 +121,32 @@ export default defineArt({
           p: 'rot',
           k: [
             [0, 0],
-            [0.15, -14],
-            [0.35, -14],
-            [0.5, 14],
-            [0.7, 14],
-            [0.85, -3],
+            [0.15, -9],
+            [0.35, -9],
+            [0.5, 9],
+            [0.7, 9],
+            [0.85, -2],
             [1, 0],
           ],
         },
         {
           g: 'head',
-          p: 'sx',
+          p: 'tx',
           k: [
-            [0, 1],
-            [0.15, 0.82],
-            [0.35, 0.82],
-            [0.42, 1],
-            [0.5, 0.82],
-            [0.7, 0.82],
-            [0.85, 1],
+            [0, 0],
+            [0.15, -3],
+            [0.35, -3],
+            [0.5, 3],
+            [0.7, 3],
+            [0.85, 0],
           ],
         },
         {
-          p: 'rot',
+          p: 'ty',
           k: [
             [0, 0],
             [0.8, 0],
-            [0.88, 4],
+            [0.88, 2],
             [1, 0],
           ],
         },
@@ -167,8 +176,8 @@ export default defineArt({
         p: 'rot',
         k: [
           [0, 0],
-          [0.3, -10],
-          [0.65, 8],
+          [0.3, -8],
+          [0.65, 6],
           [1, 0],
         ],
       },

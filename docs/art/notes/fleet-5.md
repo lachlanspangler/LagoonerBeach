@@ -115,3 +115,71 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** B+. Clearly its own legend, and it glides; regal more than cute.
 - **Would improve:** there's no way to make `proud` its resting face (the rig's idle is fixed), and
   regal leans on it; the far (second) front flipper raised as a wing would sell flight better.
+
+---
+
+# Redo round (CRITIQUE-1, kit Amendment 1)
+
+## hammerhead — C → redo, 3/4 front view
+- **Brief:** 3/4 front view, wide horizontal T (span 1.3× body), an eye at each tip, frame-break
+  2–4 px, tall dorsal behind, keep the scan.
+- **Build:** a 70-unit hammer bar (lobes `extra`) across the front of a plump body that recedes
+  back-left; `face.profile: true` puts an eye on each lobe (eye 8.4, 23 % of the zone); a belly chin
+  under the middle carries the smile. The right lobe breaks the XL frame by 3.7 px. The dorsal is
+  its own layer so the body rests level (R5T 5°). Body `#6889BA` (C 0.083, R16S).
+- **Rounds (3):**
+  1. Reads at once: a T with two eyes and a smile. But R5T 27° (the dorsal inside the body group
+     tilted the body's axis) and a 3.5 px break that sat right at the edge.
+  2. Dorsal moved to its own layer (5°), right lobe trimmed. Lint-clean.
+  3. Bigger, lower lobes so both tips bulge past the body outline and the T reads in the 24 px mask;
+     eye 8 → 8.4.
+- **Self-grade:** A-. Earnest and wide-eyed; the scan swings the hammer with both eyes.
+- **Tight pair:** dolphin 0.697 (limit 0.70), so the dolphin redo moves away from it.
+
+## dolphin — A, frame-break + lint
+- **Fixes:** flukes are `extra` and break the XL frame by 3.7 px (R28); the dorsal moved to its own
+  layer and the body was lengthened to ~2 : 1 with a slim tail stock, so it rests level (13° → 4°,
+  R5T); body `#74A6D2` (chroma 0.084, R16S).
+- **Rounds (2):** (1) extra flukes + level body, but the smaller body box made it as round as the
+  clownfish (IoU 0.74, fail); (2) longer, slimmer body: clownfish 0.63, hammerhead 0.66, flounder
+  0.68. Lint-clean.
+- **Self-grade:** A. Same joyful dolphin, now big in the tile with its flukes past the edge.
+
+## whaleshark — A (exemplar), lint only
+- **Fixes:** spots ≥ 6.2 units (R18W), mouth line 3 units (R2L), the hairline gill marks dropped,
+  body `#5A84B5` (chroma 0.089, R16S; L 0.60). The kit's head-anchored XXL crop now keeps the long
+  mouth in frame. Lint-clean; closest clownfish 0.65.
+- **Self-grade:** A. Unchanged in spirit; slightly bluer than the slate of round 1.
+
+## angler — A, open the eye
+- **Fixes:** idle eye opened 15 % (10 → 11.5 units, 24 % of a slightly taller zone) so it's no
+  longer a squint at 24–32 px; lure highlight 6.2 units (R18W); body `#8E6E9F` (chroma 0.082,
+  R16S). Lint-clean; closest sanddollar 0.73 (cross-class, limit 0.80), fish all < 0.67.
+- **Self-grade:** A.
+
+## otter — B → fixes
+- **Fixes:** the chest shell (read as a brain) is now a cream `#F3E6D2` scallop fan with 3 soft
+  ribs; the face mask is 15 % bigger so the head pops at 24 px; eye 7.6 (floor 7.4); body
+  `#A07448` (chroma 0.082); pads, inner ears and nose ≥ 6 units; the ink nose became a body-brown
+  nose (R18E: no eye-coloured pattern beside the eyes); hairline whiskers dropped (R2L).
+- **Rounds (3):** (1) lint fixes + shell + mask, whiskers at 3 u; (2) on Night the sleepy arcs plus
+  whiskers read as a moustache: whiskers removed, nose bigger; (3) the two closed arcs still met in
+  the middle (moustache again): eyes spread to 2.1 eye-widths. Night now reads contented.
+- **Self-grade:** A-. Lint-clean; closest flounder 0.71 (cross-class), cuttle 0.67 (chibi, < 0.70).
+- **Would improve:** the back-float is wide and short, so it still fills less of the tile than the
+  other L species.
+
+## goldturtle — B → redo of the crest and pose
+- **Brief:** the spiked ridge read as a famous video-game villain's shell (originality risk) →
+  3 rounded jewel domes (`#FFF1C2`, `#7FD1E8` gem centres); a pose distinct from the turtle (head
+  up 15°, both flippers out like wings).
+- **Build:** cream domes with blue gems along the shell top; palette is now gold body, cream
+  `#FFF1C2` (skin, domes, pearls, medallion) and gem blue `#7FD1E8` (gems, medallion gem), still 3
+  colours. Body tilted 10° nose-up, head lifted another 15° at the neck (face anchors computed
+  through the same transforms), the far front flipper raised up-back behind the shell as a second
+  wing (new `wing` group, strokes with the near flipper in the signature), eye 7.4 (floor 7.06),
+  pearls/gems ≥ 6 units, rim line 3 units. Sparkle is now white.
+- **Rounds (2):** (1) the raised far flipper was wide with a round tip and read as a bunny ear;
+  (2) tapered and tip-curled like a flipper, domes enlarged so the gems sit inside cream jewels.
+- **Self-grade:** A-. Lint-clean; it now flies. Closest: sunfish 0.66 (cross-class); the sea turtle
+  is no longer among its 10 closest.
