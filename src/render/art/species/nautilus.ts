@@ -1,118 +1,122 @@
 /**
- * Nautilus — SNAIL class (profile, facing right), size M.
- * Silhouette: a big round coiled shell with tiger stripes, a hooded head at the opening and a tuft
- * of short tentacles fanning out in front (R10: the tuft and the stripes on a round coil).
- * Personality: ancient, polite, unhurried. Signature: jets backward 6 units, tentacles streaming,
- * with a little bubble trail, then drifts back and settles with a polite blink.
- * Groups (back to front): tentacles, shell, body (hood and head; the face rides on it), bubbles (prop).
+ * Nautilus — SNAIL class (profile, side-on, facing right), size M, deep and nocturnal.
+ * Silhouette: a big round coiled shell, the opening on the right with a leathery hood over a small
+ * head, one big eye in the opening, and a fan of slim tentacles reaching forward (R10: the coil and
+ * the tentacle fan). Tiger stripes `#C2603A` on a cream shell, hood `#C98A5E` with pale spots.
+ * Personality: ancient, polite, unhurried. Signature: jets backward with a bubble trail, tentacles
+ * streaming, then drifts back and settles with a polite blink.
+ * Groups (back to front): tentacles, shell, body (head and hood; the face rides on it), bubbles (prop).
  */
 import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
-const shell = circle(-12, -2, 28);
-// tiger stripes on the back of the coil, fading out before the opening (R18 `bands`, hand placed)
-const stripes = join(
-  tube([
-    [-30, -30, 2.6],
-    [-22, -18, 3.4],
-    [-18, -4, 2.4],
-  ]),
-  tube([
-    [-14, -38, 2.8],
-    [-10, -24, 3.6],
-    [-10, -12, 2.4],
-  ]),
-  tube([
-    [2, -38, 2.6],
-    [2, -26, 3.2],
-    [-1, -16, 2],
-  ]),
-  tube([
-    [-42, -12, 2.6],
-    [-32, -4, 3.2],
-    [-24, 4, 2.2],
-  ]),
-  tube([
-    [-40, 12, 2.4],
-    [-30, 12, 2.8],
-    [-22, 14, 2],
-  ]),
-);
-// the coil: a whorl line winding to a small navel
-const whorl = 'M14 -16C4 -28 -22 -26 -26 -6C-29 10 -12 18 -4 8C2 0 -4 -8 -10 -6';
+const R = 26,
+  SX = -16,
+  SY = 0;
+const HX = 12,
+  HY = 2;
+
+const shell = circle(SX, SY, R);
+// tiger stripes on the back two-thirds of the coil, fading before the opening (R18 `bands`, ≥ 4 units)
+const band = (a: number, len: number) => {
+  const t = (a * Math.PI) / 180;
+  const c = Math.cos(t),
+    s = Math.sin(t);
+  return tube([
+    [SX + c * (R + 2), SY + s * (R + 2), 3.2],
+    [SX + c * (R - len * 0.5), SY + s * (R - len * 0.5), 3.6],
+    [SX + c * (R - len), SY + s * (R - len), 2.2],
+  ]);
+};
+const stripes = join(band(-120, 16), band(-90, 18), band(-60, 15), band(-150, 16), band(180, 14), band(150, 12));
+// the coil: a whorl line winding in to a small navel
+const whorl = `M${SX + R * 0.62} ${SY - R * 0.5}C${SX + R * 0.1} ${SY - R * 0.9} ${SX - R * 0.75} ${SY - R * 0.6} ${
+  SX - R * 0.7
+} ${SY + R * 0.05}C${SX - R * 0.62} ${SY + R * 0.6} ${SX + R * 0.05} ${SY + R * 0.62} ${SX + R * 0.25} ${SY + R * 0.2}C${
+  SX + R * 0.38
+} ${SY - R * 0.08} ${SX + R * 0.1} ${SY - R * 0.3} ${SX - R * 0.05} ${SY - R * 0.15}`;
+// the head in the shell opening, and the hood over it
 const head = blob([
-  [8, -6],
-  [20, -10],
-  [30, -6],
-  [33, 6],
-  [30, 18],
-  [18, 22],
-  [8, 16],
+  [HX - 8, HY - 2],
+  [HX + 4, HY - 4],
+  [HX + 12, HY - 1],
+  [HX + 13, HY + 6],
+  [HX + 6, HY + 12],
+  [HX - 4, HY + 12],
+  [HX - 9, HY + 6],
 ]);
-// the hood: a striped cap that juts forward over the head, like the real nautilus's leathery hood
 const hood = blob([
-  [4, -6],
-  [12, -14],
-  [26, -14],
-  [34, -4],
-  [30, -1],
-  [20, -6],
-  [8, -2],
+  [HX - 15, HY - 2],
+  [HX - 10, HY - 15],
+  [HX + 2, HY - 20],
+  [HX + 13, HY - 16],
+  [HX + 17, HY - 6],
+  [HX + 14, HY + 2],
+  [HX + 2, HY + 1],
+  [HX - 8, HY + 3],
 ]);
+const hoodSpots = join(circle(HX - 7, HY - 9, 3.3), circle(HX + 3, HY - 14, 3.4), circle(HX + 11, HY - 9, 3.2));
 const tentacles = join(
-  capsule(28, 2, 3.4, 39, -8, 2.6),
-  capsule(29, 8, 3.4, 41, 6, 2.6),
-  capsule(27, 14, 3.4, 39, 20, 2.6),
-  capsule(22, 18, 3.2, 31, 31, 2.6),
+  capsule(18, 6, 2.6, 23.7, -15.3, 2.5),
+  capsule(18, 6, 2.6, 30.6, -12.0, 2.5),
+  capsule(18, 6, 2.6, 36.0, -6.6, 2.5),
+  capsule(18, 6, 2.6, 39.3, 0.3, 2.5),
+  capsule(18, 6, 2.6, 39.9, 7.9, 2.5),
+  capsule(18, 6, 2.6, 37.9, 15.3, 2.5),
+  capsule(18, 6, 2.6, 33.6, 21.6, 2.5),
+  capsule(18, 6, 2.6, 27.3, 25.9, 2.5),
 );
-// the whole nautilus hangs nose-down by 40°, the way a real one hovers with its opening forward
-// and down. It also keeps its silhouette apart from the cuttlefish, hermit crab and turtle (R12).
-const R = (d: string) => xform(d, { rot: 40, sx: 0.96, sy: 0.96 });
-const bubbles = join(circle(34, 14, 3.4), circle(40, 4, 2.4), circle(36, -4, 1.8));
+// the whole animal rises nose-up by 12° (unhurried, drifting up); it also keeps the silhouette clear
+// of the cuttlefish (oval + arm tuft) and the hermit crab (shell + crab low at the front), R12
+const T = (d: string) => xform(d, { rot: -12, sx: 0.97, sy: 0.97 });
+const bubbles = join(circle(HX + 4, HY - 24, 3.4), circle(HX + 10, HY - 32, 2.4), circle(HX + 3, HY - 38, 1.8));
 
 export default defineArt({
   id: 'nautilus',
   klass: 'snail',
   size: 'M',
-  feature: 'a striped round coil with a tentacle tuft at the opening',
+  feature: 'a striped round coil with a hooded head and a fan of slim tentacles',
   personality: ['ancient', 'polite', 'unhurried'],
-  palette: { body: '#E9DCC4', accent: '#B5653A', belly: '#F0C7A8' },
+  palette: { body: '#E9D0A9', accent: '#C2603A', belly: '#C98A5E' },
+  nocturnal: true,
   groups: [
-    { id: 'tentacles', pivot: [14, 22], parts: [{ d: R(tentacles), role: 'belly' }] },
+    { id: 'tentacles', pivot: [HX + 6, HY + 4], parts: [{ d: T(tentacles), role: 'belly' }] },
     {
       id: 'shell',
-      pivot: [-8, -9],
+      pivot: [SX, SY],
       parts: [
-        { d: R(shell), role: 'body' },
-        { d: R(stripes), role: 'accent', kind: 'pattern' },
-        { d: R(whorl), role: 'ink', kind: 'line', w: 1.8, alpha: 0.5 },
+        { d: T(shell), role: 'body' },
+        { d: T(stripes), role: 'accent', kind: 'pattern' },
+        { d: T(whorl), role: 'ink', kind: 'line', w: 3, alpha: 0.4 },
       ],
     },
     {
       id: 'body',
-      pivot: [6, 10],
+      pivot: [HX, HY],
       parts: [
-        { d: R(head), role: 'belly' },
-        { d: R(hood), role: 'accent', kind: 'pattern' },
+        { d: T(head), role: 'accent' },
+        { d: T(hood), role: 'belly' },
+        { d: T(hoodSpots), role: 'white', kind: 'pattern', alpha: 0.55 },
       ],
     },
-    { id: 'bubbles', pivot: [36, 6], prop: true, parts: [{ d: bubbles, role: 'white' }] },
+    { id: 'bubbles', pivot: [HX + 6, HY - 30], prop: true, parts: [{ d: bubbles, role: 'white' }] },
   ],
   shineOn: 'shell',
-  shine: ellipse(-2, -29, 10, 4.4, 5),
+  shine: ellipse(SX - R * 0.4, SY - R * 0.62, 10, 4.4, -30),
   face: {
-    eyes: [[7, 14]],
-    eye: 8.2,
-    zone: [-6, -6, 36, 36],
-    mouth: { at: [14, 24], w: 5, shape: 'smile' },
+    eyes: [[HX + 4, HY - 3]],
+    eye: 10.5,
+    zone: [HX - 12, HY - 21, 32, 32],
+    mouth: { at: [HX + 10, HY + 4], w: 4.5, shape: 'smile' },
     sweet: true,
   },
   deviations: {
-    R7: 'the body hangs nose-down by 40°, so the eye on the head at the shell opening measures 41 % back along the tilted box',
+    R7: 'the one big eye sits in the shell opening under the hood, so it measures further back than a fish eye',
+    R16S: 'cream shell after the critique’s #F4E7D2, deepened to clear the L 0.90 ceiling and the mint tile; chroma 0.06, the stripes carry it',
   },
   idle: {
     ambient: [
       { m: 'bob', amp: 2, period: 2.8 },
-      { m: 'sway', g: 'tentacles', amp: 6, period: 1.4 },
+      { m: 'sway', g: 'tentacles', amp: 7, period: 1.4 },
       { m: 'breathe', g: 'body', amp: 0.02, period: 2.8, phase: 0.25 },
     ],
     signature: {
@@ -126,16 +130,6 @@ export default defineArt({
             [0.1, 1.5],
             [0.24, -7],
             [0.7, -5],
-            [1, 0],
-          ],
-        },
-        {
-          p: 'ty',
-          k: [
-            [0, 0],
-            [0.1, 1],
-            [0.24, -5],
-            [0.7, -3.5],
             [1, 0],
           ],
         },
@@ -179,15 +173,6 @@ export default defineArt({
             [0.86, -6],
           ],
         },
-        {
-          p: 'rot',
-          k: [
-            [0.1, 0],
-            [0.24, 5],
-            [0.6, 2],
-            [0.9, 0],
-          ],
-        },
       ],
       face: [
         [0.16, 0.6, 'surprised'],
@@ -222,5 +207,4 @@ export default defineArt({
     ],
     face: [[0, 1, 'happy']],
   },
-  nocturnal: true,
 });

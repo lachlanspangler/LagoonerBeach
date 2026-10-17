@@ -280,3 +280,18 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - Self-grade: B+. The face is sweet and the hum reads; the shape is a fan, not the heart the critique
   asked for: no heart passes the coin overlap at 24 px. Would need a silhouette metric change or a
   sand-dollar redesign to get the heart.
+
+## nautilus (graded C → redo)
+- Brief: side-on shell, opening right, hood + one big eye in the opening, 6–8 thin tentacles fanning
+  forward, hood `#C98A5E`, stripes `#C2603A` on `#F4E7D2`; must clear the cuttle and the hermit.
+- Rebuilt from a parameterised template (shell radius/centre, head position, tentacle fan, tilt) and
+  searched against the full cast. Level side-on versions all hit the cuttle (0.80–0.85: a round body
+  with a forward tuft is the cuttle's silhouette at 24 px); nose-down tilts hit the hermit (0.76–0.80).
+  A gentle **12° nose-up** rise (the animal drifting upward) clears both.
+- Now: coil R 26 with six bold tiger bands, a whorl line (3 u), a big spotted hood cap (`#C98A5E`, three
+  pale spots ≥ 6 u), the big eye in the opening under the hood, a small red-brown head with the smile,
+  and a fan of 8 slim tentacles (5 units, the R2 minimum). Shell `#E9D0A9` (R16S deviation: the
+  critique's cream measures L 0.93 and sits too close to mint).
+- IoU: turtle 0.74, cuttle 0.74, otter 0.72 (cross-class, limit 0.80); cockle 0.66 (same class).
+- Self-grade: B+. Reads as a nautilus with a proper hood and stripes; the tentacle fan still reads a
+  little like a frilled hand at 54 px.
