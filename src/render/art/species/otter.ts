@@ -3,7 +3,7 @@
  * Silhouette: a plump body lying along the water, a big round head with two small side ears at
  * the right end, little feet poking up at the left, a tail, and paws on its chest holding a shell
  * (R10: the back-float with the head up and the feet up).
- * Palette: `#7A5A3E` lifted to `#9A7656` (R16 floor), cream face and chest, a pink shell.
+ * Palette: `#7A5A3E` lifted to `#A07448` (R16 floor, chroma 0.08), cream face and chest, a cream shell.
  * Personality: cuddly, sleepy, loving (sweet: blush always on).
  * Signature: holds the shell up to show you, then hugs it to its chest, with a wink.
  */
@@ -15,15 +15,17 @@ const head = ellipse(22, -3, 20, 17.5);
 const ears = join(circle(5, -13, 4.8), circle(39, -13, 4.8));
 const feet = join(capsule(-27, 2, 5.5, -32, -7, 6.2), capsule(-17, 1, 5.5, -19, -8, 6));
 const tail = capsule(-30, 12, 6, -45, 11, 4.4);
-// a little scallop shell held on the chest, with two paws over its lower edge
+// a cream scallop shell (a fan with three ribs) held on the chest, with two paws over its lower edge
 const shell = blob(
   [
-    [-13, -4],
-    [-10, -13],
-    [-5, -15],
-    [0, -13],
-    [3, -4],
     [-5, -2],
+    [-12, -7],
+    [-15, -12],
+    [-11, -18],
+    [-5, -20],
+    [1, -18],
+    [5, -12],
+    [2, -7],
   ],
   1,
 );
@@ -35,7 +37,7 @@ export default defineArt({
   size: 'L',
   feature: 'floats on its back: big round head with small side ears up, feet up, paws on its chest with a shell',
   personality: ['cuddly', 'sleepy', 'loving'],
-  palette: { body: '#9A7656', accent: '#F4A7AE', belly: '#E6D2B8' },
+  palette: { body: '#A07448', accent: '#F3E6D2', belly: '#E6D2B8' },
   groups: [
     { id: 'tail', pivot: [-30, 12], parts: [{ d: tail, role: 'body', extra: true }] },
     {
@@ -44,7 +46,7 @@ export default defineArt({
         { d: feet, role: 'body' },
         { d: body, role: 'body' },
         { d: ellipse(-4, 0, 22, 8, -4), role: 'belly', kind: 'pattern' },
-        { d: join(circle(-32.5, -8, 2.6), circle(-19, -9, 2.6)), role: 'belly', kind: 'pattern' },
+        { d: join(circle(-32.5, -8, 3.2), circle(-19, -9, 3.2)), role: 'belly', kind: 'pattern' },
       ],
     },
     {
@@ -53,10 +55,9 @@ export default defineArt({
       parts: [
         { d: ears, role: 'body' },
         { d: head, role: 'body' },
-        { d: join(circle(5, -13, 2.2), circle(39, -13, 2.2)), role: 'belly', kind: 'pattern' },
-        { d: ellipse(22, 5, 12.5, 8.5), role: 'belly', kind: 'pattern' },
-        { d: ellipse(22, 3.2, 2.6, 1.8), role: 'ink', kind: 'pattern' },
-        { d: 'M11 5L6 4M11 7.5L6 8.5M33 5L38 4M33 7.5L38 8.5', role: 'ink', kind: 'line', w: 1.1, alpha: 0.45 },
+        { d: join(circle(5, -13, 3.1), circle(39, -13, 3.1)), role: 'belly', kind: 'pattern' },
+        { d: ellipse(22, 4.5, 14.4, 9.8), role: 'belly', kind: 'pattern' },
+        { d: ellipse(22, 2.6, 4.2, 3.2), role: 'body', kind: 'pattern' },
       ],
     },
     {
@@ -64,7 +65,7 @@ export default defineArt({
       pivot: [-5, 0],
       parts: [
         { d: shell, role: 'accent' },
-        { d: 'M-5 -4L-5 -12M-9 -5L-10 -10M-1 -5L0 -10', role: 'ink', kind: 'line', w: 1.2, alpha: 0.5 },
+        { d: 'M-6 -5L-10.5 -15M-5 -5L-5 -17M-4 -5L0.5 -15', role: 'ink', kind: 'line', w: 3, alpha: 0.3 },
         { d: paws, role: 'body' },
       ],
     },
@@ -74,10 +75,10 @@ export default defineArt({
   face: {
     g: 'head',
     eyes: [
-      [16.5, 0],
-      [27.5, 0],
+      [15.1, 0],
+      [28.9, 0],
     ],
-    eye: 7,
+    eye: 7.6,
     zone: [2, -21, 40, 36],
     mouth: { at: [22, 6.4], w: 5, shape: 'w' },
     front: true,

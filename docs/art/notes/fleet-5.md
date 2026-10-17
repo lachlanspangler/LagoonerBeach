@@ -156,3 +156,15 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
   longer a squint at 24–32 px; lure highlight 6.2 units (R18W); body `#8E6E9F` (chroma 0.082,
   R16S). Lint-clean; closest sanddollar 0.73 (cross-class, limit 0.80), fish all < 0.67.
 - **Self-grade:** A.
+
+## otter — B → fixes
+- **Fixes:** the chest shell (read as a brain) is now a cream `#F3E6D2` scallop fan with 3 soft
+  ribs; the face mask is 15 % bigger so the head pops at 24 px; eye 7.6 (floor 7.4); body
+  `#A07448` (chroma 0.082); pads, inner ears and nose ≥ 6 units; the ink nose became a body-brown
+  nose (R18E: no eye-coloured pattern beside the eyes); hairline whiskers dropped (R2L).
+- **Rounds (3):** (1) lint fixes + shell + mask, whiskers at 3 u; (2) on Night the sleepy arcs plus
+  whiskers read as a moustache: whiskers removed, nose bigger; (3) the two closed arcs still met in
+  the middle (moustache again): eyes spread to 2.1 eye-widths. Night now reads contented.
+- **Self-grade:** A-. Lint-clean; closest flounder 0.71 (cross-class), cuttle 0.67 (chibi, < 0.70).
+- **Would improve:** the back-float is wide and short, so it still fills less of the tile than the
+  other L species.
