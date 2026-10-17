@@ -218,3 +218,10 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - R18W: the six spots are now all ≥ 6.4 units across (the two smallest were 5–5.8).
 - R2L: the pectoral fin rays are 3-unit lines at 30 % alpha (soft detail; they were 1.4 u).
 - Lint clean; silhouette unchanged (closest: combjelly 0.73 cross-class, clownfish 0.68 same class).
+
+## boxfish (graded B → redo)
+- Polka dots are now 4, in the body's own dark gold `#B08A1E` (was near-black `#4A3A22`), 7–9 units,
+  all behind the face zone, so the eye is the only dark dot on the face at 24–32 px.
+- `pout` moved to 0.6 eye-heights below the eye and close under it (it read as a stray dot at the
+  snout); eye up to 12.3 (22 % of the zone).
+- Lint clean; IoU unchanged (sanddollar 0.73 cross-class, puffer 0.67 same class). Self-grade A-.
