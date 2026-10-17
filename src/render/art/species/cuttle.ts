@@ -1,103 +1,87 @@
 /**
- * Cuttlefish — CHIBI class in profile (M), facing right.
- * Silhouette: a plump oval mantle wrapped in a frilly fin skirt, with a short tuft of arms poking
- * out under the snout (R10: the skirt, exaggerated into a soft frill all round). Big round head.
- * Personality: moody, clever, shifty. Signature: a shifty little scoot — it jets back, the arm
- * tuft twirls up like a moustache, it gives a smug look and a wink.
+ * Cuttlefish — CHIBI class in profile (M), facing right. Redo after CRITIQUE-1.
+ * Silhouette: a big round head (chibi: the head is half the creature) with a large W-pupil eye,
+ * a short mantle oval wrapped in a thin, uniform rippling fin skirt (6 units), and a beard of
+ * four short arm capsules under the snout (R10: the rippling skirt + the W eye).
+ * Palette: warm brown with two bold cream zebra bands that ripple through colours.
+ * Personality: moody, clever, shifty. Signature: the colour ripple — the bands flash peach, rose
+ * and lilac one after the other while it scoots back with a shifty tilt and a smug look.
  */
-import { blob, defineArt, ellipse, join, tube } from '../kit.ts';
+import { capsule, circle, defineArt, ellipse, join } from '../kit.ts';
 
-// mantle + head as one smooth shape (the head bulges at the front)
-const body = blob([
-  [-31, 0],
-  [-25, -13],
-  [-10, -18.5],
-  [8, -19],
-  [22, -13],
-  [28, 0],
-  [24, 12],
-  [10, 18],
-  [-10, 18],
-  [-25, 12],
-]);
 const skirt =
-  'M22.0 0.0A4.4 4.4 0 0 1 20.2 8.2A4.7 4.7 0 0 1 15.0 15.4A5.0 5.0 0 0 1 7.0 20.8A5.4 5.4 0 0 1 -2.8 23.6A5.5 5.5 0 0 1 -13.2 23.6A5.4 5.4 0 0 1 -23.0 20.8A5.0 5.0 0 0 1 -31.0 15.4A4.7 4.7 0 0 1 -36.2 8.2A4.4 4.4 0 0 1 -38.0 0.0A4.4 4.4 0 0 1 -36.2 -8.2A4.7 4.7 0 0 1 -31.0 -15.4A5.0 5.0 0 0 1 -23.0 -20.8A5.4 5.4 0 0 1 -13.2 -23.6A5.5 5.5 0 0 1 -2.8 -23.6A5.4 5.4 0 0 1 7.0 -20.8A5.0 5.0 0 0 1 15.0 -15.4A4.7 4.7 0 0 1 20.2 -8.2A4.4 4.4 0 0 1 22.0 0.0Z';
-// a short tuft of arms, behind the head, poking forward under the snout
-const arms = join(
-  tube([
-    [18, 0, 5.2],
-    [30, -1, 4.4],
-    [38, -4, 3.4],
-  ]),
-  tube([
-    [16, 6, 5.6],
-    [30, 8, 4.8],
-    [40, 7, 3.8],
-  ]),
-  tube([
-    [14, 12, 5.6],
-    [28, 16, 4.6],
-    [37, 19, 3.6],
-  ]),
-  tube([
-    [10, 15, 5.4],
-    [20, 22, 4.4],
-    [27, 26, 3.4],
-  ]),
-);
-// three soft cream zebra bands across the back
-const stripes = join(
-  'M-26 -16C-22 -8 -27 0 -23 8C-21 12 -24 16 -24 18',
-  'M-14 -20C-10 -11 -15 -2 -11 7C-9 12 -12 16 -12 20',
-  'M-2 -20C2 -12 -3 -5 0 2',
-);
+  'M22.0 0.0A4.1 4.1 0 0 1 20.7 6.5A4.4 4.4 0 0 1 16.9 12.4A4.8 4.8 0 0 1 11.0 17.4A5.3 5.3 0 0 1 3.3 20.9A5.6 5.6 0 0 1 -5.4 22.8A5.7 5.7 0 0 1 -14.6 22.8A5.6 5.6 0 0 1 -23.3 20.9A5.3 5.3 0 0 1 -31.0 17.4A4.8 4.8 0 0 1 -36.9 12.4A4.4 4.4 0 0 1 -40.7 6.5A4.1 4.1 0 0 1 -42.0 0.0A4.1 4.1 0 0 1 -40.7 -6.5A4.4 4.4 0 0 1 -36.9 -12.4A4.8 4.8 0 0 1 -31.0 -17.4A5.3 5.3 0 0 1 -23.3 -20.9A5.6 5.6 0 0 1 -14.6 -22.8A5.7 5.7 0 0 1 -5.4 -22.8A5.6 5.6 0 0 1 3.3 -20.9A5.3 5.3 0 0 1 11.0 -17.4A4.8 4.8 0 0 1 16.9 -12.4A4.4 4.4 0 0 1 20.7 -6.5A4.1 4.1 0 0 1 22.0 0.0Z';
+const mantle = ellipse(-10, 0, 27, 17);
+const head = circle(15, 2, 15);
+// a beard of four short arm capsules under the snout
+// (two parts, so no subpaths overlap inside one part: WebKit fills those differently)
+const armsA = join(capsule(26, 0, 5, 37, 3, 3.4), capsule(20, 12, 5, 26, 24, 3.2));
+const armsB = join(capsule(23, 7, 5, 33, 14, 3.4), capsule(16, 15, 5, 19, 26, 3.2));
+// two bold zebra bands across the mantle's back (6 units wide), clipped to the body
+const band = (x: number) =>
+  `M${x - 2} -20C${x + 3} -12 ${x - 1} -4 ${x + 2} 4C${x + 3} 7 ${x + 7} 7 ${x + 8} 4C${x + 6} -4 ${x + 9} -12 ${x + 4} -20Z`;
+const C = '#F2E2CF',
+  P = '#F7BE93',
+  R = '#EE9FB9',
+  V = '#B9A7EC';
+// each band rests cream (step 0) and flashes in turn, front band first: a ripple running backward
+const ripple = (k: number) => [C, ...Array<string>(k).fill(C), P, R, V, ...Array<string>(2 - k).fill(C)];
 
 export default defineArt({
   id: 'cuttle',
   klass: 'chibi',
   size: 'M',
-  feature: 'oval mantle in a frilly fin skirt with a short arm tuft under the snout',
+  feature: 'big round head with a W-pupil eye, short mantle in a thin rippling fin skirt, arm beard',
   personality: ['moody', 'clever', 'shifty'],
-  palette: { body: '#C08A66', accent: '#F4E4C9' },
+  palette: { body: '#B57A55', accent: '#F2E2CF', belly: '#E9C2A6' },
+  cycle: { rate: 8, during: 'signature' },
   groups: [
+    { id: 'skirt', pivot: [-10, 0], parts: [{ d: skirt, role: 'belly' }] },
     {
-      id: 'skirt',
-      pivot: [-9, 0],
-      parts: [{ d: skirt, role: 'belly' }],
+      id: 'arms',
+      pivot: [22, 8],
+      parts: [
+        { d: armsA, role: 'body' },
+        { d: armsB, role: 'body' },
+      ],
     },
-    { id: 'arms', pivot: [14, 10], parts: [{ d: arms, role: 'body' }] },
     {
       id: 'body',
       parts: [
-        { d: body, role: 'body' },
-        { d: stripes, role: 'accent', kind: 'line', w: 3.4 },
-        { d: ellipse(-4, 18, 28, 6), role: 'belly', kind: 'pattern', alpha: 0.6 },
+        { d: mantle, role: 'body' },
+        { d: head, role: 'body' },
+        { d: band(-28), role: 'accent', kind: 'pattern', cycle: ripple(1) },
+        { d: band(-16), role: 'accent', kind: 'pattern', cycle: ripple(0) },
+        { d: ellipse(-2, 18, 26, 5), role: 'belly', kind: 'pattern', alpha: 0.7 },
+        // the collar where the mantle meets the head
+        { d: 'M-4 -16C-9 -6 -9 8 -4 18', role: 'ink', kind: 'line', w: 3, alpha: 0.35 },
       ],
     },
   ],
-  shine: ellipse(-4, -14, 11, 3.6, -6),
+  shine: ellipse(2, -12, 9, 4, -20),
   face: {
-    eyes: [[13, -1]],
-    eye: 10.6,
-    zone: [-2, -27, 30, 46],
-    mouth: { at: [22, 8], w: 4, shape: 'smile' },
+    eyes: [[16, 3.5]],
+    eye: 11,
+    zone: [-9, -23, 46, 46],
+    mouth: { at: [25, 10], w: 4, shape: 'smile' },
+    pupil: 'w',
   },
   idle: {
     ambient: [
       { m: 'breathe', amp: 0.02, period: 3 },
       { m: 'bob', amp: 1.8, period: 2.6 },
-      { m: 'pulse', g: 'skirt', amp: 0.03, period: 0.9 },
-      { m: 'sway', g: 'arms', amp: 7, period: 1.8 },
+      { m: 'pulse', g: 'skirt', amp: 0.035, period: 0.9 },
+      { m: 'sway', g: 'arms', amp: 6, period: 1.8 },
     ],
     signature: {
-      dur: 1.3,
+      dur: 1.4,
       tracks: [
         {
           p: 'tx',
           k: [
             [0, 0],
             [0.12, 1.5],
-            [0.3, -9],
+            [0.3, -8],
             [0.75, -6],
             [1, 0],
           ],
@@ -113,24 +97,26 @@ export default defineArt({
           ],
         },
         {
-          p: 'sx',
-          k: [
-            [0, 1],
-            [0.12, 0.94],
-            [0.3, 1.06],
-            [0.5, 1],
-          ],
-        },
-        {
           g: 'arms',
           p: 'rot',
           k: [
             [0, 0],
-            [0.3, 12],
-            [0.45, -38],
-            [0.6, -26],
-            [0.75, -38],
-            [0.92, 0],
+            [0.3, 10],
+            [0.5, -20],
+            [0.8, -20],
+            [0.95, 0],
+          ],
+        },
+        {
+          g: 'skirt',
+          p: 'sy',
+          k: [
+            [0, 1],
+            [0.2, 1.06],
+            [0.4, 0.96],
+            [0.6, 1.05],
+            [0.8, 0.97],
+            [1, 1],
           ],
         },
       ],

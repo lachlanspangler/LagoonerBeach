@@ -31,7 +31,7 @@ export default defineArt({
       pivot: [10, -2],
       parts: [
         { d: arm(WAVE), role: 'body' },
-        { d: join(bump(WAVE, 0.82, 3.4), bump(WAVE, 0.6, 2.4)), role: 'accent', kind: 'pattern' },
+        { d: join(bump(WAVE, 0.82, 3.4), bump(WAVE, 0.58, 3.05)), role: 'accent', kind: 'pattern' },
       ],
     },
     {
@@ -46,11 +46,11 @@ export default defineArt({
         {
           d: join(
             bump(-90, 0.82, 3.4),
-            bump(-90, 0.6, 2.4),
+            bump(-90, 0.58, 3.05),
             bump(54, 0.8, 3.4),
             bump(126, 0.8, 3.4),
             bump(198, 0.82, 3.4),
-            bump(198, 0.6, 2.4),
+            bump(198, 0.58, 3.05),
           ),
           role: 'accent',
           kind: 'pattern',

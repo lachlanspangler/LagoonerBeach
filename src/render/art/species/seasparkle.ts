@@ -51,9 +51,13 @@ export default defineArt({
       id: 'body',
       pivot: [-6, 6],
       parts: [
+        // the glow halo (CRITIQUE-1): soft light around the big orb, no outline, not silhouette
+        { d: circle(-6, 6, 42), role: 'accent', outline: false, alpha: 0.12 },
+        { d: circle(-6, 6, 37), role: 'accent', outline: false, alpha: 0.16 },
+        { d: circle(-6, 6, 33), role: 'accent', outline: false, alpha: 0.2 },
         { d: circle(-6, 6, 30), role: 'body' },
         // a soft glowing core high on the big orb, plus two sparkle specks on its rim
-        { d: join(circle(-13, -11, 7), circle(10, -14, 2.6), circle(-28, 16, 2.6)), role: 'light', kind: 'pattern' },
+        { d: join(circle(-13, -11, 7), circle(10, -15, 3.1), circle(-28, 16, 3.1)), role: 'light', kind: 'pattern' },
         { d: ellipse(-6, 30, 22, 7), role: 'belly', kind: 'pattern', alpha: 0.7 },
       ],
     },

@@ -10,13 +10,13 @@ import { blob, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 const fin = blob(
   [
     [0, -42],
-    [13, -36],
-    [26, -26],
-    [18, -20],
+    [14, -36],
+    [30, -25],
+    [20, -19],
     [0, -24],
-    [-18, -20],
-    [-26, -26],
-    [-13, -36],
+    [-20, -19],
+    [-30, -25],
+    [-14, -36],
   ],
   0.9,
 );
@@ -33,10 +33,10 @@ const mantle = blob([
   [-12, -33],
 ]);
 const armOut = tube([
-  [-10, 8, 5.4],
-  [-16, 19, 4.6],
-  [-20, 29, 3.8],
-  [-19, 34, 3.4],
+  [-11, 8, 5.4],
+  [-19, 18, 4.6],
+  [-25, 27, 3.8],
+  [-26, 33, 3.4],
 ]);
 const armIn = tube([
   [-4, 11, 5.4],
@@ -45,7 +45,8 @@ const armIn = tube([
   [-4, 37, 3.4],
 ]);
 const mirror = (d: string) => xform(d, { sx: -1 });
-const tips = (sx: number) => join(circle(-19 * sx, 34, 3.6), circle(-4.5 * sx, 37, 3.6));
+// lit arm tips: outlined light-organ beads, so they read on Day too (CRITIQUE-1), glow on Night
+const tips = (sx: number) => join(circle(-26 * sx, 34, 3.8), circle(-4.5 * sx, 38, 3.8));
 
 export default defineArt({
   id: 'firefly',
@@ -62,7 +63,7 @@ export default defineArt({
       parts: [
         { d: armOut, role: 'body' },
         { d: armIn, role: 'body' },
-        { d: tips(1), role: 'light', kind: 'pattern' },
+        { d: tips(1), role: 'light' },
       ],
     },
     {
@@ -71,7 +72,7 @@ export default defineArt({
       parts: [
         { d: mirror(armOut), role: 'body' },
         { d: mirror(armIn), role: 'body' },
-        { d: tips(-1), role: 'light', kind: 'pattern' },
+        { d: tips(-1), role: 'light' },
       ],
     },
     {
@@ -81,11 +82,11 @@ export default defineArt({
         // a few photophore dots on the upper mantle, clear of the face
         {
           d: join(
-            circle(-9, -27, 2.8),
-            circle(9, -27, 2.8),
-            circle(0, -32, 2.4),
-            circle(-14, -16, 2.4),
-            circle(14, -16, 2.4),
+            circle(-9, -27, 3.1),
+            circle(9, -27, 3.1),
+            circle(0, -33, 3.1),
+            circle(-13.5, -15, 3.1),
+            circle(13.5, -15, 3.1),
           ),
           role: 'light',
           kind: 'pattern',
