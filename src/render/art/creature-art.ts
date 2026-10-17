@@ -40,12 +40,28 @@ const SWIMMERS: ReadonlySet<SpeciesArt['klass']> = new Set(['fish', 'shark', 'lo
 /**
  * R32: day species doze on Night, night species doze on Day; awake, a species shows its
  * `restExpression` (default idle). `neverSleepy` species (the kraken) are always awake.
+ * CRITIQUE-2 NEW 1 (the Night journal was a dormitory): off-theme *tiles* doze `drowsy` (half-open,
+ * highlights showing); the closed contented ‿ `sleepy` (with its "z") is for the detail view only.
+ * A tile never rests eyes-closed: a closed-eyed rest face (the seadragon's `proud`) stays for the
+ * detail view, and the tile shows it eyes-open (`idle`).
  */
-export function restingFace(art: SpeciesArt, sp: Species, night: boolean): Expression {
+export function restingFace(
+  art: SpeciesArt,
+  sp: Species,
+  night: boolean,
+  view: 'tile' | 'detail' = 'detail',
+): Expression {
   const nocturnal = art.nocturnal ?? sp.habitat === 'night';
   const rest = art.restExpression ?? 'idle';
-  if (art.neverSleepy) return rest;
-  return night !== nocturnal ? 'sleepy' : rest;
+  const awake = view === 'tile' && CLOSED_EYES.has(rest) ? 'idle' : rest;
+  if (art.neverSleepy || night === nocturnal) return awake;
+  return view === 'tile' ? 'drowsy' : 'sleepy';
+}
+const CLOSED_EYES: ReadonlySet<Expression> = new Set(['sleepy', 'proud', 'happy', 'blink']);
+
+/** True when the species dozes on this theme (an off-theme tile: drowsy, and may wake for a look). */
+export function dozing(art: SpeciesArt, sp: Species, night: boolean): boolean {
+  return !art.neverSleepy && night !== (art.nocturnal ?? sp.habitat === 'night');
 }
 
 /** Long side of the body box in px for a `drawCreature` call. */
@@ -122,7 +138,7 @@ function drawArt(
     facing,
     night,
     golden: o.golden,
-    expression: o.expression ?? (framed ? restingFace(art, sp, night) : 'idle'),
+    expression: o.expression ?? (framed ? restingFace(art, sp, night, o.fit === 'detail' ? 'detail' : 'tile') : 'idle'),
     t: o.t,
     still: o.still,
     action: o.action,
