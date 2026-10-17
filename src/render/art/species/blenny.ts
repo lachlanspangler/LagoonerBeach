@@ -1,114 +1,113 @@
 /**
- * Blenny — the nosy neighbour of the shallows (fish class, profile view).
- * Silhouette (R10): a big, blunt, round head with two upright eyebrow tufts (cirri), tapering into a
- * long low body with one long dorsal ribbon and a little round tail. Head-heavy like a tadpole, and
- * the tufts are the only "antennae" in the fish family at 24 px.
- * Personality: nosy, cheeky, peeky. Signature: ducks out of sight below the tile edge, peeks back up,
- * and waggles its eyebrows.
+ * Blenny — the nosy neighbour of the shallows (fish class, profile view, level).
+ * Silhouette (R10): a blunt, round-headed body (2.2 : 1) with two plump upright eyebrow tufts
+ * (cirri) on the brow and one long, low dorsal ridge running from the nape to the tail; a little
+ * round tail. The tufts are the only "antennae" in the fish family at 24 px.
+ * Personality: nosy, cheeky, peeky. Signature: ducks out of sight below the tile edge, peeks back
+ * up, and waggles its eyebrows.
  */
-import { blob, capsule, circle, defineArt, ellipse, join, tube, waveTrack, within, xform } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, tube, waveTrack, within } from '../kit.ts';
 
-// propped up on its fins, nose raised to see what's going on (nosy): the TILT is part of the
-// silhouette and keeps the round head and tufts apart from the flounder's turrets (R12)
-const TILT = -20;
-const R = (d: string) => xform(d, { rot: TILT });
-const tc = Math.cos((TILT * Math.PI) / 180),
-  ts = Math.sin((TILT * Math.PI) / 180);
-/** An anchor on the drawing grid, mapped like the paths. */
-const P = (x: number, y: number): [number, number] => [x * tc - y * ts, x * ts + y * tc];
-
-// blunt round head at the front (+38), tapering to a slim tail root at −36
+// blunt round head at the front (+38), an even body to the tail root at −31
 const body = blob([
-  [38, 3],
-  [35, -9],
-  [26, -19],
-  [12, -21],
-  [-2, -14],
-  [-20, -7],
-  [-33, -4.5],
-  [-37, -2],
-  [-37, 2.5],
-  [-31, 4.5],
-  [-16, 7],
-  [-2, 12],
-  [14, 20],
-  [30, 16],
+  [38, 1],
+  [35, -12],
+  [25, -20],
+  [10, -19],
+  [-4, -11],
+  [-18, -6],
+  [-30, -3.5],
+  [-32, 0],
+  [-30, 3.5],
+  [-18, 5],
+  [-4, 10],
+  [10, 18],
+  [25, 19],
+  [35, 12],
 ]);
-// one long, low dorsal ribbon from the nape to the tail
+// the long, low dorsal ridge: one continuous band from the nape to the tail
 const dorsal = tube(
   [
-    [8, -19, 2.6],
-    [-4, -15, 3],
-    [-18, -9.5, 2.8],
-    [-32, -6, 2.4],
+    [10, -17, 3],
+    [-2, -12.5, 3.4],
+    [-16, -8, 3],
+    [-29, -4.5, 2.4],
   ],
   0.9,
 );
 const tail = blob(
   [
-    [-34, -4],
-    [-40, -9],
-    [-45, -7],
-    [-46, 0],
-    [-45, 7],
-    [-40, 9],
-    [-34, 4],
+    [-29, -4],
+    [-36, -10],
+    [-43, -9],
+    [-45, 0],
+    [-43, 9],
+    [-36, 10],
+    [-29, 4],
   ],
   0.9,
 );
-// the eyebrow tufts: two plump upright cirri with round tips (filled capsules, R2)
-const tufts = join(capsule(24, -16, 3.2, 28, -29, 2.7), capsule(15, -18, 3.2, 14, -30, 2.7));
-const pectoral = ellipse(-6, 9, 5.5, 3, 22);
-// darker olive spots, placed by hand (R18 spots, 5)
-const spots = join(
-  circle(-4, -5, 3.4),
-  circle(-16, 0, 3),
-  circle(-27, -1, 2.6),
-  circle(6, -11, 3),
-  circle(-10, -11, 2.6),
-);
+// the eyebrow tufts: two plump upright cirri (6 thick × 10 tall) with round tips
+const tufts = join(capsule(27, -16, 3, 30, -33, 3), capsule(18, -17, 3, 17, -34, 3));
+const pectoral = ellipse(-8, 7, 5, 2.8, 26);
+// darker olive spots (R18 spots, ≥ 6 u), placed by hand behind the face
+const spots = join(circle(-6, -3, 3.4), circle(-17, 1, 3.2), circle(-26, -1, 3), circle(-4, 7, 3));
 
 export default defineArt({
   id: 'blenny',
   klass: 'fish',
   size: 'S',
-  feature: 'big blunt round head with two upright eyebrow tufts, tapering to a long low body',
+  feature: 'blunt round-headed body with two upright eyebrow tufts and a long low dorsal ridge',
   personality: ['nosy', 'cheeky', 'peeky'],
-  palette: { body: '#9DAA6B', accent: '#5E6B3A' },
+  palette: { body: '#9AAE5E', accent: '#5F7436' },
   groups: [
     {
       id: 'tail',
-      pivot: P(-35, 0),
+      pivot: [-31, 0],
       parts: [
-        { d: R(tail), role: 'body' },
-        { d: R(ellipse(-46, 0, 3, 7)), role: 'accent', kind: 'pattern', alpha: 0.6 },
+        { d: tail, role: 'body' },
+        { d: ellipse(-45, 0, 3, 8), role: 'accent', kind: 'pattern', alpha: 0.7 },
       ],
     },
     {
       id: 'tufts',
-      pivot: P(20, -17),
+      pivot: [22, -15],
       parts: [
-        { d: R(tufts), role: 'body' },
-        { d: R(join(circle(28, -29, 2.7), circle(14, -30, 2.7))), role: 'accent', kind: 'pattern' },
+        { d: tufts, role: 'body' },
+        { d: join(circle(30, -33, 3), circle(17, -34, 3)), role: 'accent', kind: 'pattern' },
       ],
     },
     {
       id: 'body',
       parts: [
-        { d: R(dorsal), role: 'body' },
-        { d: R(body), role: 'body' },
-        { d: R(ellipse(14, 17, 26, 7)), role: 'belly', kind: 'pattern' },
-        { d: R(spots), role: 'accent', kind: 'pattern', alpha: 0.75 },
+        { d: dorsal, role: 'body' },
+        { d: body, role: 'body' },
+        { d: ellipse(14, 16, 26, 6), role: 'belly', kind: 'pattern' },
+        {
+          d: tube(
+            [
+              [10, -17.5, 2.2],
+              [-2, -13, 2.4],
+              [-16, -8.5, 2.2],
+              [-29, -5, 2.1],
+            ],
+            0.9,
+          ),
+          role: 'accent',
+          kind: 'pattern',
+          alpha: 0.55,
+        },
+        { d: spots, role: 'accent', kind: 'pattern', alpha: 0.8 },
       ],
     },
-    { id: 'finA', pivot: P(-9, 7), parts: [{ d: R(pectoral), role: 'body' }] },
+    { id: 'finA', pivot: [-11, 5], parts: [{ d: pectoral, role: 'body' }] },
   ],
-  shine: R(ellipse(26, -11, 7, 3, -24)),
+  shine: ellipse(28, -9, 6, 2.6, -24),
   face: {
-    eyes: [P(12, 2)],
-    eye: 9,
-    zone: [0, -25, 38, 40],
-    mouth: { at: P(32, 8), w: 6, shape: 'smile' },
+    eyes: [[13, -1]],
+    eye: 10.6,
+    zone: [2, -27, 38, 45],
+    mouth: { at: [33, 6], w: 6.5, shape: 'smile' },
     sweet: true,
   },
   idle: {
