@@ -1,7 +1,8 @@
 /**
  * Periwinkle — SNAIL class (profile, facing right), size XS.
- * Silhouette: a big round spiral shell riding on a long cream foot, a round head in front with two
- * short eye-stalks; the eyes sit on the stalk tips (appendix). R10: the stalks and the round shell.
+ * Silhouette: a big round spiral shell riding high on a long cream foot, a round head in front with
+ * two short knobbed stalks. R10: the stalks and the round shell. The eyes sit on the head, not the
+ * stalk tips: at the 4 px eye floor, stalk-tip eyes read as spectacles (and sleepy as sunglasses).
  * Personality: slow, content, homebody. Signature: the eye-stalks stretch up and bob, then it slides
  * forward a little (2 units, squash-and-creep) and settles happy.
  * Groups (back to front): body (foot and head), shell, stalks (the face rides on them).
@@ -9,26 +10,29 @@
 import { blob, capsule, circle, defineArt, ellipse, join } from '../kit.ts';
 
 const SX = -13,
-  SY = -9;
+  SY = -12;
 const shell = circle(SX, SY, 26);
 // a semicircle spiral: three cream rings winding into the apex (R18 `rings`)
 const spiral =
   `M${SX + 22} ${SY}A22 22 0 0 0 ${SX - 20} ${SY}A18 18 0 0 0 ${SX + 16} ${SY}` +
   `A13 13 0 0 0 ${SX - 10} ${SY}A8 8 0 0 0 ${SX + 6} ${SY}`;
 const foot = blob([
-  [-40, 28],
-  [-30, 23],
+  [-38, 28],
+  [-29, 23],
   [-10, 21],
   [16, 18],
-  [25, 2],
-  [34, -2],
-  [41, 6],
-  [40, 22],
+  [21, 2],
+  [29, -5],
+  [38, -4],
+  [42, 6],
+  [41, 22],
   [26, 29],
   [-10, 31],
 ]);
-const stalks = join(capsule(26, 2, 3.2, 24, -17, 2.8), capsule(35, 2, 3.2, 36, -17, 2.8));
-const knobs = join(circle(24, -19, 5.4), circle(36, -19, 5.4));
+// a big round head in front of the shell carries the face; two short stalks with knob tips on top
+const head = circle(28, 4, 14.5);
+const stalks = join(capsule(24, -8, 2.6, 21, -18, 2.5), capsule(33, -8, 2.6, 36, -18, 2.5));
+const knobs = join(circle(21, -19.5, 3.8), circle(36, -19.5, 3.8));
 
 export default defineArt({
   id: 'periwinkle',
@@ -36,7 +40,7 @@ export default defineArt({
   size: 'XS',
   feature: 'a round spiral shell on a long foot, two eye-stalks',
   personality: ['slow', 'content', 'homebody'],
-  palette: { body: '#9A7357', accent: '#F1E2C6', belly: '#F2E4CB' },
+  palette: { body: '#A8724D', accent: '#F1E2C6', belly: '#F2E4CB' },
   groups: [
     {
       id: 'body',
@@ -55,24 +59,25 @@ export default defineArt({
     },
     {
       id: 'stalks',
-      pivot: [30, 2],
+      pivot: [29, 10],
       parts: [
-        { d: stalks, role: 'belly' },
-        { d: knobs, role: 'belly' },
+        { d: stalks, role: 'belly', extra: true },
+        { d: knobs, role: 'belly', extra: true },
+        { d: head, role: 'belly' },
       ],
     },
   ],
   shineOn: 'shell',
-  shine: ellipse(-25, -23, 8, 4, -35),
+  shine: ellipse(-25, -26, 8, 4, -35),
   face: {
     g: 'stalks',
     eyes: [
-      [24, -19],
-      [36, -19],
+      [19.5, 4],
+      [36.5, 4],
     ],
-    eye: 7.4,
-    zone: [16, -37, 30, 32],
-    mouth: { at: [36, 10], w: 5, shape: 'smile' },
+    eye: 12.4,
+    zone: [13, -12, 32, 30],
+    mouth: { at: [28, 12.5], w: 6, shape: 'smile' },
     front: true,
     sweet: true,
     lid: 'belly',

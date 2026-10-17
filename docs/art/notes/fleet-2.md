@@ -255,3 +255,11 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - Body `#CD976F` (chroma 0.08; `#C49A78` from the critique measures 0.069, under the new floor),
   ridges `#946043`, cream skirt `#F1E2CC`. Lint clean.
 - IoU: flounder 0.72, cuttle 0.70 (cross-class), nautilus/cockle checked below. Self-grade A-.
+
+## periwinkle (graded B → redo)
+- The critique asked for 7-unit stalk-tip eyes; the new floor is 12.4 units at XS. At that size the
+  eyes filled the stalk knobs and read as spectacles (and as sunglasses when sleepy). So the face moved
+  onto a big round head (r 14.5) in front of the shell: eyes 12.4, blush on the cheeks, smile on the
+  head front, and two short knobbed stalks above (`extra`, out of the body box).
+- Shell `#A8724D` (chroma 0.09, R16S), shell raised so the shell/head notch stays open. Lint clean.
+- IoU: sand dollar 0.66 (same class), hermit 0.66 (cross-class). Self-grade A-.
