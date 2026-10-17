@@ -661,9 +661,9 @@ export class LeaderboardUi {
         box.append(this.avatarEl(a, 40));
         const txt = el('div', 'lb-target-txt');
         const who = el('div', 'lb-target-who');
-        who.append(el('span', 'lb-nm', name), ` · #${num(a.rank)}`);
+        who.append(`Next up · #${num(a.rank)}`); // the name lives in the line below, once
         const line = el('div', 'lb-target-line');
-        line.append(el('b', 'lb-num', num(need)), ` to pass ${name}`);
+        line.append(el('b', 'lb-num', num(need)), ' to pass ', el('span', 'lb-nm', name));
         const bar = el('div', 'bar');
         bar.setAttribute('role', 'progressbar');
         bar.setAttribute('aria-label', `Your score as a share of ${name}'s`);
@@ -758,7 +758,7 @@ export class LeaderboardUi {
       if (best > 0) {
         const r = row({
           rank: 0,
-          name: this.client.name ?? 'YOU',
+          name: this.client.name ?? '', // unnamed: the You chip alone (not "YOU You")
           score: best,
           moves: 0,
           me: true,

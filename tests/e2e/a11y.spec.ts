@@ -38,6 +38,7 @@ test('touch targets and names on every screen', async ({ page }) => {
   await expect(page.locator('.lb-row.me')).toBeVisible();
   await checkTargets(page, 'leaderboard');
   await page.getByRole('button', { name: 'Close leaderboard' }).click();
+  await expect(page.getByTestId('lb-board')).toHaveCount(0); // its exit animation scales it below 44 px
   await page.evaluate(() => (window as any).__atoll.restart());
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: 'Beach Journal' }).click();

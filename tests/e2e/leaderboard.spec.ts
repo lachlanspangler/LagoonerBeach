@@ -39,7 +39,7 @@ test('daily: name entry strips invalid keys live, posts, and shows you with the 
   const rank = Number((await me.getAttribute('aria-label'))!.match(/rank (\d+)/)![1]);
   if (rank > 1) {
     // the target card names whoever is just above you, and they are the row ranked one higher
-    const above = page.locator('.lb-target-who .lb-nm');
+    const above = page.locator('.lb-target-line .lb-nm');
     const name = (await above.textContent())!;
     await expect(page.locator('.lb-target-line')).toContainText(`to pass ${name}`);
     await expect(page.locator(`.lb-row[aria-label*="rank ${rank - 1},"]`)).toContainText(name);
