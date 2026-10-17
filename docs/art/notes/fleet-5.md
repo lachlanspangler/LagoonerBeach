@@ -150,3 +150,9 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
   body `#5A84B5` (chroma 0.089, R16S; L 0.60). The kit's head-anchored XXL crop now keeps the long
   mouth in frame. Lint-clean; closest clownfish 0.65.
 - **Self-grade:** A. Unchanged in spirit; slightly bluer than the slate of round 1.
+
+## angler — A, open the eye
+- **Fixes:** idle eye opened 15 % (10 → 11.5 units, 24 % of a slightly taller zone) so it's no
+  longer a squint at 24–32 px; lure highlight 6.2 units (R18W); body `#8E6E9F` (chroma 0.082,
+  R16S). Lint-clean; closest sanddollar 0.73 (cross-class, limit 0.80), fish all < 0.67.
+- **Self-grade:** A.
