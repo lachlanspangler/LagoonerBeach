@@ -149,6 +149,9 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
 
 /* rows */
 .lb-list {
+  /* rows cut by the list edge fade out (reads as scrolling, not a sliced row) */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
   flex: 1;
   min-height: 140px;
   overflow-y: auto;

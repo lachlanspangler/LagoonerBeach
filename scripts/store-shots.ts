@@ -178,9 +178,7 @@ const shots: {
       await p.evaluate(() => (window as any).__atoll.loadPuzzle(371));
       await p.waitForFunction(() => (window as any).__atoll.state().seed === 371, null, { timeout: 30000 });
       await p.waitForTimeout(700);
-      // the first move of a fresh reef: full tray, the plan still to find
-      const sol = await p.evaluate(() => (window as any).__atoll.puzzleSolution());
-      await hold(p, sol[0].piece, sol[0].x, sol[0].y);
+      // a fresh reef: the full hand of three, the plan still to find
     },
   },
   {

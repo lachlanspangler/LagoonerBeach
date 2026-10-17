@@ -518,12 +518,12 @@ export class Celebrate {
       g.globalAlpha = 1;
     } else if (!rm && now - c.levelAt < 900) {
       const lk = (now - c.levelAt) / 900;
-      g.globalAlpha = alpha * 0.5 * (1 - lk);
-      g.strokeStyle = p.water;
-      g.lineWidth = 2;
+      // level-up: a soft glow swells behind the badge (a stroked ring read as a stray line)
+      g.globalAlpha = alpha * 0.22 * (1 - lk) * Math.min(1, lk * 6);
+      g.fillStyle = p.water;
       g.beginPath();
-      g.ellipse(x0 + overlapW / 2, y, overlapW * (0.5 + lk * 0.4), size * (0.6 + lk * 0.5), 0, 0, Math.PI * 2);
-      g.stroke();
+      g.ellipse(x0 + overlapW / 2, y, overlapW * (0.55 + lk * 0.25), size * (0.75 + lk * 0.3), 0, 0, Math.PI * 2);
+      g.fill();
       g.globalAlpha = 1;
     }
     this.blit(g, label, x0 + (label.w * scale) / 2, y + size * 0.05, scale, 0, alpha);

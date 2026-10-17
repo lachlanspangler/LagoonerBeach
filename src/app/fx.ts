@@ -111,7 +111,7 @@ export class Fx {
         text: name,
         x: b.x + b.w / 2,
         y: b.y + b.h * 0.42 + l.cell * 1.05 * ts,
-        size: l.cell * 0.5 * ts,
+        size: l.cell * 0.68 * ts, // ≥ 30 px: stroked display type needs the size (UI_DESIGN §7.1)
         start: t + 120,
         life: life - 120,
         style: 'water',

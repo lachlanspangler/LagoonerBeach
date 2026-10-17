@@ -140,7 +140,9 @@ export function buildReefList(
         button(
           '',
           cls,
-          `<span class="num">${n}</span>${pure.has(id) ? icon('star', { filled: true, cls: 'star' }) : ''}`,
+          `<span class="num">${n}</span>${
+            pure.has(id) ? icon('star', { filled: true, cls: 'star' }) : isSolved ? icon('check', { cls: 'tick' }) : ''
+          }`,
           `Reef ${n}${isSolved ? ', cleared' : ''}${pure.has(id) ? ', no hints' : ''}`,
           () => onPick(i),
         ),

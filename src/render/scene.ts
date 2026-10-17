@@ -989,7 +989,7 @@ export class Scene {
         const pw = tw + fs * 2.6;
         const ph = Math.round(fs * 2.1);
         const py = l.hud.y + l.hud.h * 0.71;
-        g.fillStyle = p.surfaceSunk;
+        g.fillStyle = p.name === 'night' ? '#1B3150' : p.surfaceSunk; // raised at night (sunk vanished)
         g.beginPath();
         g.roundRect(cx - pw / 2, py - ph / 2, pw, ph, ph / 2);
         g.fill();

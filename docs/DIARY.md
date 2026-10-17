@@ -458,3 +458,48 @@ SCORE) on our rule, clean and never chaotic; discoveries as moments scaled by ra
   in the middle of an empty board. **Felt off / open:** burst pieces keep the white "lit" rim in
   flight (sparkly, slightly busy); the common pop overlaps the board's top row for ~2 s; chips still
   hide the badge while up; reveal baselines will change when the art fleet redraws box crab / kraken.
+
+## 2026-10-16 (session 3) — aesthetic pass (UI_DESIGN.md, every screen)
+Owner brief: "incredibly aesthetic, incredibly high class … top of the App Store charts." Built on
+what exists (no feature rebuilds); every test's intent kept.
+- **Plan:** tokens (CSS + TS mirror, contrast-tested) → Tidemark icons → components (pebble buttons,
+  sheets, chips, segmented, tiles) → screens one by one → layout → celebration leftovers → store art →
+  look at every screen, 3 rounds → independent review → fix → second review.
+- **Tokens:** `style.css` `:root`/night = UI_DESIGN §10 (+ springs as CSS `linear()` samples of the
+  M3 springs, cubic-bezier fallback); `theme.ts` mirrors them (`CSS_VARS`, `TYPE`, `SPACE`, `RADII`,
+  `UI_MOTION`). `contrast.test.ts` now checks 16 text/background pairs per theme (Day + Night) ≥ AA and fails if a
+  CSS variable drifts from the palette. Fixed: secondary text 3.53 → 5.64:1, no cyan text (NEW BEST
+  label gold-ink 5.2:1, reef subtitle/mode tag/chips now ink-2 or accent); gold-ink darkened
+  #9A6A00 → #875C00 (the doc's 4.59 was on surface, 4.2 on the ribbon tint).
+- **Top bar decision:** menu left, **Beach Journal** right (the hint bulb in Reefs). Every catch swims
+  into that button and a coral dot marks unseen pages, so the collection loop is one tap and visibly
+  alive; the Daily moved to a home mode card (streak chip + "Day 7") and the results' ghost button;
+  leaderboards live on the results card and the home sheet. Two corner objects keep the score centered
+  and calm (a third icon crowded 320 px).
+- **Layout:** status → board → strip → hand. The tray block is 3.6 cells, the hand grows up to 0.82 on
+  tall phones, and the strip (board ↔ tray) holds reef progress and every chip; dead sand under the
+  hand on a 390×844 phone went from ~200 px to ~90 px. Tablets center the stack. Unit tests: strip
+  bounds, no dead band, notched portrait + landscape insets; the 5×2 e2e layouts also check the top bar.
+- **Celebration leftovers:** burst pebbles crossfade the white rim to plain in the first third of the
+  flight; the common pop lives in the strip (never over the board), 1.4 s instead of 1.9 s, and chips
+  wait for it; chips no longer take the COMBO slot (CLAUDE.md rule updated).
+- **Art "later work" that is UI:** rarity frames + 1–5 shell pips on journal tiles (locked too), the
+  species size line ("Caught 9.4 cm · record 31 cm / about 8 pebbles" + a pebble at true scale; the
+  journal now stores the latest size), one ambient signature at a time in the grid (R37).
+- **About:** font credits with links to the bundled OFL texts, privacy row.
+- **Budget:** settings/journal/species/reefs moved to a lazy `sheets` chunk (prefetched on idle) and
+  the debug hooks went lazy: initial JS 61.8 KB gz (was ~61.6 before the pass; 67.4 with everything
+  eager), CSS 5.5 KB (sheets + leaderboard CSS lazy).
+- **Rounds** (`scripts/screens.ts`, 40 screens × 2 themes): (1) wordmark wrapped beside the best,
+  theme segment crushed its label, journal showed a wall of "new" dots after an update (existing
+  journals now start seen), the leaderboard bar class vanished; (2) the common pop covered the board on
+  320 px, tablets opened a canyon between board and tray, share-card footer cramped; (3) staged reef ids
+  were wrong (lowercase) so captures disagreed.
+- **Independent review** (fresh agent, read-only, screenshots + UI_DESIGN): must-fixes were the pinned
+  "you" row overlapping rows (now outside the scroller), COMBO badge too small for stroked display type
+  (+25%), "+N" touching the word (0.2-cell gap, ≥ 24 px), wrong staged data, tray piece at x = 12,
+  store frames cropping the tray, two primaries (menu, reef list). All addressed; second round below.
+- **Felt good:** Fraunces titles + Nunito numbers finally give the game a voice; the journal reads as a
+  specimen collection; Night with raised controls and brighter water. **Felt off / open:** Fraunces
+  COMBO at 22 px still has tight counters; tray pieces don't re-center when one is left (kept for
+  position stability); reveal golden border is flat gold, not the foil gradient.
