@@ -1,92 +1,110 @@
 /**
  * Baby Kraken — LEGENDARY, front-facing CHIBI, drawn XL (appendix ★ override).
- * Silhouette: a wide round head wearing a tiny three-point crown, eight arms that splay out
- * sideways and curl UP at the tips like a sea monster flexing (R10: the crown + the up-curled
- * arm fan; the octopus pilot's arms hang down and curl out, this one's spread and rise).
- * Deep purple, lifted to L 0.49 (R16 dark-identity rule) with a pink belly and pink suckers; the
+ * Silhouette: a WIDE squat head (≈ 1.3× the octopus pilot's head relative to its arms) wearing a
+ * tiny three-point crown, with all eight arms splayed out sideways like a starburst skirt, the tips
+ * curling up and breaking the tile frame (R10: the crown + the splayed arm fan + a stubby brow).
+ * The octopus pilot is a tall dome over hanging arms; this is a flat, wide little sea monster.
+ * Deep purple lifted to L 0.49 (R16 dark-identity rule) with a pink belly and pink suckers; the
  * crown is a light organ, so it glows gold on Night.
- * Personality: adorable, menacing-ish, babyish. Signature: tries a scary pose (arms up, puffed
- * up, smug), can't hold it, giggles and blushes.
+ * Personality: adorable, menacing-ish, babyish. Signature: tries a scary pose (arms up, puffed up,
+ * smug), can't hold it, giggles and blushes.
  */
 import { blob, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
 const head = blob([
-  [0, -31],
-  [16, -28],
-  [25, -16],
-  [27, 0],
-  [22, 13],
-  [11, 19],
-  [0, 20],
-  [-11, 19],
-  [-22, 13],
-  [-27, 0],
-  [-25, -16],
-  [-16, -28],
+  [0, -29],
+  [20, -27],
+  [33, -17],
+  [37, -3],
+  [32, 10],
+  [17, 17],
+  [0, 18],
+  [-17, 17],
+  [-32, 10],
+  [-37, -3],
+  [-33, -17],
+  [-20, -27],
 ]);
 const crown = blob(
   [
-    [-12, -26],
-    [-14, -40],
-    [-7, -34],
-    [0, -44.5],
-    [7, -34],
-    [14, -40],
-    [12, -26],
-    [0, -24],
+    [-11, -24],
+    [-12, -36],
+    [-6, -31],
+    [0, -40],
+    [6, -31],
+    [12, -36],
+    [11, -24],
+    [0, -22],
   ],
   0.75,
 );
-// left arms (right ones mirror): two big outer arms that rise and curl up, a mid and a front arm
-const upL = tube([
-  [-21, 8, 6.6],
-  [-31, 4, 5.6],
-  [-36, -8, 4.8],
-  [-36, -22, 4],
-  [-31, -33, 3.4],
-  [-26, -32, 2.8],
-]);
-const lowL = tube([
-  [-19, 14, 6.6],
-  [-29, 23, 5.6],
-  [-36, 22, 4.6],
-  [-37, 15, 3.8],
-  [-33, 12, 3],
-]);
-const midL = tube([
-  [-12, 18, 6.4],
-  [-18, 28, 5.4],
-  [-25, 34, 4.4],
-  [-31, 32, 3.6],
-  [-30, 27, 3],
-]);
+// left arms (right ones mirror). Bases stay inside the body box; the curled tips are `extra` and
+// break the frame (R28). Four arms a side, fanned from horizontal-and-up to down-and-out.
+const armsBase = join(
+  tube([
+    [-28, 2, 7],
+    [-34, 0, 6],
+    [-37, -4, 5],
+  ]),
+  tube([
+    [-26, 10, 7],
+    [-32, 14, 6],
+    [-37, 15, 5],
+  ]),
+  tube([
+    [-19, 15, 6.8],
+    [-26, 24, 5.8],
+    [-33, 28, 4.8],
+  ]),
+);
+const armsTips = join(
+  tube([
+    [-37, -4, 5],
+    [-41, -11, 4],
+    [-39, -17, 3.2],
+    [-35, -16, 2.8],
+  ]),
+  tube([
+    [-37, 15, 5],
+    [-44, 13, 4],
+    [-46, 6, 3.2],
+    [-43, 3, 2.8],
+  ]),
+  tube([
+    [-33, 28, 4.8],
+    [-41, 30, 3.8],
+    [-45, 25, 3.2],
+    [-42, 21, 2.8],
+  ]),
+);
+// the front arm: down and out, tip curling outward (never toward the other one: not clasped hands)
 const frontL = tube([
-  [-6.5, 19, 6.2],
-  [-8, 29, 5.2],
-  [-12, 35, 4.2],
-  [-17, 34, 3.4],
-  [-17, 30, 2.8],
+  [-9, 16, 6.6],
+  [-14, 27, 5.6],
+  [-21, 35, 4.6],
+  [-28, 37, 3.6],
+  [-31, 33, 3],
 ]);
 const mirror = (d: string) => xform(d, { sx: -1 });
-const suckers = (pts: readonly (readonly [number, number])[]) => join(...pts.map(([x, y]) => circle(x, y, 2.2)));
+const dots = (pts: readonly (readonly [number, number])[], r = 3.2) => join(...pts.map(([x, y]) => circle(x, y, r)));
 const sL: [number, number][] = [
-  [-36.5, -14],
-  [-35, -24],
-  [-36.5, 18],
-  [-30, 31],
-  [-24, 35],
+  [-40.5, -10],
+  [-44.5, 10],
+  [-42, 28.5],
 ];
 const sF: [number, number][] = [
-  [-9, 32],
-  [-14, 36],
+  [-20, 33],
+  [-27, 35],
 ];
 const flip = (pts: [number, number][]) => pts.map(([x, y]) => [-x, y] as [number, number]);
+// the stubby "menacing" brow: two short thick ink dashes angled down toward the middle
+const brow = 'M-15 -14.5L-9 -12.5M15 -14.5L9 -12.5';
 
 export default defineArt({
   id: 'kraken',
   klass: 'chibi',
   size: 'XL',
-  feature: 'tiny crown on a wide round head, eight arms splayed wide and curled up at the tips',
+  feature: 'wide squat crowned head, all eight arms splayed out like a starburst with curled tips',
   personality: ['adorable', 'menacing-ish', 'babyish'],
   palette: { body: '#714B99', accent: '#F2C14E', belly: '#F2A5CF' },
   nocturnal: true,
@@ -94,22 +112,36 @@ export default defineArt({
   groups: [
     {
       id: 'armsL',
-      pivot: [-18, 8],
+      pivot: [-24, 8],
       parts: [
-        { d: upL, role: 'body' },
-        { d: lowL, role: 'body' },
-        { d: midL, role: 'body' },
-        { d: suckers(sL), role: 'belly', kind: 'pattern' },
+        { d: armsBase, role: 'body' },
+        { d: armsTips, role: 'body', extra: true },
+        { d: dots(sL), role: 'belly', kind: 'pattern' },
       ],
     },
     {
       id: 'armsR',
-      pivot: [18, 8],
+      pivot: [24, 8],
       parts: [
-        { d: mirror(upL), role: 'body' },
-        { d: mirror(lowL), role: 'body' },
-        { d: mirror(midL), role: 'body' },
-        { d: suckers(flip(sL)), role: 'belly', kind: 'pattern' },
+        { d: mirror(armsBase), role: 'body' },
+        { d: mirror(armsTips), role: 'body', extra: true },
+        { d: dots(flip(sL)), role: 'belly', kind: 'pattern' },
+      ],
+    },
+    {
+      id: 'armL',
+      pivot: [-9, 16],
+      parts: [
+        { d: frontL, role: 'body' },
+        { d: dots(sF, 3), role: 'belly', kind: 'pattern' },
+      ],
+    },
+    {
+      id: 'armR',
+      pivot: [9, 16],
+      parts: [
+        { d: mirror(frontL), role: 'body' },
+        { d: dots(flip(sF), 3), role: 'belly', kind: 'pattern' },
       ],
     },
     {
@@ -117,36 +149,20 @@ export default defineArt({
       parts: [
         { d: crown, role: 'light' },
         { d: head, role: 'body' },
-        { d: join(circle(-18, -18, 3.6), circle(-23, -8, 2.4), circle(19, -19, 2.8)), role: 'belly', kind: 'pattern' },
-        { d: ellipse(0, 18, 24, 6), role: 'belly', kind: 'pattern', alpha: 0.8 },
-      ],
-    },
-    {
-      id: 'armL',
-      pivot: [-6.5, 18],
-      parts: [
-        { d: frontL, role: 'body' },
-        { d: suckers(sF), role: 'belly', kind: 'pattern' },
-      ],
-    },
-    {
-      id: 'armR',
-      pivot: [6.5, 18],
-      parts: [
-        { d: mirror(frontL), role: 'body' },
-        { d: suckers(flip(sF)), role: 'belly', kind: 'pattern' },
+        { d: join(circle(-24, -14, 3.6), circle(25, -15, 3.2), circle(-29, 1, 3)), role: 'belly', kind: 'pattern' },
+        { d: brow, role: 'ink', kind: 'line', w: 3.2 },
       ],
     },
   ],
-  shine: ellipse(-12, -21, 9, 4.6, -30),
+  shine: ellipse(-14, -20, 10, 4.4, -22),
   face: {
     eyes: [
-      [-10, -2],
-      [10, -2],
+      [-10, -3],
+      [10, -3],
     ],
-    eye: 11.6,
-    zone: [-27, -31, 54, 51],
-    mouth: { at: [0, 7], w: 6, shape: 'smile' },
+    eye: 11.2,
+    zone: [-37, -29, 74, 47],
+    mouth: { at: [0, 7], w: 6, shape: 'w' },
     front: true,
   },
   idle: {
@@ -162,43 +178,33 @@ export default defineArt({
       tracks: [
         {
           g: 'armsL',
-          p: 'rot',
+          p: 'sx',
           k: [
-            [0, 0],
-            [0.12, 6],
-            [0.3, -18],
-            [0.5, -16],
-            [0.62, 0],
+            [0, 1],
+            [0.12, 0.94],
+            [0.3, 1.16],
+            [0.52, 1.14],
+            [0.64, 1],
           ],
         },
         {
           g: 'armsR',
-          p: 'rot',
+          p: 'sx',
           k: [
-            [0, 0],
-            [0.12, -6],
-            [0.3, 18],
-            [0.5, 16],
-            [0.62, 0],
+            [0, 1],
+            [0.12, 0.94],
+            [0.3, 1.16],
+            [0.52, 1.14],
+            [0.64, 1],
           ],
         },
         {
-          g: 'armL',
-          p: 'rot',
+          p: 'ty',
           k: [
             [0, 0],
-            [0.3, 100],
-            [0.5, 96],
-            [0.64, 0],
-          ],
-        },
-        {
-          g: 'armR',
-          p: 'rot',
-          k: [
-            [0, 0],
-            [0.3, -100],
-            [0.5, -96],
+            [0.12, 2],
+            [0.3, -4],
+            [0.52, -4],
             [0.64, 0],
           ],
         },
