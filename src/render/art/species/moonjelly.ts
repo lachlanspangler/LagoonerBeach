@@ -47,7 +47,7 @@ export default defineArt({
   size: 'M',
   feature: 'wide translucent dome bell with a four-leaf clover and four short frilly arms',
   personality: ['floaty', 'carefree', 'dreamy'],
-  palette: { body: '#C9D6FF', accent: '#D47FC6' },
+  palette: { body: '#B8C4FF', accent: '#C86AB8' },
   groups: [
     {
       id: 'armsL',
@@ -71,7 +71,6 @@ export default defineArt({
       parts: [
         { d: bell, role: 'body', alpha: 0.85 },
         { d: clover, role: 'light', kind: 'pattern', alpha: 0.9 },
-        { d: circle(0, -28, 2.2), role: 'body', kind: 'pattern' },
         // the frilly rim: a soft inner line just above the bell edge
         { d: 'M-31 0C-20 4 -10 2 0 2C10 2 20 4 31 0', role: 'ink', kind: 'line', w: 1.4, alpha: 0.3 },
       ],
