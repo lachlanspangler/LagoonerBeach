@@ -1,97 +1,103 @@
 /**
- * Cleaner wrasse — the reef's tidy little spa attendant (fish class, profile view).
- * Silhouette (R10): a slim cigar with a rounded fan tail, always swimming nose-up at a jaunty tilt
- * (the level minnow and barracuda are its neighbours at 24 px). One bold ink stripe to the tail.
+ * Cleaner wrasse — the reef's tidy little spa attendant (fish class, profile view, level).
+ * Silhouette (R10): a slim, even cigar with a rounded fan tail (no fork, no tall fins): between the
+ * barracuda's needle and the minnow's forked torpedo. Bluestreak colours: a pale front half, a blue
+ * back half, and one bold ink stripe that starts behind the eye and widens into the tail.
  * Personality: helpful, busy, tidy. Signature: a little "scrub" wiggle with a bubble sparkle.
  */
-import { blob, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
+import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
-// The whole fish swims nose-up at a jaunty TILT (busy, on its way to a client): the pose is the
-// silhouette feature that keeps the cigar apart from the level minnow and barracuda (R12).
-const TILT = -14;
-const T = (d: string) => xform(d, { rot: TILT });
-// even cigar: rounded nose at +38, tail root at −27
-const body = T(
-  tube(
-    [
-      [31, 0, 9.5],
-      [20, 0, 12.5],
-      [4, 0, 13],
-      [-12, 0, 11.5],
-      [-22, 0, 8.5],
-      [-26, 0, 6.5],
-    ],
-    1,
-  ),
+// even cigar: rounded nose at +40, tail root at −27
+const body = blob([
+  [40, 1],
+  [35, -6],
+  [24, -12],
+  [8, -14],
+  [-8, -11],
+  [-20, -6],
+  [-28, -3.5],
+  [-28, 3.5],
+  [-20, 6],
+  [-8, 11],
+  [8, 14],
+  [24, 12.5],
+  [35, 7.5],
+]);
+// rounded fan tail
+const tail = blob(
+  [
+    [-26, -3],
+    [-33, -9],
+    [-40, -14],
+    [-43.5, -7],
+    [-44, 0],
+    [-43.5, 7],
+    [-40, 14],
+    [-33, 9],
+    [-26, 3],
+  ],
+  0.95,
 );
-// rounded fan tail with a slightly convex trailing edge
-const tail = T(
-  blob(
-    [
-      [-23, -5],
-      [-32, -11],
-      [-39, -13.5],
-      [-42.5, -7],
-      [-43, 0],
-      [-42.5, 7],
-      [-39, 13.5],
-      [-32, 11],
-      [-23, 5],
-    ],
-    0.85,
-  ),
-);
-const pectoral = T(ellipse(-2, 6.5, 4.8, 2.5, 24));
-// one bold stripe: thin behind the eye, widening to the tail (R18 stripes, 1 line)
-const stripe = T(
-  tube([
-    [3, -1, 1.2],
-    [-8, -1, 3.2],
-    [-20, -1, 4],
-    [-30, -1, 4.2],
-  ]),
-);
-const tailStripe = T(
-  tube([
-    [-26, -1, 4],
-    [-46, -1, 3.6],
-  ]),
-);
-const bubbles = join(circle(43, -20, 3.6), circle(37, -29, 2.4), circle(45, -35, 1.8));
+const pectoral = ellipse(-4, 7, 5, 2.6, 26);
+// the pale front half over the blue body (pattern, follows the outline)
+const front = blob([
+  [2, -18],
+  [46, -18],
+  [46, 18],
+  [2, 18],
+  [8, 0],
+]);
+// one bold ink stripe: starts well behind the eye (R18E) and widens from 7 to 10 units into the tail
+const stripe = tube([
+  [-5, -0.5, 3.5],
+  [-14, -0.5, 4.2],
+  [-26, 0, 5],
+]);
+const tailStripe = tube([
+  [-27, 0, 5],
+  [-46, 0, 5],
+]);
+const bubbles = join(circle(45, -16, 3.6), circle(39, -25, 2.6), circle(46, -31, 2));
 
 export default defineArt({
   id: 'wrasse',
   klass: 'fish',
   size: 'S',
-  feature: 'slim cigar swimming nose-up, rounded fan tail, one bold stripe',
+  feature: 'slim even cigar with a round tail; pale front, blue back, one bold stripe widening to the tail',
   personality: ['helpful', 'busy', 'tidy'],
-  palette: { body: '#3D9BE9', belly: '#BFE3FF' },
+  palette: { body: '#3D9BE9', accent: '#BFE6F7', belly: '#BFE6F7' },
   groups: [
     {
       id: 'tail',
-      pivot: [-25, 6],
+      pivot: [-27, 0],
       parts: [
         { d: tail, role: 'body' },
-        { d: tailStripe, role: 'ink', kind: 'pattern', alpha: 0.85 },
+        { d: tailStripe, role: 'ink', kind: 'pattern', alpha: 0.9 },
       ],
     },
     {
       id: 'body',
       parts: [
         { d: body, role: 'body' },
-        { d: T(ellipse(10, 13, 32, 6)), role: 'belly', kind: 'pattern' },
-        { d: stripe, role: 'ink', kind: 'pattern', alpha: 0.85 },
+        { d: front, role: 'accent', kind: 'pattern' },
+        { d: stripe, role: 'ink', kind: 'pattern', alpha: 0.9 },
       ],
     },
-    { id: 'finA', pivot: [-1, 4.5], parts: [{ d: pectoral, role: 'body' }] },
-    { id: 'bubbles', pivot: [40, -20], prop: true, parts: [{ d: bubbles, role: 'white', alpha: 0.85 }] },
+    { id: 'finA', pivot: [-6, 5], parts: [{ d: pectoral, role: 'accent' }] },
+    {
+      id: 'bubbles',
+      pivot: [42, -20],
+      prop: true,
+      followRoot: true,
+      parts: [{ d: bubbles, role: 'white', alpha: 0.85 }],
+    },
   ],
-  shine: T(ellipse(22, -7, 8, 2.6, -6)),
+  shine: ellipse(24, -8, 8, 2.6, -10),
   face: {
-    eyes: [[12, -1.5]],
-    eye: 8,
-    zone: [2, -22, 40, 36],
-    mouth: { at: [31, -1.5], w: 5.5, shape: 'smile' },
+    eyes: [[14, 0]],
+    eye: 10.6,
+    zone: [4, -27, 38, 46],
+    mouth: { at: [35, 6], w: 6.5, shape: 'smile' },
     sweet: true,
   },
   idle: {
