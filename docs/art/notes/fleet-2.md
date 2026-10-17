@@ -211,3 +211,87 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
 - New closest pairs: hermit 0.70, combjelly 0.68 (cross-class, limit 0.80), cockle 0.66 (same class,
   limit 0.70); cuttle dropped out of the top list. Every fish is ≤ 0.65 against it.
 - Self-grade stays B+: it reads as a little nautilus peering down, and the coil stripes still lead.
+
+# Redo round (after CRITIQUE-1 and the kit pass)
+
+## puffer (graded A, lint only)
+- R18W: the six spots are now all ≥ 6.4 units across (the two smallest were 5–5.8).
+- R2L: the pectoral fin rays are 3-unit lines at 30 % alpha (soft detail; they were 1.4 u).
+- Lint clean; silhouette unchanged (closest: combjelly 0.73 cross-class, clownfish 0.68 same class).
+
+## boxfish (graded B → redo)
+- Polka dots are now 4, in the body's own dark gold `#B08A1E` (was near-black `#4A3A22`), 7–9 units,
+  all behind the face zone, so the eye is the only dark dot on the face at 24–32 px.
+- `pout` moved to 0.6 eye-heights below the eye and close under it (it read as a stray dot at the
+  snout); eye up to 12.3 (22 % of the zone).
+- Lint clean; IoU unchanged (sanddollar 0.73 cross-class, puffer 0.67 same class). Self-grade A-.
+
+## sunfish (graded B → redo)
+- Clavus rebuilt as a smooth frill of three big round scallops (the many-point blob read as a bite mark).
+- XL frame-break: each long fin ends in a short `extra` capsule that pokes 3.5 px past the tile's
+  art box (lint overhang 3.5 px); the fins themselves stay in the body box so the silhouette keeps
+  its tall proportions (making the whole fins `extra` re-scaled the mask and hit the sand dollar at 0.81).
+- Warm sun-blush `#FFB3A0` always on (`face.blush`), eye 9.4 (22 %), mouth `o` a touch larger.
+- R16S deviation: silver identity at chroma 0.05 (the mola is silver-grey); it reads on sand and mint.
+- IoU: lionfish 0.68, clownfish 0.68 (same class, limit 0.70). Self-grade A-.
+
+## urchin (graded B → redo)
+- Face disc `#B9A0D6` (was near-white `#EBDEFB`: with the half-lids on Night it read as a skull),
+  widened to 38×28 under eyes now 17 units apart (2.0 widths; the closed sleepy arcs read as a
+  moustache when the eyes were close).
+- Eye 10 (above the 9.7 floor); crown tubercles ≥ 6 units (R18W). Lint clean.
+- IoU: clownfish 0.62, puffer 0.61 (cross-class). Self-grade A-.
+
+## giantclam (graded B → redo)
+- The bowl's hairline ribs (read as taco teeth) are now four wide, gently wavy ridges (tubes 4.4–5.2
+  units, ink at 13 %); shell `#F3E3BC`.
+- Mantle spots all ≥ 6.2 units (R18W); the tiny pearl highlight dot is gone (the white pearl reads alone).
+- Eyes 9.6 (24 % of a slightly taller face zone) so the face holds at 54 px. Lint clean.
+- IoU: octopus 0.70, kraken 0.69 (cross-class, limit 0.80); sand dollar 0.64 (same class). Self-grade A-.
+
+## limpet (graded B → redo)
+- Face moved up onto the cone flank at 60 % of its height, eyes 12.4 units (the XS floor; 30 % of the
+  zone, allowed by the floor rule) 17 apart, mouth 0.7 eye-heights below.
+- Body `#CD976F` (chroma 0.08; `#C49A78` from the critique measures 0.069, under the new floor),
+  ridges `#946043`, cream skirt `#F1E2CC`. Lint clean.
+- IoU: flounder 0.72, cuttle 0.70 (cross-class), nautilus/cockle checked below. Self-grade A-.
+
+## periwinkle (graded B → redo)
+- The critique asked for 7-unit stalk-tip eyes; the new floor is 12.4 units at XS. At that size the
+  eyes filled the stalk knobs and read as spectacles (and as sunglasses when sleepy). So the face moved
+  onto a big round head (r 14.5) in front of the shell: eyes 12.4, blush on the cheeks, smile on the
+  head front, and two short knobbed stalks above (`extra`, out of the body box).
+- Shell `#A8724D` (chroma 0.09, R16S), shell raised so the shell/head notch stays open. Lint clean.
+- IoU: sand dollar 0.66 (same class), hermit 0.66 (cross-class). Self-grade A-.
+
+## cockle (graded C → redo)
+- Brief: wide heart-ish shell 1.25 : 1, 4 broad ribs `#B07A4E` on `#F1DDBB`, open ~10° with eyes in the
+  gap, drop the tongue-foot (or a small cream side nub), keep the hum.
+- Tried, measured against the full cast (R12):
+  1. Heart 84×67 with a lens gap, edges closed: sand dollar 0.85. Scalloped heart lip + umbo: 0.87.
+  2. Lid tipped 11–24° on a left hinge (a wedge gap): 0.70 at 24°, but the locked silhouette was a
+     famous arcade character's (originality risk, CRITIQUE-1 golden-turtle note). Dropped.
+  3. Fan lid (rounded triangle) over a square-ish bowl + a small cream foot nub at the side: sand
+     dollar 0.68, limpet 0.68, cuttle 0.76 (cross-class). Kept.
+- The gap is now a wide lens (the lid lifted ~10° worth), mantle pink, eyes 12.6 (the XS floor),
+  smile in the gap; ribs slimmed so the lid reads cream with brown ribs, not a brown hat; no pompom
+  knob; the foot is cream, not pink. Shell `#E8CCA3` (the critique's `#F1DDBB` measures L 0.91 and
+  sits ΔE 0.07 from the mint tile; R16S deviation at chroma 0.06).
+- Self-grade: B+. The face is sweet and the hum reads; the shape is a fan, not the heart the critique
+  asked for: no heart passes the coin overlap at 24 px. Would need a silhouette metric change or a
+  sand-dollar redesign to get the heart.
+
+## nautilus (graded C → redo)
+- Brief: side-on shell, opening right, hood + one big eye in the opening, 6–8 thin tentacles fanning
+  forward, hood `#C98A5E`, stripes `#C2603A` on `#F4E7D2`; must clear the cuttle and the hermit.
+- Rebuilt from a parameterised template (shell radius/centre, head position, tentacle fan, tilt) and
+  searched against the full cast. Level side-on versions all hit the cuttle (0.80–0.85: a round body
+  with a forward tuft is the cuttle's silhouette at 24 px); nose-down tilts hit the hermit (0.76–0.80).
+  A gentle **12° nose-up** rise (the animal drifting upward) clears both.
+- Now: coil R 26 with six bold tiger bands, a whorl line (3 u), a big spotted hood cap (`#C98A5E`, three
+  pale spots ≥ 6 u), the big eye in the opening under the hood, a small red-brown head with the smile,
+  and a fan of 8 slim tentacles (5 units, the R2 minimum). Shell `#E9D0A9` (R16S deviation: the
+  critique's cream measures L 0.93 and sits too close to mint).
+- IoU: turtle 0.74, cuttle 0.74, otter 0.72 (cross-class, limit 0.80); cockle 0.66 (same class).
+- Self-grade: B+. Reads as a nautilus with a proper hood and stripes; the tentacle fan still reads a
+  little like a frilled hand at 54 px.

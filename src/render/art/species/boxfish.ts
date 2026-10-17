@@ -33,14 +33,12 @@ const anal = blob([
   [-12, 37],
   [-14, 27],
 ]);
-// six hand-placed polka dots (R18), clear of the eye and lips
+// four hand-placed polka dots in the body's own dark gold (R18), all behind the face zone
 const dots = join(
-  ellipse(-12, -16, 3.6, 3.6),
-  ellipse(4, -20, 3.4, 3.4),
-  ellipse(19, -15, 3, 3),
-  ellipse(-14, -2, 3.2, 3.2),
-  ellipse(-10, 20, 3.2, 3.2),
-  ellipse(12, 19, 3, 3),
+  ellipse(-14, -14, 4.4, 4.4),
+  ellipse(-5, -22, 3.6, 3.6),
+  ellipse(-17, 6, 4, 4),
+  ellipse(-7, 19, 3.8, 3.8),
 );
 
 /** A fast ±deg whir between u0 and u1 (the signature's furious little fins). */
@@ -57,7 +55,7 @@ export default defineArt({
   size: 'M',
   feature: 'a near-cube rounded-square body with tiny fins',
   personality: ['earnest', 'chunky', 'polite'],
-  palette: { body: '#F2D43B', accent: '#4A3A22', belly: '#FBEFA6' },
+  palette: { body: '#F2D43B', accent: '#B08A1E', belly: '#FBEFA6' },
   groups: [
     { id: 'tail', pivot: [-23, 0], parts: [{ d: tail, role: 'body' }] },
     { id: 'dorsal', pivot: [-8, -28], parts: [{ d: dorsal, role: 'body' }] },
@@ -74,9 +72,9 @@ export default defineArt({
   shine: ellipse(14, -19, 10, 4, -12),
   face: {
     eyes: [[9, 4]],
-    eye: 11,
+    eye: 12.3,
     zone: [-4, -29, 36, 56],
-    mouth: { at: [25, 10], w: 7, shape: 'pout' },
+    mouth: { at: [16, 11.5], w: 7, shape: 'pout' },
     sweet: true,
   },
   idle: {

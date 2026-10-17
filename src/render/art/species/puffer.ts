@@ -42,11 +42,11 @@ const finRays = 'M-4 11L-12 9M-4 12L-13 14';
 // brown spots on the back only (hand placed, R18)
 const spots = join(
   ellipse(-8, -18, 4.2, 3.6),
-  ellipse(6, -22, 3.6, 3.2),
-  ellipse(-18, -6, 3.6, 3.4),
-  ellipse(18, -16, 3, 2.8),
-  ellipse(-4, -6, 3, 2.8),
-  ellipse(-16, -22, 2.6, 2.4),
+  ellipse(6, -22, 3.8, 3.4),
+  ellipse(-18, -6, 3.8, 3.5),
+  ellipse(19, -15, 3.4, 3.2),
+  ellipse(-5, -6, 3.4, 3.2),
+  ellipse(-16, -23, 3.3, 3.1),
 );
 
 export default defineArt({
@@ -73,7 +73,7 @@ export default defineArt({
       pivot: [-2, 11],
       parts: [
         { d: pectoral, role: 'body' },
-        { d: finRays, role: 'ink', kind: 'line', w: 1.4, alpha: 0.5 },
+        { d: finRays, role: 'ink', kind: 'line', w: 3, alpha: 0.3 },
       ],
     },
   ],
