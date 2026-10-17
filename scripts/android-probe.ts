@@ -67,5 +67,15 @@ await ev(`window.__atoll.autoplay('human', 400)`);
 await sleep(3000);
 await shot('daily-over');
 report.score = await ev(`window.__atoll.state().score`);
+// a legendary discovery reveal, then the journal (new art from the lazy chunk)
+await ev(`window.__atoll.restart()`);
+await sleep(600);
+await ev(`window.__atoll.revealSpecies('kraken', { size: 64 })`);
+await sleep(2600);
+await shot('reveal');
+report.drawP95 = await ev(
+  `(() => { const d = window.__atoll.drawTimes().slice().sort((a, b) => a - b); return d[Math.floor(d.length * 0.95)] ?? null; })()`,
+);
+
 console.log(JSON.stringify(report, null, 1));
 sock.close();
