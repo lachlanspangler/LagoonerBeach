@@ -6,7 +6,7 @@
  * Personality: brave, small, bold. Signature: puffs its chest and charges 4 units at the viewer's
  * finger, then settles, very pleased with itself.
  */
-import { blob, defineArt, ellipse, join } from '../kit.ts';
+import { blob, capsule, defineArt, ellipse, join } from '../kit.ts';
 
 // deep, short oval body: snout at +30, tail root at −17 (deeper than long, chest out)
 const body = blob([
@@ -42,27 +42,32 @@ const tail = blob(
 // an upright dorsal sail that trails back into a rounded point, and a matching anal fin
 const dorsal = blob(
   [
-    [14, -21],
-    [6, -32],
-    [-8, -36],
+    [16, -20],
+    [6, -30],
+    [-8, -35],
     [-22, -36],
-    [-16, -18],
+    [-27, -31],
+    [-19, -23],
+    [-12, -17],
   ],
   0.9,
 );
 const anal = blob(
   [
-    [4, 22],
-    [-6, 30],
-    [-18, 30],
-    [-15, 16],
+    [14, 19],
+    [4, 30],
+    [-9, 34],
+    [-22, 34],
+    [-26, 29],
+    [-18, 22],
+    [-11, 16],
   ],
   0.9,
 );
-const pectoral = ellipse(-2, 8, 5.5, 3, 26);
+const pectoral = capsule(-7, 9, 2.8, -13, 12, 2);
 // pale-blue fin tips (accent)
-const tips = join(ellipse(-42, -26, 6, 5, 40), ellipse(-42, 26, 6, 5, -40));
-const finTips = join(ellipse(-8, -37, 16, 5, 4), ellipse(-10, 31.5, 10, 4, -6));
+const tips = join(ellipse(-42, -27, 8, 6, 40), ellipse(-42, 27, 8, 6, -40));
+const finTips = join(ellipse(-24, -34, 9, 6, 20), ellipse(-24, 32, 9, 6, -20));
 
 export default defineArt({
   id: 'damsel',
@@ -70,7 +75,7 @@ export default defineArt({
   size: 'S',
   feature: 'deep oval held tall and chest-out, with a big flaring swallow tail',
   personality: ['brave', 'small', 'bold'],
-  palette: { body: '#4A78E0', accent: '#9BC2FF' },
+  palette: { body: '#4A78E0', accent: '#9DB8FF' },
   groups: [
     {
       id: 'tail',
@@ -90,7 +95,7 @@ export default defineArt({
         { d: finTips, role: 'accent', kind: 'pattern' },
       ],
     },
-    { id: 'finA', pivot: [-4, 6], parts: [{ d: pectoral, role: 'body' }] },
+    { id: 'finA', pivot: [-7, 9], parts: [{ d: pectoral, role: 'belly' }] },
   ],
   shine: ellipse(14, -13, 8, 3.4, -20),
   face: {

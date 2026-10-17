@@ -1,38 +1,43 @@
 /**
  * Parrotfish — the reef's happy little sand-maker (fish class, profile view).
- * Silhouette (R10): a chunky body with a steep forehead, a rounded beak jutting from the front, and
- * a tall crescent (lunate) tail whose two horns curve back. Two pink stripes along the side.
+ * Silhouette (R10): a chunky oval with a blunt (never domed) forehead, a cream rounded-wedge beak with
+ * a slight overbite, and a tall crescent (lunate) tail whose two horns curve back. Two pink stripes.
  * Personality: crunchy, busy, chill. Signature: chomps twice on a bit of coral and leaves a little
  * puff of sand.
  */
-import { blob, circle, defineArt, ellipse, join, snap, tube } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, snap, tube } from '../kit.ts';
 
-// chunky body: a bumped, steep forehead over the beak, narrow tail root at −27
+// chunky oval: a blunt, steep (not domed) forehead sloping straight down into the beak, tail root at −27
 const body = blob([
-  [27, -2],
-  [29, -14],
-  [23, -29],
-  [10, -34],
-  [-6, -28],
-  [-16, -16],
-  [-24, -8],
-  [-29, -3.5],
-  [-29, 3.5],
-  [-24, 8],
-  [-14, 17],
-  [0, 20],
-  [16, 19],
-  [26, 13],
+  [26, -4],
+  [23, -13],
+  [15, -22],
+  [2, -26],
+  [-12, -23],
+  [-21, -15],
+  [-28, -4],
+  [-28, 4],
+  [-21, 13],
+  [-9, 20],
+  [6, 22],
+  [19, 18],
+  [26, 9],
 ]);
-// the beak: a rounded parrot bill in a lighter tone (belly), its own group so it can chomp
-const beak = blob([
-  [23, 0],
-  [32, -1],
-  [40, 3],
-  [40, 10],
-  [33, 14],
-  [23, 12],
-]);
+// the beak: a rounded cream wedge, the upper bill overhanging the lower (slight overbite)
+const beak = blob(
+  [
+    [22, -7],
+    [31, -5.5],
+    [38, -1.5],
+    [41, 3.5],
+    [38.5, 8.5],
+    [30, 11.5],
+    [22, 11],
+  ],
+  0.85,
+);
+// one ink parting line that turns up at the back like a smile
+const parting = 'M24.5 3.5Q31 7.5 38.5 5.5';
 // crescent tail: two curved horns with rounded tips around a shallow, round notch
 const tail = blob(
   [
@@ -50,18 +55,19 @@ const tail = blob(
   ],
   0.9,
 );
-const pectoral = ellipse(-4, 10, 5.5, 2.8, 24);
-// two pink stripes along the side (R18 stripes, 2), behind the eye
+// a small swept-back pectoral in the cream tone, unoutlined (outlined, it read as a second mouth)
+const pectoral = capsule(-3, 14, 3, -12, 16.5, 2.2);
+// two pink stripes along the side (R18 stripes, 2), 5 units wide, starting behind the eye
 const stripes = join(
   tube([
-    [4, -7, 1.6],
-    [-10, -8, 2.4],
-    [-26, -4, 1.8],
+    [4, -9, 2.5],
+    [-10, -10, 2.5],
+    [-27, -6, 2.5],
   ]),
   tube([
-    [6, 13, 1.6],
-    [-8, 11, 2.4],
-    [-24, 4, 1.8],
+    [6, 11, 2.5],
+    [-9, 10, 2.5],
+    [-27, 5, 2.5],
   ]),
 );
 // the sand puff (prop): three little grains drifting off the beak
@@ -73,7 +79,7 @@ export default defineArt({
   size: 'M',
   feature: 'chunky body with a rounded beak and a tall crescent tail',
   personality: ['crunchy', 'busy', 'chill'],
-  palette: { body: '#3BC9A0', accent: '#E86FB0', belly: '#CDEFE0' },
+  palette: { body: '#3BC9A0', accent: '#F06AA0', belly: '#F5F1E6' },
   groups: [
     {
       id: 'tail',
@@ -87,27 +93,26 @@ export default defineArt({
       id: 'body',
       parts: [
         { d: body, role: 'body' },
-        { d: ellipse(6, 20, 28, 7), role: 'belly', kind: 'pattern' },
         { d: stripes, role: 'accent', kind: 'pattern' },
       ],
     },
     {
       id: 'beak',
-      pivot: [27, 4],
+      pivot: [24, 4],
       parts: [
         { d: beak, role: 'belly' },
-        { d: 'M28 4Q34 5.5 39.5 3', role: 'ink', kind: 'line', w: 1.2 },
+        { d: parting, role: 'ink', kind: 'line', w: 3 },
       ],
     },
-    { id: 'finA', pivot: [-3, 7], parts: [{ d: pectoral, role: 'body' }] },
+    { id: 'finA', pivot: [-3, 14], parts: [{ d: pectoral, role: 'belly', outline: false }] },
     { id: 'sand', pivot: [42, 16], prop: true, parts: [{ d: sand, role: 'belly' }] },
   ],
-  shine: ellipse(16, -14, 8, 3.2, -18),
+  shine: ellipse(12, -17, 7, 3, -18),
   face: {
-    eyes: [[12, -1]],
-    eye: 8.6,
-    zone: [0, -22, 40, 40],
-    mouth: { at: [24, 7], w: 5.5, shape: 'smile' },
+    eyes: [[13, -2]],
+    eye: 9.6,
+    zone: [2, -24, 38, 40],
+    mouth: { at: [31, 7], w: 5, shape: 'none' },
     sweet: true,
   },
   idle: {
@@ -120,7 +125,7 @@ export default defineArt({
       dur: 1.2,
       every: [5, 8],
       tracks: [
-        snap('beak', 12),
+        snap('beak', 18),
         {
           p: 'tx',
           k: [

@@ -1,132 +1,116 @@
 /**
- * Butterflyfish — the reef's little trickster (fish class, profile view).
- * Silhouette (R10): a disc taller than it is long (tall dorsal and anal fins), a long tweezer snout,
- * and a small rounded tail. The false eye-spot near the tail is the joke.
- * Personality: dainty, tricky, sunny. Signature: turns around to show off its false eye, turns back
- * and winks with the real one.
+ * Butterflyfish — the reef's little trickster (fish class, profile view, level).
+ * Silhouette (R10): a deep, upright disc (taller than long), a short straight tweezer snout, a narrow
+ * tail root and a clear pale fan tail. The real eye sits in a dark vertical eye-band (the classic
+ * mask) inside a white ring; a smaller ringed false eye near the tail is the joke.
+ * Personality: dainty, tricky, sunny. Signature: spins round to show the false eye, spins back and
+ * winks with the real one.
  */
-import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
-// it hovers nose-down at a dainty TILT, tweezer snout picking at the reef: the pose that keeps the
-// tall disc apart from the sunfish and the round jellies at 24 px (R12)
-const TILT = 17;
-const R = (d: string) => xform(d, { rot: TILT });
-const tc = Math.cos((TILT * Math.PI) / 180),
-  ts = Math.sin((TILT * Math.PI) / 180);
-/** An anchor on the drawing grid, mapped like the paths. */
-const P = (x: number, y: number): [number, number] => [x * tc - y * ts, x * ts + y * tc];
-
-// the disc: a deep, nearly round body
-const body = blob([
-  [17, 0],
-  [13, -15],
-  [1, -25],
-  [-14, -26],
-  [-26, -16],
-  [-30, 0],
-  [-26, 16],
-  [-14, 26],
-  [1, 25],
-  [13, 15],
-]);
-// tall soft dorsal and anal fins, swept back: together the silhouette is taller than it is long
-const dorsal = blob(
+// the disc: deep and upright, soft dorsal/anal fins folded into one smooth outline
+const disc = blob(
   [
-    [9, -18],
-    [4, -32],
-    [-6, -40],
-    [-18, -38],
-    [-28, -24],
-    [-16, -22],
-  ],
-  0.95,
-);
-const anal = blob(
-  [
-    [8, 19],
-    [3, 32],
-    [-6, 39],
-    [-18, 37],
-    [-28, 23],
-    [-16, 21],
-  ],
-  0.95,
-);
-// the tweezer snout (rounded tip, R3)
-const snout = capsule(13, 3, 6, 34, 4, 3.2);
-const tail = blob(
-  [
-    [-27, -8],
-    [-34, -12],
-    [-39.5, -8],
-    [-40.5, 0],
-    [-39.5, 8],
-    [-34, 12],
-    [-27, 8],
-  ],
-  0.9,
-);
-// the eye band sits just behind the real eye; the small false eye near the tail is ringed in white
-const band = tube(
-  [
-    [-3, -38, 3.4],
-    [-4, -16, 4.2],
-    [-4, 6, 4.2],
-    [-2, 26, 3.4],
+    [18, 0],
+    [14, -17],
+    [4, -31],
+    [-9, -37],
+    [-19, -29],
+    [-22, -14],
+    [-24, -4],
+    [-24, 4],
+    [-22, 14],
+    [-19, 29],
+    [-9, 37],
+    [4, 31],
+    [14, 17],
   ],
   1,
 );
-const falseRing = circle(-21, -13, 6);
-const falseEye = circle(-21, -13, 4);
+// the threadfin's pennant: one plump filament trailing off the rear dorsal corner (rounded tip)
+const filament = tube(
+  [
+    [-16, -32, 3.6],
+    [-28, -36, 3.2],
+    [-40, -34, 3],
+    [-44, -28, 2.8],
+  ],
+  1,
+);
+// the short straight tweezer snout (rounded tip, R3)
+const snout = capsule(15, 3, 4.2, 30, 3.5, 3);
+// narrow tail root, then a clear fan tail in the pale fin colour
+const tail = blob(
+  [
+    [-21, -3.5],
+    [-30, -7],
+    [-39, -16],
+    [-45, -11],
+    [-46, 0],
+    [-45, 11],
+    [-39, 16],
+    [-30, 7],
+    [-21, 3.5],
+  ],
+  0.95,
+);
+// the eye-band: a vertical mask through the eye, mid-dark (never eye-coloured, R18E)
+const band = tube(
+  [
+    [3, -34, 4.6],
+    [5, -14, 5.4],
+    [5, 10, 5.4],
+    [3, 32, 4.6],
+  ],
+  1,
+);
+// white ring so the real eye pops out of its mask
+const ring = circle(5, 1, 7.8);
+// pale fin margins top and bottom at the back (they read as the soft dorsal/anal fins)
+const fins = join(ellipse(-12, -34, 13, 6, 30), ellipse(-12, 34, 13, 6, -30));
+// the false eye near the tail: a small dark dot in a pale ring
+const falseRing = circle(-15, -5, 4.8);
+const falseEye = circle(-15, -5, 3.1);
 
 export default defineArt({
   id: 'butterfly',
   klass: 'fish',
   size: 'M',
-  feature: 'a tall disc (taller than long) with a long tweezer snout and a false eye-spot',
+  feature: 'deep upright disc, short tweezer snout, real eye in a dark band, a false eye by the tail',
   personality: ['dainty', 'tricky', 'sunny'],
-  palette: { body: '#F2D43B', accent: '#3B3229' },
+  palette: { body: '#F2D43B', accent: '#8C6A3A', belly: '#FFF6D0' },
   groups: [
     {
       id: 'tail',
-      pivot: P(-27, 0),
-      parts: [
-        { d: R(tail), role: 'body' },
-        { d: R(ellipse(-40.5, 0, 4, 12)), role: 'white', kind: 'pattern', alpha: 0.7 },
-      ],
+      pivot: [-24, 0],
+      parts: [{ d: tail, role: 'belly' }],
     },
     {
       id: 'body',
       parts: [
-        { d: R(dorsal), role: 'body' },
-        { d: R(anal), role: 'body' },
-        { d: R(body), role: 'body' },
-        { d: R(snout), role: 'body' },
-        { d: R(ellipse(-6, 28, 26, 8)), role: 'belly', kind: 'pattern' },
-        { d: R(band), role: 'accent', kind: 'pattern', alpha: 0.9 },
-        { d: R(falseRing), role: 'white', kind: 'pattern' },
-        { d: R(falseEye), role: 'accent', kind: 'pattern' },
-        {
-          d: R(join(ellipse(-8, -41, 14, 4, 14), ellipse(-8, 40, 13, 4, -14))),
-          role: 'accent',
-          kind: 'pattern',
-          alpha: 0.35,
-        },
+        { d: disc, role: 'body' },
+        { d: snout, role: 'body' },
+        { d: filament, role: 'belly', extra: true },
+        { d: fins, role: 'belly', kind: 'pattern' },
+        { d: band, role: 'accent', kind: 'pattern' },
+        { d: ring, role: 'white', kind: 'pattern' },
+        { d: falseRing, role: 'white', kind: 'pattern' },
+        { d: falseEye, role: 'ink', kind: 'pattern' },
       ],
     },
   ],
-  shine: R(ellipse(0, -17, 9, 3.4, -24)),
+  shine: ellipse(-6, -20, 8, 3.4, -28),
   face: {
-    eyes: [P(6, 1.5)],
-    eye: 9.5,
-    zone: [-8, -24, 41, 46],
-    mouth: { at: P(33, 6), w: 5, shape: 'smile' },
+    eyes: [[5, 1]],
+    eye: 10.6,
+    zone: [-8, -25, 38, 46],
+    mouth: { at: [28.5, 6], w: 4.6, shape: 'smile' },
     sweet: true,
   },
   idle: {
     ambient: [
       { m: 'bob', amp: 2.5, period: 2.6 },
-      { m: 'wag', g: 'tail', amp: 8, period: 0.9 },
+      { m: 'wag', g: 'tail', amp: 10, period: 0.8 },
       { m: 'breathe', amp: 0.015, period: 2.6 },
     ],
     signature: {
@@ -148,8 +132,9 @@ export default defineArt({
           p: 'ty',
           k: [
             [0, 0],
-            [0.1, -3],
-            [0.2, 0],
+            [0.06, 2],
+            [0.16, -3],
+            [0.3, 0],
             [0.56, -3],
             [0.68, 0],
           ],

@@ -1,128 +1,99 @@
 /**
- * Grouper — the lagoon's enormous, unbothered uncle (fish class, profile view).
- * Silhouette (R10): a wedge — a massive tall head with big downturned lips, tapering to a narrow
- * tail root and a rounded fan tail. Front-heavy, unlike every other fish in the cast.
- * Personality: unbothered, enormous, grumpy-sweet. Signature: a slow, huge yawn (the lower lip
- * drops), then heavy half-lids.
+ * Grouper — the lagoon's enormous, unbothered uncle (fish class, profile view, level).
+ * Silhouette (R10): a front-heavy wedge — a massive head (60 % of the length) with big pouty lips
+ * centred on the snout, tapering to a narrow tail root and a rounded fan tail.
+ * Personality: unbothered, enormous, grumpy-sweet; rests `drowsy` (heavy half-lids, its personality).
+ * Signature: a slow, huge yawn — the lower lip drops — then it settles back into its half-lids.
  */
-import { blob, defineArt, ellipse, join, xform } from '../kit.ts';
+import { blob, defineArt, ellipse, join } from '../kit.ts';
 
-// drawn on a round grid, then flattened top-to-bottom so the wedge is long and low (R12: it must not
-// read as the plump clownfish)
-const SY = 0.86;
-// and it rests nose-down at a lazy TILT, chin toward the sand: unbothered (and its own silhouette)
-const TILT = 18;
-const Y = (d: string) => xform(xform(d, { sy: SY }), { rot: TILT });
-const tc = Math.cos((TILT * Math.PI) / 180),
-  ts = Math.sin((TILT * Math.PI) / 180);
-/** An anchor on the drawing grid, mapped like the paths. */
-const P = (x: number, y: number): [number, number] => [x * tc - y * SY * ts, x * ts + y * SY * tc];
-
-// the wedge: tall forehead and jowls at the front, narrowing to the tail root at −24
+// the wedge: a tall, blunt head and jowls at the front, narrowing to the tail root at −24
 const body = blob([
-  [37, 0],
-  [33, -20],
-  [20, -34],
+  [27, -4],
+  [27, -19],
+  [18, -31],
   [4, -32],
-  [-10, -18],
-  [-22, -7],
-  [-29, -4],
-  [-29, 4],
-  [-22, 6],
-  [-10, 13],
-  [4, 26],
-  [18, 26],
-  [28, 10],
+  [-4, -22],
+  [-12, -9],
+  [-20, -5],
+  [-29, -4.5],
+  [-29, 3.5],
+  [-20, 4],
+  [-12, 7],
+  [-4, 15],
+  [6, 19],
+  [18, 19.5],
+  [26, 14],
 ]);
+// rounded fan tail
 const tail = blob(
   [
-    [-25, -5],
-    [-32, -13],
-    [-39, -13],
-    [-42.5, -5],
-    [-42.5, 5],
-    [-39, 13],
-    [-32, 13],
-    [-25, 5],
+    [-27, -3],
+    [-33, -10],
+    [-38, -17],
+    [-41.5, -11],
+    [-42.5, 0],
+    [-41.5, 11],
+    [-38, 17],
+    [-33, 10],
+    [-27, 3],
   ],
-  0.9,
+  0.95,
 );
-// a long, low dorsal along the back
+// a low spiny-soft dorsal along the back
 const dorsal = blob(
   [
-    [8, -28],
-    [-2, -31],
-    [-12, -24],
-    [-20, -13],
-    [-12, -14],
+    [12, -28],
+    [2, -35],
+    [-8, -27],
+    [-9, -16],
   ],
   0.95,
 );
-const anal = blob(
-  [
-    [-8, 15],
-    [-14, 21],
-    [-21, 18],
-    [-22, 8],
-  ],
-  0.95,
-);
-// the big lips: a thick upper lip over the snout and a heavy, downturned lower lip (the jaw group)
-// the big lips: a thick, downturned lower lip that juts forward (the jaw group, it drops to yawn)
-const lowerLip = blob([
-  [22, 7],
-  [33, 6],
-  [40, 10],
-  [39, 17],
-  [31, 21],
-  [20, 17],
-]);
-const pectoral = ellipse(0, 12, 6, 3.2, 24);
-// tan saddle blotches (R18 saddle), placed by hand
-const saddles = join(
-  ellipse(4, -22, 9, 6, 0),
-  ellipse(-12, -14, 7, 5, 20),
-  ellipse(-22, -2, 5, 6, 0),
-  ellipse(-6, 6, 5, 4, 0),
-);
+// big pouty lips centred on the snout: a thick upper lip on the body, the lower lip on the jaw
+const upperLip = ellipse(30.5, 1, 8, 5.4, -6);
+const lowerLip = ellipse(30.5, 10.5, 8.6, 6, 6);
+const pectoral = ellipse(-2, 12, 6, 3.2, 28);
+// three large, soft saddles (R18 saddle), placed by hand, well behind the face
+const saddles = join(ellipse(2, -31, 12, 10, 0), ellipse(-14, -15, 8, 8, 20), ellipse(-7, 11, 7, 6, 0));
 
 export default defineArt({
   id: 'grouper',
   klass: 'fish',
-  restExpression: 'drowsy', // CRITIQUE-1: the half-lid is its personality, its awake resting face
   size: 'L',
-  feature: 'a front-heavy wedge: massive head, big downturned lips, rounded fan tail',
+  feature: 'a front-heavy wedge: massive head, big pouty lips on the snout, rounded fan tail',
   personality: ['unbothered', 'enormous', 'grumpy-sweet'],
-  palette: { body: '#94735A', accent: '#D2B48A' },
+  palette: { body: '#A8703F', accent: '#CDAE84', belly: '#D9A98E' },
+  restExpression: 'drowsy',
   groups: [
     {
       id: 'tail',
-      pivot: P(-27, 0),
+      pivot: [-25, 0],
       parts: [
-        { d: Y(tail), role: 'body' },
-        { d: Y(ellipse(-36, -6, 4, 4)), role: 'accent', kind: 'pattern' },
-        { d: Y(ellipse(-37, 7, 3.4, 3.4)), role: 'accent', kind: 'pattern' },
+        { d: tail, role: 'body' },
+        { d: ellipse(-38, -7, 4, 4), role: 'accent', kind: 'pattern' },
+        { d: ellipse(-39, 7, 3.6, 3.6), role: 'accent', kind: 'pattern' },
       ],
     },
     {
       id: 'body',
       parts: [
-        { d: Y(dorsal), role: 'body' },
-        { d: Y(anal), role: 'body' },
-        { d: Y(body), role: 'body' },
-        { d: Y(ellipse(10, 25, 28, 9)), role: 'belly', kind: 'pattern' },
-        { d: Y(saddles), role: 'accent', kind: 'pattern', alpha: 0.85 },
+        { d: dorsal, role: 'body' },
+        { d: body, role: 'body' },
+        { d: upperLip, role: 'belly' },
+        { d: ellipse(10, 27, 26, 8), role: 'belly', kind: 'pattern', alpha: 0.7 },
+        { d: saddles, role: 'accent', kind: 'pattern' },
       ],
     },
-    { id: 'finA', pivot: P(-2, 9), parts: [{ d: Y(pectoral), role: 'body' }] },
-    { id: 'jaw', pivot: P(22, 8), parts: [{ d: Y(lowerLip), role: 'body' }] },
+    { id: 'finA', pivot: [-5, 10], parts: [{ d: pectoral, role: 'body' }] },
+    { id: 'jaw', pivot: [29, 6], parts: [{ d: lowerLip, role: 'belly' }] },
   ],
-  shine: Y(ellipse(20, -16, 9, 3.6, -20)),
+  shine: ellipse(18, -18, 9, 3.6, -20),
   face: {
-    eyes: [P(13, 0)],
-    eye: 10,
-    zone: [0, -27, 41, 50],
-    mouth: { at: P(35, 5), w: 6.5, shape: 'flat' },
+    eyes: [[13, -2]],
+    eye: 11,
+    zone: [-2, -31, 40, 50],
+    mouth: { at: [35, 6], w: 6, shape: 'flat' },
     sweet: true,
   },
   idle: {
@@ -142,19 +113,19 @@ export default defineArt({
           k: [
             [0, 0],
             [0.15, 0],
-            [0.4, 34],
-            [0.6, 34],
-            [0.75, 0],
+            [0.4, 28],
+            [0.62, 28],
+            [0.78, 0],
           ],
         },
         {
           g: 'jaw',
-          p: 's',
+          p: 'ty',
           k: [
-            [0.15, 1],
-            [0.4, 1.15],
-            [0.6, 1.15],
-            [0.75, 1],
+            [0.15, 0],
+            [0.4, 3],
+            [0.62, 3],
+            [0.78, 0],
           ],
         },
         {
@@ -162,8 +133,8 @@ export default defineArt({
           k: [
             [0, 0],
             [0.4, -5],
-            [0.6, -5],
-            [0.8, 1],
+            [0.62, -5],
+            [0.82, 1],
             [1, 0],
           ],
         },
@@ -172,15 +143,15 @@ export default defineArt({
           k: [
             [0, 1],
             [0.4, 1.04],
-            [0.6, 1.04],
-            [0.8, 0.97],
+            [0.62, 1.04],
+            [0.82, 0.97],
             [1, 1],
           ],
         },
       ],
       face: [
-        [0.2, 0.68, 'happy'],
-        [0.7, 1, 'sleepy'],
+        [0.2, 0.7, 'happy'],
+        [0.72, 1, 'drowsy'],
       ],
     },
   },

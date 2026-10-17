@@ -1,119 +1,115 @@
 /**
- * Barracuda — the long one (fish class, profile view).
- * Silhouette (R10): a 3 : 1 needle with a jutting underbite jaw and a crisp forked tail; at 24 px it
- * is the only fish this long and thin.
+ * Barracuda — the long one (fish class, profile view, level).
+ * Silhouette (R10): a true needle (≈ 3.5 : 1) with a lower jaw that juts 6 units past the snout, two
+ * white rounded teeth on it, and a crisp forked tail taller than the body.
  * Personality: sleek, toothy, aloof. Signature: a fast 10-unit lunge, then it acts as if nothing
- * happened (smug `proud` face, eyes elsewhere).
+ * happened (nose up, smug `proud` face).
  */
-import { blob, defineArt, ellipse, join, tube } from '../kit.ts';
+import { blob, capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
-// needle body: upper snout at +37, lower jaw juts out to +42, tail root at −30
+// needle body: upper snout at +34, the lower jaw juts on to +41, tail root at −30
 const body = blob([
-  [40.5, 5.5],
-  [37.5, 2.5],
-  [35, 1],
-  [36, -1.5],
-  [28, -8.5],
-  [12, -12.5],
-  [-6, -12],
-  [-22, -8.5],
-  [-31, -3.5],
-  [-31, 3.5],
-  [-22, 8.5],
-  [-6, 12],
-  [12, 12.5],
-  [30, 10.5],
-  [38, 9],
+  [34, -1],
+  [28, -6],
+  [12, -8.5],
+  [-6, -8.5],
+  [-22, -6],
+  [-30, -3],
+  [-30, 3],
+  [-22, 6],
+  [-6, 8.5],
+  [12, 8.5],
+  [28, 7.5],
+  [34, 4.5],
 ]);
+// the jutting lower jaw (R10, exaggerated): a plump rounded wedge under and past the snout
+const jaw = blob([
+  [24, 3],
+  [33, 1.5],
+  [40.5, 2.5],
+  [41, 6],
+  [36, 8.5],
+  [24, 8.5],
+]);
+// two white rounded teeth standing on the jaw tip
+const teeth = join(capsule(35.5, 2, 1.7, 35, -1.8, 1.4), capsule(39.5, 2.8, 1.6, 39.2, -0.8, 1.3));
+// crisp fork, taller than the body
 const tail = blob(
   [
-    [-28, -4],
-    [-36, -10],
-    [-41, -16],
-    [-43, -12],
-    [-41, -4],
-    [-39, 0],
-    [-41, 4],
-    [-43, 12],
-    [-41, 16],
-    [-36, 10],
-    [-28, 4],
+    [-28, -3.5],
+    [-35, -9],
+    [-39.5, -17],
+    [-42.5, -15],
+    [-40, -5],
+    [-38, 0],
+    [-40, 5],
+    [-42.5, 15],
+    [-39.5, 17],
+    [-35, 9],
+    [-28, 3.5],
   ],
   0.9,
 );
-const dorsal1 = blob(
+const dorsal = blob(
   [
-    [5, -11],
-    [-2, -19.5],
-    [-8, -18.5],
-    [-10, -10],
+    [2, -9],
+    [-4, -14.5],
+    [-10, -13.5],
+    [-12, -8],
   ],
   0.9,
 );
-const dorsal2 = blob(
-  [
-    [-15, -8],
-    [-20, -15],
-    [-25, -14],
-    [-26, -7],
-  ],
-  0.9,
-);
-const anal = blob(
-  [
-    [-15, 8],
-    [-20, 15],
-    [-25, 14],
-    [-26, 7],
-  ],
-  0.9,
-);
-const pectoral = ellipse(4, 6, 6, 2.6, 18);
-// six dark chevrons along the back (R18 bands), pointing forward like a speed mark
+const pectoral = ellipse(4, 5, 5, 2.4, 18);
+// six filled chevron bands (R18 bands, ≥ 6 units), mid-dark slate, behind the face
 const chevron = (x: number) =>
   tube([
-    [x - 2.5, -12, 1.3],
-    [x + 1, -7, 1.6],
-    [x - 1.5, -2, 1.1],
+    [x - 3, -11, 2.8],
+    [x + 1.5, -3, 3],
+    [x - 1, 4, 2.4],
   ]);
-const chevrons = join(chevron(-26), chevron(-18), chevron(-10), chevron(-2), chevron(6), chevron(13));
+const chevrons = join(chevron(-27), chevron(-18), chevron(-9), chevron(0), chevron(8), chevron(15.5));
 
 export default defineArt({
   id: 'barracuda',
   klass: 'fish',
   size: 'L',
-  feature: 'a 3 : 1 needle with a jutting underbite jaw and a forked tail',
+  feature: 'a true needle with a jaw that juts past the snout, two white teeth, and a forked tail',
   personality: ['sleek', 'toothy', 'aloof'],
-  palette: { body: '#94A8BC', accent: '#3B4652' },
+  palette: { body: '#7AA3D4', accent: '#5F7385' },
   groups: [
     {
       id: 'tail',
       pivot: [-30, 0],
       parts: [
         { d: tail, role: 'body' },
-        { d: join(ellipse(-42.5, -14, 4, 4), ellipse(-42.5, 14, 4, 4)), role: 'accent', kind: 'pattern', alpha: 0.7 },
+        { d: join(ellipse(-42, -14, 4, 4), ellipse(-42, 14, 4, 4)), role: 'accent', kind: 'pattern' },
+      ],
+    },
+    {
+      id: 'jaw',
+      pivot: [22, 5],
+      parts: [
+        { d: teeth, role: 'white' },
+        { d: jaw, role: 'body' },
       ],
     },
     {
       id: 'body',
       parts: [
-        { d: dorsal1, role: 'body' },
-        { d: dorsal2, role: 'body' },
-        { d: anal, role: 'body' },
+        { d: dorsal, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(6, 10, 40, 5), role: 'belly', kind: 'pattern' },
-        { d: chevrons, role: 'accent', kind: 'pattern', alpha: 0.6 },
-        { d: 'M24 -6Q27 0 24 6', role: 'ink', kind: 'line', w: 1.4 },
+        { d: ellipse(4, 10, 34, 4.5), role: 'belly', kind: 'pattern' },
+        { d: chevrons, role: 'accent', kind: 'pattern', alpha: 0.85 },
       ],
     },
-    { id: 'finA', pivot: [0, 5], parts: [{ d: pectoral, role: 'body' }] },
+    { id: 'finA', pivot: [0, 4], parts: [{ d: pectoral, role: 'body' }] },
   ],
-  shine: ellipse(26, -6, 8, 2.2, -8),
+  shine: ellipse(22, -5.5, 8, 2, -6),
   face: {
-    eyes: [[15, 1.5]],
-    eye: 8,
-    zone: [0, -19, 42, 36],
-    mouth: { at: [34.5, 3.4], w: 6, shape: 'underbite' },
+    eyes: [[18, -1.5]],
+    eye: 8.2,
+    zone: [4, -24, 38, 39],
+    mouth: { at: [32, 3], w: 6, shape: 'flat' },
   },
   idle: {
     ambient: [
@@ -143,6 +139,15 @@ export default defineArt({
             [0.1, 0.92],
             [0.2, 1.08],
             [0.32, 1],
+          ],
+        },
+        {
+          g: 'jaw',
+          p: 'rot',
+          k: [
+            [0.12, 0],
+            [0.18, 10],
+            [0.26, 0],
           ],
         },
         {

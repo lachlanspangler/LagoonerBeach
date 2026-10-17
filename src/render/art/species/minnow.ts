@@ -58,9 +58,9 @@ const pelvic = blob(
 const pectoral = ellipse(-6, 8, 5.5, 3, 28);
 // one lagoon-blue lateral stripe from behind the eye to the tail (makes the silver read on Day)
 const stripe = tube([
-  [-1, -2, 1.2],
-  [-10, -1.5, 2.6],
-  [-24, 0, 1.8],
+  [1, 8.5, 2.2],
+  [-10, 7.5, 2.3],
+  [-24, 3.5, 2.2],
 ]);
 export default defineArt({
   id: 'minnow',
@@ -68,7 +68,11 @@ export default defineArt({
   size: 'S',
   feature: 'slim torpedo with an oversized, deeply forked V tail',
   personality: ['eager', 'first', 'twitchy'],
-  palette: { body: '#B0C4D8', accent: '#2E86D6' },
+  palette: { body: '#C3CDD6', accent: '#2E86D6', belly: '#E4EAEF' },
+  deviations: {
+    R16: 'real silver (CRITIQUE-1): chroma 0.02 is the identity; the blue stripe and outline carry it',
+    R16S: 'real silver (CRITIQUE-1 asks #C3CDD6); the ink outline and the lagoon-blue stripe keep it off the sand',
+  },
   groups: [
     {
       id: 'tail',
@@ -79,7 +83,7 @@ export default defineArt({
           d: join(ellipse(-44, -19, 5, 5, 35), ellipse(-44, 19, 5, 5, -35)),
           role: 'accent',
           kind: 'pattern',
-          alpha: 0.6,
+          alpha: 0.4,
         },
       ],
     },
@@ -89,7 +93,7 @@ export default defineArt({
         { d: dorsal, role: 'body' },
         { d: pelvic, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(8, 14, 32, 6), role: 'belly', kind: 'pattern' },
+        { d: ellipse(10, 16, 30, 5), role: 'belly', kind: 'pattern' },
         { d: stripe, role: 'accent', kind: 'pattern' },
       ],
     },
@@ -97,9 +101,9 @@ export default defineArt({
   ],
   shine: ellipse(24, -8, 7, 2.6, -14),
   face: {
-    eyes: [[10.5, 1]],
-    eye: 8.6,
-    zone: [4, -20, 33, 36],
+    eyes: [[10.5, 2.5]],
+    eye: 10.6,
+    zone: [4, -24, 33, 46],
     mouth: { at: [29, 6], w: 5.5, shape: 'smile' },
     sweet: true,
   },
