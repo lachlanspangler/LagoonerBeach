@@ -138,8 +138,17 @@ export class Ui {
     return b;
   }
 
+  /** Announcements made in the same task, read out together (one would otherwise overwrite the other). */
+  private srQueue: string[] = [];
   announce(text: string): void {
-    this.sr.textContent = text;
+    if (!text || this.srQueue.includes(text)) return;
+    this.srQueue.push(text);
+    if (this.srQueue.length > 1) return;
+    queueMicrotask(() => {
+      const q = this.srQueue;
+      this.srQueue = [];
+      this.sr.textContent = q.length === 1 ? q[0]! : q.map((t) => (/[.!?…]$/.test(t) ? t : `${t}.`)).join(' ');
+    });
   }
 
   /** Top bar for a mode; `unseen` = journal pages not looked at yet (a dot on the journal). */

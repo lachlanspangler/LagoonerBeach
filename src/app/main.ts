@@ -286,6 +286,9 @@ function syncScene(): void {
   scene.placing = [];
   scene.fish = [];
   scene.sweep = -1e9;
+  scene.ripples = [];
+  scene.shake = { start: -1e9, amp: 0 };
+  scene.scorePunch = { at: -1e9, amp: 0 };
   scene.clearChips();
   scene.particles.clear();
   const now = performance.now();
@@ -1131,6 +1134,15 @@ void document.fonts?.load?.('900 16px "Lagoon Display"').then(fontsIn);
 if ((!DEBUG || params.has('sw')) && 'serviceWorker' in navigator && import.meta.env.PROD && !isNative()) {
   const url = `./sw.js?v=${encodeURIComponent(__BUILD_ID__)}`;
   window.addEventListener('load', () => void navigator.serviceWorker.register(url).catch(() => undefined));
+} else if (isNative() && 'serviceWorker' in navigator) {
+  // earlier builds registered the worker in the Android shell too: drop it and its caches (its
+  // cache-first index once stranded the app on deleted chunks — a blank screen after an update)
+  void navigator.serviceWorker
+    .getRegistrations()
+    .then((rs) => Promise.all(rs.map((r) => r.unregister())))
+    .then(() => caches?.keys())
+    .then((ks) => Promise.all((ks ?? []).map((k) => caches.delete(k))))
+    .catch(() => undefined);
 }
 
 // ------------------------------------------------------------------ debug / test hooks

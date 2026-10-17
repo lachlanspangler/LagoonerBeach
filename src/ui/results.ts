@@ -58,6 +58,8 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
     const t0 = performance.now();
     // a record crosses the old best around 70% of the count, so the gold lands on the climb
     const step = () => {
+      // the card was dismissed (next game): stop, and never fire the record fanfare over it
+      if (!el.isConnected) return;
       const k = Math.min(1, (performance.now() - t0) / COUNT_MS);
       const e = 1 - Math.pow(1 - k, 3);
       const v = Math.round(o.score * e);
@@ -67,7 +69,7 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
       else {
         scoreEl.textContent = fmt(o.score);
         land();
-        setTimeout(() => o.onSettled?.(), o.newBest ? 420 : 0);
+        setTimeout(() => el.isConnected && o.onSettled?.(), o.newBest ? 420 : 0);
       }
     };
     requestAnimationFrame(step);
