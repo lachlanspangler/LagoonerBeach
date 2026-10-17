@@ -6,6 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       '.claude/**',
+      'artifacts/**',
       'ios/**',
       'android/**',
       'dist/**',
