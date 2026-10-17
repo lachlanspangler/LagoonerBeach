@@ -7,7 +7,7 @@
 }
 .lb-sheet .lb-title {
   margin: 0;
-  font: 900 30px/1.1 var(--font-display);
+  font: 900 calc(30px * var(--fs))/1.1 var(--font-display);
   letter-spacing: 0;
   text-transform: none;
   color: var(--text);
@@ -23,7 +23,7 @@
   height: 24px;
   padding: 0 10px;
   border-radius: 999px;
-  font: 800 12px var(--font);
+  font: 800 calc(12px * var(--fs)) var(--font);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: color-mix(in srgb, var(--accent) 14%, var(--panel));
@@ -31,7 +31,7 @@
 }
 .lb-sub {
   color: var(--ink-2);
-  font: 700 15px/1.35 var(--font);
+  font: 700 calc(15px * var(--fs))/1.35 var(--font);
   margin: 6px 0 2px;
 }
 .lb-num {
@@ -59,7 +59,7 @@
   border-radius: 11px;
   background: transparent;
   color: var(--ink-2);
-  font: 800 15px var(--font);
+  font: 800 calc(15px * var(--fs)) var(--font);
   cursor: pointer;
   transition: background 140ms ease;
 }
@@ -105,18 +105,18 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   min-width: 0;
 }
 .lb-target-who {
-  font: 700 13px var(--font);
+  font: 700 calc(13px * var(--fs)) var(--font);
   color: var(--ink-2);
 }
 .lb-target-who .lb-nm {
-  font-size: 15px;
+  font-size: calc(15px * var(--fs));
   color: var(--text);
 }
 .lb-target-line {
-  font: 700 15px/1.35 var(--font);
+  font: 700 calc(15px * var(--fs))/1.35 var(--font);
 }
 .lb-target-line .lb-num {
-  font-size: 20px;
+  font-size: calc(20px * var(--fs));
 }
 /* the "to pass" progress bar (same look as .track) */
 .bar {
@@ -139,7 +139,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   margin: 0 0 8px;
 }
 .lb-note {
-  font: 700 14px/1.35 var(--font);
+  font: 700 calc(14px * var(--fs))/1.35 var(--font);
   color: var(--ink-2);
   margin: 0 2px 8px;
 }
@@ -174,7 +174,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
 }
 .lb-rank {
   text-align: right;
-  font: 800 17px var(--font);
+  font: 800 calc(17px * var(--fs)) var(--font);
   font-variant-numeric: tabular-nums;
   color: var(--ink-2);
   display: flex;
@@ -200,7 +200,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   stroke-linecap: round;
 }
 .lb-medal text {
-  font: 900 12px var(--font);
+  font: 900 calc(12px * var(--fs)) var(--font);
   fill: #2b231c;
 }
 .lb-av {
@@ -211,7 +211,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   display: grid;
   place-items: center;
   overflow: hidden;
-  font: 900 16px var(--font-display);
+  font: 900 calc(16px * var(--fs)) var(--font-display);
   color: var(--ink-2);
   flex: none;
 }
@@ -220,7 +220,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   height: 40px;
 }
 .lb-nm {
-  font: 900 18px/1.1 var(--font-display);
+  font: 900 calc(18px * var(--fs))/1.1 var(--font-display);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -228,7 +228,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   text-overflow: ellipsis;
 }
 .lb-nm.lb-dim {
-  font: 700 14px var(--font);
+  font: 700 calc(14px * var(--fs)) var(--font);
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);
@@ -239,7 +239,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   margin-left: 6px;
   padding: 2px 7px;
   border-radius: 999px;
-  font: 800 11px var(--font);
+  font: 800 calc(11px * var(--fs)) var(--font);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: var(--accent);
@@ -247,12 +247,12 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
 }
 .lb-sc {
   text-align: right;
-  font: 800 18px var(--font);
+  font: 800 calc(18px * var(--fs)) var(--font);
   font-variant-numeric: tabular-nums;
 }
 .lb-sc small {
   display: block;
-  font: 700 12px var(--font);
+  font: 700 calc(12px * var(--fs)) var(--font);
   color: var(--ink-2);
 }
 /* your row: tinted, accent bar, pinned to the list edge when scrolled away */
@@ -287,7 +287,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   border-radius: 14px;
   background: var(--accent);
   color: var(--on-accent);
-  font: 800 15px var(--font);
+  font: 800 calc(15px * var(--fs)) var(--font);
   cursor: pointer;
 }
 .lb-rename {
@@ -333,7 +333,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   gap: 10px;
   padding: 18px 8px;
   text-align: center;
-  font: 700 16px/1.35 var(--font);
+  font: 700 calc(16px * var(--fs))/1.35 var(--font);
   color: var(--ink-2);
 }
 .lb-empty .btn {
@@ -349,7 +349,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   margin: 10px 0 8px;
   min-height: 52px;
   text-align: center;
-  font: 900 44px/1.15 var(--font-display);
+  font: 900 calc(44px * var(--fs))/1.15 var(--font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: linear-gradient(180deg, #ffd27a 0%, #5cc8e0 52%, #16588a 100%);
@@ -384,7 +384,7 @@ html[data-theme='night'] .lb-name-hero {
   background: var(--surface-sunk);
   display: grid;
   place-items: center;
-  font: 900 24px var(--font-display);
+  font: 900 calc(24px * var(--fs)) var(--font-display);
   color: var(--text);
 }
 .lb-slot.filled {
@@ -435,7 +435,7 @@ html[data-theme='night'] .lb-name-hero {
 }
 .lb-hint {
   text-align: center;
-  font: 700 14px var(--font);
+  font: 700 calc(14px * var(--fs)) var(--font);
   color: var(--ink-2);
   min-height: 20px;
   margin: 8px 0 10px;
@@ -476,7 +476,7 @@ html[data-theme='night'] .lb-name-hero {
   border-radius: 10px;
   background: var(--surface-sunk);
   box-shadow: 0 2px 0 color-mix(in srgb, var(--text) 14%, transparent);
-  font: 800 20px var(--font);
+  font: 800 calc(20px * var(--fs)) var(--font);
   pointer-events: none;
 }
 .lb-key:active span {
@@ -489,7 +489,7 @@ html[data-theme='night'] .lb-name-hero {
 }
 .lb-key-wide span {
   width: 100%;
-  font-size: 17px;
+  font-size: calc(17px * var(--fs));
 }
 .lb-done span {
   background: var(--accent);

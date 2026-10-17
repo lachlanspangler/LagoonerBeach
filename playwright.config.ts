@@ -32,6 +32,7 @@ export default defineConfig({
         'e2e/leaderboard.spec.ts',
         'e2e/art.spec.ts',
         'e2e/art-kit.spec.ts',
+        'e2e/larger-text.spec.ts',
       ],
     },
   ],
