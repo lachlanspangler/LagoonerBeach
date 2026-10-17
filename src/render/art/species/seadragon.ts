@@ -10,13 +10,13 @@ import { blob, capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
 const head = ellipse(3, -27, 12.5, 11, -12);
 // a short, slim pipette snout with a rounded tip
-const snout = join(capsule(11, -25, 4.4, 24, -21.5, 3), ellipse(25.5, -21, 3.2, 3));
+const snout = capsule(11, -25, 4.4, 25, -21.5, 3.2);
 const torso = blob([
   [-5, -18],
   [6, -15],
   [11, -5],
-  [12, 7],
-  [7, 15],
+  [13, 8],
+  [8.5, 16],
   [-2, 17],
   [-10, 9],
   [-11, -5],
@@ -29,26 +29,36 @@ const tail = tube([
   [6, 37.5, 2.8],
 ]);
 
-/** A leaf blade rooted at (bx, by), pointing at `deg`: narrow stalk, wide rounded blade. */
+/**
+ * A leaf blade rooted at (bx, by), pointing at `deg`: a teardrop with one root point (two close root
+ * points made the curve loop back on itself, which WebKit and the rasteriser fill differently).
+ */
 function blade(bx: number, by: number, deg: number, len: number, w: number): string {
   const a = (deg * Math.PI) / 180;
   const c = Math.cos(a),
     s = Math.sin(a);
   const P = (u: number, v: number): [number, number] => [bx + u * c - v * s, by + u * s + v * c];
   return blob([
-    P(0, -2),
-    P(len * 0.4, -w * 0.48),
-    P(len * 0.82, -w * 0.44),
+    P(-1, 0),
+    P(len * 0.36, -w * 0.5),
+    P(len * 0.8, -w * 0.42),
     P(len, 0),
-    P(len * 0.82, w * 0.44),
-    P(len * 0.4, w * 0.48),
-    P(0, 2),
+    P(len * 0.8, w * 0.42),
+    P(len * 0.36, w * 0.5),
   ]);
 }
 type Frond = readonly [number, number, number, number, number];
-/** A forked frond: a big blade and a smaller sister blade from the same root (the leafy look). */
-const frond = ([x, y, d, len, w]: Frond) =>
-  join(blade(x, y, d - 12, len, w), blade(x, y, d + 30, len * 0.62, w * 0.72));
+/**
+ * A forked frond: a big blade and a smaller sister blade from the same root (the leafy look). The
+ * two blades go in separate parts: overlapping subpaths in one Path2D rasterise differently on WebKit.
+ */
+const main = ([x, y, d, len, w]: Frond) => blade(x, y, d - 12, len, w);
+const sister = ([x, y, d, len, w]: Frond) => blade(x, y, d + 30, len * 0.62, w * 0.72);
+const fronds = (L: readonly Frond[]) => [
+  { d: join(...L.map(sister)), role: 'belly' as const },
+  { d: join(...L.map(main)), role: 'belly' as const },
+];
+
 const rib = ([x, y, d, len]: Frond) => {
   const a = ((d - 12) * Math.PI) / 180;
   return `M${x + 4 * Math.cos(a)} ${y + 4 * Math.sin(a)}L${x + len * 0.78 * Math.cos(a)} ${y + len * 0.78 * Math.sin(a)}`;
@@ -87,17 +97,14 @@ export default defineArt({
     {
       id: 'leavesB',
       pivot: [-8, -10],
-      parts: [
-        { d: join(...BACK.map(frond)), role: 'belly' },
-        { d: join(...BACK.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 },
-      ],
+      parts: [...fronds(BACK), { d: join(...BACK.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 }],
     },
     {
       id: 'tail',
       pivot: [-3, 14],
       seamless: true,
       parts: [
-        { d: join(...TAIL.map(frond)), role: 'belly' },
+        ...fronds(TAIL),
         { d: tail, role: 'body' },
         {
           d: tube([
@@ -124,10 +131,7 @@ export default defineArt({
     {
       id: 'leavesF',
       pivot: [9, 8],
-      parts: [
-        { d: join(...FRONT.map(frond)), role: 'belly' },
-        { d: join(...FRONT.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 },
-      ],
+      parts: [...fronds(FRONT), { d: join(...FRONT.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 }],
     },
   ],
   shine: ellipse(-2, -34, 6, 2.6, -18),
