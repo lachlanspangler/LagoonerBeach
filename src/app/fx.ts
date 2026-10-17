@@ -11,7 +11,7 @@ import { pieceById } from '../core/pieces.ts';
 import { xOf, yOf } from '../core/grid.ts';
 import { Kind } from '../render/particles.ts';
 import type { Scene } from '../render/scene.ts';
-import { MOTION } from '../render/theme.ts';
+import { MOTION, fmt } from '../render/theme.ts';
 import { chimeLayers, chimeStep, comboChange, comboLevel, LIMITS, MomentGuard, momentFor } from '../render/moments.ts';
 import { placeStack, WORD_LIFE, WORD_SIZE, BEST_LIFE } from '../render/celebrate.ts';
 import type { Sfx } from '../audio/sfx.ts';
@@ -283,7 +283,7 @@ export class Fx {
               if (m.sound.sting !== 'none') this.sfx.sting(m.sound.sting);
             }
             cel.showNumber({
-              text: `+${pts}`,
+              text: `+${fmt(pts)}`,
               x: pos.x,
               y: word ? pos.y + wordH * 0.5 + gap + numH * 0.5 : pos.y,
               size: numH,
@@ -299,7 +299,7 @@ export class Fx {
             cel.prewarm(
               [
                 ...(m.word ? [[m.word, l.cell * WORD_SIZE[tier]! * ts, m.style] as const] : []),
-                [`+${pts}`, numPx, 'points'] as const,
+                [`+${fmt(pts)}`, numPx, 'points'] as const,
                 ...(e.streak >= 2 ? cel.comboSprites(e.streak, l, ts) : []),
               ],
               sc.palette.name === 'night',

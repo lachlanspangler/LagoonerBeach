@@ -346,7 +346,7 @@ export class Ui {
       'Endless',
       'Play on for a high score',
       mode === 'classic' ? 'New game' : 'Play',
-      mode === 'classic' ? 'New game' : 'Classic mode',
+      mode === 'classic' ? 'New game' : 'Endless mode',
       mode === 'classic',
       () => (mode === 'classic' ? this.h.onNewGame() : this.h.onClassic()),
       'go',
@@ -432,14 +432,14 @@ export class Ui {
     };
   }
 
-  /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Classic. */
+  /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Endless. */
   showReefError(index: number, retry: () => void): void {
     const card = document.createElement('div');
     card.className = 'card stagger';
     card.setAttribute('data-testid', 'reef-error');
     card.innerHTML = `<div class="overline">Reef ${index + 1}</div><h2 class="res-word" style="font-size:30px">Uncharted</h2><p class="callout">This reef couldn't be charted just now.</p>`;
     card.append(this.button('retry-chart', 'btn primary', 'Try again', `Try charting reef ${index + 1} again`, retry));
-    card.append(this.button('', 'btn ghost', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    card.append(this.button('', 'btn ghost', 'Endless', 'Endless mode', () => this.h.onClassic()));
     this.show(card, true, 'reef-error');
     this.announce(`Reef ${index + 1} couldn't be charted. Try again.`);
   }
@@ -471,7 +471,7 @@ export class Ui {
             this.h.onPuzzleNext(),
           ),
         );
-      card.append(this.button('', 'btn ghost', 'Classic', 'Classic mode', () => this.h.onClassic()));
+      card.append(this.button('', 'btn ghost', 'Endless', 'Endless mode', () => this.h.onClassic()));
     } else {
       card.append(
         this.button('retry-reef', 'btn primary', `${icon('restart')}Try again`, 'Try again', () =>
@@ -541,7 +541,7 @@ export class Ui {
     }
     card.append(
       o.mode === 'daily'
-        ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play classic', () => this.h.onClassic())
+        ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play endless', () => this.h.onClassic())
         : this.button('', 'btn ghost', `${icon('daily')}Daily challenge`, 'Daily challenge', () => this.h.onDaily()),
     );
     this.show(card, false, 'results');
