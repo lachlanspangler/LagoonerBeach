@@ -172,3 +172,45 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   outline); `underbite` teeth scale with the R8-capped mouth width (≈ 1 px at tile size); no way to
   author a species' resting expression (the grouper's "half-lid idle" only shows at the end of its
   yawn and in the R32 sleepy state).
+
+## Redo round (CRITIQUE-1 B notes: damsel, parrot, lionfish)
+
+### damsel
+- Round 1 (review of the previous artist's WIP): accent → `#9DB8FF`, anal fin deepened, pectoral
+  shrunk to a 4.4 × 2.4 ellipse. Kept the palette and the deeper anal; the tiny outlined ellipse
+  read as an `o` mouth under the eye at 54 px, and the fin tips were invisible.
+- Round 2: pectoral as a swept-back capsule, tips enlarged. The capsule was a bar next to the eye,
+  and the flat-topped dorsal/anal made the body a box with a round nose.
+- Round 3: dorsal and anal now sweep back into rounded trailing points past the tail root, tips
+  `#9DB8FF` on both trailing points and both swallow-tail lobes; pectoral smaller (≈ −30 %), in the
+  belly tone, tipped back behind the gill line. The mouth stays `smile`, and the kit already falls
+  back from `open`. Closest pair: damsel/sanddollar 0.74 (cross-class), damsel/lionfish 0.67 and
+  butterfly/damsel 0.66 within the fish class. Grade A−: the brave puff-and-charge signature reads
+  well; the deep oval is a little soft next to the clownfish.
+
+### parrot
+- Round 1: domed forehead + snout + small mint beak = beluga (the critique was right). Rebuilt as a
+  chunky oval with a steep, blunt forehead running straight into a cream `#F5F1E6` rounded wedge,
+  a 3-unit ink parting line that turns up at the back (it doubles as the smile; the rig mouth hides
+  under the beak), and the upper bill overhanging the lower. Stripes `#F06AA0`, 5 units, two.
+- Round 2: the outlined pectoral (between the stripes) read as a pill-shaped second mouth/eye on
+  Night. It is now cream and unoutlined, low behind the gill; the beak front is blunter, the body
+  is a touch shallower, and the eye went up to 9.6 u.
+- Round 3: chomp 12° → 18° so the double crunch reads in the frames. Closest: limpet/parrot 0.69
+  (cross-class), clownfish/parrot 0.67 (fish). Grade A−: the beak and the crescent tail read at
+  24 px; the body is still a little ball-like (the 84-unit box is shared with a long beak + tail).
+
+### lionfish
+- Round 1: body +25 % (snout 36, ±22), five spines radiating ±60° from one hub, eye 22 % (9.9 u).
+  No longer a hand, but it became a striped ball with bristles; at 24 px it was a spider.
+- Round 2: webbing between the spines and the pectoral rays. The pectoral fan read as a paw with
+  five toes; the crown web was hidden behind the body.
+- Round 3: the pectoral became one scalloped wing (a blob through the tips and the notches) with
+  cream ray lines and tips, sweeping back and down rather than down; the crown web was dropped
+  (spine gaps keep the mask distinct). Then I tuned it against the full cast:
+  lionfish/sanddollar went 0.80 → 0.73, clownfish/lionfish 0.75 → 0.68, lionfish/puffer
+  0.70 → 0.67 (shorter body + tail, longer spines, a wing reaching past the tail root). Bands: four
+  5-unit cream bands behind the eye, plus the cream tail band (five in total). Body = 52 % of the
+  silhouette area. Grade A−: fabulous at 54 px, and the fan-open signature works; at 24 px the
+  spines are still thin.
+- All three: lint ✓, `tests/unit/art.test.ts` green, e2e + perf art specs green (Chromium + WebKit).
