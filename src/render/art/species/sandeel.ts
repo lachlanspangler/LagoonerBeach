@@ -1,64 +1,86 @@
 /**
- * Sand Eel — LONG class (profile). Silhouette: a long slim body in a quick double wave ("~~"),
- * an oversized round head and a pointed, jutting lower jaw, a tiny forked tail (R10: the wavy needle
- * and the jaw). Slimmer and wavier than the moray, horizontal unlike the garden eel.
+ * Sand Eel — LONG class (profile, level). Silhouette: a true needle (≈ 4 : 1) with a big round head
+ * (30 % of the length), a pointed lower jaw that juts past the snout and a tiny forked tail; a low
+ * double wave travels down the body (R10: the needle and the jaw). Silver belly under sand.
  * Personality: zippy, shy, sandy. Signature: dives tail-first into the tile floor and pops back up.
+ * Three seamless segments carry the travelling wave without seams (ADR 0011 Amendment 1).
  */
 import { capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
-const tail = join(
+const tailTip = join(
   tube([
-    [-10, 4, 8.4],
-    [-19, 14, 7.6],
-    [-28, 16, 6.4],
-    [-34, 9, 5],
+    [-24, 1.5, 4.8],
+    [-31, 2.5, 4],
+    [-36, 1.5, 3.2],
   ]),
-  capsule(-34, 9, 3.8, -38, 0, 2.8),
-  capsule(-34, 9, 3.8, -39, 13, 2.8),
+  capsule(-34, 1.5, 3, -38.5, -3.5, 2.6),
+  capsule(-34, 1.5, 3, -38.5, 6.5, 2.6),
 );
+const tailMid = tube([
+  [-12, 0, 6],
+  [-19, 1.5, 5.4],
+  [-26, 1.5, 4.8],
+]);
 const body = tube([
-  [-12, 6, 8.8],
-  [-3, -6, 9.6],
-  [8, -13, 9.6],
-  [18, -10, 10.4],
+  [-14, 0, 6],
+  [-2, -1.5, 6.4],
+  [8, -1, 7],
+  [14, 0, 8],
 ]);
-// a low dorsal fin riding the first hump
-const dorsal = tube([
-  [-9, -9, 3],
-  [0, -18, 3.6],
-  [10, -24, 3],
-]);
-const head = ellipse(23, -8, 13.5, 12, -10);
-const jaw = capsule(28, 1, 4.8, 39.5, -1.5, 2.6);
-const snout = capsule(28, -10, 5.6, 35, -7.5, 3);
+const head = ellipse(23, -0.5, 13.5, 11);
+const snout = capsule(29, -3.5, 6, 35, -2, 3.2);
+const jaw = capsule(29, 4, 5, 40.4, 3.5, 2.4);
 
 export default defineArt({
   id: 'sandeel',
   klass: 'long',
   size: 'M',
-  feature: 'a long slim body in a quick double wave, an oversized round head and a pointed jutting jaw',
+  feature: 'a true needle with a big round head, a pointed lower jaw jutting past the snout and a forked tail',
   personality: ['zippy', 'shy', 'sandy'],
-  palette: { body: '#D8C79A', accent: '#8FA7B5', belly: '#EEF2F2' },
+  palette: { body: '#D9C489', accent: '#7F9BB0', belly: '#E8ECEF' },
   groups: [
     {
-      id: 'tail',
-      pivot: [-11, 5],
+      id: 'tail2',
+      pivot: [-25, 1.5],
+      seamless: true,
       parts: [
-        { d: tail, role: 'body' },
+        { d: tailTip, role: 'body' },
         {
           d: tube([
-            [-8, -2.5, 2.4],
-            [-18, 6, 2.2],
-            [-28, 9, 1.8],
+            [-24, -2, 2.4],
+            [-34, -1, 2.4],
           ]),
           role: 'accent',
           kind: 'pattern',
         },
         {
           d: tube([
-            [-12, 12, 2.6],
-            [-20, 21, 2.4],
-            [-30, 21, 2],
+            [-24, 5.5, 2.2],
+            [-34, 4.5, 2],
+          ]),
+          role: 'belly',
+          kind: 'pattern',
+        },
+      ],
+    },
+    {
+      id: 'tail1',
+      pivot: [-13, 0],
+      seamless: true,
+      parts: [
+        { d: tailMid, role: 'body' },
+        {
+          d: tube([
+            [-12, -4.4, 2.4],
+            [-26, -2.6, 2.4],
+          ]),
+          role: 'accent',
+          kind: 'pattern',
+        },
+        {
+          d: tube([
+            [-12, 5, 2.4],
+            [-26, 5.4, 2.2],
           ]),
           role: 'belly',
           kind: 'pattern',
@@ -67,28 +89,28 @@ export default defineArt({
     },
     {
       id: 'body',
+      seamless: true,
       parts: [
-        { d: dorsal, role: 'belly' },
         { d: body, role: 'body' },
         { d: jaw, role: 'belly' },
         { d: head, role: 'body' },
         { d: snout, role: 'body' },
         {
           d: tube([
-            [-12, -2, 2.6],
-            [-3, -14, 2.8],
-            [8, -21.5, 3],
-            [20, -20.5, 3],
+            [-14, -4.4, 2],
+            [-2, -6.6, 2.2],
+            [10, -7.6, 2.4],
+            [22, -9.6, 2.4],
           ]),
           role: 'accent',
           kind: 'pattern',
         },
         {
           d: tube([
-            [-12, 14, 2.8],
-            [-1, 2.5, 3],
-            [10, -3, 3.2],
-            [24, 3, 4.4],
+            [-14, 5, 2.6],
+            [-2, 5, 2.8],
+            [10, 6, 3],
+            [24, 9, 4],
           ]),
           role: 'belly',
           kind: 'pattern',
@@ -96,22 +118,21 @@ export default defineArt({
       ],
     },
   ],
-  shine: ellipse(21, -15, 6, 2.4, -14),
+  shine: ellipse(22, -6.5, 6, 2.2, -8),
   face: {
-    eyes: [[26, -8]],
-    eye: 7,
-    zone: [12, -24, 30, 30],
-    mouth: { at: [34, -2], w: 5, shape: 'smile' },
+    eyes: [[25, -1]],
+    eye: 9.4,
+    zone: [12, -23, 30, 38],
+    mouth: { at: [35, 4.5], w: 5, shape: 'smile' },
     sweet: true,
   },
   deviations: {
-    R7: 'long class (R5): the eye sits in the oversized head, the front 30 % of the wavy body, not 34 % back',
+    R7: 'long class (R5): the eye sits in the big head (front 30 % of a 4 : 1 needle), not 34 % back',
   },
   idle: {
     ambient: [
-      { m: 'bob', amp: 2, period: 1.8 },
-      { m: 'wag', g: 'tail', amp: 10, period: 0.7 },
-      { m: 'sway', g: 'body', amp: 2.5, period: 1.4, phase: 0.25 },
+      { m: 'bob', amp: 1.6, period: 1.8 },
+      { m: 'wave', g: ['body', 'tail1', 'tail2'], amp: 4, period: 1.1, lag: 0.12 },
     ],
     signature: {
       dur: 1.4,
@@ -122,8 +143,8 @@ export default defineArt({
           k: [
             [0, 0],
             [0.12, 8],
-            [0.3, -72],
-            [0.62, -72],
+            [0.3, -76],
+            [0.62, -76],
             [0.8, 6],
             [0.9, -3],
             [1, 0],
@@ -135,8 +156,8 @@ export default defineArt({
             [0, 0],
             [0.12, -3],
             [0.3, 4],
-            [0.46, 40],
-            [0.6, 40],
+            [0.46, 42],
+            [0.6, 42],
             [0.76, -8],
             [0.88, 2],
             [1, 0],
@@ -151,6 +172,17 @@ export default defineArt({
             [0.7, 1.14],
             [0.84, 0.9],
             [1, 1],
+          ],
+        },
+        {
+          g: 'tail2',
+          p: 'rot',
+          k: [
+            [0, 0],
+            [0.3, 18],
+            [0.4, -18],
+            [0.5, 12],
+            [0.6, 0],
           ],
         },
       ],
