@@ -263,3 +263,20 @@ Worst same-class pair overall among mine: clownfish/sunfish 0.684 and limpet/nau
   head front, and two short knobbed stalks above (`extra`, out of the body box).
 - Shell `#A8724D` (chroma 0.09, R16S), shell raised so the shell/head notch stays open. Lint clean.
 - IoU: sand dollar 0.66 (same class), hermit 0.66 (cross-class). Self-grade A-.
+
+## cockle (graded C → redo)
+- Brief: wide heart-ish shell 1.25 : 1, 4 broad ribs `#B07A4E` on `#F1DDBB`, open ~10° with eyes in the
+  gap, drop the tongue-foot (or a small cream side nub), keep the hum.
+- Tried, measured against the full cast (R12):
+  1. Heart 84×67 with a lens gap, edges closed: sand dollar 0.85. Scalloped heart lip + umbo: 0.87.
+  2. Lid tipped 11–24° on a left hinge (a wedge gap): 0.70 at 24°, but the locked silhouette was a
+     famous arcade character's (originality risk, CRITIQUE-1 golden-turtle note). Dropped.
+  3. Fan lid (rounded triangle) over a square-ish bowl + a small cream foot nub at the side: sand
+     dollar 0.68, limpet 0.68, cuttle 0.76 (cross-class). Kept.
+- The gap is now a wide lens (the lid lifted ~10° worth), mantle pink, eyes 12.6 (the XS floor),
+  smile in the gap; ribs slimmed so the lid reads cream with brown ribs, not a brown hat; no pompom
+  knob; the foot is cream, not pink. Shell `#E8CCA3` (the critique's `#F1DDBB` measures L 0.91 and
+  sits ΔE 0.07 from the mint tile; R16S deviation at chroma 0.06).
+- Self-grade: B+. The face is sweet and the hum reads; the shape is a fan, not the heart the critique
+  asked for: no heart passes the coin overlap at 24 px. Would need a silhouette metric change or a
+  sand-dollar redesign to get the heart.
