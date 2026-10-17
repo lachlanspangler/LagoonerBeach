@@ -144,3 +144,9 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
   clownfish (IoU 0.74, fail); (2) longer, slimmer body: clownfish 0.63, hammerhead 0.66, flounder
   0.68. Lint-clean.
 - **Self-grade:** A. Same joyful dolphin, now big in the tile with its flukes past the edge.
+
+## whaleshark — A (exemplar), lint only
+- **Fixes:** spots ≥ 6.2 units (R18W), mouth line 3 units (R2L), the hairline gill marks dropped,
+  body `#5A84B5` (chroma 0.089, R16S; L 0.60). The kit's head-anchored XXL crop now keeps the long
+  mouth in frame. Lint-clean; closest clownfish 0.65.
+- **Self-grade:** A. Unchanged in spirit; slightly bluer than the slate of round 1.
