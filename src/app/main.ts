@@ -44,7 +44,7 @@ import { shareText, type LagoonShape } from '../meta/share.ts';
 
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
 import { solve } from '../core/solver.ts';
-import { initNative } from '../platform/native.ts';
+import { initNative, isNative } from '../platform/native.ts';
 import { catchCapture, type LagoonCatch } from '../meta/catch.ts';
 import { record, type Journal } from '../meta/journal.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
@@ -1110,8 +1110,11 @@ document.fonts?.addEventListener?.('loadingdone', fontsIn);
 void document.fonts?.load?.('800 16px "Lagoon UI"').then(fontsIn);
 void document.fonts?.load?.('900 16px "Lagoon Display"').then(fontsIn);
 
-if (!DEBUG && 'serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));
+// PWA offline cache — web only: inside the native shells the app is already local, and a cache
+// there would only strand players on an old build (ADR 0005). `?sw=1`: e2e (webdriver = debug).
+if ((!DEBUG || params.has('sw')) && 'serviceWorker' in navigator && import.meta.env.PROD && !isNative()) {
+  const url = `./sw.js?v=${encodeURIComponent(__BUILD_ID__)}`;
+  window.addEventListener('load', () => void navigator.serviceWorker.register(url).catch(() => undefined));
 }
 
 // ------------------------------------------------------------------ debug / test hooks
