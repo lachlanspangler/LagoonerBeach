@@ -115,3 +115,23 @@ Species: hammerhead, dolphin, whaleshark, angler, otter, goldturtle. Sheets in `
 - **Self-grade:** B+. Clearly its own legend, and it glides; regal more than cute.
 - **Would improve:** there's no way to make `proud` its resting face (the rig's idle is fixed), and
   regal leans on it; the far (second) front flipper raised as a wing would sell flight better.
+
+---
+
+# Redo round (CRITIQUE-1, kit Amendment 1)
+
+## hammerhead — C → redo, 3/4 front view
+- **Brief:** 3/4 front view, wide horizontal T (span 1.3× body), an eye at each tip, frame-break
+  2–4 px, tall dorsal behind, keep the scan.
+- **Build:** a 70-unit hammer bar (lobes `extra`) across the front of a plump body that recedes
+  back-left; `face.profile: true` puts an eye on each lobe (eye 8.4, 23 % of the zone); a belly chin
+  under the middle carries the smile. The right lobe breaks the XL frame by 3.7 px. The dorsal is
+  its own layer so the body rests level (R5T 5°). Body `#6889BA` (C 0.083, R16S).
+- **Rounds (3):**
+  1. Reads at once: a T with two eyes and a smile. But R5T 27° (the dorsal inside the body group
+     tilted the body's axis) and a 3.5 px break that sat right at the edge.
+  2. Dorsal moved to its own layer (5°), right lobe trimmed. Lint-clean.
+  3. Bigger, lower lobes so both tips bulge past the body outline and the T reads in the 24 px mask;
+     eye 8 → 8.4.
+- **Self-grade:** A-. Earnest and wide-eyed; the scan swings the hammer with both eyes.
+- **Tight pair:** dolphin 0.697 (limit 0.70), so the dolphin redo moves away from it.
