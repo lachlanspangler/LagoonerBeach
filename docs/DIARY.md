@@ -503,3 +503,10 @@ what exists (no feature rebuilds); every test's intent kept.
   specimen collection; Night with raised controls and brighter water. **Felt off / open:** Fraunces
   COMBO at 22 px still has tight counters; tray pieces don't re-center when one is left (kept for
   position stability); reveal golden border is flat gold, not the foil gradient.
+- **Second review round:** 5/7 fixed, 2 partly — the list edge now fades (a half-sliced row above the
+  pinned "you" row read as a bug), the chapter subtitle is ≥ 30 px, the level-up flare is a soft glow
+  instead of a stroked ring; minors done too (reef tiles get a check, night tier chip raised). Left by
+  decision: store frames keep ~130 px of strip between board and hand (it's the real layout).
+- **Tests:** `make check` 452 green; e2e 104 green on Chromium + WebKit (perf included). The midnight
+  leaderboard test typed before the now-lazier leaderboard sheet existed (first letter lost, "EMO"):
+  it waits for the sheet like its siblings. Pixel baselines re-recorded twice, looked at each time.

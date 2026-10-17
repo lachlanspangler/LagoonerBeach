@@ -95,6 +95,8 @@ test('a Daily finished after local midnight opens (and labels) the board it was 
   await page.clock.setSystemTime(new Date(2026, 9, 17, 0, 0, 30)); // past midnight, same game
   await finishDaily(page);
   await page.locator('#lb-open').click();
+  // the leaderboard chunk (JS + CSS) is lazy: type once the sheet is up, as the other tests do
+  await page.getByTestId('lb-name-entry').waitFor();
   await page.keyboard.type('nemo');
   await page.getByTestId('lb-post').click();
   await expect(page.locator('.lb-row.me')).toContainText('NEMO'); // yesterday's board, where the score is
