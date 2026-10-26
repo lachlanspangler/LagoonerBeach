@@ -323,6 +323,22 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.getByTestId('puzzle-result').waitFor({ timeout: 15000 });
     await p.waitForTimeout(900);
   },
+  // after posting today's Daily, replaying it shows where you stand under DAILY
+  'daily-ranked': async (p) => {
+    await p.evaluate(() => (window as any).__atoll.autoplay('human', 400));
+    await p.getByTestId('final-score').waitFor({ timeout: 15000 });
+    await p.waitForTimeout(1200);
+    await p.locator('#lb-open').click();
+    await p.getByTestId('lb-name-entry').waitFor();
+    await p.keyboard.type('coral');
+    await p.getByTestId('lb-post').click();
+    await p.locator('.lb-row.me').waitFor();
+    await p.evaluate(() => (window as any).__atoll.restart());
+    await p.waitForTimeout(400);
+    await p.keyboard.press('Escape');
+    await p.evaluate(() => (window as any).__atoll.autoplay('greedy', 3));
+    await p.waitForTimeout(1500);
+  },
   daily: async (p) => {
     await p.evaluate(() => (window as any).__atoll.switchMode('daily'));
     await p.waitForTimeout(800);
@@ -363,6 +379,7 @@ const special: Record<string, { query?: string; fresh?: boolean }> = {
   'results-real': { query: 'seed=8&fast=1' },
   'name-entry': { query: 'mode=daily&fast=1' },
   leaderboard: { query: 'mode=daily&fast=1' },
+  'daily-ranked': { query: 'mode=daily&fast=1' },
 };
 
 for (const [name, run] of Object.entries(screens)) {

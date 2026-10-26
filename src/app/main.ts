@@ -59,6 +59,7 @@ import { installPreloadRecovery } from '../platform/lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
+import { dailyBoard } from '../meta/boards.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -320,7 +321,7 @@ function syncScene(): void {
   updateHint();
   updateMisfits();
   scene.hudLabel = null;
-  scene.modeTag = mode === 'daily' ? 'Daily' : '';
+  scene.modeTag = mode === 'daily' ? dailyTag() : '';
   const p = mode === 'puzzle' ? reefAt(state.seed) : null;
   if (p) {
     const i = state.seed;
@@ -507,6 +508,7 @@ function finishGame(prevBest: number): void {
   profile.stats.totalScore += state.score;
   const newBest = state.score > prevBest;
   if (mode === 'daily') {
+    dailyRank = null; // ask the board again next time (this game may have just been posted)
     profile.dailyBest[dailyDate] = Math.max(prevBest, state.score);
     profile.daily = recordDaily(profile.daily, dayIndex(dailyDate));
   } else if (newBest) profile.best = state.score;
@@ -540,6 +542,32 @@ function finishGame(prevBest: number): void {
       resultCard = ui.showGameOver(card);
     }),
   );
+}
+
+/** Daily HUD line: "Daily · Oct 26", plus "#12 today" once you're on today's board (boards on). */
+let dailyRank: { date: string; rank: number | null; asked: boolean } | null = null;
+function dailyTag(): string {
+  const [y, m, d] = dailyDate.split('-').map(Number);
+  const date = new Date(y!, m! - 1, d!).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (dailyRank?.date !== dailyDate) dailyRank = { date: dailyDate, rank: null, asked: false };
+  if (LB_ON && profile.lb?.name && !dailyRank.asked) {
+    dailyRank.asked = true;
+    const want = dailyDate;
+    void lbui()
+      .then((l) => l.client.view(dailyBoard(want)))
+      .then(
+        (v) => {
+          if (dailyRank?.date !== want || !v.me) return;
+          dailyRank.rank = v.me.rank;
+          if (mode === 'daily' && dailyDate === want) {
+            scene.modeTag = dailyTag();
+            dirty = true;
+          }
+        },
+        () => undefined,
+      );
+  }
+  return `Daily · ${date}${dailyRank.rank ? ` · #${fmt(dailyRank.rank)} today` : ''}`;
 }
 
 // ------------------------------------------------------------------ leaderboards (lazy: ui/leaderboard.ts)
