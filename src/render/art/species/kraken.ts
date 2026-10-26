@@ -1,5 +1,8 @@
 /**
  * Baby Kraken — LEGENDARY, front-facing CHIBI, drawn XL (appendix ★ override).
+ * CRITIQUE-2: rests in its "scary pose": two arms raised over the head, tips curling in over the
+ * crown (the locked silhouette read as a crowned crab/spider when every arm curled down);
+ * brow ≤ 12° (mischief, not anger). Resting mouth: a tiny fang grin.
  * Silhouette: a WIDE squat head (≈ 1.3× the octopus pilot's head relative to its arms) wearing a
  * tiny three-point crown, with all eight arms splayed out sideways like a starburst skirt, the tips
  * curling up and breaking the tile frame (R10: the crown + the splayed arm fan + a stubby brow).
@@ -27,25 +30,20 @@ const head = blob([
 ]);
 const crown = blob(
   [
-    [-11, -24],
-    [-12, -36],
-    [-6, -31],
-    [0, -40],
-    [6, -31],
-    [12, -36],
-    [11, -24],
-    [0, -22],
+    [-14, -25],
+    [-17, -38.5],
+    [-8, -33],
+    [0, -43],
+    [8, -33],
+    [17, -38.5],
+    [14, -25],
+    [0, -23],
   ],
   0.75,
 );
 // left arms (right ones mirror). Bases stay inside the body box; the curled tips are `extra` and
 // break the frame (R28). Four arms a side, fanned from horizontal-and-up to down-and-out.
 const armsBase = join(
-  tube([
-    [-28, 2, 7],
-    [-34, 0, 6],
-    [-37, -4, 5],
-  ]),
   tube([
     [-26, 10, 7],
     [-32, 14, 6],
@@ -57,54 +55,68 @@ const armsBase = join(
     [-33, 28, 4.8],
   ]),
 );
+// CRITIQUE-2: the upper side arm curls its tip UP (a beckoning flick); the lower one ripples out
+// and down with a loose open hook, so the skirt reads as tentacles, not crab feet.
 const armsTips = join(
   tube([
-    [-37, -4, 5],
-    [-41, -11, 4],
-    [-39, -17, 3.2],
-    [-35, -16, 2.8],
-  ]),
-  tube([
     [-37, 15, 5],
-    [-44, 13, 4],
-    [-46, 6, 3.2],
-    [-43, 3, 2.8],
+    [-44, 12, 4],
+    [-46, 4, 3.1],
+    [-44, -1, 2.6],
   ]),
   tube([
     [-33, 28, 4.8],
-    [-41, 30, 3.8],
-    [-45, 25, 3.2],
-    [-42, 21, 2.8],
+    [-40, 34, 3.8],
+    [-46, 35, 3],
+    [-47, 30.5, 2.4],
   ]),
 );
+// CRITIQUE-2: the "scary pose" at rest: one arm a side raised over the head, the tip curling
+// outward like a flourish (rawr! curling inward over the crown read as horns). Base inside the body box; the curl is `extra` and may break the frame.
+const raisedBase = tube([
+  [-25, -6, 7],
+  [-32, -14, 6.2],
+  [-36, -25, 5.4],
+]);
+const raisedTip = tube([
+  [-36, -25, 5.4],
+  [-37.5, -35, 4.4],
+  [-41.5, -41, 3.6],
+  [-46, -38, 3],
+  [-44.5, -32.5, 2.6],
+]);
+const sU: [number, number][] = [
+  [-33.5, -17],
+  [-36, -28],
+];
 // the front arm: down and out, tip curling outward (never toward the other one: not clasped hands)
 const frontL = tube([
   [-9, 16, 6.6],
   [-14, 27, 5.6],
-  [-21, 35, 4.6],
-  [-28, 37, 3.6],
-  [-31, 33, 3],
+  [-19, 34, 4.6],
+  [-25, 37.5, 3.4],
+  [-30, 35.5, 2.6],
 ]);
 const mirror = (d: string) => xform(d, { sx: -1 });
 const dots = (pts: readonly (readonly [number, number])[], r = 3.2) => join(...pts.map(([x, y]) => circle(x, y, r)));
 const sL: [number, number][] = [
-  [-40.5, -10],
   [-44.5, 10],
-  [-42, 28.5],
+  [-41, 33.5],
 ];
 const sF: [number, number][] = [
-  [-20, 33],
-  [-27, 35],
+  [-19, 34],
+  [-25.5, 37],
 ];
 const flip = (pts: [number, number][]) => pts.map(([x, y]) => [-x, y] as [number, number]);
 // the stubby "menacing" brow: two short thick ink dashes angled down toward the middle
-const brow = 'M-15 -14.5L-9 -12.5M15 -14.5L9 -12.5';
+// (CRITIQUE-2: ≤ 12°, so it reads mischievous, not angry)
+const brow = 'M-15.5 -14L-9 -12.7M15.5 -14L9 -12.7';
 
 export default defineArt({
   id: 'kraken',
   klass: 'chibi',
   size: 'XL',
-  feature: 'wide squat crowned head, all eight arms splayed out like a starburst with curled tips',
+  feature: 'wide squat crowned head, two arms raised over it in a scary pose, six splayed below',
   personality: ['adorable', 'menacing-ish', 'babyish'],
   palette: { body: '#714B99', accent: '#F2C14E', belly: '#F2A5CF' },
   nocturnal: true,
@@ -126,6 +138,17 @@ export default defineArt({
         { d: mirror(armsBase), role: 'body' },
         { d: mirror(armsTips), role: 'body', extra: true },
         { d: dots(flip(sL)), role: 'belly', kind: 'pattern' },
+      ],
+    },
+    {
+      id: 'up',
+      pivot: [0, -8],
+      parts: [
+        { d: raisedBase, role: 'body' },
+        { d: mirror(raisedBase), role: 'body' },
+        { d: raisedTip, role: 'body', extra: true },
+        { d: mirror(raisedTip), role: 'body', extra: true },
+        { d: dots([...sU, ...flip(sU)], 3), role: 'belly', kind: 'pattern' },
       ],
     },
     {
@@ -162,7 +185,7 @@ export default defineArt({
     ],
     eye: 11.2,
     zone: [-37, -29, 74, 47],
-    mouth: { at: [0, 7], w: 6, shape: 'w' },
+    mouth: { at: [0, 7], w: 8, shape: 'grin' },
     front: true,
   },
   idle: {
@@ -176,6 +199,29 @@ export default defineArt({
     signature: {
       dur: 1.5,
       tracks: [
+        {
+          g: 'up',
+          p: 'ty',
+          k: [
+            [0, 0],
+            [0.12, 2],
+            [0.3, -6],
+            [0.52, -6],
+            [0.62, 1],
+            [0.7, 0],
+          ],
+        },
+        {
+          g: 'up',
+          p: 'sx',
+          k: [
+            [0, 1],
+            [0.12, 0.92],
+            [0.3, 1.12],
+            [0.52, 1.12],
+            [0.64, 1],
+          ],
+        },
         {
           g: 'armsL',
           p: 'sx',
@@ -232,7 +278,8 @@ export default defineArt({
       ],
       face: [
         [0.2, 0.55, 'proud'],
-        [0.6, 1, 'happy'],
+        [0.6, 0.92, 'happy'],
+        [0.92, 1, 'shy'],
       ],
     },
   },
