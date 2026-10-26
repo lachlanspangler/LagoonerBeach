@@ -302,7 +302,7 @@ test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page 
   expect(card.w).toBe(1080);
   expect(card.h).toBe(1350);
   expect(card.png).toBeGreaterThan(20_000);
-  expect(card.text).toContain('BOX CRAB');
+  expect(card.text).toContain('Box Crab');
   expect(card.text).toContain('Lagooner Beach');
   expect(card.text.join(' ')).not.toContain(card.hint);
 });
