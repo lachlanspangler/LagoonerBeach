@@ -146,12 +146,12 @@ export class Fx {
       cel.washAt = t;
       sc.sweep = t + 200;
       cel.showWord(
-        { text: `Chapter ${chapter}!`, style: 'gold', tier: 4, x: b.x + b.w / 2, y: b.y + b.h * 0.42, start: t, life },
+        { text: `Chapter ${chapter}`, style: 'gold', tier: 4, x: b.x + b.w / 2, y: b.y + b.h * 0.42, start: t, life },
         l,
         ts,
       );
       cel.showNumber({
-        text: name,
+        text: `Complete · ${name}`, // "Chapter 2!" read like *starting* chapter 2 (UX review)
         x: b.x + b.w / 2,
         y: b.y + b.h * 0.42 + l.cell * 1.05 * ts,
         size: l.cell * 0.68 * ts, // ≥ 30 px: stroked display type needs the size (UI_DESIGN §7.1)

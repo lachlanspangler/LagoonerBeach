@@ -87,17 +87,18 @@ describe('always-a-solution guarantee', () => {
           const ms = legalMoves(s);
           const res = applyMove(s, ms[r.int(ms.length)]!)!;
           const dealt = res.events.find((e) => e.type === 'dealt');
-          if (dealt && dealt.type === 'dealt' && res.state.board.some((c) => c === 0))
-            expect(
-              bruteClearable(
-                res.state.board,
-                dealt.tray.map((t) => t.pieceId),
-              ),
-            ).toBe(true);
+          if (dealt && dealt.type === 'dealt' && res.state.board.some((c) => c === 0)) {
+            const ids = dealt.tray.map((t) => t.pieceId);
+            // On a nearly full board no three pieces fit at all (not even three dots, the smallest
+            // piece): then the promise is only that one dealt piece fits (seed 921857515).
+            if (bruteClearable(res.state.board, ['dot', 'dot', 'dot']))
+              expect(bruteClearable(res.state.board, ids)).toBe(true);
+            else expect(ids.some((id) => placements(res.state.board, pieceById(id)).length > 0)).toBe(true);
+          }
           s = res.state;
         }
       }),
-      { numRuns: 25 },
+      { numRuns: 25, examples: [[921857515]] }, // the nearly-full-board case, always checked
     );
   });
 

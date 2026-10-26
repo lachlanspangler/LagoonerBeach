@@ -277,10 +277,10 @@ test('a discovery that completes a chapter is revealed after the chapter moment,
   await stageReefEnd(page, ring, true);
   await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
   const seen = await page.evaluate(() => (window as any).__seen);
-  expect(seen['Chapter 1!'], 'chapter moment played').toBeGreaterThan(0);
+  expect(seen['Chapter 1'], 'chapter moment played').toBeGreaterThan(0);
   expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);
   // the chapter word lives 1.5 s; the discovery waits for it (never over it), the card for both
-  expect(seen.reveal - seen['Chapter 1!']).toBeGreaterThanOrEqual(1400);
+  expect(seen.reveal - seen['Chapter 1']).toBeGreaterThanOrEqual(1400);
   expect(seen.result).toBeGreaterThan(seen.reveal);
 });
 
