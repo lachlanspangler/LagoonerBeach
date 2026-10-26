@@ -288,7 +288,8 @@ function syncScene(): void {
   scene.sweep = -1e9;
   scene.ripples = [];
   scene.shake = { start: -1e9, amp: 0 };
-  scene.scorePunch = { at: -1e9, amp: 0 };
+  scene.scorePunch = { at: -1e9, amp: 0, gold: false };
+  scene.scoreRoll = { at: -1e9, ms: 0, from: 0, to: 0 };
   scene.clearChips();
   scene.particles.clear();
   const now = performance.now();
@@ -957,6 +958,8 @@ const drag = new DragController(canvas, {
   state: () => state,
   enabled: () => !ui.open && !reveal.blocking,
   onPick: () => {
+    // fast play: the previous move's word leaves quickly (it won't describe the next board)
+    scene.celebrate.hurry(clock());
     wakeAudio();
     sfx.pick();
     haptics.fire('tick');

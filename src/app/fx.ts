@@ -10,7 +10,8 @@ import type { GameEvent } from '../core/game.ts';
 import { pieceById } from '../core/pieces.ts';
 import { xOf, yOf } from '../core/grid.ts';
 import { Kind } from '../render/particles.ts';
-import type { Scene } from '../render/scene.ts';
+import { BURST_LIFT } from '../render/burst.ts';
+import { FISH_LIFE, type Scene } from '../render/scene.ts';
 import { MOTION, fmt } from '../render/theme.ts';
 import { chimeLayers, chimeStep, comboChange, comboLevel, LIMITS, MomentGuard, momentFor } from '../render/moments.ts';
 import { placeStack, WORD_LIFE, WORD_SIZE, BEST_LIFE } from '../render/celebrate.ts';
@@ -40,6 +41,8 @@ export const numberPx = (cell: number, withWord: boolean, tier: number, ts: numb
 
 /** A scheduled step this overdue keeps its visuals but drops its sound and haptics. */
 export const LATE_MS = 250;
+/** Creatures in flight at once (the rest become one "+N" coin chip). */
+export const MAX_FLYING = 3;
 
 /** `target` whose methods become no-ops while `quiet()` (sound/haptics of late steps). */
 function quietWhen<T extends object>(target: T, quiet: () => boolean): T {
@@ -61,6 +64,8 @@ export class Fx {
   settleAt = 0;
   /** When the latest move's word fades (the NEW BEST banner waits for it). */
   private wordEnd = 0;
+  /** Bumped per dispatched move: a word never lands over a board it doesn't describe. */
+  private moveSeq = 0;
 
   /** True while running a step that is more than LATE_MS overdue: its sound and haptics are dropped. */
   private late = false;
@@ -177,6 +182,9 @@ export class Fx {
     const sc = this.scene;
     const l = sc.layout;
     const cel = sc.celebrate;
+    // a newer move: the previous word leaves fast, and its pending word (if any) never lands
+    const seq = ++this.moveSeq;
+    cel.hurry(now);
     const flight = from ? MOTION.place * 0.8 : 0;
     const rm = sc.reducedMotion;
     let settle = now + flight + MOTION.place;
@@ -222,6 +230,8 @@ export class Fx {
           const waves = e.waves.length;
           const last = now + flight + (waves - 1) * MOTION.waveGap;
           let lastPop = last;
+          // when the last ring's top row (where the word lands) bursts
+          let topPop = 0;
           e.waves.forEach((w, k) => {
             const t0 = now + flight + k * MOTION.waveGap;
             const area = w.pockets.reduce((a, p) => a + p.cells.length, 0);
@@ -238,6 +248,7 @@ export class Fx {
             // ring pebbles burst outward from the lagoon's center, in a ripple by distance; later
             // waves and bigger moments burst harder
             const strength = rm ? 0 : v.burst + k * 0.1;
+            const lagoonTop = Math.min(...lagoonCells.map(yOf));
             for (const d of w.cleared) {
               const [x, y] = sc.cellCenter(d.cell);
               const dist = Math.hypot(x - cx, y - cy) / l.cell;
@@ -245,6 +256,7 @@ export class Fx {
               sc.burst.add(x, y, cx, cy, d.color, st, strength, l.cell, sc.rand);
               settle = Math.max(settle, st + 700);
               lastPop = Math.max(lastPop, st);
+              if (k === waves - 1 && yOf(d.cell) < lagoonTop) topPop = Math.max(topPop, st);
               const n = Math.min(v.perPebble, v.budget - spent);
               spent += Math.max(0, n);
               if (n > 0)
@@ -283,24 +295,42 @@ export class Fx {
           const pts = e.score.total;
           const clean = e.score.cleanBonus > 0;
           // Spotless owns the middle of the board, so it waits for the last ring to leave its cells
-          const wordAt = clean ? Math.max(last + MOTION.lagoonFill + 40, lastPop + 190) : last + MOTION.lagoonFill + 40;
+          // a lagoon's word waits (≤ 140 ms more) until the ring's top row has lifted off and left the
+          // spot above the lagoon where it lands
+          const base = last + MOTION.lagoonFill + 40;
+          const wordAt = clean
+            ? Math.max(base, lastPop + 190)
+            : Math.min(base + 140, Math.max(base, topPop + BURST_LIFT + 90));
           // words fit the 1.3 s settle budget; the rare tier-4 word may hold a little longer
           const life = Math.max(tier === 4 ? 850 : 600, Math.min(WORD_LIFE[tier]!, now + LIMITS.settleMs - wordAt));
           settle = Math.max(settle, wordAt + life);
           this.wordEnd = m.word ? wordAt + life : 0;
-          if (v.sweep) this.at(last + MOTION.lagoonFill, (t) => (sc.sweep = t));
+          // peaks: the gold light sweeps the board just after the word pops (it lights the moment)
+          if (v.sweep) this.at(wordAt + 120, (t) => (sc.sweep = t));
           if (v.wash)
             this.at(last + MOTION.lagoonFill + 60, (t) => {
               cel.washAt = t;
               this.sfx.whoosh();
             });
+          // the shake lands with the first ring burst; tier 4 takes the whole allowance (≤ 6 px)
           if (v.shake > 0 && !rm)
-            this.at(now + flight + 40, (t) => (sc.shake = { start: t, amp: MomentGuard.shake(v.shake) }));
+            this.at(
+              now + flight + MOTION.lagoonFill,
+              (t) => (sc.shake = { start: t, amp: MomentGuard.shake(tier === 4 ? LIMITS.maxShakePx : v.shake) }),
+            );
           // the word and the number: one stack, above the last lagoon (never on the water)
           const lastCells = e.waves[waves - 1]!.pockets.flatMap((p) => p.cells);
           this.at(wordAt, (t) => {
+            const from = sc.score;
             sc.score = sc.pendingScore ?? sc.score;
-            if (tier >= 2) sc.scorePunch = { at: t, amp: [0, 0, 0.08, 0.14, 0.2][tier]! };
+            // the board has moved on (a newer move was committed): just land the points
+            if (seq !== this.moveSeq) return;
+            if (tier >= 3) {
+              // peaks count up on a clock and the score pulses (gold) as the last digit lands
+              const ms = tier === 4 ? 520 : 420;
+              sc.scoreRoll = { at: t, ms, from, to: sc.score };
+              sc.scorePunch = { at: t + ms, amp: tier === 4 ? 0.24 : 0.17, gold: true };
+            } else if (tier === 2) sc.scorePunch = { at: t, amp: 0.08, gold: false };
             const ts = sc.textScale;
             const word = m.word && this.guard.claimWord(tier, t, life) ? m.word : null;
             const numH = numberPx(l.cell, !!word, tier, ts);
@@ -406,7 +436,29 @@ export class Fx {
       .filter((c) => c.wave === k + 1)
       .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
     const announced = new Set<string>();
-    caught.slice(0, 4).forEach((c, f) => {
+    // at most MAX_FLYING creatures in the air at once (counting earlier waves/moves still flying);
+    // the rest merge into one small "+N" coin chip that swims to the journal behind them
+    const flying = sc.fish.filter((x) => !x.arrived && x.start + FISH_LIFE * 1000 > t0).length;
+    const room = Math.max(0, MAX_FLYING - flying);
+    // new species always get a seat first
+    const isNewId = (id: string) => (opts.newIds?.has(id) ? 1 : 0);
+    const order = [...caught].sort((a, b) => isNewId(b.x.id) - isNewId(a.x.id));
+    const extra = order.length - room;
+    if (extra > 0) {
+      const c = order[Math.min(room, order.length - 1)]!;
+      const [lx, ly] = sc.cellCenter(c.cells[Math.floor(c.cells.length / 2)]!);
+      sc.fish.push({
+        x: lx,
+        y: ly,
+        vx: l.cell * 1.4,
+        vy: -l.cell * 10,
+        start: t0 + 90 + Math.min(room, MAX_FLYING) * 110,
+        size: l.cell * 0.5,
+        hue: '#F2C14E',
+        chip: extra,
+      });
+    }
+    order.slice(0, room).forEach((c, f) => {
       // only the first of a newly discovered species gets the "New!" treatment
       const isNew = (opts.newIds?.has(c.x.id) ?? false) && !announced.has(c.x.id) && !this.announced.has(c.x.id);
       if (isNew) {

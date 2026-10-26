@@ -76,6 +76,8 @@ export interface Fish {
   /** First time this species was ever caught: a gold ring. */
   isNew?: boolean;
   arrived?: boolean;
+  /** "+N" coin chip standing in for N more creatures (at most ~3 creatures fly at once). */
+  chip?: number;
 }
 interface TraySlot {
   t: TrayPiece | null;
@@ -95,7 +97,7 @@ interface Placing {
 }
 
 /** Seconds a leaping creature stays on screen. */
-const FISH_LIFE = 0.95;
+export const FISH_LIFE = 0.95;
 
 export const FONT = FONT_STACK;
 /** Display voice (callouts, names, titles). Never for numbers: its digits are proportional. */
@@ -260,8 +262,10 @@ export class Scene {
   lastDragDraw: { x: number; y: number } | null = null;
   /** Jackpot light sweep across the board. */
   sweep = -1e9;
-  /** Score punch when a big moment's points land. */
-  scorePunch = { at: -1e9, amp: 0 };
+  /** Score punch when a big moment's points land; `gold`: a peak (tier ≥ 3) tints it gold. */
+  scorePunch = { at: -1e9, amp: 0, gold: false };
+  /** Peak moments count the score up on a fixed clock (so the pulse lands with the last digit). */
+  scoreRoll = { at: -1e9, ms: 0, from: 0, to: 0 };
   /** Tap-to-place selection (drawn raised with an outline). */
   selected: number | null = null;
 
@@ -337,6 +341,9 @@ export class Scene {
     this.particles.update(dt);
     this.shownScore = this.shownScore + (this.score - this.shownScore) * Math.min(1, dt / 90);
     if (Math.abs(this.score - this.shownScore) < 0.5) this.shownScore = this.score;
+    const rk = (now - this.scoreRoll.at) / this.scoreRoll.ms;
+    if (rk >= 0 && rk < 1 && this.score === this.scoreRoll.to)
+      this.shownScore = Math.round(lerp(this.scoreRoll.from, this.scoreRoll.to, easeOutCubic(rk)));
 
     // background
     g.fillStyle = p.bg;
@@ -645,7 +652,11 @@ export class Scene {
     }
   }
 
-  /** Jackpot: one soft band of light sweeps diagonally across the board (≈650 ms). */
+  /**
+   * Peaks (tier ≥ 3): one soft band of warm gold light sweeps diagonally across the board (≈650 ms).
+   * It moves (never a flash): the band is ~30% of the board wide and ≤ 0.3 alpha, so the mean board
+   * luminance changes by a few % per frame at most (ADR 0012 §8, celebrate.spec).
+   */
   private drawSweep(now: number): void {
     const t = (now - this.sweep) / 650;
     if (t < 0 || t >= 1 || this.reducedMotion) return;
@@ -656,11 +667,13 @@ export class Scene {
     g.roundRect(b.x, b.y, b.w, b.h, b.w * GEOM.boardRadius);
     g.clip();
     const pos = b.x - b.w * 0.6 + b.w * 2.2 * easeInOutSine(t);
-    const gr = g.createLinearGradient(pos - b.w * 0.14, b.y, pos + b.w * 0.14, b.y + b.h * 0.25);
-    gr.addColorStop(0, 'rgba(255,255,255,0)');
+    const gr = g.createLinearGradient(pos - b.w * 0.2, b.y, pos + b.w * 0.2, b.y + b.h * 0.25);
     const night = this.palette.name === 'night';
-    gr.addColorStop(0.5, night ? 'rgba(160,240,255,0.22)' : 'rgba(255,255,250,0.28)');
-    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    gr.addColorStop(0, 'rgba(255,214,120,0)');
+    gr.addColorStop(0.35, night ? 'rgba(245,196,81,0.10)' : 'rgba(255,222,140,0.16)');
+    gr.addColorStop(0.5, night ? 'rgba(255,220,130,0.24)' : 'rgba(255,240,190,0.34)');
+    gr.addColorStop(0.65, night ? 'rgba(245,196,81,0.10)' : 'rgba(255,222,140,0.16)');
+    gr.addColorStop(1, 'rgba(255,214,120,0)');
     // additive light only on the dark board; on sand it would blow out to white
     g.globalCompositeOperation = night ? 'lighter' : 'source-over';
     g.fillStyle = gr;
@@ -828,7 +841,8 @@ export class Scene {
     const g = this.g;
     for (const f of this.fish) {
       const t = (now - f.start) / 1000;
-      if (t > FISH_LIFE && !f.arrived && this.journalTarget && f.species) {
+      const swims = !!(f.species || f.chip);
+      if (t > FISH_LIFE && !f.arrived && this.journalTarget && swims) {
         f.arrived = true;
         this.onCollect?.();
       }
@@ -844,17 +858,19 @@ export class Scene {
       let fade = 1;
       const lx = (tt: number) => f.x + f.vx * tt;
       const ly = (tt: number) => f.y + f.vy * tt + 0.5 * grav * tt * tt;
-      if (t < T1 || !tgt || !f.species) {
+      if (t < T1 || !tgt || !swims) {
         x = lx(t);
         y = ly(t);
         ang = Math.atan2(f.vy + grav * t, f.vx);
-        if (!tgt || !f.species) fade = t > FISH_LIFE - 0.25 ? (FISH_LIFE - t) / 0.25 : 1;
+        if (!tgt || !swims) fade = t > FISH_LIFE - 0.25 ? (FISH_LIFE - t) / 0.25 : 1;
       } else {
         const u = easeInOutSine(Math.min(1, (t - T1) / (FISH_LIFE - T1)));
         const ax = lx(T1);
         const ay = ly(T1);
-        const cx1 = (ax + tgt.x) / 2;
-        const cy1 = Math.min(ay, tgt.y) - this.layout.cell * 1.5;
+        // an arc that hugs the screen's right edge and rises into the button: it never crosses the
+        // COMBO badge (centred under the score) on its way up
+        const cx1 = Math.max(ax, tgt.x) + this.layout.cell * 0.4;
+        const cy1 = ay - this.layout.cell * 0.5;
         x = (1 - u) * (1 - u) * ax + 2 * (1 - u) * u * cx1 + u * u * tgt.x;
         y = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy1 + u * u * tgt.y;
         ang = Math.atan2(tgt.y - y, tgt.x - x);
@@ -864,6 +880,26 @@ export class Scene {
           f.arrived = true;
           this.onCollect?.();
         }
+      }
+      if (f.chip) {
+        // a small gold coin with "+N"
+        const r = f.size * 0.62 * Math.max(0.5, scale);
+        g.save();
+        g.globalAlpha = fade;
+        g.fillStyle = '#F2C14E';
+        g.strokeStyle = '#B9821F';
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(x, y, r, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.fillStyle = '#4A3300';
+        g.font = `900 ${Math.round(r * 1.0)}px ${FONT_STACK}`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText(`+${f.chip}`, x, y + 1);
+        g.restore();
+        continue;
       }
       const sp = f.species ? SPECIES_BY_ID.get(f.species) : undefined;
       if (sp) {
@@ -1011,6 +1047,8 @@ export class Scene {
     // big moments punch the score as their points land (tier ≥ 2 only; calm moves don't)
     const pk = (now - this.scorePunch.at) / 360;
     const punch = pk >= 0 && pk < 1 && !this.reducedMotion ? 1 + this.scorePunch.amp * (1 - spring01(pk)) : 1;
+    // a peak's points land in gold for a beat
+    if (this.scorePunch.gold && pk >= 0 && pk < 1.6) g.fillStyle = night ? p.gold : p.goldInk;
     const base = l.hud.y + l.hud.h * 0.5;
     g.font = `900 ${Math.round(big * punch)}px ${FONT}`;
     const ls = g as CanvasRenderingContext2D & { letterSpacing?: string };
@@ -1059,7 +1097,8 @@ export class Scene {
       this.land.some((t) => now - t < MOTION.place * 1.6) ||
       now - this.streakPulse < 300 ||
       now - this.sweep < 650 ||
-      now - this.scorePunch.at < 360 ||
+      now - this.scorePunch.at < 580 ||
+      now - this.scoreRoll.at < this.scoreRoll.ms ||
       (this.gameOverAt >= 0 && now - this.gameOverAt < 600)
     );
   }

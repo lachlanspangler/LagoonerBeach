@@ -16,9 +16,14 @@ import { DISPLAY_STACK as FONT_DISPLAY, FONT_STACK as FONT_UI, type Palette } fr
 import { STREAK_GRACE } from '../core/scoring.ts';
 import { drawShell } from '../ui/icons.ts';
 
-export type TextStyle = WordStyle | 'points';
+/**
+ * 'flat': clean Nunito heavy caps in one ink (the COMBO badge below ×10: outlined display type at
+ * ~14 px reads muddy on Day). Same ink as the HUD accent in each theme.
+ */
+export type TextStyle = WordStyle | 'points' | 'flat';
+const FLAT_INK = { day: '#16588A', night: '#6FD3EC' } as const;
 
-const FILL: Record<TextStyle, readonly [string, string, string]> = {
+const FILL: Record<Exclude<TextStyle, 'flat'>, readonly [string, string, string]> = {
   warm: ['#FFE08A', '#F2B93B', '#F2795B'],
   water: ['#E8FCFF', '#6FD3EC', '#2B8FC0'],
   gold: ['#FFF4C2', '#F2C14E', '#B9821F'],
@@ -81,6 +86,7 @@ export class TextSprites {
   }
 
   private render(text: string, size: number, style: TextStyle, night: boolean, weight: number): Sprite {
+    if (style === 'flat') return this.renderFlat(text, size, night);
     const parts = runs(text);
     const fontOf = (num: boolean) =>
       num ? `900 ${Math.round(size * 0.94)}px ${FONT_UI}` : `${weight} ${size}px ${FONT_DISPLAY}`;
@@ -148,6 +154,33 @@ export class TextSprites {
     const bmp = 'transferToImageBitmap' in c ? (c as OffscreenCanvas).transferToImageBitmap() : c;
     return { c: bmp, w: W, h: H };
   }
+
+  /** One-ink Nunito heavy caps with a little tracking (no outline, no gradient). */
+  private renderFlat(text: string, size: number, night: boolean): Sprite {
+    const font = `900 ${size}px ${FONT_UI}`;
+    const track = size * 0.06;
+    const probe = mk(4, 4).getContext('2d') as CanvasRenderingContext2D;
+    probe.font = font;
+    const chars = [...text];
+    const widths = chars.map((ch) => probe.measureText(ch).width);
+    const w = widths.reduce((a, b) => a + b, 0) + track * (chars.length - 1);
+    const pad = 2;
+    const W = Math.ceil(w + pad * 2);
+    const H = Math.ceil(size * 1.25 + pad * 2);
+    const c = mk(Math.ceil(W * this.dpr), Math.ceil(H * this.dpr));
+    const g = c.getContext('2d') as CanvasRenderingContext2D;
+    g.scale(this.dpr, this.dpr);
+    g.font = font;
+    g.textBaseline = 'middle';
+    g.fillStyle = night ? FLAT_INK.night : FLAT_INK.day;
+    let x = pad;
+    chars.forEach((ch, i) => {
+      g.fillText(ch, x, H / 2 + size * 0.04);
+      x += widths[i]! + track;
+    });
+    const bmp = 'transferToImageBitmap' in c ? (c as OffscreenCanvas).transferToImageBitmap() : c;
+    return { c: bmp, w: W, h: H };
+  }
 }
 
 function mk(w: number, h: number): HTMLCanvasElement | OffscreenCanvas {
@@ -170,6 +203,8 @@ interface WordShow {
   size: number;
   start: number;
   life: number;
+  /** Hurried out (the player picked up the next piece): a fast fade from here. */
+  fadeAt?: number;
 }
 interface NumShow {
   text: string;
@@ -180,7 +215,24 @@ interface NumShow {
   life: number;
   /** Default 'points' (the +N); a subtitle line can use a word style. */
   style?: TextStyle;
+  fadeAt?: number;
 }
+
+/** How fast a hurried word/number leaves (ms). */
+export const HURRY_MS = 120;
+
+/**
+ * Peak words (tier 3–4) land with ONE overshoot pop instead of a spring: up past full size, then
+ * settle, no wobble. Returns the scale factor at k ms (from → peak at 150 ms → 1 at 360 ms).
+ */
+export function peakPop(k: number, from: number, peak: number): number {
+  if (k <= 0) return from;
+  if (k < 150) return lerp(from, peak, easeOutCubic(k / 150));
+  if (k < 360) return lerp(peak, 1, easeInOutSine((k - 150) / 210));
+  return 1;
+}
+/** The pop's peak by tier (Unbelievable/Amazing pop harder than Atoll). */
+export const PEAK_POP = [1, 1, 1, 1.14, 1.2];
 
 /** Word size by tier, as a share of a board cell. */
 export const WORD_SIZE = [0, 0.56, 0.72, 1.05, 1.25];
@@ -227,7 +279,10 @@ export function placeStack(
   const minY = b.y - l.cell * 0.1;
   const maxY = b.y + b.h + l.cell * 0.15;
   let stackTop: number;
-  if (top - gap - H >= minY) stackTop = top - gap - H;
+  // half a cell higher when there's room: the ring's top row (still bursting) stays readable
+  const lift = l.cell * 0.5;
+  if (top - gap - lift - H >= minY) stackTop = top - gap - lift - H;
+  else if (top - gap - H >= minY) stackTop = top - gap - H;
   else if (bot + gap + H <= maxY) stackTop = bot + gap;
   else stackTop = top - minY > maxY - bot ? minY : maxY - H;
   const cx = b.x + ((x0 + x1 + 1) / 2) * l.cell;
@@ -278,11 +333,10 @@ export class Celebrate {
 
   /** The COMBO badge's text sizes for a combo of n (for prewarm). */
   comboSprites(n: number, l: Layout, ts: number): [string, number, TextStyle, number][] {
-    const st = comboStyle(comboLevel(n));
-    const size = l.cell * st.size * Math.min(1.15, ts);
+    const b = badgeType(n, l, ts);
     return [
-      ['COMBO', size * 0.78, st.style, st.weight],
-      [`×${n}`, size, st.style, 900],
+      ['COMBO', b.labelPx, b.style, b.weight],
+      [`×${n}`, b.numPx, b.style, 900],
     ];
   }
 
@@ -292,6 +346,17 @@ export class Celebrate {
 
   showNumber(n: NumShow): void {
     this.num = n;
+  }
+
+  /**
+   * Fast play: the player picked up the next piece (or committed the next move) → the previous
+   * word and number leave quickly instead of stacking over a board they no longer describe.
+   */
+  hurry(now: number): void {
+    for (const s of [this.word, this.num]) if (s && now >= s.start && s.fadeAt === undefined) s.fadeAt = now;
+    // shown but not started yet: drop it
+    if (this.word && now < this.word.start) this.word = null;
+    if (this.num && now < this.num.start) this.num = null;
   }
 
   /** Combo went up at `t` (the number ticks with a punch; level-ups flare). */
@@ -350,33 +415,59 @@ export class Celebrate {
     const w = this.word;
     if (w) {
       const k = now - w.start;
-      if (k >= w.life) this.word = null;
+      const hurried = w.fadeAt !== undefined ? clamp01((now - w.fadeAt) / HURRY_MS) : 0;
+      if (k >= w.life || hurried >= 1) this.word = null;
       else if (k >= 0) {
         const spr = this.sprites.get(w.text, w.size, w.style, night);
-        const out = clamp01((k - (w.life - 220)) / 220);
+        const out = Math.max(hurried, clamp01((k - (w.life - 220)) / 220));
         let scale = 1;
         let rot = 0;
         let rise = 0;
         let alpha = rm ? Math.min(1, k / 120) : Math.min(1, k / 70);
         if (!rm) {
-          const s = spring(k, 340, WORD_OVERSHOOT[w.tier]!);
-          scale = lerp(WORD_FROM[w.tier]!, 1, s) * (1 + 0.04 * easeOutCubic(out));
-          if (w.tier >= 3) rot = ((1 - s) * -4 * Math.PI) / 180;
+          if (w.tier >= 3) {
+            // one overshoot pop, and a small settle of the tilt
+            scale = peakPop(k, WORD_FROM[w.tier]!, PEAK_POP[w.tier]!) * (1 + 0.04 * easeOutCubic(out));
+            rot = ((1 - clamp01(k / 360)) * -4 * Math.PI) / 180;
+          } else {
+            const s = spring(k, 340, WORD_OVERSHOOT[w.tier]!);
+            scale = lerp(WORD_FROM[w.tier]!, 1, s) * (1 + 0.04 * easeOutCubic(out));
+          }
           rise = easeInCubic(out) * l.cell * 0.25;
         }
         alpha *= 1 - out;
         // never wider than the board
         const fit = Math.min(1, (l.board.w * 0.94) / (spr.w * 1));
+        // tier 4: a soft warm glow pools behind the word (fades in, never a flash)
+        if (w.tier >= 4) {
+          const ga = 0.5 * Math.min(1, k / 220) * alpha;
+          const rx = Math.min(l.board.w * 0.5, spr.w * fit * 0.62);
+          const gr = g.createRadialGradient(w.x, w.y - rise, 0, w.x, w.y - rise, rx);
+          gr.addColorStop(0, night ? 'rgba(245,196,81,0.55)' : 'rgba(255,236,170,0.9)');
+          gr.addColorStop(1, 'rgba(255,236,170,0)');
+          g.globalAlpha = ga;
+          g.fillStyle = gr;
+          g.save();
+          g.translate(w.x, w.y - rise);
+          g.scale(1, 0.42);
+          g.translate(-w.x, -(w.y - rise));
+          g.beginPath();
+          g.arc(w.x, w.y - rise, rx, 0, Math.PI * 2);
+          g.fill();
+          g.restore();
+          g.globalAlpha = 1;
+        }
         this.blit(g, spr, w.x, w.y - rise, scale * fit, rot, alpha);
       }
     }
     const n = this.num;
     if (n) {
       const k = now - n.start;
-      if (k >= n.life) this.num = null;
+      const hurried = n.fadeAt !== undefined ? clamp01((now - n.fadeAt) / HURRY_MS) : 0;
+      if (k >= n.life || hurried >= 1) this.num = null;
       else if (k >= 0) {
         const spr = this.sprites.get(n.text, n.size, n.style ?? 'points', night);
-        const out = clamp01((k - (n.life - 200)) / 200);
+        const out = Math.max(hurried, clamp01((k - (n.life - 200)) / 200));
         const s = rm ? 1 : lerp(0.7, 1, spring(k, 260, 0.06));
         const rise = rm ? 0 : easeOutCubic(k / n.life) * l.cell * 0.3;
         this.blit(g, spr, n.x, n.y - rise, s, 0, Math.min(1, k / 60) * (1 - out));
@@ -500,13 +591,15 @@ export class Celebrate {
     if (alpha <= 0.01) return;
     const level = comboLevel(n) as ComboLevel;
     const st = comboStyle(level);
-    const size = l.cell * st.size * Math.min(1.15, ts);
-    const label = this.sprites.get('COMBO', size * 0.78, st.style, night, st.weight);
-    const num = this.sprites.get(`×${n}`, size, st.style, night);
+    const bt0 = badgeType(n, l, ts);
+    const size = bt0.size;
+    const label = this.sprites.get('COMBO', bt0.labelPx, bt0.style, night, bt0.weight);
+    const num = this.sprites.get(`×${n}`, bt0.numPx, bt0.style, night);
     // the number ticks up with a punch; level-ups punch harder
     const bt = now - c.bumpAt;
     const punch = rm || c.n < 2 ? 1 : 1 + (now - c.levelAt < 600 ? 0.55 : 0.35) * (1 - spring(bt, 380, 0.12));
-    const overlapW = label.w + num.w - size * 0.36;
+    // outlined sprites carry padding for the stroke (they overlap); flat ones sit a gap apart
+    const overlapW = bt0.flat ? label.w + num.w + size * 0.18 : label.w + num.w - size * 0.36;
     const pipR = Math.max(3, size * 0.17);
     const pipsW = pipR * 2 * STREAK_GRACE + pipR * 0.8 * (STREAK_GRACE - 1);
     const total = overlapW + pipR * 2 + pipsW;
@@ -531,11 +624,40 @@ export class Celebrate {
       g.fill();
       g.globalAlpha = 1;
     }
-    this.blit(g, label, x0 + (label.w * scale) / 2, y + size * 0.05, scale, 0, alpha);
-    const nx = x0 + (label.w - size * 0.36) * scale + (num.w * scale) / 2;
+    // ×10 and ×20 step up visibly: a ring bursts off the badge with a few sparks (once, ≤ 600 ms)
+    const rk = (now - c.levelAt) / 600;
+    if (level >= 3 && !rm && rk >= 0 && rk < 1) {
+      const e = easeOutCubic(rk);
+      const col = level >= 4 ? '#F5C451' : '#F2955B';
+      const bx = x0 + overlapW / 2;
+      g.globalAlpha = alpha * (1 - rk) * 0.9;
+      g.strokeStyle = col;
+      g.lineWidth = Math.max(1.5, size * 0.12 * (1 - rk));
+      g.beginPath();
+      g.ellipse(bx, y, overlapW * (0.5 + 0.35 * e), size * (0.7 + 0.9 * e), 0, 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = col;
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 + 0.2;
+        const d = 0.55 + 0.55 * e;
+        g.beginPath();
+        g.arc(
+          bx + Math.cos(a) * overlapW * d,
+          y + Math.sin(a) * size * (0.9 + 1.2 * e),
+          Math.max(1, size * 0.09 * (1 - rk)),
+          0,
+          Math.PI * 2,
+        );
+        g.fill();
+      }
+      g.globalAlpha = 1;
+    }
+    this.blit(g, label, x0 + (label.w * scale) / 2, y + (bt0.flat ? size * 0.02 : size * 0.05), scale, 0, alpha);
+    const nx = x0 + (overlapW - num.w) * scale + (num.w * scale) / 2;
     // the previous number lifts away as the new one lands
     if (!rm && bt >= 0 && bt < 160 && c.prevN >= 2 && c.prevN !== n) {
-      const prev = this.sprites.get(`×${c.prevN}`, size, st.style, night);
+      const pb = badgeType(c.prevN, l, ts);
+      const prev = this.sprites.get(`×${c.prevN}`, pb.numPx, pb.style, night);
       this.blit(g, prev, nx, y - (bt / 160) * size * 0.5, scale, 0, alpha * (1 - bt / 160));
     }
     this.blit(g, num, nx, y, scale * punch, 0, alpha * (rm ? 1 : Math.min(1, Math.max(0, bt) / 60 + 0.2)));
@@ -598,6 +720,21 @@ export class Celebrate {
     this.blit(g, spr, l.w / 2, cy, inS, 0, alpha);
     g.globalAlpha = 1;
   }
+}
+
+/**
+ * The COMBO badge's type: clean Nunito heavy caps in one ink below ×10 (both themes), the outlined
+ * display treatment from ×10 up (warm, then gold at ×20) — the step is a visible change of kind.
+ */
+export function badgeType(
+  n: number,
+  l: Layout,
+  ts: number,
+): { flat: boolean; size: number; labelPx: number; numPx: number; style: TextStyle; weight: number } {
+  const st = comboStyle(comboLevel(n));
+  const size = l.cell * st.size * Math.min(1.15, ts);
+  if (n < 10) return { flat: true, size, labelPx: size * 0.66, numPx: size * 0.9, style: 'flat', weight: 900 };
+  return { flat: false, size, labelPx: size * 0.78, numPx: size, style: st.style, weight: st.weight };
 }
 
 /** Mid-game NEW BEST banner: drop in, hold, fade (ms). */
