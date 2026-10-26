@@ -73,7 +73,9 @@ export function showSettings(k: SheetKit, p: Profile): void {
     ['night', 'Night', 'moon'],
   ] as const) {
     const on = s.theme === t;
-    const b = k.button('', 'seg-b', icon(ic, { filled: on }), `Theme ${l}`, () => k.h.onTheme(t));
+    const b = k.button('', 'seg-b seg-cap', `${icon(ic, { filled: on })}<small>${l}</small>`, `Theme ${l}`, () =>
+      k.h.onTheme(t),
+    );
     b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', String(on));
     seg.append(b);
@@ -113,11 +115,16 @@ export function showSettings(k: SheetKit, p: Profile): void {
   const info = document.createElement('div');
   info.className = 'about';
   info.innerHTML = `<b>Lagooner Beach ${__APP_VERSION__}</b> · no ads, no tracking.<br>
-    Fonts: Fraunces, Nunito (SIL Open Font License 1.1) ·
-    <a href="./fonts/OFL-Fraunces.txt" target="_blank" rel="noopener">Fraunces license</a> ·
-    <a href="./fonts/OFL-Nunito.txt" target="_blank" rel="noopener">Nunito license</a><br>
     Sounds and music are made in code, on your device.`;
   about.append(info);
+  // font licences live one tap away, behind Credits
+  const credits = document.createElement('details');
+  credits.className = 'credits';
+  credits.innerHTML = `<summary class="row row-link"><span class="row-ic">${icon('sparkle')}</span><span class="row-label">Credits</span><span class="chev">${icon('chevronDown')}</span></summary>
+    <div class="about">Type: Fraunces and Nunito, under the SIL Open Font License 1.1 ·
+    <a href="./fonts/OFL-Fraunces.txt" target="_blank" rel="noopener">Fraunces license</a> ·
+    <a href="./fonts/OFL-Nunito.txt" target="_blank" rel="noopener">Nunito license</a></div>`;
+  about.append(credits);
   const priv = document.createElement('a');
   priv.className = 'row row-link';
   priv.href = './privacy.html';

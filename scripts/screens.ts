@@ -140,6 +140,7 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.getByRole('button', { name: 'Settings' }).click();
     await p.waitForTimeout(500);
     await p.evaluate(() => {
+      document.querySelector('.credits')?.setAttribute('open', '');
       const s = document.querySelector('.veil .sheet, .veil .card') as HTMLElement | null;
       const sc = (document.querySelector('.veil .sheet-body') as HTMLElement | null) ?? s;
       if (sc) sc.scrollTop = 9999;
