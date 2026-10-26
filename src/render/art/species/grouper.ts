@@ -1,78 +1,93 @@
 /**
- * Grouper — the lagoon's enormous, unbothered uncle (fish class, profile view, level).
- * Silhouette (R10): a front-heavy wedge — a massive head (60 % of the length) with big pouty lips
- * centred on the snout, tapering to a narrow tail root and a rounded fan tail.
- * Personality: unbothered, enormous, grumpy-sweet; rests `drowsy` (heavy half-lids, its personality).
- * Signature: a slow, huge yawn — the lower lip drops — then it settles back into its half-lids.
+ * Grouper — the big, unbothered boss of the reef (fish class, profile view, level).
+ * Silhouette (R10): an enormous helmet of a head (70 u tall, the tallest head in the fish family)
+ * on a thick, even body that never thins to a stalk (tail root 31 u = 45 % of the depth, never a
+ * trumpet), a long low dorsal, and a broad rounded fan tail; small pouty lips sat on the snout.
+ * Coral-grouper red with pale-blue spots.
+ * Personality: unbothered, enormous, grumpy-sweet; rests `drowsy` with a pout (half-lids are its
+ * personality; no blush, which read tipsy at tile size). Signature: a slow, huge yawn — the lower
+ * lip drops — then a moment of heavy half-lids before it settles.
  */
-import { blob, defineArt, ellipse, join } from '../kit.ts';
+import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
 
-// the wedge: a tall, blunt head and jowls at the front, narrowing to the tail root at −24
+// the helmet head: tall and blunt, with the snout set low; behind the gill the body steps down
+// to a thick, level trunk that runs straight to the tail root
 const body = blob([
-  [27, -4],
-  [27, -19],
-  [18, -31],
-  [4, -32],
-  [-4, -22],
-  [-12, -9],
-  [-20, -5],
-  [-29, -4.5],
-  [-29, 3.5],
-  [-20, 4],
-  [-12, 7],
-  [-4, 15],
-  [6, 19],
-  [18, 19.5],
-  [26, 14],
+  [39, 11],
+  [36.5, -5],
+  [29.2, -24.6],
+  [20, -35.1],
+  [6, -30.9],
+  [-9, -17.5],
+  [-25, -15.7],
+  [-29.5, 0],
+  [-25, 15.7],
+  [-9, 17.5],
+  [6, 30.9],
+  [23, 35.1],
+  [37.5, 22.5],
 ]);
-// rounded fan tail
+// a broad rounded fan tail, slightly cupped at the trailing edge
 const tail = blob(
   [
-    [-27, -3],
-    [-33, -10],
-    [-38, -17],
-    [-41.5, -11],
-    [-42.5, 0],
-    [-41.5, 11],
-    [-38, 17],
-    [-33, 10],
-    [-27, 3],
+    [-24, -11.7],
+    [-30, -15.7],
+    [-37, -23.5],
+    [-41.5, -13.5],
+    [-40, 0],
+    [-41.5, 13.5],
+    [-37, 23.5],
+    [-30, 15.7],
+    [-24, 11.7],
   ],
-  0.95,
+  0.9,
 );
-// a low spiny-soft dorsal along the back
+// the dorsal: a long, low soft fin hugging the back, nape to tail root (three soft scallops)
 const dorsal = blob(
   [
-    [12, -28],
-    [2, -35],
-    [-8, -27],
-    [-9, -16],
+    [16, -32],
+    [9, -37.5],
+    [1, -33.5],
+    [-7, -23.5],
+    [-17, -19.6],
+    [-24, -17],
+    [-22, -14],
+    [-8, -17],
+    [2, -25],
   ],
-  0.95,
+  0.85,
 );
-// big pouty lips centred on the snout: a thick upper lip on the body, the lower lip on the jaw
-const upperLip = ellipse(30.5, 1, 8, 5.4, -6);
-const lowerLip = ellipse(30.5, 10.5, 8.6, 6, 6);
-const pectoral = ellipse(-2, 12, 6, 3.2, 28);
-// three large, soft saddles (R18 saddle), placed by hand, well behind the face
-const saddles = join(ellipse(2, -31, 12, 10, 0), ellipse(-14, -15, 8, 8, 20), ellipse(-7, 11, 7, 6, 0));
+// small pouty lips sat on the snout (≤ 0.9 eye widths): the upper on the head, the lower on
+// the jaw (it juts a little: the grumpy underbite) so it can drop for the yawn
+const upperLip = ellipse(37.3, 4.5, 5, 3.2, -14);
+const lowerLip = ellipse(37.6, 10.5, 5, 3.5, 10);
+// the pectoral: an unoutlined belly-tone fan behind the gill line (an outlined one under the eye
+// read as a second mouth)
+const pectoral = ellipse(-4, 7, 8, 3.6, 24);
+// pale-blue spots (R18 spots, ≥ 6 u), placed by hand on the flank, clear of the eye
+const spots = join(
+  circle(-4, -11, 3.4),
+  circle(-15, -2, 3.3),
+  circle(-6, 1.5, 3),
+  circle(-20, -11, 3),
+  circle(4, -18, 3),
+);
 
 export default defineArt({
   id: 'grouper',
   klass: 'fish',
   size: 'L',
-  feature: 'a front-heavy wedge: massive head, big pouty lips on the snout, rounded fan tail',
+  feature: 'an enormous helmet head on a thick trunk, small pouty lips, pale-blue spots, rounded fan tail',
   personality: ['unbothered', 'enormous', 'grumpy-sweet'],
-  palette: { body: '#A8703F', accent: '#CDAE84', belly: '#D9A98E' },
   restExpression: 'drowsy',
+  palette: { body: '#C0674A', accent: '#BFE6F7', belly: '#C9A08A' },
   groups: [
     {
       id: 'tail',
-      pivot: [-25, 0],
+      pivot: [-26, 0],
       parts: [
         { d: tail, role: 'body' },
-        { d: ellipse(-38, -7, 4, 4), role: 'accent', kind: 'pattern' },
-        { d: ellipse(-39, 7, 3.6, 3.6), role: 'accent', kind: 'pattern' },
+        { d: join(circle(-37, -7, 3.2), circle(-38, 6.5, 3.1)), role: 'accent', kind: 'pattern' },
       ],
     },
     {
@@ -81,20 +96,22 @@ export default defineArt({
         { d: dorsal, role: 'body' },
         { d: body, role: 'body' },
         { d: upperLip, role: 'belly' },
-        { d: ellipse(10, 27, 26, 8), role: 'belly', kind: 'pattern', alpha: 0.7 },
-        { d: saddles, role: 'accent', kind: 'pattern' },
+        { d: ellipse(8, 21, 28, 6.5), role: 'belly', kind: 'pattern', alpha: 0.6 },
+        // the open mouth behind the lower lip, only seen when it drops for the yawn
+        { d: ellipse(36.5, 9.5, 3.6, 3), role: 'ink', kind: 'pattern' },
+        { d: spots, role: 'accent', kind: 'pattern' },
       ],
     },
-    { id: 'finA', pivot: [-5, 10], parts: [{ d: pectoral, role: 'body' }] },
-    { id: 'jaw', pivot: [29, 6], parts: [{ d: lowerLip, role: 'belly' }] },
+    { id: 'finA', pivot: [3, 4], parts: [{ d: pectoral, role: 'belly', outline: false }] },
+    { id: 'jaw', pivot: [36, 8], parts: [{ d: lowerLip, role: 'belly' }] },
   ],
-  shine: ellipse(18, -18, 9, 3.6, -20),
+  shine: ellipse(20, -15, 9, 3.6, -20),
   face: {
-    eyes: [[13, -2]],
+    eyes: [[14, -5]],
     eye: 11,
-    zone: [-2, -31, 40, 50],
-    mouth: { at: [35, 6], w: 6, shape: 'flat' },
-    sweet: true,
+    zone: [-2, -33, 42, 50],
+    // grumpy-sweet: the pout is the lips themselves; a short seam between them
+    mouth: { at: [39.5, 7.6], w: 5, shape: 'flat' },
   },
   idle: {
     ambient: [
@@ -150,8 +167,8 @@ export default defineArt({
         },
       ],
       face: [
-        [0.2, 0.7, 'happy'],
-        [0.72, 1, 'drowsy'],
+        [0.2, 0.62, 'happy'],
+        [0.66, 0.92, 'drowsy'],
       ],
     },
   },
