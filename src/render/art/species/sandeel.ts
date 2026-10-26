@@ -18,17 +18,17 @@ const tailTip = join(
   capsule(-34, 1.5, 3, -38.5, 6.5, 2.6),
 );
 const tailMid = tube([
-  [-12, 0, 6.8],
-  [-19, 1.5, 6.2],
-  [-26, 1.5, 5.6],
+  [-12, 0, 7.1],
+  [-19, 1.5, 6.5],
+  [-26, 1.5, 5.8],
 ]);
 const body = tube([
-  [-14, 0, 6.8],
-  [-2, -1.5, 7.2],
-  [8, -1, 7.8],
-  [14, 0, 8.6],
+  [-14, 0, 7.1],
+  [-2, -1.5, 7.6],
+  [8, -1, 8.2],
+  [14, 0, 9],
 ]);
-const head = ellipse(22, -0.5, 14, 10.4);
+const head = ellipse(22.5, -0.5, 14, 11.6);
 const snout = capsule(29, -3.5, 6, 33.6, -2, 3.2);
 // the lower jaw juts a full 6 u past the snout (R10: the sand eel's pointed underbite)
 const jaw = capsule(29, 4, 5, 40.6, 3.2, 2.2);
