@@ -137,10 +137,16 @@ export function installDebugApi(d: DebugDeps): void {
     ...d.celebrate,
     /** Commit a move directly (no drag; flight 0) — for frozen-clock staging. */
     commitMove: (m: Move) => d.commit(m, null),
-    /** Stage a board ("." or "0" empty, 1-6 colors; 64 chars) and tray piece ids. */
-    setup(board: string, tray: (string | null)[]) {
+    /**
+     * Stage a board ("." or "0" empty, 1-6 colors; 64 chars) and tray piece ids. In puzzle mode the
+     * staged game stays a reef game (no refills; `seed` = reef index, default the current one).
+     */
+    setup(board: string, tray: (string | null)[], seed?: number) {
+      const cur = d.state();
+      const puzzle = cur.mode === 'puzzle';
       const g = decodeGame({
         ...encodeGame(newGame(1)),
+        ...(puzzle ? { mode: 'puzzle' as const, seed: seed ?? cur.seed, rng: 0 } : {}),
         board: board.replace(/\./g, '0'),
         tray: tray.map((id, i) => (id ? { pieceId: id, color: ((i + 3) % 6) + 1 } : null)),
       });

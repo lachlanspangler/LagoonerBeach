@@ -12,7 +12,7 @@
  * Reduced motion: no rays/tide motion, no hops — the same information.
  */
 import { SPECIES, SPECIES_BY_ID, type Rarity, type Species } from '../meta/creatures.ts';
-import { drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
+import { artSizeOf, drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
 import { spring } from '../render/celebrate.ts';
 import './celebrate.css';
 import {
@@ -73,6 +73,29 @@ export const REVEAL_MS: Record<Rarity, number> = {
 const SIGNATURE_MS = 950;
 /** When the bubble-pearl pops (ms). */
 const POP_MS: Record<Rarity, number> = { common: 0, uncommon: 300, rare: 480, epic: 640, legendary: 980 };
+/** The pool (CSS px) the creature sits in, and the bigger stage canvas around it (big ones break out). */
+const POOL_W = 200;
+const POOL_H = 168;
+const STAGE = 300;
+/** Stage offset: the pool's creature centre (POOL_W/2, POOL_H·0.55) is the stage centre. */
+const STAGE_X = STAGE / 2 - POOL_W / 2;
+const STAGE_Y = STAGE / 2 - POOL_H * 0.55;
+/**
+ * CRITIQUE-2 NEW 5: the present is scaled by the creature's size class (an S seahorse no longer looks
+ * as big as the legendary XL kraken, which breaks the card top). XS stays clearly readable.
+ */
+export const REVEAL_SCALE = { XS: 0.8, S: 0.9, M: 1, L: 1.15, XL: 1.3, XXL: 1.3 } as const;
+/** How far a legendary XL breaks the card top (CSS px). */
+export const REVEAL_BREAK_PX = 10;
+/** After the happy/proud beat the creature settles on its eyes-open idle face, with one blink. */
+const BEAT_END_MS = 1500;
+const PROUD_MS = 650;
+const BLINK_AT_MS = 420;
+const BLINK_MS = 140;
+/** The end of the happy (and, rare+, proud) beat, ms after the pop. */
+export function beatEnd(rank: number): number {
+  return BEAT_END_MS + (rank >= 3 ? PROUD_MS : 0);
+}
 
 export function formatSize(cm: number): string {
   return cm >= 100 ? `${(cm / 100).toFixed(cm >= 1000 ? 0 : 1)} m` : `${cm.toFixed(1)} cm`;
@@ -94,6 +117,13 @@ interface Active {
   fx: HTMLCanvasElement | null;
   settled: boolean;
   stamped: boolean;
+  /** The press that skipped the animation: its click must not land on the buttons it reveals. */
+  swallow: boolean;
+  /** Last fx-canvas draw (ms): once settled the backdrop redraws at ~15 fps (or once, reduced motion). */
+  fxAt: number;
+  /** Elements made inert while the dialog is up (restored on close), and where focus was. */
+  inerted: Element[];
+  returnTo: HTMLElement | null;
 }
 
 export class Reveal {
@@ -186,7 +216,7 @@ export class Reveal {
     const pipColor = item.golden ? '#C9922B' : RARITY_COLOR[sp.rarity];
     if (!modal) {
       el.className = 'reveal-pop';
-      el.setAttribute('role', 'status');
+      el.setAttribute('aria-hidden', 'true'); // announced once, by the live region
       el.innerHTML = `<div class="rp-text"><div class="rp-over">New in your journal</div><div class="rp-name">${sp.name}</div></div>`;
       stage.className = 'rp-stage';
       el.prepend(stage);
@@ -196,7 +226,8 @@ export class Reveal {
       el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}`;
       el.setAttribute('role', 'dialog');
       el.setAttribute('aria-modal', 'true');
-      el.setAttribute('aria-label', `New discovery: ${sp.name}`);
+      // announced once: the dialog's name is the whole sentence (no live-region repeat)
+      el.setAttribute('aria-label', `New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`);
       fx = document.createElement('canvas');
       fx.className = 'rv-fx';
       const card = document.createElement('div');
@@ -206,6 +237,7 @@ export class Reveal {
       card.innerHTML = `<div class="rv-over">${item.firstGolden ? 'Golden find' : 'New discovery'}</div>
         <div class="rv-pool"></div>
         <div class="rv-rarity"><canvas class="rv-pips"></canvas><span>${item.golden ? 'Golden · ' : ''}${cap(sp.rarity)}</span></div>
+        <div class="rv-lower"><div class="rv-ph" aria-hidden="true"><i class="n"></i><i class="f"></i><i class="f"></i><i class="j"></i></div>
         <div class="rv-info">
           <div class="rv-name">${sp.name}</div>
           <div class="rv-facts">
@@ -213,7 +245,7 @@ export class Reveal {
             <div><b>${howLine(sp)}</b><span>How</span></div>
           </div>
           <div class="rv-journal"><span class="rv-stamp" aria-hidden="true">No.<b>${no}</b></span><span>Added to your Beach Journal</span></div>
-        </div>
+        </div></div>
         <div class="rv-btns"></div>`;
       card.querySelector('.rv-pool')!.append(stage);
       const pips = card.querySelector('.rv-pips') as HTMLCanvasElement;
@@ -221,33 +253,71 @@ export class Reveal {
       const pg = pips.getContext('2d')!;
       drawPips(pg, 46, 9, 5, RARITY_RANK[sp.rarity], pipColor, 'rgba(120,110,95,0.6)');
       const btns = card.querySelector('.rv-btns')!;
-      const cont = button('Continue', 'btn primary', () => this.finish());
-      const share = button('Share', 'btn ghost', () => void this.share(sp, item));
+      // the buttons only act once the card has settled (they're hidden and inert until then)
+      const cont = button('Continue', 'btn primary', () => this.cur?.settled && this.finish());
+      const share = button('Share', 'btn ghost', () => this.cur?.settled && void this.share(sp, item));
       btns.append(cont, share);
       el.append(fx, card);
-      this.sizeCanvas(stage, 200, 168);
+      this.sizeCanvas(stage, STAGE, STAGE);
+      stage.style.left = `${-STAGE_X}px`;
+      stage.style.top = `${-STAGE_Y}px`;
       // tap during the animation = skip to the settled card; tap outside the card = continue
       el.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
         const a = this.cur;
         if (!a) return;
-        if (!a.settled) a.start = this.now() - REVEAL_MS[rarity];
+        a.swallow = false;
+        if (!a.settled) {
+          this.skipToSettled(a);
+          a.swallow = true;
+        }
       });
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') this.finish();
-      });
+      // the click that ends a skipping press never presses a button the skip just revealed
+      el.addEventListener(
+        'click',
+        (e) => {
+          const a = this.cur;
+          if (a?.swallow) {
+            a.swallow = false;
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        },
+        true,
+      );
+      el.addEventListener('keydown', (e) => this.key(e));
     }
+    const returnTo = modal && document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.root.append(el);
-    if (fx) this.sizeCanvas(fx, innerWidth, innerHeight);
+    const inerted = modal ? inertOthers(el) : [];
+    if (fx) {
+      this.sizeCanvas(fx, innerWidth, innerHeight, 1);
+      addEventListener('resize', this.resize);
+    }
     requestAnimationFrame(() => el.classList.add('show'));
-    this.cur = { item, sp, start: this.now(), modal, el, stage, fx, settled: false, stamped: false };
-    // keyboard users land on Continue; touch users get no focus ring (focus the dialog itself)
-    if (modal && lastKey) (el.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
-    else if (modal) {
+    this.cur = {
+      item,
+      sp,
+      start: this.now(),
+      modal,
+      el,
+      stage,
+      fx,
+      settled: false,
+      stamped: false,
+      swallow: false,
+      fxAt: -Infinity,
+      inerted,
+      returnTo,
+    };
+    if (modal) this.frameBreak(this.cur);
+    // focus the dialog itself (no ring); keyboard users move to Continue once it's there to press
+    if (modal) {
       el.tabIndex = -1;
       el.focus({ preventScroll: true });
     }
-    this.d.announce(`New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`);
+    // one announcement: the modal's dialog name is read on focus; the quick pop uses the live region
+    if (!modal) this.d.announce(`New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`);
     // sound and touch: the chime when the pearl pops (commons at once)
     const pop = this.d.reducedMotion() ? 0 : POP_MS[rarity];
     setTimeout(() => {
@@ -258,8 +328,71 @@ export class Reveal {
     this.loop();
   }
 
-  private sizeCanvas(c: HTMLCanvasElement, w: number, h: number): void {
-    const dpr = Math.min(3, devicePixelRatio || 1);
+  /**
+   * CRITIQUE-2 NEW 5: a legendary XL breaks the card top by ~10 px. Measures the creature's resting
+   * top once (a scratch render) and pulls the pool up under the card top (the overline gives way).
+   */
+  private frameBreak(a: Active): void {
+    const cls = artSizeOf(a.sp.id);
+    if (a.sp.rarity !== 'legendary' || (cls !== 'XL' && cls !== 'XXL')) return;
+    const pool = a.stage.parentElement;
+    const card = pool?.parentElement;
+    if (!pool || !card) return;
+    card.classList.add('rv-break');
+    const c = document.createElement('canvas');
+    c.width = c.height = STAGE;
+    const g = c.getContext('2d', { willReadFrequently: true })!;
+    const s = Math.min(POOL_W, POOL_H) * 0.84 * REVEAL_SCALE[cls];
+    drawCreature(g, a.sp, STAGE / 2, STAGE / 2, s, 0, { expression: 'idle', night: this.d.night() });
+    const d = g.getImageData(0, 0, STAGE, STAGE).data;
+    let top = -1;
+    for (let i = 3; i < d.length && top < 0; i += 4) if (d[i]! > 40) top = Math.floor(i / 4 / STAGE);
+    if (top < 0) return;
+    // the creature's top sits (STAGE/2 - top) above the pool's centre line (POOL_H·0.55); move the
+    // pool so that lands REVEAL_BREAK_PX above the card's top edge (offsetTop ignores the entrance scale)
+    const topInPool = POOL_H * 0.55 - (STAGE / 2 - top);
+    const lift = pool.offsetTop + topInPool + REVEAL_BREAK_PX;
+    if (lift > 0) pool.style.marginTop = `${2 - lift}px`;
+  }
+
+  /** Skip the animation: draw the settled card now. */
+  private skipToSettled(a: Active): void {
+    const rarity: Rarity = a.item.firstGolden ? 'rare' : a.sp.rarity;
+    a.start = Math.min(a.start, this.now() - REVEAL_MS[rarity]);
+    this.draw(a, this.now() - a.start);
+  }
+
+  /** Keyboard: Esc closes; Enter/Space skip the animation; Tab stays inside the dialog. */
+  private key(e: KeyboardEvent): void {
+    const a = this.cur;
+    if (!a?.modal) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this.finish();
+    } else if (!a.settled && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      this.skipToSettled(a);
+    } else if (e.key === 'Tab') {
+      const btns = a.settled ? [...a.el.querySelectorAll<HTMLElement>('.rv-btns .btn')] : [];
+      e.preventDefault();
+      if (!btns.length) return a.el.focus({ preventScroll: true });
+      const i = btns.indexOf(document.activeElement as HTMLElement);
+      const n = i < 0 ? (e.shiftKey ? btns.length - 1 : 0) : (i + (e.shiftKey ? -1 : 1) + btns.length) % btns.length;
+      btns[n]!.focus({ preventScroll: true });
+    }
+  }
+
+  private resize = (): void => {
+    const a = this.cur;
+    if (!a?.fx) return;
+    this.sizeCanvas(a.fx, innerWidth, innerHeight, 1);
+    a.fxAt = -Infinity;
+    this.draw(a, this.now() - a.start);
+  };
+
+  /** `cap`: max device pixel ratio (the full-screen fx canvas is soft gradients: 1 is plenty). */
+  private sizeCanvas(c: HTMLCanvasElement, w: number, h: number, cap = 3): void {
+    const dpr = Math.min(cap, devicePixelRatio || 1);
     c.width = Math.round(w * dpr);
     c.height = Math.round(h * dpr);
     c.style.width = `${w}px`;
@@ -287,29 +420,63 @@ export class Reveal {
       return;
     }
     const popAt = rm ? 0 : POP_MS[rarity];
-    if (!a.settled && t >= total) {
+    // reduced motion: nothing animates, so the card is settled at once (never blocks the board)
+    const settleAt = rm ? 0 : total;
+    if (!a.settled && t >= settleAt) {
       a.settled = true;
-      a.el.classList.add('settled');
+      a.el.classList.add('settled', 'info');
       // settled: the backdrop lets presses through; one outside the card closes the reveal
       addEventListener('pointerdown', this.outside, true);
+      // keyboard users land on Continue now that it can be pressed
+      if (lastKey && a.el.contains(document.activeElement)) {
+        (a.el.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
+      }
     }
     if (t >= popAt + 120) a.el.classList.add('info');
-    if (!a.stamped && t >= total - 160) {
+    if (!a.stamped && t >= settleAt - 160) {
       a.stamped = true;
       a.el.classList.add('stamped');
       this.d.sfx.place(2);
     }
-    this.drawStage(a, t, 200, 168, rm, popAt);
-    if (a.fx) this.drawFx(a, t, rm, popAt, total);
+    this.drawStage(a, t, POOL_W, POOL_H, rm, popAt);
+    // the backdrop: every frame while it moves; once settled ~15 fps (rays turn slowly), once if still
+    if (a.fx) {
+      const now = this.now();
+      const due = !a.settled || (rm ? a.fxAt === -Infinity : now - a.fxAt >= 66 || now < a.fxAt);
+      if (due) {
+        a.fxAt = now;
+        this.drawFx(a, t, rm, popAt, total);
+      }
+    }
   }
 
   /** The pool: bubble-pearl (tinted by tier) → pop → the creature's little dance. */
   private drawStage(a: Active, t: number, w: number, h: number, rm: boolean, popAt: number): void {
     const g = a.stage.getContext('2d')!;
-    g.clearRect(0, 0, w, h);
+    g.save();
+    if (a.modal) {
+      g.clearRect(0, 0, STAGE, STAGE);
+      g.translate(STAGE_X, STAGE_Y); // pool coordinates; the stage around it lets big ones break out
+    } else g.clearRect(0, 0, w, h);
+    this.drawPool(g, a, t, w, h, rm, popAt);
+    g.restore();
+  }
+
+  private drawPool(
+    g: CanvasRenderingContext2D,
+    a: Active,
+    t: number,
+    w: number,
+    h: number,
+    rm: boolean,
+    popAt: number,
+  ): void {
     const cx = w / 2;
     const cy = h * 0.55;
     const s = Math.min(w, h) * (a.modal ? 0.84 : 0.7);
+    // the creature (not the pearl) is scaled by its size class in the modal card
+    const cls = artSizeOf(a.sp.id);
+    const big = a.modal && cls ? REVEAL_SCALE[cls] : 1;
     const tier = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
     const night = this.d.night();
     type Expr = NonNullable<DrawOpts['expression']>;
@@ -415,7 +582,8 @@ export class Reveal {
     let sy = 1;
     let dy = 0;
     let ang = 0;
-    let expr: Expr = 'happy';
+    // reduced motion: the same information, eyes open (no beat to end)
+    let expr: Expr = rm ? 'idle' : 'happy';
     let sig: number | undefined;
     if (!rm) {
       const out = spring(u, 360, 0.12);
@@ -437,12 +605,16 @@ export class Reveal {
         dy = Math.sin((hopT - 560) / 380) * s * 0.025;
         ang = Math.sin((hopT - 560) / 520) * 0.05;
       }
-      if (RARITY_RANK[a.sp.rarity] >= 3 && u > 1500) expr = 'proud';
+      const rank = RARITY_RANK[a.sp.rarity];
+      if (rank >= 3 && u > BEAT_END_MS) expr = 'proud';
+      // the beat ends: eyes open, one blink, then the idle loop (never an eyes-closed last frame)
+      const end = beatEnd(rank);
+      if (u >= end) expr = u - end >= BLINK_AT_MS && u - end < BLINK_AT_MS + BLINK_MS ? 'blink' : 'idle';
     }
     g.save();
     g.translate(cx, cy + dy);
     g.rotate(ang);
-    g.scale(sx, sy);
+    g.scale(sx * big, sy * big);
     drawCreature(g, a.sp, 0, 0, s, 0, opts(expr, u, sig));
     g.restore();
     if (a.item.golden && !rm) sparkles(g, cx, cy, s * 0.62, 5, u / 1000);
@@ -461,7 +633,7 @@ export class Reveal {
     const dim = rank >= 4 ? 0.62 : 0.42;
     g.fillStyle = night ? `rgba(4,12,20,${dim})` : `rgba(43,35,28,${dim * 0.55})`;
     g.fillRect(0, 0, W, H);
-    const pool = a.stage.getBoundingClientRect();
+    const pool = (a.stage.parentElement ?? a.stage).getBoundingClientRect();
     const cx = pool.left + pool.width / 2;
     const cy = pool.top + pool.height * 0.55;
     // legendary: the tide rolls up the whole screen, then settles as deep water behind the card
@@ -533,7 +705,14 @@ export class Reveal {
     if (!a) return;
     this.cur = null;
     removeEventListener('pointerdown', this.outside, true);
+    removeEventListener('resize', this.resize);
     cancelAnimationFrame(this.raf);
+    for (const e of a.inerted) e.removeAttribute('inert');
+    if (a.modal && a.el.contains(document.activeElement)) {
+      const back = a.returnTo?.isConnected ? a.returnTo : null;
+      if (back) back.focus({ preventScroll: true });
+      else (document.activeElement as HTMLElement | null)?.blur();
+    }
     a.el.classList.remove('show');
     a.el.classList.add('leaving');
     if (immediate) a.el.remove();
@@ -561,6 +740,23 @@ export class Reveal {
   skip(): void {
     this.finish();
   }
+}
+
+/** Make everything but `el` (and its ancestors) inert; returns what changed, to restore. */
+function inertOthers(el: Element): Element[] {
+  const out: Element[] = [];
+  for (let n: Element | null = el; n && n !== document.body; n = n.parentElement) {
+    const parent: Element | null = n.parentElement;
+    if (!parent) break;
+    for (const sib of Array.from(parent.children)) {
+      if (sib === n || sib.hasAttribute('inert') || sib.tagName === 'SCRIPT') continue;
+      // the live region stays live (announcements from the game keep working)
+      if (sib.getAttribute('aria-live')) continue;
+      sib.setAttribute('inert', '');
+      out.push(sib);
+    }
+  }
+  return out;
 }
 
 function button(label: string, cls: string, fn: () => void): HTMLButtonElement {

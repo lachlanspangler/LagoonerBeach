@@ -9,13 +9,13 @@ import { saveSeen } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
 import { HABITATS, SPECIES, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
-import { drawCreature, hasNewArt } from '../render/creatures.ts';
+import { dozesNow, drawCreature, hasNewArt } from '../render/creatures.ts';
 import { lookFor } from '../render/skins.ts';
 import { fmt } from '../render/theme.ts';
 import { buildReefList, type ReefListModel } from './reefList.ts';
 import { icon, type IconName } from './icons.ts';
 import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
-import { creatureThumb, PEBBLE_CM, type SheetKit, type UiHandlers } from './overlay.ts';
+import { creatureThumb, PEBBLE_CM, type SheetKit, type ThumbRedraw, type UiHandlers } from './overlay.ts';
 
 const night = (): boolean => document.documentElement.dataset.theme === 'night';
 const reduced = (): boolean => document.documentElement.dataset.rm === '1';
@@ -262,21 +262,32 @@ export function showReefs(k: SheetKit, m: ReefListModel): void {
   k.show(card, true, 'reefs');
 }
 
+/** A dozing tile wakes: blink open, look at you a while, blink, back to its doze (ms). */
+const WAKE_MS = 2400;
+/** Share of the dozing (off-theme) tiles that may wake when picked (CRITIQUE-2 NEW 1). */
+const WAKERS = 0.3;
+
+/** The face of a waking tile at progress u (0–1); exported for tests. */
+export function wakeFace(u: number): 'blink' | 'idle' | 'drowsy' {
+  return u < 0.06 || (u >= 0.86 && u < 0.92) ? 'blink' : u < 0.86 ? 'idle' : 'drowsy';
+}
+
 /**
  * The journal grid's ambient life (CREATURE_ART R37): every 3–5 s, one random visible caught tile
- * plays its signature move once (≤ 30 fps). Never more than one at a time; stops when the grid
- * closes or the page is hidden; none under reduced motion.
+ * plays its signature move once (≤ 30 fps) — or, for ~30 % of the dozing (off-theme) tiles, blinks
+ * awake and looks at the player for a moment (CRITIQUE-2 NEW 1: the journal was a dormitory). Never
+ * more than one at a time; stops when the grid closes or the page is hidden; none under reduced motion.
  */
 class JournalLife {
-  private tiles: { c: HTMLCanvasElement; sp: Species }[] = [];
+  private tiles: { c: HTMLCanvasElement; sp: Species; waker: boolean }[] = [];
   add(c: HTMLCanvasElement, sp: Species, _golden: boolean): void {
-    this.tiles.push({ c, sp });
+    this.tiles.push({ c, sp, waker: dozesNow(sp, night()) && Math.random() < WAKERS });
   }
   start(root: HTMLElement): void {
     if (reduced() || !this.tiles.length) return;
     const seenAt = performance.now();
     let next = seenAt + 1800;
-    let cur: { c: HTMLCanvasElement; t0: number } | null = null;
+    let cur: { c: HTMLCanvasElement; t0: number; wake: boolean } | null = null;
     let last = 0;
     const vis = new Set<HTMLCanvasElement>();
     const io = new IntersectionObserver((es) => {
@@ -292,17 +303,17 @@ class JournalLife {
       if (!root.isConnected) return io.disconnect();
       requestAnimationFrame(tick);
       if (document.hidden) return;
-      const redraw = (c: HTMLCanvasElement, t?: number, sig?: number) =>
-        (c as HTMLCanvasElement & { redraw?: (t?: number, sig?: number) => void }).redraw?.(t, sig);
+      const redraw: ThumbRedraw = (...a) => (cur?.c as HTMLCanvasElement & { redraw?: ThumbRedraw }).redraw?.(...a);
       if (cur) {
         if (now - last < 33) return;
         last = now;
-        const u = (now - cur.t0) / DUR;
+        const u = (now - cur.t0) / (cur.wake ? WAKE_MS : DUR);
         if (u >= 1) {
-          redraw(cur.c);
+          redraw();
           cur = null;
           next = now + 3000 + Math.random() * 2000;
-        } else redraw(cur.c, now / 1000, u);
+        } else if (cur.wake) redraw(now / 1000, undefined, wakeFace(u));
+        else redraw(now / 1000, u);
         return;
       }
       if (now < next) return;
@@ -312,7 +323,7 @@ class JournalLife {
         return;
       }
       const pick = pool[Math.floor(Math.random() * pool.length)]!;
-      cur = { c: pick.c, t0: now };
+      cur = { c: pick.c, t0: now, wake: pick.waker };
     };
     requestAnimationFrame(tick);
   }

@@ -102,7 +102,8 @@ if (stage) {
     await shot(`t${String(t).padStart(4, '0')}`);
   }
 } else if (reveal) {
-  await p.evaluate(([id, golden]) => (window as any).__atoll.revealSpecies(id, { golden, size: 31.4 }), [
+  // no size: the debug hook picks a plausible one per species (both staged reveals showed "31.4 cm")
+  await p.evaluate(([id, golden]) => (window as any).__atoll.revealSpecies(id, { golden }), [
     reveal,
     has('golden'),
   ] as const);

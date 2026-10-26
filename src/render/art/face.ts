@@ -39,6 +39,8 @@ export interface FaceCtx {
 }
 
 const TAU = Math.PI * 2;
+/** How much of the eye `drowsy` leaves open (bottom-aligned). */
+export const DROWSY_OPEN = 0.62;
 /** Night blush on bodies darker than L 0.65 (CRITIQUE-1: the default went muddy). */
 export const NIGHT_BLUSH = { color: '#FF9DB0', alpha: 0.45, belowL: 0.65 } as const;
 
@@ -54,7 +56,8 @@ export function mouthFor(expr: Expression, idle: Mouth): Mouth {
     case 'sleepy':
       return idle === 'o' ? 'o' : 'smile';
     case 'drowsy':
-      return 'flat';
+      // dozy, not bored: the species' own resting mouth (a whole journal row of flat lines read grumpy)
+      return idle;
     case 'shy':
       return 'none';
     default:
@@ -129,6 +132,33 @@ export function drawFace(g: G, f: Face, st: FaceState, c: FaceInk, x: FaceCtx): 
     if (expr === 'proud') return arc(0.75, thick(2.6)); // smug ‿, level
     if (expr === 'sleepy') return arc(0.62, thick(3), 0.12, 0.58); // contented ‿, set a touch lower
     if (expr === 'blink') return arc(0.32, thick(2)); // closed, relaxed
+    if (expr === 'drowsy') {
+      // CRITIQUE-2 NEW 1: dozy, not grumpy — the lower ~60 % of the eye (bottom-aligned) under a
+      // soft arched lid line, both highlights showing. The old flat 45 % lid hid the highlights and
+      // a whole Night journal of them read annoyed.
+      const dh = h * DROWSY_OPEN;
+      const dy = ey + (h - dh) / 2;
+      g.fillStyle = eyeCol;
+      g.beginPath();
+      g.ellipse(ex, dy, w / 2, dh / 2, 0, 0, TAU);
+      g.fill();
+      g.fillStyle = SHARED.white;
+      g.beginPath();
+      g.arc(ex - 0.2 * w, dy - 0.12 * dh, Math.max(0.24 * w, 0.5 * px), 0, TAU);
+      g.fill();
+      if (h * x.ppu >= 3) {
+        g.beginPath();
+        g.arc(ex + 0.2 * w, dy + 0.2 * dh, 0.1 * w, 0, TAU);
+        g.fill();
+      }
+      g.strokeStyle = eyeCol;
+      g.lineWidth = Math.max(0.12 * h, 1 * px);
+      g.beginPath();
+      g.moveTo(ex - w * 0.62, dy + 0.05 * dh);
+      g.quadraticCurveTo(ex, dy - dh * 1.05, ex + w * 0.62, dy + 0.05 * dh);
+      g.stroke();
+      return;
+    }
 
     const big = expr === 'surprised' ? 1.15 : 1;
     const ew = w * big,
@@ -177,23 +207,6 @@ export function drawFace(g: G, f: Face, st: FaceState, c: FaceInk, x: FaceCtx): 
       g.beginPath();
       g.arc(ex + 0.2 * ew, ey + 0.26 * eh, 0.12 * ew * hl, 0, TAU);
       g.fill();
-    }
-    if (expr === 'drowsy') {
-      // half-lid: the top 45 % covered by skin, with an ink lid line (the grouper's personality)
-      const ly = ey - eh / 2 + eh * 0.45;
-      g.save();
-      g.beginPath();
-      g.ellipse(ex, ey, ew / 2 + 0.3 * px, eh / 2 + 0.3 * px, 0, 0, TAU);
-      g.clip();
-      g.fillStyle = c.lid;
-      g.fillRect(ex - ew, ey - eh, ew * 2, ly - (ey - eh));
-      g.restore();
-      g.strokeStyle = eyeCol;
-      g.lineWidth = Math.max(0.16 * h, 1 * px);
-      g.beginPath();
-      g.moveTo(ex - ew * 0.56, ly - 0.04 * eh);
-      g.quadraticCurveTo(ex, ly + 0.12 * eh, ex + ew * 0.56, ly - 0.04 * eh);
-      g.stroke();
     }
   });
 

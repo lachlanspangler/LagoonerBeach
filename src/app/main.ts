@@ -421,7 +421,7 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
   const caught = catchFor(r);
   const t = clock();
   lastDispatchAt = t;
-  const settled = fx.dispatch(r.events, t, from, {
+  fx.dispatch(r.events, t, from, {
     firstCapture: teaching,
     catches: caught.lagoons,
     newIds: caught.newIds,
@@ -432,8 +432,6 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
     bestCelebrated = true;
     fx.newBest(t);
   }
-  // discoveries wait for the capture to settle (never mid-capture), then queue one at a time
-  if (caught.reveals.length && !quiet) reveal.enqueue(caught.reveals, settled + 80);
   scene.dry = state.dry;
   for (const e of r.events) {
     if (e.type === 'captured') {
@@ -458,7 +456,11 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
   if (mode === 'puzzle') {
     puzzleMoves.push(m);
     checkPuzzle();
-  } else if (state.over) finishGame(prevBest);
+  }
+  // discoveries wait for everything this move set off to settle — the capture, NEW BEST, a chapter
+  // moment (checkPuzzle) — never over it, then queue one at a time (the result cards wait for them)
+  if (caught.reveals.length && !quiet) reveal.enqueue(caught.reveals, fx.settleAt + 80);
+  if (mode !== 'puzzle' && state.over) finishGame(prevBest);
   saveProfile(profile);
   updateHint();
   updateMisfits();
@@ -657,7 +659,13 @@ function checkPuzzle(): void {
     );
   } else {
     const cleared = profile.puzzle.solved.length;
-    later(700, () => ui.showPuzzleResult({ solved: false, index: i, total: MAX_REEF, cleared }));
+    const token = gameToken;
+    // "So close": a discovery made on the way still gets its reveal first (the card follows it)
+    later(700, () =>
+      reveal.whenIdle(
+        () => token === gameToken && ui.showPuzzleResult({ solved: false, index: i, total: MAX_REEF, cleared }),
+      ),
+    );
   }
 }
 
@@ -1073,6 +1081,7 @@ function step(): void {
   if (frozen !== null) scene.shownScore = scene.score;
   const wasDragging = scene.drag !== null;
   scene.drag = drag.view(now);
+  scene.covered = ui.open;
   if (dirty || scene.busy(now) || fx.pending) {
     const t0 = performance.now();
     scene.draw(now, dt);
@@ -1219,7 +1228,12 @@ function debugDeps(): DebugDeps {
         bestCelebrated = false;
         dirty = true;
       },
-      revealSpecies: (id, o) => reveal.enqueue([{ id, size: o?.size ?? 24.6, golden: o?.golden ?? false }], 0),
+      // default size: a plausible catch for that species (geometric mid of its range), not a fixture
+      revealSpecies: (id, o) => {
+        const r = SPECIES_BY_ID.get(id)?.size ?? [20, 30];
+        const size = o?.size ?? Math.round(Math.sqrt(r[0] * r[1]) * 10) / 10;
+        reveal.enqueue([{ id, size, golden: o?.golden ?? false }], 0);
+      },
       chapterMoment: (chapter, name) => {
         lastDispatchAt = clock();
         fx.chapterComplete(lastDispatchAt, chapter, name);

@@ -30,7 +30,30 @@ describe('CRITIQUE-1 kit rules', () => {
     expect(a).toBeGreaterThan(0);
     expect(mouthFor('sleepy', 'smile')).toBe('smile');
     expect(mouthFor('sleepy', 'flat')).toBe('smile');
-    expect(mouthFor('drowsy', 'smile')).toBe('flat');
+    // CRITIQUE-2 NEW 1: drowsy keeps the species' own mouth (a row of flat lines read grumpy)
+    expect(mouthFor('drowsy', 'smile')).toBe('smile');
+    expect(mouthFor('drowsy', 'pout')).toBe('pout');
+  });
+  it('CRITIQUE-2 NEW 1: off-theme tiles doze drowsy (eyes half-open), sleepy is the detail view only', () => {
+    expect(restingFace(fish, sp('clownfish'), true, 'tile')).toBe('drowsy');
+    expect(restingFace(fish, sp('clownfish'), true, 'detail')).toBe('sleepy');
+    expect(restingFace(fish, sp('clownfish'), false, 'tile')).toBe('idle');
+    // the rest expression still applies when awake; neverSleepy never dozes
+    expect(restingFace({ ...fish, restExpression: 'shy' }, sp('clownfish'), false, 'tile')).toBe('shy');
+    expect(restingFace(ART.get('grouper')!, sp('grouper'), false, 'tile')).toBe('drowsy');
+    expect(restingFace({ ...fish, neverSleepy: true }, sp('clownfish'), true, 'tile')).toBe('idle');
+    for (const night of [false, true]) {
+      expect(['idle', 'proud', 'shy']).toContain(restingFace(ART.get('kraken')!, sp('kraken'), night, 'tile'));
+    }
+    // a closed-eyed rest face (the seadragon's proud) is the detail view's; the tile is eyes-open
+    expect(restingFace(ART.get('seadragon')!, sp('seadragon'), false, 'tile')).toBe('idle');
+    expect(restingFace(ART.get('seadragon')!, sp('seadragon'), false, 'detail')).toBe('proud');
+    // no journal tile rests eyes-closed on either theme
+    for (const night of [false, true])
+      for (const [id, art] of ART) {
+        const f = restingFace(art, sp(id), night, 'tile');
+        expect(['sleepy', 'proud', 'happy', 'blink'], `${id} night=${night}`).not.toContain(f);
+      }
   });
   it('Night blush is brighter on darker bodies; a per-species override wins', () => {
     expect(blushStyle(fish.face, 'happy', { night: true, bodyL: 0.5 })[0]).toBe(NIGHT_BLUSH.color);

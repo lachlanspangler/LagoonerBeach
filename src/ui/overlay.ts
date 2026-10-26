@@ -10,7 +10,7 @@ import type { Profile, ThemePref } from '../platform/storage.ts';
 import { loadSeen, saveSeen } from '../platform/storage.ts';
 import { SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
-import { drawCreature, hasNewArt, whenArtReady } from '../render/creatures.ts';
+import { drawCreature, hasNewArt, whenArtReady, type DrawOpts } from '../render/creatures.ts';
 import { fmt } from '../render/theme.ts';
 import type { ReefListModel } from './reefList.ts';
 import type * as Sheets from './sheets.ts';
@@ -619,6 +619,8 @@ function nearMiss(score: number, best: number): string {
  * species' size class (ADR 0011, R27); the species page (`animate`) runs the idle loop at ≤ 30 fps
  * while it's on screen (blinks only under reduced motion). Redraws once the art chunk arrives.
  */
+export type ThumbRedraw = (t?: number, sig?: number, expression?: NonNullable<DrawOpts['expression']>) => void;
+
 export function creatureThumb(
   sp: Species,
   px: number,
@@ -671,7 +673,8 @@ export function creatureThumb(
       draw();
       animate();
     });
-  (c as HTMLCanvasElement & { redraw?: (t?: number, sig?: number) => void }).redraw = (t, sig) => {
+  // the journal's ambient life (sheets.ts JournalLife): a signature at progress `sig`, or a face
+  (c as HTMLCanvasElement & { redraw?: ThumbRedraw }).redraw = (t, sig, expression) => {
     g.clearRect(0, 0, W, W);
     drawCreature(g, sp, W / 2, W / 2, px, 0, {
       golden,
@@ -679,6 +682,7 @@ export function creatureThumb(
       fit,
       t,
       ...(sig !== undefined ? { signatureAt: sig } : {}),
+      ...(expression ? { expression } : {}),
     });
   };
   return c;
