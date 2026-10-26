@@ -1224,6 +1224,7 @@ function debugDeps(): DebugDeps {
   return {
     state: () => state,
     setState: (g) => {
+      if (g !== state) teaching = false; // a staged board is never the first-run lesson
       state = g;
       syncScene();
     },
