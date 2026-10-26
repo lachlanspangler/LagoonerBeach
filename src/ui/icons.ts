@@ -18,11 +18,17 @@ interface IconDef {
 export const SHELL_D = 'M12 20.2 4.3 10.4C5.6 6.6 8.5 4.3 12 4.3s6.4 2.3 7.7 6.1L12 20.2Z';
 export const SHELL_RIBS_D = 'M12 20.2 8.4 7.2M12 20.2V5.6M12 20.2l3.6-13';
 
+/** A pointing hand, index finger up; its fingertip is at (10.6, 3.4) (first-run demo, canvas). */
+export const TAP_D =
+  'M9 14.5V5a1.6 1.6 0 0 1 3.2 0v5.4a1.6 1.6 0 0 1 3.2.4 1.6 1.6 0 0 1 3.2.8V15c0 3.4-2.4 5.8-5.6 5.8h-1.2c-2 0-3.4-.9-4.5-2.4L5.6 16a1.6 1.6 0 0 1 2.5-2Z';
+const TAP_KNUCKLES = 'M12.2 10.4v2.4M15.4 10.8v2.2';
+
 const SUN_RAYS =
   'M12 2.8v1.6M12 19.6v1.6M2.8 12h1.6M19.6 12h1.6M5.5 5.5l1.1 1.1M17.4 17.4l1.1 1.1M5.5 18.5l1.1-1.1M17.4 6.6l1.1-1.1';
 
 const ICONS = {
   menu: { d: 'M4.5 7h15M4.5 12h10M4.5 17h15' },
+  tap: { d: `${TAP_D}${TAP_KNUCKLES}`, fill: TAP_D },
   close: { d: 'M6.5 6.5l11 11M17.5 6.5l-11 11' },
   back: { d: 'M14.5 5.5 8 12l6.5 6.5' },
   chevronLeft: { d: 'M14.5 5.5 8 12l6.5 6.5' },
@@ -176,5 +182,42 @@ export function drawShell(
     g.lineWidth = Math.max(1.6, 2.6 / Math.max(0.6, k));
     g.stroke(shellPath);
   }
+  g.restore();
+}
+
+let tapPath: Path2D | null = null;
+let tapKnuckles: Path2D | null = null;
+/**
+ * The "tap" hand on a canvas with its fingertip at (x, y); `size` ≈ the glyph's height. A light
+ * fill with a dark outline reads on pebbles, sand and water alike (the first-run demo finger).
+ */
+export function drawTap(
+  g: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  fill: string,
+  stroke: string,
+  alpha: number,
+): void {
+  tapPath ??= new Path2D(TAP_D);
+  tapKnuckles ??= new Path2D(TAP_KNUCKLES);
+  const k = size / 18;
+  g.save();
+  g.globalAlpha = alpha;
+  g.translate(x - 10.6 * k, y - 3.4 * k);
+  g.scale(k, k);
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  g.shadowColor = 'rgba(0,0,0,0.22)';
+  g.shadowBlur = 3;
+  g.shadowOffsetY = 1;
+  g.fillStyle = fill;
+  g.fill(tapPath);
+  g.shadowColor = 'transparent';
+  g.strokeStyle = stroke;
+  g.lineWidth = 1.7;
+  g.stroke(tapPath);
+  g.stroke(tapKnuckles);
   g.restore();
 }

@@ -302,6 +302,23 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForTimeout(1500);
   },
   'first-run': async () => {},
+  // the teaching capture: cup, then the closing piece → "Lagoon!" + "That's a lagoon!" in the strip
+  'first-capture': async (p) => {
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      const slot = a.state().tray.findIndex((t: any) => t?.pieceId === 'cup-up');
+      a.commitMove({ slot, x: 2, y: 4 });
+    });
+    await p.waitForTimeout(900);
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      const m = a.plan('greedy').move;
+      a.freezeNow();
+      a.commitMove(m);
+    });
+    await p.evaluate(() => (window as any).__atoll.freeze(1000));
+    await frames(p);
+  },
   offline: async (p) => {
     await p.getByRole('button', { name: 'Menu' }).click();
     await p
@@ -313,6 +330,7 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
 };
 const special: Record<string, { query?: string; fresh?: boolean }> = {
   'first-run': { query: 'seed=42', fresh: true },
+  'first-capture': { query: 'seed=42', fresh: true },
   offline: { query: 'seed=5&lboffline=1' },
   'results-real': { query: 'seed=8&fast=1' },
   'name-entry': { query: 'mode=daily&fast=1' },

@@ -358,6 +358,8 @@ function updateMisfits(): void {
 
 // ------------------------------------------------------------------ teaching hint
 function updateHint(): void {
+  // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3)
+  scene.coach = teaching && mode === 'classic' && !state.over ? 'Close a ring of blocks' : null;
   if (mode === 'puzzle') {
     scene.hint = null; // puzzle hints are on demand only
     return;
@@ -445,6 +447,9 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
       if (teaching) {
         teaching = false;
         profile.firstRunDone = true;
+        // name it, then the one-line rule, while the water is still on the board
+        scene.toast("That's a lagoon!", t + 350, 1700);
+        scene.toast('Water fills any closed ring', t + 350, 2200);
       } else if (!profile.lesson2Done && e.pockets.reduce((x, p) => x + p.cells.length, 0) >= 2) {
         profile.lesson2Done = true;
         later(900, () => scene.toast('Bigger lagoons, bigger catches', performance.now(), 1800));

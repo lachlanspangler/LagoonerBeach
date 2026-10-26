@@ -222,7 +222,9 @@ export class Fx {
           // logical board is final now: remove cleared cells from the mirror, animate them bursting
           for (const c of e.cleared) sc.board[c.cell] = 0;
           const prevStreak = sc.streak;
-          const m = momentFor(e, { prevStreak });
+          const m0 = momentFor(e, { prevStreak });
+          // first run: the teaching capture names the thing ("Lagoon!"), never "Spotless!" (UX S3)
+          const m = opts.firstCapture && m0.word ? { ...m0, word: 'Lagoon!' } : m0;
           const tier = m.tier;
           const v = m.visual;
           let spent = 0;
