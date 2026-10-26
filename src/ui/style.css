@@ -1136,10 +1136,42 @@ html[data-theme='night'] .round {
 }
 .chapter-progress {
   margin: var(--s3) auto 0;
-  max-width: 240px;
+  max-width: 280px;
 }
 .chapter-progress .segs {
   margin-top: 8px;
+}
+.chapter-done {
+  margin-bottom: 4px;
+  font: 900 calc(16px * var(--fs))/1.25 var(--font-display);
+  color: var(--gold-ink);
+  text-wrap: balance;
+}
+.reef-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px auto 0;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--gold-tint);
+  color: var(--gold-ink);
+  font: 800 calc(13px * var(--fs)) var(--font);
+}
+.reef-reward i {
+  font-style: normal;
+  opacity: 0.6;
+}
+.reef-reward .ic {
+  width: 16px;
+  height: 16px;
+}
+.reef-reward .rw-shell {
+  color: #f08f6a;
+  --ic-cut: var(--gold-tint);
+}
+.reef-reward .rw-star {
+  color: var(--gold);
 }
 
 /* ═══ Larger text ═══ */

@@ -463,14 +463,29 @@ export class Ui {
     progress?: string;
     /** Chapter segments (20; true = cleared). */
     segs?: readonly boolean[];
+    /** This clear completed a chapter: "Chapter 2 complete · Ebbtide Bight". */
+    chapterDone?: { chapter: number; name: string };
+    /** A small reward line: first clear (shell sticker), no hints (star), a new depth record. */
+    reward?: { first: boolean; pure: boolean; depth?: number };
   }): void {
     const card = document.createElement('div');
     card.className = 'card stagger';
     const segs = o.segs
       ? `<div class="segs" aria-hidden="true">${o.segs.map((s) => `<i${s ? ' class="on"' : ''}></i>`).join('')}</div>`
       : '';
+    const rw = o.reward;
+    const bits: string[] = [];
+    if (rw?.pure) bits.push(`${icon('star', { filled: true, cls: 'rw-star' })}No hints`);
+    else if (rw?.first) bits.push(`${icon('shell', { filled: true, cls: 'rw-shell' })}Shell sticker`);
+    if (rw?.depth) bits.push(`New depth <b class="num">${rw.depth} m</b>`);
+    const reward = bits.length
+      ? `<div class="reef-reward" data-testid="reef-reward">${bits.join('<i>·</i>')}</div>`
+      : '';
+    const chapterLine = o.chapterDone
+      ? `<div class="chapter-done" data-testid="chapter-done">Chapter ${o.chapterDone.chapter} complete · ${o.chapterDone.name}</div>`
+      : '';
     card.innerHTML = o.solved
-      ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2><div class="chapter-progress"><div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>${segs}</div>`
+      ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2>${reward}<div class="chapter-progress">${chapterLine || `<div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`}${segs}</div>`
       : `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word" data-testid="puzzle-result">So close</h2><p class="callout">Every piece must be placed and every pebble popped.</p>`;
     if (o.newIds?.length) card.append(journalStrip(o.newIds, () => this.h.onJournal()));
     if (o.solved) {

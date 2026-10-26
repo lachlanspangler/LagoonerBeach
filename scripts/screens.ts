@@ -285,19 +285,39 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForFunction(() => (window as any).__atoll.state().seed === 372, null, { timeout: 30000 });
     await p.waitForTimeout(800);
   },
+  // reef 40 closes chapter 2 (Ebbtide Bight): solve it for real, so the moment plays on a clean board
   'chapter-complete': async (p) => {
     await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
     await p.waitForTimeout(1200);
-    // reef 40 closes chapter 2 (Ebbtide Bight): the moment over its own reef
+    await p.evaluate(() => {
+      const pr = (window as any).__atoll.profile();
+      pr.puzzle.solved = Array.from({ length: 39 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`);
+    });
     await p.evaluate(() => (window as any).__atoll.loadPuzzle(39));
     await p.waitForTimeout(600);
     await p.evaluate(() => {
       const a = (window as any).__atoll;
       a.freezeNow();
-      a.chapterMoment(2, 'Ebbtide Bight');
+      for (const s of a.puzzleSolution()) a.commitMove({ slot: s.piece, x: s.x, y: s.y });
     });
-    await p.evaluate(() => (window as any).__atoll.freeze(1200));
+    await p.evaluate(() => (window as any).__atoll.freeze(1900));
     await frames(p);
+  },
+  'chapter-result': async (p) => {
+    await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+    await p.waitForTimeout(1200);
+    await p.evaluate(() => {
+      const pr = (window as any).__atoll.profile();
+      pr.puzzle.solved = Array.from({ length: 39 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`);
+    });
+    await p.evaluate(() => (window as any).__atoll.loadPuzzle(39));
+    await p.waitForTimeout(600);
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      for (const s of a.puzzleSolution()) a.commitMove({ slot: s.piece, x: s.x, y: s.y });
+    });
+    await p.getByTestId('puzzle-result').waitFor({ timeout: 15000 });
+    await p.waitForTimeout(900);
   },
   daily: async (p) => {
     await p.evaluate(() => (window as any).__atoll.switchMode('daily'));

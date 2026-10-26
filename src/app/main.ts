@@ -644,12 +644,17 @@ function checkPuzzle(): void {
       later(900, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
     }
     const first = !profile.puzzle.solved.includes(p.id);
+    // the deepest reef cleared before this one (the reefs list's "Depth N m")
+    const deepestBefore = Math.max(0, ...profile.puzzle.solved.map((id) => Number(id.replace(/\D/g, '')) || 0));
+    let chapterDone: { chapter: number; name: string } | undefined;
     if (first) {
       profile.puzzle.solved.push(p.id);
-      noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      const cd = noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      if (cd) chapterDone = { chapter: cd.chapter, name: cd.name };
     }
     profile.puzzle.pure ??= [];
     const hinted = profile.puzzle.hinted?.includes(p.id) ?? false;
+    const reward = { first, pure: first && !hinted, ...(first && i + 1 > deepestBefore ? { depth: i + 1 } : {}) };
     if (!hinted && !profile.puzzle.pure.includes(p.id)) profile.puzzle.pure.push(p.id);
     profile.puzzle.index = Math.min(MAX_REEF - 1, i + 1);
     saveProfile(profile);
@@ -669,7 +674,17 @@ function checkPuzzle(): void {
       reveal.whenIdle(
         () =>
           token === gameToken &&
-          ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress, segs }),
+          ui.showPuzzleResult({
+            solved: true,
+            index: i,
+            total: MAX_REEF,
+            cleared,
+            newIds,
+            progress,
+            segs,
+            chapterDone,
+            reward,
+          }),
       ),
     );
   } else {
