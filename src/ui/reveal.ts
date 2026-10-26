@@ -3,10 +3,11 @@
  * is a little present. Shown after the capture has settled (never mid-capture), one at a time,
  * rarest last. Scaled by rarity:
  *   common     quick card pop at the top of the board + chime (≤ 0.8 s, never blocks input)
- *   uncommon   bubble-pearl → pop → creature card (name in display type), ring wave
- *   rare       + light rays + sparkles
- *   epic       + music sting + dimmed board
- *   legendary  + full-screen tide + fanfare (settled ≤ 2.0 s)
+ *   uncommon   bubble-pearl → pop → creature card (name in display type), ring wave, tier vignette
+ *   rare       + light rays in the tier colour (radial falloff) + sparkles
+ *   epic       a scene: coin pulses → the creature enters large → the card slides in, name stamps
+ *   legendary  + ~1.2 s gold anticipation, deep tide, fanfare (settled ≤ 2.5 s)
+ * The card shows creature, name, rarity and No.; size and how live on the journal species page.
  * Any tap during the animation skips to the settled card; Continue (or a tap outside) closes it.
  * The creature does a little dance (surprised → happy). Share renders a 4:5 card (share-card.ts).
  * Reduced motion: no rays/tide motion, no hops — the same information.
@@ -66,13 +67,21 @@ export const REVEAL_MS: Record<Rarity, number> = {
   common: 800,
   uncommon: 900,
   rare: 1150,
-  epic: 1450,
-  legendary: 2000,
+  epic: 1800,
+  legendary: 2500,
 };
 /** The species' signature move, played once in the reveal (new art). */
 const SIGNATURE_MS = 950;
 /** When the bubble-pearl pops (ms). */
-const POP_MS: Record<Rarity, number> = { common: 0, uncommon: 300, rare: 480, epic: 640, legendary: 980 };
+const POP_MS: Record<Rarity, number> = { common: 0, uncommon: 300, rare: 480, epic: 700, legendary: 1200 };
+/**
+ * Epic and legendary are a *scene*, not a card (session-3 UX review): a pulsing coin with the
+ * silhouette while the light builds (legendary ≈ 1.2 s), then the creature enters large over the
+ * whole screen, and only then does the card chrome slide in and the creature settles into its pool.
+ */
+const CHROME_MS: Partial<Record<Rarity, number>> = { epic: 1150, legendary: 1750 };
+/** The big creature moves into the card's pool over this long once the chrome slides in (ms). */
+const HANDOFF_MS = 320;
 /** The pool (CSS px) the creature sits in, and the bigger stage canvas around it (big ones break out). */
 const POOL_W = 200;
 const POOL_H = 168;
@@ -115,6 +124,11 @@ interface Active {
   el: HTMLElement;
   stage: HTMLCanvasElement;
   fx: HTMLCanvasElement | null;
+  /** Epic/legendary: the full-screen canvas the coin and the big creature are drawn on (sharp). */
+  hero: HTMLCanvasElement | null;
+  /** Epic/legendary: when the card chrome slides in (ms); 0 = from the start. */
+  chromeAt: number;
+  heroDone?: boolean;
   settled: boolean;
   stamped: boolean;
   /** The press that skipped the animation: its click must not land on the buttons it reveals. */
@@ -212,6 +226,7 @@ export class Reveal {
     const el = document.createElement('div');
     const stage = document.createElement('canvas');
     let fx: HTMLCanvasElement | null = null;
+    let hero: HTMLCanvasElement | null = null;
     const no = SPECIES.indexOf(sp) + 1;
     const pipColor = item.golden ? '#C9922B' : RARITY_COLOR[sp.rarity];
     if (!modal) {
@@ -223,7 +238,8 @@ export class Reveal {
       this.sizeCanvas(stage, 48, 48);
       this.d.onStrip?.(REVEAL_MS[rarity] + POP_HOLD_MS + 200);
     } else {
-      el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}`;
+      const scene = !this.d.reducedMotion() && CHROME_MS[rarity] !== undefined;
+      el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}${scene ? ' r-scene' : ''}`;
       el.setAttribute('role', 'dialog');
       el.setAttribute('aria-modal', 'true');
       // announced once: the dialog's name is the whole sentence (no live-region repeat)
@@ -237,13 +253,9 @@ export class Reveal {
       card.innerHTML = `<div class="rv-over">${item.firstGolden ? 'Golden find' : 'New discovery'}</div>
         <div class="rv-pool"></div>
         <div class="rv-rarity"><canvas class="rv-pips"></canvas><span>${item.golden ? 'Golden · ' : ''}${cap(sp.rarity)}</span></div>
-        <div class="rv-lower"><div class="rv-ph" aria-hidden="true"><i class="n"></i><i class="f"></i><i class="f"></i><i class="j"></i></div>
+        <div class="rv-lower"><div class="rv-ph" aria-hidden="true"><i class="n"></i><i class="j"></i></div>
         <div class="rv-info">
           <div class="rv-name">${sp.name}</div>
-          <div class="rv-facts">
-            <div><b>${formatSize(item.size)}</b><span>Size</span></div>
-            <div><b>${howLine(sp)}</b><span>How</span></div>
-          </div>
           <div class="rv-journal"><span class="rv-stamp" aria-hidden="true">No.<b>${no}</b></span><span>Added to your Beach Journal</span></div>
         </div></div>
         <div class="rv-btns"></div>`;
@@ -258,6 +270,11 @@ export class Reveal {
       const share = button('Share', 'btn ghost', () => this.cur?.settled && void this.share(sp, item));
       btns.append(cont, share);
       el.append(fx, card);
+      if (scene) {
+        hero = document.createElement('canvas');
+        hero.className = 'rv-fx rv-hero';
+        el.append(hero);
+      }
       this.sizeCanvas(stage, STAGE, STAGE);
       stage.style.left = `${-STAGE_X}px`;
       stage.style.top = `${-STAGE_Y}px`;
@@ -290,6 +307,7 @@ export class Reveal {
     const returnTo = modal && document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.root.append(el);
     const inerted = modal ? inertOthers(el) : [];
+    if (hero) this.sizeCanvas(hero, innerWidth, innerHeight, 2);
     if (fx) {
       this.sizeCanvas(fx, innerWidth, innerHeight, 1);
       addEventListener('resize', this.resize);
@@ -303,6 +321,8 @@ export class Reveal {
       el,
       stage,
       fx,
+      hero,
+      chromeAt: hero ? CHROME_MS[rarity]! : 0,
       settled: false,
       stamped: false,
       swallow: false,
@@ -386,6 +406,8 @@ export class Reveal {
     const a = this.cur;
     if (!a?.fx) return;
     this.sizeCanvas(a.fx, innerWidth, innerHeight, 1);
+    if (a.hero) this.sizeCanvas(a.hero, innerWidth, innerHeight, 2);
+    a.heroDone = false;
     a.fxAt = -Infinity;
     this.draw(a, this.now() - a.start);
   };
@@ -432,13 +454,16 @@ export class Reveal {
         (a.el.querySelector('.btn.primary') as HTMLElement | null)?.focus({ preventScroll: true });
       }
     }
-    if (t >= popAt + 120) a.el.classList.add('info');
+    if (a.hero && t >= a.chromeAt) a.el.classList.add('chrome');
+    // the name stamps in once the card is there (scene tiers), else just after the pop
+    if (t >= (a.hero ? a.chromeAt + 200 : popAt + 120)) a.el.classList.add('info');
     if (!a.stamped && t >= settleAt - 160) {
       a.stamped = true;
       a.el.classList.add('stamped');
       this.d.sfx.place(2);
     }
     this.drawStage(a, t, POOL_W, POOL_H, rm, popAt);
+    if (a.hero) this.drawHero(a, t, rm, popAt);
     // the backdrop: every frame while it moves; once settled ~15 fps (rays turn slowly), once if still
     if (a.fx) {
       const now = this.now();
@@ -471,6 +496,8 @@ export class Reveal {
     rm: boolean,
     popAt: number,
   ): void {
+    // epic/legendary: the creature is on the hero canvas until it lands in the pool
+    if (a.hero && t < a.chromeAt + HANDOFF_MS) return;
     const cx = w / 2;
     const cy = h * 0.55;
     const s = Math.min(w, h) * (a.modal ? 0.84 : 0.7);
@@ -611,16 +638,22 @@ export class Reveal {
       const end = beatEnd(rank);
       if (u >= end) expr = u - end >= BLINK_AT_MS && u - end < BLINK_AT_MS + BLINK_MS ? 'blink' : 'idle';
     }
-    g.save();
-    g.translate(cx, cy + dy);
-    g.rotate(ang);
-    g.scale(sx * big, sy * big);
-    drawCreature(g, a.sp, 0, 0, s, 0, opts(expr, u, sig));
-    g.restore();
+    withFinish(g, a.item.golden, u, rm, cx, cy + dy, s * big, (gg) => {
+      gg.save();
+      gg.translate(cx, cy + dy);
+      gg.rotate(ang);
+      gg.scale(sx * big, sy * big);
+      drawCreature(gg, a.sp, 0, 0, s, 0, opts(expr, u, sig));
+      gg.restore();
+    });
     if (a.item.golden && !rm) sparkles(g, cx, cy, s * 0.62, 5, u / 1000);
   }
 
-  /** Behind the card: dim, rays (rare+), sparkles, and the full-screen tide (legendary). */
+  /**
+   * Behind the card: dim; uncommon gets a soft tier-tinted vignette; rare+ rays in the tier colour
+   * (gold legendary, purple epic) with a soft radial falloff; legendary a deep tide rolls up while
+   * the light builds. Epic/legendary rays centre on the big creature, then follow it into the pool.
+   */
   private drawFx(a: Active, t: number, rm: boolean, popAt: number, total: number): void {
     const c = a.fx!;
     const g = c.getContext('2d')!;
@@ -628,21 +661,20 @@ export class Reveal {
     const H = innerHeight;
     g.clearRect(0, 0, W, H);
     const rank = a.item.firstGolden ? 3 : RARITY_RANK[a.sp.rarity];
+    const col = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
     const night = this.d.night();
-    // scrim: epic and legendary dim the board more
-    const dim = rank >= 4 ? 0.62 : 0.42;
-    g.fillStyle = night ? `rgba(4,12,20,${dim})` : `rgba(43,35,28,${dim * 0.55})`;
+    // scrim: epic and legendary dim the board more (a scene, not a card)
+    const dim = rank >= 5 ? 0.72 : rank >= 4 ? 0.64 : 0.42;
+    g.fillStyle = night ? `rgba(4,12,20,${dim})` : `rgba(43,35,28,${dim * (rank >= 4 ? 0.8 : 0.55)})`;
     g.fillRect(0, 0, W, H);
-    const pool = (a.stage.parentElement ?? a.stage).getBoundingClientRect();
-    const cx = pool.left + pool.width / 2;
-    const cy = pool.top + pool.height * 0.55;
-    // legendary: the tide rolls up the whole screen, then settles as deep water behind the card
+    const { x: cx, y: cy } = this.lightCentre(a, t, W, H);
+    // legendary: a deep tide rolls up the whole screen while the light builds
     if (rank >= 5) {
       const k = rm ? 1 : Math.min(1, t / (popAt + 300));
       const top = H * (1 - 1.05 * easeOut(k));
       const gr = g.createLinearGradient(0, top, 0, H);
-      gr.addColorStop(0, night ? 'rgba(47,184,216,0.55)' : 'rgba(92,200,224,0.7)');
-      gr.addColorStop(1, night ? 'rgba(10,40,70,0.9)' : 'rgba(22,88,138,0.85)');
+      gr.addColorStop(0, night ? 'rgba(24,70,92,0.55)' : 'rgba(30,78,96,0.5)');
+      gr.addColorStop(1, night ? 'rgba(4,14,24,0.9)' : 'rgba(10,30,44,0.82)');
       g.fillStyle = gr;
       g.beginPath();
       g.moveTo(0, H);
@@ -651,39 +683,189 @@ export class Reveal {
       g.closePath();
       g.fill();
       if (!rm && k < 1) {
-        g.strokeStyle = 'rgba(255,255,255,0.8)';
-        g.lineWidth = 4;
+        g.strokeStyle = 'rgba(255,255,255,0.35)';
+        g.lineWidth = 3;
         g.beginPath();
         for (let i = 0; i <= 12; i++) g.lineTo((W * i) / 12, top + Math.sin(i * 0.9 + t / 180) * 10);
         g.stroke();
       }
     }
-    // light rays fan open behind the creature (rare+); they turn slowly unless motion is reduced
-    if (rank >= 3 && t >= popAt) {
+    // uncommon: a soft vignette in the tier colour (common toast → uncommon card → epic+ scene)
+    if (rank === 2) {
+      const vg = g.createRadialGradient(cx, cy, Math.min(W, H) * 0.28, cx, cy, Math.max(W, H) * 0.72);
+      vg.addColorStop(0, hexA(col, 0));
+      vg.addColorStop(1, hexA(col, night ? 0.3 : 0.38));
+      g.fillStyle = vg;
+      g.fillRect(0, 0, W, H);
+    }
+    // the light: builds before the pop on epic/legendary, fans out as rays from the pop (rare+)
+    const lightFrom = a.hero ? popAt * 0.35 : popAt;
+    if (rank >= 3 && t >= lightFrom) {
+      const build = a.hero && t < popAt ? (t - lightFrom) / (popAt - lightFrom) : 1;
       const k = rm ? 1 : Math.min(1, (t - popAt) / 400);
+      const kk = a.hero ? Math.max(0.35 * easeOut(build), t >= popAt ? 0.35 + 0.65 * k : 0) : k;
+      const len = Math.max(W, H) * (rank >= 5 ? 0.8 : rank >= 4 ? 0.7 : 0.5) * (0.4 + 0.6 * easeOut(kk));
+      // a soft glow under the rays
+      const glow = g.createRadialGradient(cx, cy, 0, cx, cy, len * 0.55);
+      glow.addColorStop(0, hexA(col, (rank >= 4 ? 0.55 : 0.35) * kk));
+      glow.addColorStop(1, hexA(col, 0));
+      g.fillStyle = glow;
+      g.fillRect(0, 0, W, H);
       const n = rank >= 5 ? 16 : rank >= 4 ? 12 : 8;
-      const len = Math.max(W, H) * (rank >= 5 ? 0.75 : 0.5) * (0.4 + 0.6 * easeOut(k));
       g.save();
       g.translate(cx, cy);
       g.rotate(rm ? 0 : (t / 20000) * Math.PI * 2);
+      // one radial gradient for every ray: bright at the centre, gone at the tips
+      const rg = g.createRadialGradient(0, 0, 0, 0, 0, len);
+      rg.addColorStop(0, hexA(col, 0.6 * kk));
+      rg.addColorStop(0.3, hexA(col, 0.3 * kk));
+      rg.addColorStop(0.65, hexA(col, 0.08 * kk));
+      rg.addColorStop(1, hexA(col, 0));
+      g.fillStyle = rg;
+      g.beginPath();
       for (let i = 0; i < n; i++) {
-        g.rotate((Math.PI * 2) / n);
-        const gr = g.createLinearGradient(0, 0, 0, -len);
-        gr.addColorStop(0, rank >= 5 ? `rgba(255,228,140,${0.5 * k})` : `rgba(255,255,255,${0.42 * k})`);
-        gr.addColorStop(1, 'rgba(255,255,255,0)');
-        g.fillStyle = gr;
-        g.beginPath();
+        const a0 = (i / n) * Math.PI * 2;
+        const hw = (Math.PI / n) * 0.42;
         g.moveTo(0, 0);
-        g.lineTo(-len * 0.09, -len);
-        g.lineTo(len * 0.09, -len);
+        g.lineTo(Math.cos(a0 - hw) * len, Math.sin(a0 - hw) * len);
+        g.lineTo(Math.cos(a0 + hw) * len, Math.sin(a0 + hw) * len);
         g.closePath();
-        g.fill();
       }
+      g.fill();
       g.restore();
     }
     // sparkles drift around the card (rare+)
     if (rank >= 3 && t >= popAt && !rm) sparkles(g, cx, cy, Math.min(W, 420) * 0.48, rank >= 5 ? 12 : 7, t / 1000);
     void total;
+  }
+
+  /** Where the light comes from: the big creature (epic/legendary), following it into the pool. */
+  private lightCentre(a: Active, t: number, W: number, H: number): { x: number; y: number } {
+    const pool = (a.stage.parentElement ?? a.stage).getBoundingClientRect();
+    const px = pool.left + pool.width / 2;
+    const py = pool.top + pool.height * 0.55;
+    if (!a.hero) return { x: px, y: py };
+    const h = easeInOut(Math.min(1, Math.max(0, (t - a.chromeAt) / HANDOFF_MS)));
+    return { x: W / 2 + (px - W / 2) * h, y: H * 0.42 + (py - H * 0.42) * h };
+  }
+
+  /**
+   * Epic/legendary on the full-screen hero canvas: the coin with the silhouette pulses while the
+   * light builds; at the pop the creature enters large, then moves into the card's pool as the
+   * chrome slides in (the pool's own creature takes over when it arrives).
+   */
+  private drawHero(a: Active, t: number, rm: boolean, popAt: number): void {
+    const c = a.hero!;
+    const g = c.getContext('2d')!;
+    const W = innerWidth;
+    const H = innerHeight;
+    const end = a.chromeAt + HANDOFF_MS;
+    if (t >= end) {
+      if (!a.heroDone) {
+        g.clearRect(0, 0, W, H);
+        a.heroDone = true;
+      }
+      return;
+    }
+    a.heroDone = false;
+    g.clearRect(0, 0, W, H);
+    const tier = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
+    const legend = a.sp.rarity === 'legendary';
+    const cx = W / 2;
+    const cy = H * 0.42;
+    const night = this.d.night();
+    if (t < popAt) {
+      // the coin: pulses (harder as the light builds), squashes just before it bursts
+      const k = t / popAt;
+      const beat = Math.max(0, Math.sin((t / 420) * Math.PI * 2));
+      const pulse = 1 + (0.03 + 0.07 * k) * beat;
+      const squash = k > 0.9 ? 1 - (k - 0.9) * 1.5 : 1;
+      const r = Math.min(W, H) * 0.15 * pulse * Math.min(1, 0.6 + t / 300);
+      g.save();
+      g.translate(cx, cy);
+      g.scale(1 / squash, squash);
+      const face = legend ? ['#FFF4C2', '#F2C14E', '#B9821F'] : [shade(tier, 0.6), tier, shade(tier, -0.35)];
+      const gr = g.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r);
+      gr.addColorStop(0, face[0]!);
+      gr.addColorStop(0.6, face[1]!);
+      gr.addColorStop(1, face[2]!);
+      g.fillStyle = gr;
+      g.beginPath();
+      g.arc(0, 0, r, 0, Math.PI * 2);
+      g.fill();
+      g.lineWidth = r * 0.07;
+      g.strokeStyle = shade(tier, -0.4);
+      g.stroke();
+      g.lineWidth = r * 0.03;
+      g.strokeStyle = 'rgba(255,255,255,0.7)';
+      g.beginPath();
+      g.arc(0, 0, r * 0.82, 0, Math.PI * 2);
+      g.stroke();
+      drawCreature(g, a.sp, 0, 0, r * 1.25, 0, { silhouette: shade(tier, -0.55) });
+      // a glint crosses the coin on every beat
+      g.save();
+      g.beginPath();
+      g.arc(0, 0, r, 0, Math.PI * 2);
+      g.clip();
+      const gx = -r * 1.5 + ((t % 840) / 840) * r * 3;
+      const sh = g.createLinearGradient(gx - r * 0.3, -r, gx + r * 0.3, r);
+      sh.addColorStop(0, 'rgba(255,255,255,0)');
+      sh.addColorStop(0.5, 'rgba(255,255,255,0.55)');
+      sh.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = sh;
+      g.fillRect(-r, -r, r * 2, r * 2);
+      g.restore();
+      g.restore();
+      return;
+    }
+    const u = t - popAt;
+    const cls = artSizeOf(a.sp.id);
+    const big = cls ? REVEAL_SCALE[cls] : 1;
+    const bigS = Math.min(W * 0.78, H * 0.4, 400);
+    // into the pool once the chrome slides in
+    const h = easeInOut(Math.min(1, Math.max(0, (t - a.chromeAt) / HANDOFF_MS)));
+    const pool = (a.stage.parentElement ?? a.stage).getBoundingClientRect();
+    const tx = pool.left + pool.width / 2;
+    const ty = pool.top + pool.height * 0.55;
+    const ts = Math.min(POOL_W, POOL_H) * 0.84 * big;
+    const x = cx + (tx - cx) * h;
+    const y = cy + (ty - cy) * h;
+    const s = bigS + (ts - bigS) * h;
+    // the pop: a ring and droplets fly off the coin
+    if (u < 420) {
+      const k = u / 420;
+      g.globalAlpha = 1 - k;
+      g.strokeStyle = '#FFFFFF';
+      g.lineWidth = 4 * (1 - k) + 1;
+      g.beginPath();
+      g.arc(cx, cy, Math.min(W, H) * (0.15 + k * 0.3), 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = hexA(tier, 0.9);
+      for (let i = 0; i < 14; i++) {
+        const an = (i / 14) * Math.PI * 2 + 0.3;
+        const d = Math.min(W, H) * (0.16 + k * 0.32);
+        g.beginPath();
+        g.arc(cx + Math.cos(an) * d, cy + Math.sin(an) * d + k * k * 12, 5 * (1 - k) + 1, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.globalAlpha = 1;
+    }
+    const out = spring(u, 420, 0.12);
+    const sx = 0.5 + 0.5 * out;
+    const sy = 0.5 + 0.5 * out + 0.14 * Math.max(0, 1 - u / 280);
+    const opts: DrawOpts = {
+      golden: a.item.golden,
+      expression: u < 420 ? 'surprised' : 'happy',
+      t: u / 1000,
+      night,
+    };
+    withFinish(g, a.item.golden, u, rm, x, y, s * sx, (gg) => {
+      gg.save();
+      gg.translate(x, y);
+      gg.scale(sx, sy);
+      drawCreature(gg, a.sp, 0, 0, s, 0, opts);
+      gg.restore();
+    });
   }
 
   private async share(sp: Species, item: RevealItem): Promise<void> {
@@ -772,6 +954,61 @@ function button(label: string, cls: string, fn: () => void): HTMLButtonElement {
 
 const cap = (s: string) => s[0]!.toUpperCase() + s.slice(1);
 const easeOut = (k: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
+const easeInOut = (k: number) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
+
+let scratch: HTMLCanvasElement | null = null;
+/**
+ * Golden finish: the creature's own golden art read mustard on the card. Draw it to a scratch
+ * canvas, lay a warmer, brighter light-gold wash over its pixels only, and sweep a moving specular
+ * glint across it (no glint with reduced motion). (x, y, s): the creature's centre and box.
+ */
+function withFinish(
+  g: CanvasRenderingContext2D,
+  golden: boolean,
+  tMs: number,
+  rm: boolean,
+  x: number,
+  y: number,
+  s: number,
+  draw: (g: CanvasRenderingContext2D) => void,
+): void {
+  if (!golden) return draw(g);
+  const W = g.canvas.width;
+  const H = g.canvas.height;
+  scratch ??= document.createElement('canvas');
+  if (scratch.width !== W || scratch.height !== H) {
+    scratch.width = W;
+    scratch.height = H;
+  }
+  const sg = scratch.getContext('2d')!;
+  sg.setTransform(1, 0, 0, 1, 0, 0);
+  sg.clearRect(0, 0, W, H);
+  sg.setTransform(g.getTransform());
+  draw(sg);
+  sg.globalCompositeOperation = 'source-atop';
+  const wash = sg.createLinearGradient(0, y - s * 0.5, 0, y + s * 0.5);
+  wash.addColorStop(0, 'rgba(255,248,205,0.42)');
+  wash.addColorStop(0.55, 'rgba(255,214,110,0.22)');
+  wash.addColorStop(1, 'rgba(255,160,60,0.16)');
+  sg.fillStyle = wash;
+  sg.fillRect(x - s, y - s, s * 2, s * 2);
+  if (!rm) {
+    // one glint every 1.6 s, diagonally across the body
+    const p = ((tMs % 1600) / 1600) * 2.2 - 0.6;
+    const gx = x - s * 0.6 + s * 1.2 * p;
+    const gl = sg.createLinearGradient(gx - s * 0.14, y - s * 0.5, gx + s * 0.14, y - s * 0.3);
+    gl.addColorStop(0, 'rgba(255,255,255,0)');
+    gl.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+    gl.addColorStop(1, 'rgba(255,255,255,0)');
+    sg.fillStyle = gl;
+    sg.fillRect(x - s, y - s, s * 2, s * 2);
+  }
+  sg.globalCompositeOperation = 'source-over';
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(scratch, 0, 0);
+  g.restore();
+}
 
 function hexA(hex: string, a: number): string {
   const n = parseInt(hex.slice(1), 16);

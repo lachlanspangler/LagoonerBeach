@@ -74,7 +74,7 @@ test.describe('baselines', () => {
       await boot(page, 'seed=42');
       await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
       await page.waitForTimeout(300);
-      await page.evaluate(() => (window as any).__atoll.revealFreeze(2400));
+      await page.evaluate(() => (window as any).__atoll.revealFreeze(3000));
       await page.waitForTimeout(400);
       await expect(page.locator('.reveal .rv-name')).toBeVisible();
       await expect(page).toHaveScreenshot(`reveal-${id}.png`, SNAP);
