@@ -558,3 +558,24 @@ what exists (no feature rebuilds); every test's intent kept.
 - **Tests:** `make check` 452 green; e2e 104 green on Chromium + WebKit (perf included). The midnight
   leaderboard test typed before the now-lazier leaderboard sheet existed (first letter lost, "EMO"):
   it waits for the sheet like its siblings. Pixel baselines re-recorded twice, looked at each time.
+
+## 2026-10-26 (session 3, resumed) — Milestone reviews, round 2 art, recovery
+- **Milestone reviews (fresh agents):** art round 2 = 27 A / 15 B / 5 C (from 11/22/13/1) →
+  docs/art/CRITIQUE-2.md; UX review → docs/research/UX_REVIEW_S3.md; code review found real bugs:
+  Larger text used CSS `zoom` (sheets overflowed small phones), lazy-chunk failures were cached for
+  the whole session, the service worker was cache-first for index.html with a constant cache name
+  (every update would strand users on stale chunks), canvas `roundRect` killed the render loop on
+  iOS 15, native share was dead code, reveal timing bugs.
+- **Decisions:** iOS minimum raised to 16.4 instead of polyfilling (roundRect, color-mix,
+  OffscreenCanvas; ADR 0005); the render loop now survives a throwing draw. The SW is web-only,
+  network-first for the shell, cache-first for hashed assets, versioned per build. Release builds
+  without a leaderboard server hide leaderboards entirely (demo boards are dev/test only) — a
+  "DEMO" board in a store build or screenshot would look fake (UX review must-fix 1).
+- **Recovery:** the session was cut off mid-flight (API auth/timeouts), killing five agents. Their
+  committed work survived in their worktree branches: robustness (8 commits, all fixes), reveal
+  fixes (3), art round 3 (16 species). Merged those; uncommitted WIP (grouper, kraken, seadragon)
+  was handed to fresh agents as diffs to reuse. Lesson reinforced: agents commit per item, so an
+  interruption costs minutes, not hours. The robustness merge added @capacitor/share +
+  filesystem to package.json without installing into the shared node_modules → `npm install`.
+- Merging art round 3 from three parallel batches produced one new cross-batch collision (blenny vs
+  flounder 0.713 > 0.70) — handed to the fish finisher.
