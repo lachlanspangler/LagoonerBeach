@@ -146,3 +146,52 @@ Sheets: `docs/media/art/<id>.jpg`. All pass the style-guide checks and the R12 I
 - **Perf test:** `tests/perf/art.spec.ts` frame p95 is borderline (0.7–0.8 ms alone, 1.1–1.5 ms
   when it runs in parallel with the e2e workers on this busy machine). It passes with `--workers=1`
   and when run alone. Per-creature mean stays at 0.03–0.05 ms (budget 0.12).
+
+## Round 3 (CRITIQUE-2 legendaries: kraken, seadragon, seahorse)
+
+Picked up two interrupted WIPs: the kraken WIP was kept and pushed further. The seadragon WIP had
+gone horizontal (a level pipefish with leaves); in the lineup it read as a leafy fish with a small
+face, so I went back to main's upright drawing and applied the critique's numbers to it. Sheets:
+`docs/media/art/{kraken,seadragon}.jpg`. Both pass the style guide, the R12 matrix (closest pairs
+are elsewhere: cuttle/nautilus 0.77), the art-kit resting-face test, and have no self-crossing fill
+subpaths (checked by flattening every fill part).
+
+### Baby Kraken (`kraken`): B → **A-**
+- **Scary pose at rest:** two arms raised over the head with the tips flourishing outward ("rawr").
+  The locked silhouette is now a crowned monster with its arms up, not a crab or spider.
+- **Tips up:** the upper side arms curl their tips up. The lower side arms ripple out and down with
+  loose open hooks, so the skirt reads as tentacles rather than six crab feet.
+- Crown 1.25× wider and taller (it reads in the 24 px mask), brow 11° (≤ 12°), fang grin,
+  `neverSleepy`, XL frame-break on every side. Signature: puffs up into the scary pose (proud), can't
+  hold it, giggles (happy), then shy.
+- Rounds: (1) WIP as-is: raised arms good, the lower arms still crab feet, crown lost at 24 px;
+  (2) re-curled the lower arms, made the crown `extra` and taller: the drawing grew and the tile
+  clipped the arms; (3) crown back in the body box at −43, tips pulled inside the ±50 artboard.
+- Reveal (`--reveal kraken`): big, breaks the card top; it reads as the present.
+
+### Leafy Sea Dragon (`seadragon`): B → **A-**
+- Olive-gold `#C9A53B` (off the seahorse's orange `#F2B93B` with red stripes), sea-green leaves with
+  pale (white 45 %) veins in place of grey ink ribs, so the fronds look fresh, not scratched.
+- **Leaves +30 %, seven fronds, 56 % of the silhouette** (measured on a 0.5-unit grid: leaf pixels
+  not under the body ÷ all fill pixels; it was 41 %).
+- Snout −20 % thickness (4.4/3.2 → 3.5/2.6). The tail now sweeps **back** (the seahorse curls
+  forward into a spiral), with a leaf at the tip.
+- Rest: `restExpression: 'proud'` stays, because the kit (CRITIQUE-2 NEW 1) shows it in the detail
+  view only. Journal tiles rest eyes-open, as the critique asked and `art-kit.test.ts` requires.
+- Feels bigger than M: the crown and tail fronds are `extra` and the tail sits higher, so the box
+  went from 80×79 to 74×74. The kit scales it about 7 % up, and the leaves break the frame.
+- Rounds: (1) +30 % fronds: the belly frond read as an arm holding lettuce; (2) split it into two
+  fronds angled down along the belly, like a leafy skirt, and swapped to pale veins; (3) frame-break
+  extras. Fill parts are at the 12 cap: the main and sister blades must stay in separate parts
+  (WebKit), so a frond list costs 2 parts.
+
+### Seahorse (`seahorse`): unchanged, A-
+At 24 px and in the cast it's an orange S with red bands and a forward spiral tail. The dragon is
+now an olive head on a green leaf mass with its tail swept back. They no longer twin on colour,
+pose or silhouette, so I didn't touch the seahorse.
+
+### Checks
+`make check` green on each commit. `npm run build` OK. `tests/perf/art.spec.ts` passes. In
+`tests/e2e/art.spec.ts` the Path2D parity passes for every species, but the silhouette pair
+**cockle vs nautilus** fails (0.709 Chromium, 0.700 WebKit, limit 0.70). Neither is my species, and
+the IoU of that pair doesn't depend on kraken or seadragon, so it's an issue on main.
