@@ -8,49 +8,76 @@
  */
 import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
 
-// big round head (centre ≈ +12) on a short body that narrows to the tail root at −22
+// a blunt round head (43 u tall) carrying the giant eye, then a fast taper to a sturdy tail
+// root (17.4 u = 40 % of the head: a tiny lantern, not a tadpole)
 const body = blob([
-  [37, 1],
-  [33, -15],
-  [21, -25],
-  [6, -23],
-  [-6, -12],
-  [-16, -6],
-  [-24, -3.5],
-  [-24, 3.5],
-  [-16, 6],
-  [-6, 12],
-  [6, 23],
-  [21, 25],
-  [33, 15],
+  [38, 1],
+  [35.5, -13],
+  [26.5, -21],
+  [13, -21.5],
+  [1, -15.5],
+  [-8, -10.5],
+  [-18, -9],
+  [-26, -8.7],
+  [-28, 0],
+  [-26, 8.7],
+  [-18, 9],
+  [-8, 10.5],
+  [1, 15.5],
+  [13, 21.5],
+  [26.5, 21],
+  [35.5, 13],
 ]);
-// small crisp fork with plump rounded tips
-const tail = blob(
+// little dorsal and anal fins, one each, set well back
+const dorsal = blob(
   [
-    [-21, -3],
-    [-30, -10],
-    [-38, -22],
-    [-44, -21],
-    [-40, -8],
-    [-35, 0],
-    [-40, 8],
-    [-44, 21],
-    [-38, 22],
-    [-30, 10],
-    [-21, 3],
+    [-1, -13],
+    [-5, -22],
+    [-12, -23],
+    [-17, -13.5],
+    [-13, -8],
   ],
   0.9,
 );
-// five photophores along the lower flank, in three groups so they can blink in sequence
+const anal = blob(
+  [
+    [-5, 11],
+    [-9, 17],
+    [-15, 16.5],
+    [-17, 10.5],
+    [-13, 7.5],
+  ],
+  0.9,
+);
+// a deep crisp fork: two long plump lobes (the lanternfish's "swallow" tail at 24 px)
+const tail = blob(
+  [
+    [-24, -6.5],
+    [-30, -12],
+    [-37, -25],
+    [-44, -26],
+    [-42, -10],
+    [-36, 0],
+    [-42, 10],
+    [-44, 26],
+    [-37, 25],
+    [-30, 12],
+    [-24, 6.5],
+  ],
+  0.9,
+);
+// five photophores in a row along the belly edge, behind the face (a curve under the mouth read
+// as teeth), in three groups so they blink in sequence; at night each glows in its own small
+// halo (1.4× the dot), never a belly smear
 const DOTS: readonly (readonly [number, number])[] = [
-  [17, 11],
-  [9, 12.5],
-  [1, 11],
-  [-6.5, 7.5],
-  [-13, 4],
+  [9, 15],
+  [0.5, 11.8],
+  [-8, 8.8],
+  [-16.5, 6.2],
+  [-25, 4],
 ];
-const dot = (i: number) => circle(DOTS[i]![0], DOTS[i]![1], 2.7);
-const halo = (i: number) => circle(DOTS[i]![0], DOTS[i]![1], 4.6);
+const dot = (i: number) => circle(DOTS[i]![0], DOTS[i]![1], 2.6);
+const halo = (i: number) => circle(DOTS[i]![0], DOTS[i]![1], 3.6);
 const phA = join(dot(0), dot(1));
 const phB = join(dot(2));
 const phC = join(dot(3), dot(4));
@@ -63,53 +90,63 @@ export default defineArt({
   personality: ['earnest', 'tiny', 'glowing'],
   palette: { body: '#2FB8D8', accent: '#9BF0FF' },
   nocturnal: true,
+  deviations: { R7: 'R10: the biggest eye in the cast is the trait (18 u, 45 % of the zone)' },
   groups: [
     {
       id: 'tail',
-      pivot: [-21, 0],
+      pivot: [-23, 0],
       parts: [
         { d: tail, role: 'body' },
-        { d: join(ellipse(-39, -14, 4, 4), ellipse(-39, 14, 4, 4)), role: 'accent', kind: 'pattern', alpha: 0.8 },
+        { d: join(ellipse(-41, -17, 4, 4.5), ellipse(-41, 17, 4, 4.5)), role: 'accent', kind: 'pattern', alpha: 0.8 },
       ],
     },
     {
       id: 'body',
       parts: [
+        { d: dorsal, role: 'body' },
+        { d: anal, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(14, 24, 22, 6), role: 'belly', kind: 'pattern' },
+        { d: ellipse(18, 22, 20, 5), role: 'belly', kind: 'pattern' },
+        {
+          d: join(ellipse(-8, -22.5, 8, 3.5, -8), ellipse(-11, 17, 7, 3, 10)),
+          role: 'accent',
+          kind: 'pattern',
+          alpha: 0.6,
+        },
       ],
     },
     {
       id: 'phA',
-      pivot: [13, 12],
+      pivot: [4, 13],
       parts: [
         { d: join(halo(0), halo(1)), role: 'light', outline: false, alpha: 0.35 },
-        { d: phA, role: 'light' },
+        { d: phA, role: 'light', outline: false },
       ],
     },
     {
       id: 'phB',
-      pivot: [1, 11],
+      pivot: [-8, 8.5],
       parts: [
         { d: halo(2), role: 'light', outline: false, alpha: 0.35 },
-        { d: phB, role: 'light' },
+        { d: phB, role: 'light', outline: false },
       ],
     },
     {
       id: 'phC',
-      pivot: [-10, 6],
+      pivot: [-20, 5],
       parts: [
         { d: join(halo(3), halo(4)), role: 'light', outline: false, alpha: 0.35 },
-        { d: phC, role: 'light' },
+        { d: phC, role: 'light', outline: false },
       ],
     },
   ],
-  shine: ellipse(20, -12, 7, 3, -24),
+  shine: ellipse(24, -11, 6.5, 2.8, -24),
   face: {
     eyes: [[12, -1]],
-    eye: 11.2,
-    zone: [-2, -28, 38, 47],
-    mouth: { at: [30, 6], w: 6.5, shape: 'smile' },
+    eye: 18,
+    zone: [-4, -24, 42, 40],
+    // earnest wonder: a small round "oh"
+    mouth: { at: [31, 10], w: 9, shape: 'o' },
     sweet: true,
   },
   idle: {
