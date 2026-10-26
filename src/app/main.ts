@@ -35,7 +35,7 @@ import {
   type Profile,
 } from '../platform/storage.ts';
 import { Scene } from '../render/scene.ts';
-import { DAY, NIGHT } from '../render/theme.ts';
+import { DAY, NIGHT, fmt } from '../render/theme.ts';
 import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
 import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
@@ -876,6 +876,9 @@ const ui = new Ui({
       !state.over,
       Object.keys(journal.entries).length,
       profile.daily.lastDay === dayIndex(today()),
+      mode === 'puzzle'
+        ? `Reef ${state.seed + 1}`
+        : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
     ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),

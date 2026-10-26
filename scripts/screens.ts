@@ -124,6 +124,9 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForTimeout(700);
   },
   menu: async (p) => {
+    // a game in progress: Resume says what it goes back to ("Endless · 3,150")
+    await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+    await p.evaluate(() => (window as any).__atoll.stageBest(12480, 3150));
     await p.getByRole('button', { name: 'Menu' }).click();
     await p.waitForTimeout(600);
   },

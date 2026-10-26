@@ -300,7 +300,15 @@ export class Ui {
   }
 
   // ─────────────────────────────────────────────────────────────────────────── home
-  showMenu(p: Profile, mode: Mode, canResume: boolean, journalCount = 0, dailyDone = false): void {
+  showMenu(
+    p: Profile,
+    mode: Mode,
+    canResume: boolean,
+    journalCount = 0,
+    dailyDone = false,
+    /** What Resume goes back to, e.g. "Endless · 3,150" or "Reef 28". */
+    resumeWhat = '',
+  ): void {
     const card = document.createElement('div');
     card.className = 'sheet home stagger';
     card.dataset.kind = 'menu';
@@ -323,7 +331,13 @@ export class Ui {
     }
     if (canResume)
       card.append(
-        this.button('', 'btn primary', `${icon('play', { filled: true })}Resume`, 'Resume', () => this.h.onResume()),
+        this.button(
+          'menu-resume',
+          'btn primary',
+          `${icon('play', { filled: true })}Resume${resumeWhat ? ` <span class="resume-what">${resumeWhat}</span>` : ''}`,
+          resumeWhat ? `Resume ${resumeWhat.replace(' · ', ', ')}` : 'Resume',
+          () => this.h.onResume(),
+        ),
       );
     if (mode === 'puzzle')
       card.append(
@@ -386,7 +400,7 @@ export class Ui {
       this.button(
         '',
         'link-tile',
-        `${icon('journal')}<span>Journal</span><small class="num tile-badge">${journalCount}/${SPECIES.length}</small>`,
+        `<span class="tile-ic">${icon('journal')}<small class="num tile-badge">${journalCount}/${SPECIES.length}</small></span><span>Journal</span>`,
         `Beach Journal, ${journalCount} of ${SPECIES.length} found`,
         () => this.h.onJournal(),
       ),
