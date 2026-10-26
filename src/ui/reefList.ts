@@ -30,6 +30,10 @@ export interface ReefListModel {
 export type ButtonFactory = (id: string, cls: string, html: string, label: string, fn: () => void) => HTMLButtonElement;
 
 const TIER_NAME: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
+
+/** Depth in metres: one metre per reef, so each chapter of 20 sinks 20 m (UX S3: a depth meter). */
+export const depthOf = (reef: number): number => Math.max(0, Math.floor(reef));
+const span = (chapter: number) => `${depthOf((chapter - 1) * CHAPTER_SIZE + 1)}–${depthOf(chapter * CHAPTER_SIZE)} m`;
 const FIRST_ENDLESS_CHAPTER = SHIPPED_REEFS / CHAPTER_SIZE + 1;
 
 /** Highest chapter the list lets you open: one past the furthest of current, frontier and deepest. */
@@ -58,9 +62,12 @@ export function buildReefList(
   const deepest = deepestChapter(solved);
   const head = document.createElement('div');
   head.className = 'sheet-head';
+  // how deep you've been: the deepest reef cleared, in metres
+  let frontier = 0;
+  for (const id of solved) frontier = Math.max(frontier, Number(id.replace(/\D/g, '')) || 0);
   head.innerHTML = `<div style="flex:1;min-width:0"><h2 class="title-m">Reefs</h2><div class="callout" data-testid="reef-depth">${solved.size} cleared${
-    deepest ? ` · Depth: chapter ${deepest}` : ''
-  }${pure.size ? ` · ${pure.size} without hints` : ''}</div></div>`;
+    frontier ? ` · <b class="num">Depth ${depthOf(frontier)} m</b>` : ''
+  }${deepest ? ` · chapter ${deepest}` : ''}${pure.size ? ` · ${pure.size} without hints` : ''}</div></div>`;
   head.append(button('', 'round', icon('close'), 'Close', onClose));
   card.append(head);
 
@@ -84,7 +91,7 @@ export function buildReefList(
     cta.append(
       button(
         'reef-of-day',
-        `btn ${m.daily.done || climbing ? '' : 'primary'}`,
+        'btn small reef-day', // secondary: Continue is the way on
         `${m.daily.done ? icon('check') : icon('daily')}Reef of the day · ${m.daily.index + 1} · ${tierName}`,
         `Reef of the day, reef ${m.daily.index + 1}${m.daily.done ? ', done' : ''}`,
         () => onPick(m.daily!.index),
@@ -107,6 +114,15 @@ export function buildReefList(
   scroller.className = 'sheet-body';
   const grid = document.createElement('div');
   grid.className = 'reef-grid';
+  // the water behind the tiles darkens chapter by chapter (you're sinking), with a depth gauge
+  const sea = document.createElement('div');
+  sea.className = 'reef-sea';
+  const gauge = document.createElement('div');
+  gauge.className = 'depth-gauge';
+  gauge.setAttribute('aria-hidden', 'true');
+  sea.append(gauge, grid);
+  const upcoming = document.createElement('div');
+  upcoming.className = 'reef-upcoming';
   const key = document.createElement('div');
   key.className = 'tier-key caption';
   key.innerHTML = ['calm', 'tricky', 'deep', 'abyss']
@@ -115,7 +131,7 @@ export function buildReefList(
         `<span class="reef t-${t}" style="all:unset;display:inline-flex;align-items:center;gap:5px"><i style="background:var(--tier-c)"></i>${TIER_NAME[t]}</span>`,
     )
     .join('');
-  scroller.append(grid, key);
+  scroller.append(sea, upcoming, key);
   card.append(nav, scroller);
 
   const render = (): void => {
@@ -124,9 +140,18 @@ export function buildReefList(
     const segs = Array.from({ length: CHAPTER_SIZE }, (_, k) =>
       solved.has(reefId(first + k)) ? '<i class="on"></i>' : '<i></i>',
     ).join('');
-    title.innerHTML = `<b data-testid="chapter-title">Chapter ${chapter} · ${chapterName(chapter)}</b><span class="caption num">${done}/${CHAPTER_SIZE} cleared${
+    title.innerHTML = `<b data-testid="chapter-title">Chapter ${chapter} · ${chapterName(chapter)}</b><span class="caption num">${done}/${CHAPTER_SIZE} cleared · ${span(chapter)}${
       chapter >= FIRST_ENDLESS_CHAPTER ? ' · endless' : ''
     }</span><span class="segs" aria-hidden="true">${segs}</span>`;
+    // 0 at the surface → 1 by chapter 19 (the end of the pack) and beyond
+    const sink = Math.min(1, (chapter - 1) / 18);
+    sea.style.setProperty('--sink', sink.toFixed(3));
+    gauge.innerHTML = `<i style="top:${(sink * 100).toFixed(1)}%"></i><span class="num">${depthOf(chapter * CHAPTER_SIZE)} m</span>`;
+    // the next chapters, by name: somewhere to be headed
+    const ahead = [chapter + 1, chapter + 2];
+    upcoming.innerHTML = `<span class="caption">Deeper</span>${ahead
+      .map((c) => `<span class="reef-next-ch" title="${span(c)}"><b>${c}</b> ${chapterName(c)}</span>`)
+      .join('')}`;
     prev.disabled = chapter <= 1;
     fwd.disabled = chapter >= top;
     grid.replaceChildren();
@@ -141,7 +166,12 @@ export function buildReefList(
           '',
           cls,
           `<span class="num">${n}</span>${
-            pure.has(id) ? icon('star', { filled: true, cls: 'star' }) : isSolved ? icon('check', { cls: 'tick' }) : ''
+            // a sticker on every cleared reef: a shell, or a gold star when cleared without hints
+            pure.has(id)
+              ? icon('star', { filled: true, cls: 'stk star' })
+              : isSolved
+                ? icon('shell', { filled: true, cls: 'stk shell' })
+                : ''
           }`,
           `Reef ${n}${isSolved ? ', cleared' : ''}${pure.has(id) ? ', no hints' : ''}`,
           () => onPick(i),
