@@ -167,3 +167,44 @@ compositing in headless Chromium (no GPU) — reported, not asserted.
   `scripts/moments.ts` (real play, every capture frozen at its word).
 - Baselines: `tests/e2e/celebrate.spec.ts-snapshots/` (reveal baselines change when ADR 0011's fleet
   redraws boxcrab/kraken — re-record then).
+
+## Peaks + reveal tiers (2026-10-26, session-3 UX review)
+The review found normal moves nicely calm but the peaks too close to them. Pinches keep their exact
+timing and placement; "Nice Lagoon!" keeps its size and treatment (it only moves, see below).
+- **Peaks (tier 3–4 only).** Words land with one overshoot pop (`peakPop`: 0.45/0.3 → 1.14/1.2 at
+  150 ms → 1 at 360 ms, no wobble) instead of the spring; tier 4 gets a soft warm glow under the
+  word. Height ratio Unbelievable : Nice Lagoon = 1.25 : 0.72 (≈ 1.7×; long words are width-capped
+  to the board, so the on-screen ratio is ≥ 1.35×). The jackpot sweep is now **gold** and runs just
+  after the word pops (`wordAt + 120`), so the board itself lights up (moving band, alpha ≤ 0.34; the
+  no-flash test still passes). The shake (≤ 6 px) lands with the first ring burst; tier 4 takes the
+  full 6 px. The score counts up on a fixed clock (420/520 ms, `Scene.scoreRoll`) and pulses gold
+  (×1.17/×1.24) as the last digit lands.
+- **COMBO badge.** Below ×10: clean Nunito 900 caps in one ink (`'flat'` sprite style: Day
+  `#16588A`, Night `#6FD3EC`) in both themes — the outlined Fraunces at ~14 px was muddy on Day and
+  Night rendered differently. From ×10: the outlined display treatment (warm ×10, gold ×20), and
+  each step bursts a ring + 10 sparks off the badge (600 ms) on top of the colour change and punch.
+- **Placement and stacking.** A word's stack sits half a cell higher when there's room, and waits
+  (≤ 140 ms) until the last ring's top row has lifted and left (`topPop + BURST_LIFT + 90`).
+  Picking up a piece (`onPick`) or committing the next move hurries the previous word and number out
+  (`Celebrate.hurry`, 120 ms); a word whose move is no longer the latest never lands (`moveSeq`),
+  only its points do. At most 3 creatures fly at once (`MAX_FLYING`, counting earlier waves/moves
+  still in the air; new species get the seats); the rest become one gold "+N" coin chip. Creatures
+  swim to the journal on an arc that hugs the right edge, so they never cross the badge slot.
+- **Reveal tiers** — common (toast) → uncommon (card, soft tier-tinted vignette) → rare (card +
+  rays) → epic/legendary (a *scene*). Epic/legendary: a coin in the tier colour (gold legendary,
+  purple epic) with the silhouette pulses while the light builds (legendary 1.2 s, epic 0.7 s), it
+  bursts, the creature enters large on a sharp full-screen canvas (`rv-hero`), then the card chrome
+  slides up (`chrome` at 1.75/1.15 s), the creature moves into its pool (320 ms) and the name stamps
+  in. Settled: legendary 2.5 s, epic 1.8 s (was 2.0/1.45; a tap still skips at any point; ADR §8's
+  "≤ 2 s" for reveals now reads "≤ 2.5 s"). Rays are drawn in the tier colour from one radial
+  gradient (bright core, soft falloff) instead of the flat white sunburst; the legendary tide is
+  deep water, not bright ocean blue. Golden: a warmer, brighter light-gold wash over the creature's
+  pixels plus a moving specular glint (`withFinish`; no glint in reduced motion). The card keeps the
+  creature, name, rarity and No.; SIZE and HOW moved off it (the journal species page has both:
+  the size line and the hint). Reduced motion: no scene (the settled card at once), as before.
+- **Share card.** Tier-colour background, the creature in a lagoon (water + caustic lines) ringed by
+  blocks, the app's icon mark + wordmark on top, the name in plain Fraunces (no outline) on a cream
+  label with pips, rarity · No., "Found by" and the date.
+- Review: `docs/media/celebrate/` (g2 legendary, g3 epic, g4 golden added), clips re-recorded.
+  Perf: the biggest-moment p95 under 4× throttle measured the same as main on a heavily loaded
+  machine (main 8.4–11.6 ms vs this 7.4–10.8 ms in the same minute); re-measure when idle.
