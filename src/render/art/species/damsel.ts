@@ -3,8 +3,8 @@
  * Silhouette (R10): a deep oval body held tall and chest-out (a slight nose-up stance) with a big
  * swallow tail whose two long lobes flare up and down. Deeper than the minnow, forked unlike the
  * clownfish and butterfly.
- * Personality: brave, small, bold. Signature: puffs its chest and charges 4 units at the viewer's
- * finger, then settles, very pleased with itself.
+ * Personality: brave, small, bold; rests with a set little frown (a tiny bouncer). Signature: puffs
+ * its chest and charges 4 units at the viewer's finger, then settles, very pleased with itself.
  */
 import { blob, capsule, defineArt, ellipse, join } from '../kit.ts';
 
@@ -44,10 +44,10 @@ const dorsal = blob(
   [
     [16, -20],
     [6, -30],
-    [-8, -35],
-    [-22, -36],
-    [-27, -31],
-    [-19, -23],
+    [-6, -34],
+    [-17, -34],
+    [-21, -29],
+    [-17, -22],
     [-12, -17],
   ],
   0.9,
@@ -56,18 +56,19 @@ const anal = blob(
   [
     [14, 19],
     [4, 30],
-    [-9, 34],
-    [-22, 34],
-    [-26, 29],
-    [-18, 22],
+    [-7, 33],
+    [-17, 32.5],
+    [-21, 27.5],
+    [-17, 21],
     [-11, 16],
   ],
   0.9,
 );
-const pectoral = capsule(-7, 9, 2.8, -13, 12, 2);
+// a small pectoral tucked flat against the flank, swept 30° back (no hanging arm, no bar)
+const pectoral = capsule(-4, 8, 2.6, -8.5, 10.6, 1.9);
 // pale-blue fin tips (accent)
 const tips = join(ellipse(-42, -27, 8, 6, 40), ellipse(-42, 27, 8, 6, -40));
-const finTips = join(ellipse(-24, -34, 9, 6, 20), ellipse(-24, 32, 9, 6, -20));
+const finTips = join(ellipse(-19, -33, 7, 5, 20), ellipse(-19, 31, 7, 5, -20));
 
 export default defineArt({
   id: 'damsel',
@@ -95,14 +96,15 @@ export default defineArt({
         { d: finTips, role: 'accent', kind: 'pattern' },
       ],
     },
-    { id: 'finA', pivot: [-7, 9], parts: [{ d: pectoral, role: 'belly' }] },
+    { id: 'finA', pivot: [-4, 8], parts: [{ d: pectoral, role: 'belly', outline: false }] },
   ],
   shine: ellipse(14, -13, 8, 3.4, -20),
   face: {
     eyes: [[7, 1]],
-    eye: 9.2,
+    eye: 10.4,
     zone: [-6, -25, 36, 44],
-    mouth: { at: [26, 6], w: 6, shape: 'smile' },
+    // brave: the chest-out little frown of a tiny bouncer (CRITIQUE-2 resting mouths)
+    mouth: { at: [24.5, 6.5], w: 6, shape: 'flat' },
   },
   idle: {
     ambient: [

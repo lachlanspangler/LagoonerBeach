@@ -1,7 +1,8 @@
 /**
- * Sand Eel — LONG class (profile, level). Silhouette: a true needle (≈ 4 : 1) with a big round head
- * (30 % of the length), a pointed lower jaw that juts past the snout and a tiny forked tail; a low
- * double wave travels down the body (R10: the needle and the jaw). Silver belly under sand.
+ * Sand Eel — LONG class (profile, level). Silhouette: a true needle (≈ 4 : 1) with a slim head
+ * (30 % of the length), a pointed lower jaw that juts 6 u past the snout and a tiny forked tail; a low
+ * double wave travels down the body (R10: the needle and the jaw). Silver belly #E8ECEF under a sand back,
+ * no blue (CRITIQUE-2: off the minnow's silver-blue).
  * Personality: zippy, shy, sandy. Signature: dives tail-first into the tile floor and pops back up.
  * Three seamless segments carry the travelling wave without seams (ADR 0011 Amendment 1).
  */
@@ -17,27 +18,28 @@ const tailTip = join(
   capsule(-34, 1.5, 3, -38.5, 6.5, 2.6),
 );
 const tailMid = tube([
-  [-12, 0, 6.8],
-  [-19, 1.5, 6.2],
-  [-26, 1.5, 5.6],
+  [-12, 0, 7.1],
+  [-19, 1.5, 6.5],
+  [-26, 1.5, 5.8],
 ]);
 const body = tube([
-  [-14, 0, 6.8],
-  [-2, -1.5, 7.2],
-  [8, -1, 7.8],
-  [14, 0, 8.6],
+  [-14, 0, 7.1],
+  [-2, -1.5, 7.6],
+  [8, -1, 8.2],
+  [14, 0, 9],
 ]);
-const head = ellipse(23, -0.5, 14, 11.8);
-const snout = capsule(29, -3.5, 6, 35, -2, 3.2);
-const jaw = capsule(29, 4, 5, 40.4, 3.5, 2.4);
+const head = ellipse(22.5, -0.5, 14, 11.6);
+const snout = capsule(29, -3.5, 6, 33.6, -2, 3.2);
+// the lower jaw juts a full 6 u past the snout (R10: the sand eel's pointed underbite)
+const jaw = capsule(29, 4, 5, 40.6, 3.2, 2.2);
 
 export default defineArt({
   id: 'sandeel',
   klass: 'long',
   size: 'M',
-  feature: 'a true needle with a big round head, a pointed lower jaw jutting past the snout and a forked tail',
+  feature: 'a true needle with a slim head, a pointed lower jaw jutting past the snout and a forked tail',
   personality: ['zippy', 'shy', 'sandy'],
-  palette: { body: '#D9C489', accent: '#7F9BB0', belly: '#E8ECEF' },
+  palette: { body: '#DCC58A', accent: '#A08A50', belly: '#E8ECEF' },
   groups: [
     {
       id: 'tail2',
@@ -123,7 +125,7 @@ export default defineArt({
     eyes: [[25, -1]],
     eye: 9.4,
     zone: [12, -23, 30, 38],
-    mouth: { at: [35, 4.5], w: 5, shape: 'smile' },
+    mouth: { at: [34, 4.2], w: 5, shape: 'smile' },
     sweet: true,
   },
   deviations: {

@@ -2,7 +2,7 @@
  * Cleaner wrasse — the reef's tidy little spa attendant (fish class, profile view, level).
  * Silhouette (R10): a slim, even cigar with a rounded fan tail (no fork, no tall fins): between the
  * barracuda's needle and the minnow's forked torpedo. Bluestreak colours: a pale front half, a blue
- * back half, and one bold ink stripe that starts behind the eye and widens into the tail.
+ * back half, and one bold navy stripe that starts behind the eye and widens into the tail.
  * Personality: helpful, busy, tidy. Signature: a little "scrub" wiggle with a bubble sparkle.
  */
 import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
@@ -47,15 +47,18 @@ const front = blob([
   [2, 18],
   [8, 0],
 ]);
-// one bold ink stripe: starts well behind the eye (R18E) and widens from 7 to 10 units into the tail
+// one bold ink stripe: starts 3 u behind the eye at 4 u, arcs gently with the body's midline and
+// widens to 10 u at the tail root, then fans on into the tail (never a strip of tape)
 const stripe = tube([
-  [-5, -0.5, 3.5],
-  [-14, -0.5, 4.2],
-  [-26, 0, 5],
+  [6, 0.6, 2],
+  [-5, -0.2, 2.8],
+  [-16, -0.6, 3.8],
+  [-27, 0, 5],
 ]);
 const tailStripe = tube([
   [-27, 0, 5],
-  [-46, 0, 5],
+  [-36, 0, 6],
+  [-46, 0, 7.5],
 ]);
 const bubbles = join(circle(45, -16, 3.6), circle(39, -25, 2.6), circle(46, -31, 2));
 
@@ -65,25 +68,25 @@ export default defineArt({
   size: 'S',
   feature: 'slim even cigar with a round tail; pale front, blue back, one bold stripe widening to the tail',
   personality: ['helpful', 'busy', 'tidy'],
-  palette: { body: '#3D9BE9', accent: '#BFE6F7', belly: '#BFE6F7' },
+  palette: { body: '#3D9BE9', accent: '#23528F', belly: '#BFE6F7' },
   groups: [
     {
       id: 'tail',
       pivot: [-27, 0],
       parts: [
         { d: tail, role: 'body' },
-        { d: tailStripe, role: 'ink', kind: 'pattern', alpha: 0.9 },
+        { d: tailStripe, role: 'accent', kind: 'pattern' },
       ],
     },
     {
       id: 'body',
       parts: [
         { d: body, role: 'body' },
-        { d: front, role: 'accent', kind: 'pattern' },
-        { d: stripe, role: 'ink', kind: 'pattern', alpha: 0.9 },
+        { d: front, role: 'belly', kind: 'pattern' },
+        { d: stripe, role: 'accent', kind: 'pattern' },
       ],
     },
-    { id: 'finA', pivot: [-6, 5], parts: [{ d: pectoral, role: 'accent' }] },
+    { id: 'finA', pivot: [-6, 5], parts: [{ d: pectoral, role: 'belly' }] },
     {
       id: 'bubbles',
       pivot: [42, -20],
@@ -97,7 +100,8 @@ export default defineArt({
     eyes: [[14, 0]],
     eye: 10.6,
     zone: [4, -27, 38, 46],
-    mouth: { at: [35, 6], w: 6.5, shape: 'smile' },
+    // helpful: the wide, contented spa-attendant smile (CRITIQUE-2 resting mouths)
+    mouth: { at: [34.5, 6], w: 8, shape: 'smile' },
     sweet: true,
   },
   idle: {
