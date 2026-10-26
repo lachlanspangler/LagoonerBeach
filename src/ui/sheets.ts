@@ -155,8 +155,9 @@ export function showJournal(k: SheetKit, j: Journal): void {
   const sub = document.createElement('p');
   sub.className = 'callout j-sub';
   sub.textContent =
-    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} released` : ''].filter(Boolean).join(' · ') ||
-    'Close a loop to catch your first creature';
+    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught & released` : '']
+      .filter(Boolean)
+      .join(' · ') || 'Close a loop to catch your first creature';
   head.querySelector('.title-m')!.append(sub);
   const ink = night() ? '#6C8193' : '#968672'; // ink.3; silhouettes at 45%
   const life = new JournalLife();
@@ -184,13 +185,16 @@ export function showJournal(k: SheetKit, j: Journal): void {
       b.style.setProperty('--hab-ring', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
       const pool = document.createElement('span');
       pool.className = 'j-pool';
-      const thumb = creatureThumb(sp, 58, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
+      const thumb = creatureThumb(sp, 70, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
       pool.append(thumb);
       b.append(pool);
       if (e && hasNewArt(sp.id)) life.add(thumb, sp, (e.golden ?? 0) > 0);
       b.insertAdjacentHTML(
         'beforeend',
         `<span class="j-name">${e ? sp.name : '???'}</span>${pipsHtml(RARITY_RANK[sp.rarity])}${
+          // epic and legendary say so in a word, not only in pips and frame
+          sp.rarity === 'epic' || sp.rarity === 'legendary' ? `<span class="j-rar">${sp.rarity}</span>` : ''
+        }${
           (e?.golden ?? 0) > 0 ? icon('sparkle', { filled: true, cls: 'spark' }) : ''
         }${isNew ? '<span class="new" aria-hidden="true"></span>' : ''}`,
       );
