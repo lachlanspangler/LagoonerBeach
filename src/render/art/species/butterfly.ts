@@ -37,17 +37,17 @@ const filament = tube(
   1,
 );
 // the short straight tweezer snout (rounded tip, R3)
-const snout = capsule(15, 3, 4.2, 32.5, 3.5, 2.9);
+const snout = capsule(15, 3, 4.8, 34, 3.5, 3.3);
 // narrow tail root, then a clear fan tail in the pale fin colour
 const tail = blob(
   [
     [-21, -3.5],
     [-30, -7],
-    [-40, -19],
-    [-46, -13],
-    [-46, 0],
-    [-46, 13],
-    [-40, 19],
+    [-40.5, -21.5],
+    [-45.5, -14.5],
+    [-45.5, 0],
+    [-45.5, 14.5],
+    [-40.5, 21.5],
     [-30, 7],
     [-21, 3.5],
   ],
@@ -103,7 +103,7 @@ export default defineArt({
     eyes: [[5, 1]],
     eye: 10.6,
     zone: [-8, -25, 38, 46],
-    mouth: { at: [32, 5.6], w: 4.4, shape: 'smile' },
+    mouth: { at: [33.5, 5.8], w: 4.4, shape: 'smile' },
     sweet: true,
   },
   idle: {
