@@ -1286,6 +1286,8 @@ function debugDeps(): DebugDeps {
           unlocked: [],
           caught: { count: 9, newIds: [] },
           reducedMotion: scene.reducedMotion,
+          // review shots: the record card with its "Post your score" button (opens nothing)
+          ...(o.lb ? { leaderboard: { label: 'Post your score', open: () => undefined } } : {}),
         }),
     },
   };

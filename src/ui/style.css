@@ -909,6 +909,11 @@ html[data-theme='night'] .round {
   font: 600 calc(22px * var(--fs))/1.2 var(--font-display);
   color: var(--ink);
 }
+.res-head.record {
+  font-weight: 900;
+  font-size: calc(26px * var(--fs));
+  color: var(--gold-ink);
+}
 .res-best {
   margin: 4px auto 0;
   max-width: 260px;

@@ -531,23 +531,30 @@ export class Ui {
       [o.dailyStreak, 'Streak'],
     ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<div class="overline">${o.mode === 'daily' ? 'Daily · complete' : 'Endless'}</div>
-      <h2 class="res-head">${o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
+      <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
       <div class="hero-slot"></div>
       ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
       ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
     card.querySelector('.hero-slot')!.replaceWith(hero.el);
     if (o.caught?.newIds.length) card.append(journalStrip(o.caught.newIds, () => this.h.onJournal()));
-    if (o.mode === 'daily') {
-      card.append(this.button('', 'btn primary', `${icon('share')}Share`, 'Share result', () => this.h.onShare()));
-    } else {
-      card.append(this.button('play-again', 'btn primary', 'Play again', 'Play again', () => this.h.onNewGame()));
-    }
+    // on a record, posting it is the point: the leaderboard button leads as the one primary
+    const lbFirst = !!o.leaderboard && o.newBest;
+    const next =
+      o.mode === 'daily'
+        ? this.button('', `btn ${lbFirst ? 'small' : 'primary'}`, `${icon('share')}Share`, 'Share result', () =>
+            this.h.onShare(),
+          )
+        : this.button('play-again', `btn ${lbFirst ? 'small' : 'primary'}`, 'Play again', 'Play again', () =>
+            this.h.onNewGame(),
+          );
+    if (!lbFirst) card.append(next);
     if (o.leaderboard) {
       const lb = o.leaderboard;
-      const b = this.button('lb-open', 'btn small', lb.label, lb.label, () => lb.open());
+      const b = this.button('lb-open', `btn ${lbFirst ? 'primary' : 'small'}`, lb.label, lb.label, () => lb.open());
       card.append(b);
       lb.mount?.(b);
     }
+    if (lbFirst) card.append(next);
     card.append(
       o.mode === 'daily'
         ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play endless', () => this.h.onClassic())

@@ -148,8 +148,12 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForTimeout(1600);
   },
   'results-record': async (p) => {
-    await p.evaluate(() => (window as any).__atoll.showResults({ score: 15230, prevBest: 12480 }));
+    await p.evaluate(() => (window as any).__atoll.showResults({ score: 15230, prevBest: 12480, lb: true }));
     await p.waitForTimeout(1900);
+  },
+  'results-confetti': async (p) => {
+    await p.evaluate(() => (window as any).__atoll.showResults({ score: 15230, prevBest: 12480, lb: true }));
+    await p.waitForTimeout(1250);
   },
   'results-real': async (p) => {
     await p.evaluate(() => (window as any).__atoll.autoplay('human', 400));
