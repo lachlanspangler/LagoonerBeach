@@ -5,27 +5,17 @@
  * Signature: retracts into the burrow and rises again. The mound is drawn in front, so the eel sinks
  * behind it.
  */
-import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
+import { circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
 const stalk = tube([
-  [-4, 38, 6],
-  [-5, 24, 6.2],
-  [-5, 8, 6.2],
-  [-4, -8, 6.4],
-  [-2, -18, 6.8],
+  [-4, 38, 5.6],
+  [-5, 24, 5.6],
+  [-5, 8, 5.7],
+  [-4, -8, 6],
+  [-3, -14, 6.8],
 ]);
-// one smooth, big round head (≈ 1.8× the stalk) with a rounded snout: a periscope, not a cane
-const head = blob([
-  [-11, -26],
-  [-7, -35],
-  [3, -39.5],
-  [13, -36],
-  [19, -29],
-  [19, -22],
-  [12, -16],
-  [1, -14.5],
-  [-8, -18],
-]);
+// one big round head (≈ 1.9× the stalk), tipped 15° toward the viewer so the face looks out at us
+const head = ellipse(2.5, -23, 19, 15.5, 15);
 const mound = join(ellipse(-4, 36, 30, 8.5), ellipse(-20, 38, 12, 6), ellipse(13, 38, 12, 6));
 
 export default defineArt({
@@ -42,7 +32,7 @@ export default defineArt({
       parts: [
         { d: stalk, role: 'body' },
         { d: head, role: 'body' },
-        { d: join(circle(-7.5, -29, 3.2), circle(-8, 0, 3.4), circle(-7, 20, 3.4)), role: 'accent', kind: 'pattern' },
+        { d: join(circle(-7.5, -3, 3.6), circle(-6.5, 19, 3.6)), role: 'accent', kind: 'pattern' },
       ],
     },
     {
@@ -55,12 +45,12 @@ export default defineArt({
       ],
     },
   ],
-  shine: ellipse(0, -36, 6, 2.6, -16),
+  shine: ellipse(-4, -32, 7, 3, -10),
   face: {
-    eyes: [[8, -26]],
-    eye: 9.6,
+    eyes: [[7.5, -23.5]],
+    eye: 10.6,
     zone: [-11, -49, 31, 40],
-    mouth: { at: [15.5, -19], w: 5, shape: 'smile' },
+    mouth: { at: [15, -12.5], w: 6, shape: 'smile' },
     sweet: true,
   },
   deviations: {

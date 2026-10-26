@@ -7,35 +7,34 @@
  */
 import { blob, circle, defineArt, ellipse, join } from '../kit.ts';
 
-const body = ellipse(0, 11, 34, 9);
+const body = ellipse(0, 11, 34, 11);
 // the rim fin: a softly scalloped frill all the way round (18 lobes, alternating radius)
 const rim = blob(
   Array.from({ length: 18 }, (_, i) => {
     const a = (i / 18) * Math.PI * 2;
     const k = i % 2 ? 0.93 : 1;
-    return [-2 + 40 * k * Math.cos(a), 11 + 12.5 * k * Math.sin(a)] as const;
+    return [-2 + 40 * k * Math.cos(a), 11 + 14.5 * k * Math.sin(a)] as const;
   }),
 );
 // eye turrets: big domes on the top edge; the back one sits 8 units higher
 const turrets = join(circle(6, -8, 9), circle(22, 0, 8.4));
 const tail = blob([
-  [-37, 4],
-  [-41, 0],
-  [-44, 3],
-  [-43, 9],
-  [-44, 15],
-  [-41, 18],
-  [-37, 14],
+  [-38, 7],
+  [-42, 5.5],
+  [-44, 8],
+  [-44, 14],
+  [-42, 16.5],
+  [-38, 15],
 ]);
-const spots = join(circle(-24, 10, 3.6), circle(-12, 15, 3.2), circle(-14, 4, 3), circle(2, 16, 3));
+const spots = join(circle(-25, 10, 3.8), circle(-12, 16, 3.6), circle(3, 17, 3.2));
 const rays = join(
-  'M-30 -1L-34 -5',
-  'M-17 -4L-19 -9',
-  'M-30 19L-34 23',
-  'M-16 22L-18 27',
-  'M0 23L0 28',
-  'M16 21L18 26',
-  'M29 16L33 19',
+  'M-30 -3L-34 -7',
+  'M-17 -6L-19 -11',
+  'M-30 21L-34 25',
+  'M-16 24L-18 29',
+  'M0 25L0 30',
+  'M16 23L18 28',
+  'M29 18L33 21',
 );
 
 export default defineArt({
@@ -44,7 +43,7 @@ export default defineArt({
   size: 'M',
   feature: 'a flat pancake in a pale rim fin with two big eye turrets on top, one 8 units higher',
   personality: ['wry', 'flat', 'watchful'],
-  palette: { body: '#B78A5C', accent: '#7A5636', belly: '#E9D4AE' },
+  palette: { body: '#C79A68', accent: '#7A5636', belly: '#EED9B4' },
   groups: [
     { id: 'tail', pivot: [-37, 9], parts: [{ d: tail, role: 'belly' }] },
     {
@@ -61,7 +60,9 @@ export default defineArt({
       parts: [
         { d: body, role: 'body' },
         { d: spots, role: 'accent', kind: 'pattern' },
-        { d: ellipse(-2, 20, 26, 3.5), role: 'ink', kind: 'pattern', alpha: 0.1 },
+        { d: ellipse(-2, 22, 26, 3.5), role: 'ink', kind: 'pattern', alpha: 0.1 },
+        // the wry half-smile: only the front corner of the flat mouth curls up
+        { d: 'M31.5 11.4Q33.6 11 34.4 8.8', role: 'ink', kind: 'line', w: 3 },
       ],
     },
     // the eye turrets ride their own seamless layer (the face draws on it), so the pancake rests level
@@ -77,7 +78,7 @@ export default defineArt({
     eye: 9.6,
     front: true,
     zone: [-4, -30, 36, 40],
-    mouth: { at: [30, 10], w: 6, shape: 'smile' },
+    mouth: { at: [29.5, 11], w: 7, shape: 'flat' },
   },
   deviations: {
     R7: 'flounder eyes sit stacked on the top edge, one 8 units higher (appendix: "Eyes stacked: the joke")',
