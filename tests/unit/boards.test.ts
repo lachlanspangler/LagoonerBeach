@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  resetsIn,
   BoardTable,
   boardsFor,
   checkSubmission,
@@ -138,5 +139,18 @@ describe('BoardTable', () => {
     expect(t.top('endless:all', 1).entries[0]).toMatchObject({ name: 'KELP', avatar: 'hermit' });
     t.deletePlayer('a');
     expect(t.top('endless:all', 1).total).toBe(0);
+  });
+});
+
+describe('resetsIn', () => {
+  it('counts down to local midnight (Daily) and Monday 00:00 UTC (week)', () => {
+    const now = new Date(2026, 9, 26, 14, 44); // local afternoon
+    expect(resetsIn('daily', now)).toBe('Resets in 9h 16m');
+    const sat = new Date(Date.UTC(2026, 9, 24, 20, 0)); // Saturday 20:00 UTC
+    expect(resetsIn('week', sat)).toBe('Resets in 1d 4h');
+    const late = new Date(Date.UTC(2026, 9, 25, 23, 59, 30)); // Sunday 23:59:30 UTC
+    expect(resetsIn('week', late)).toBe('Resets in 1m');
+    const mon = new Date(Date.UTC(2026, 9, 26, 0, 0)); // Monday 00:00 UTC: a full week
+    expect(resetsIn('week', mon)).toBe('Resets in 7d 0h');
   });
 });

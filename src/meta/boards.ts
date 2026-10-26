@@ -421,3 +421,22 @@ export class BoardTable {
     }
   }
 }
+
+/**
+ * "Resets in 2d 4h": the Daily starts over at local midnight, the week board at Monday 00:00 UTC
+ * (ISO weeks, as the server files them).
+ */
+export function resetsIn(kind: 'daily' | 'week', now: Date): string {
+  let end: number;
+  if (kind === 'daily') end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
+  else {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const toMonday = (8 - d.getUTCDay()) % 7 || 7; // Sunday → 1, Monday → 7
+    end = d.getTime() + toMonday * 86_400_000;
+  }
+  const m = Math.max(1, Math.ceil((end - now.getTime()) / 60_000));
+  const dd = Math.floor(m / 1440);
+  const hh = Math.floor((m % 1440) / 60);
+  const mm = m % 60;
+  return `Resets in ${dd ? `${dd}d ${hh}h` : hh ? `${hh}h ${mm}m` : `${mm}m`}`;
+}

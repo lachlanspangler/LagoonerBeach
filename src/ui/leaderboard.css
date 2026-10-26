@@ -17,6 +17,37 @@
   align-items: center;
   gap: 10px;
 }
+.lb-x {
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-sunk);
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+}
+.lb-x .ic {
+  width: 20px;
+  height: 20px;
+}
+.lb-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lb-meta .lb-note {
+  flex: 1;
+}
+.lb-reset {
+  flex: none;
+  margin: 0 2px 8px;
+  font: 800 calc(13px * var(--fs)) var(--font);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
 .lb-chip {
   display: inline-flex;
   align-items: center;
@@ -181,8 +212,23 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   justify-content: flex-end;
 }
 .lb-medal {
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
+  filter: drop-shadow(0 1.5px 0 rgba(43, 35, 28, 0.18));
+}
+/* the podium: gold, silver and bronze washes on the top three rows */
+.lb-row.r1 {
+  background: color-mix(in srgb, var(--gold) 22%, var(--surface));
+}
+.lb-row.r2 {
+  background: color-mix(in srgb, var(--silver) 26%, var(--surface));
+}
+.lb-row.r3 {
+  background: color-mix(in srgb, var(--bronze) 18%, var(--surface));
+}
+.lb-row.r1 .lb-nm,
+.lb-row.r1 .lb-sc {
+  font-size: calc(19px * var(--fs));
 }
 .lb-medal path:first-child {
   fill: var(--gold);
@@ -200,7 +246,7 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   stroke-linecap: round;
 }
 .lb-medal text {
-  font: 900 calc(12px * var(--fs)) var(--font);
+  font: 900 calc(11px * var(--fs)) var(--font);
   fill: #2b231c;
 }
 .lb-av {
@@ -262,9 +308,29 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
     inset 3px 0 0 var(--accent),
     var(--e2);
   position: sticky;
-  top: 0;
-  bottom: 0;
+  top: 10px;
+  bottom: 10px;
   z-index: 1;
+}
+/* while pinned, a solid band of sheet colour fading out on each side: rows scroll under it
+   instead of showing through around it */
+.lb-list .lb-row.me::before,
+.lb-list .lb-row.me::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 14px;
+  pointer-events: none;
+  z-index: -1;
+}
+.lb-list .lb-row.me::before {
+  bottom: 100%;
+  background: linear-gradient(to top, var(--surface) 30%, transparent);
+}
+.lb-list .lb-row.me::after {
+  top: 100%;
+  background: linear-gradient(to bottom, var(--surface) 30%, transparent);
 }
 .lb-pin .lb-row {
   position: static;
@@ -345,32 +411,17 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
 }
 
 /* name entry: hero preview, seven pebble slots, A–Z keypad */
-.lb-name-hero {
-  margin: 10px 0 8px;
-  min-height: 52px;
-  text-align: center;
-  font: 900 calc(44px * var(--fs))/1.15 var(--font-display);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #ffd27a 0%, #5cc8e0 52%, #16588a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(14, 63, 102, 0.35);
-  filter: drop-shadow(0 2px 0 rgba(14, 63, 102, 0.16));
+/* the row you'd get on the board, live as you type */
+.lb-preview {
+  position: static;
+  margin: 14px 0 12px;
 }
-html[data-theme='night'] .lb-name-hero {
-  background-image: linear-gradient(180deg, #fff3c4 0%, #6fd3ec 55%, #2b8fc0 100%);
-  -webkit-text-stroke: 1px rgba(111, 211, 236, 0.35);
-}
-.lb-name-hero.empty {
-  background: none;
-  color: var(--ink-2);
-  -webkit-text-stroke: 0;
-  filter: none;
-  opacity: 0.45;
+.lb-preview .lb-rank {
+  font-size: calc(16px * var(--fs));
+  color: var(--accent);
 }
 .lb-slots {
+  width: 100%;
   display: flex;
   justify-content: center;
   gap: 6px;
@@ -378,13 +429,13 @@ html[data-theme='night'] .lb-name-hero {
   padding: 2px;
 }
 .lb-slot {
-  width: 40px;
-  height: 48px;
-  border-radius: 14px;
+  width: min(46px, calc((100% - 36px) / 7));
+  height: 58px;
+  border-radius: 15px;
   background: var(--surface-sunk);
   display: grid;
   place-items: center;
-  font: 900 calc(24px * var(--fs)) var(--font-display);
+  font: 900 calc(30px * var(--fs)) var(--font-display);
   color: var(--text);
 }
 .lb-slot.filled {
