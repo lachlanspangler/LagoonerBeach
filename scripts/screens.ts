@@ -124,6 +124,9 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForTimeout(700);
   },
   menu: async (p) => {
+    // a game in progress: Resume says what it goes back to ("Endless · 3,150")
+    await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
+    await p.evaluate(() => (window as any).__atoll.stageBest(12480, 3150));
     await p.getByRole('button', { name: 'Menu' }).click();
     await p.waitForTimeout(600);
   },
@@ -137,6 +140,7 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.getByRole('button', { name: 'Settings' }).click();
     await p.waitForTimeout(500);
     await p.evaluate(() => {
+      document.querySelector('.credits')?.setAttribute('open', '');
       const s = document.querySelector('.veil .sheet, .veil .card') as HTMLElement | null;
       const sc = (document.querySelector('.veil .sheet-body') as HTMLElement | null) ?? s;
       if (sc) sc.scrollTop = 9999;
@@ -148,8 +152,12 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForTimeout(1600);
   },
   'results-record': async (p) => {
-    await p.evaluate(() => (window as any).__atoll.showResults({ score: 15230, prevBest: 12480 }));
+    await p.evaluate(() => (window as any).__atoll.showResults({ score: 15230, prevBest: 12480, lb: true }));
     await p.waitForTimeout(1900);
+  },
+  'results-confetti': async (p) => {
+    await p.evaluate(() => (window as any).__atoll.showResults({ score: 15230, prevBest: 12480, lb: true }));
+    await p.waitForTimeout(1250);
   },
   'results-real': async (p) => {
     await p.evaluate(() => (window as any).__atoll.autoplay('human', 400));
@@ -281,19 +289,55 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForFunction(() => (window as any).__atoll.state().seed === 372, null, { timeout: 30000 });
     await p.waitForTimeout(800);
   },
+  // reef 40 closes chapter 2 (Ebbtide Bight): solve it for real, so the moment plays on a clean board
   'chapter-complete': async (p) => {
     await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
     await p.waitForTimeout(1200);
-    // reef 40 closes chapter 2 (Ebbtide Bight): the moment over its own reef
+    await p.evaluate(() => {
+      const pr = (window as any).__atoll.profile();
+      pr.puzzle.solved = Array.from({ length: 39 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`);
+    });
     await p.evaluate(() => (window as any).__atoll.loadPuzzle(39));
     await p.waitForTimeout(600);
     await p.evaluate(() => {
       const a = (window as any).__atoll;
       a.freezeNow();
-      a.chapterMoment(2, 'Ebbtide Bight');
+      for (const s of a.puzzleSolution()) a.commitMove({ slot: s.piece, x: s.x, y: s.y });
     });
-    await p.evaluate(() => (window as any).__atoll.freeze(1200));
+    await p.evaluate(() => (window as any).__atoll.freeze(1900));
     await frames(p);
+  },
+  'chapter-result': async (p) => {
+    await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+    await p.waitForTimeout(1200);
+    await p.evaluate(() => {
+      const pr = (window as any).__atoll.profile();
+      pr.puzzle.solved = Array.from({ length: 39 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`);
+    });
+    await p.evaluate(() => (window as any).__atoll.loadPuzzle(39));
+    await p.waitForTimeout(600);
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      for (const s of a.puzzleSolution()) a.commitMove({ slot: s.piece, x: s.x, y: s.y });
+    });
+    await p.getByTestId('puzzle-result').waitFor({ timeout: 15000 });
+    await p.waitForTimeout(900);
+  },
+  // after posting today's Daily, replaying it shows where you stand under DAILY
+  'daily-ranked': async (p) => {
+    await p.evaluate(() => (window as any).__atoll.autoplay('human', 400));
+    await p.getByTestId('final-score').waitFor({ timeout: 15000 });
+    await p.waitForTimeout(1200);
+    await p.locator('#lb-open').click();
+    await p.getByTestId('lb-name-entry').waitFor();
+    await p.keyboard.type('coral');
+    await p.getByTestId('lb-post').click();
+    await p.locator('.lb-row.me').waitFor();
+    await p.evaluate(() => (window as any).__atoll.restart());
+    await p.waitForTimeout(400);
+    await p.keyboard.press('Escape');
+    await p.evaluate(() => (window as any).__atoll.autoplay('greedy', 3));
+    await p.waitForTimeout(1500);
   },
   daily: async (p) => {
     await p.evaluate(() => (window as any).__atoll.switchMode('daily'));
@@ -302,6 +346,23 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     await p.waitForTimeout(1500);
   },
   'first-run': async () => {},
+  // the teaching capture: cup, then the closing piece → "Lagoon!" + "That's a lagoon!" in the strip
+  'first-capture': async (p) => {
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      const slot = a.state().tray.findIndex((t: any) => t?.pieceId === 'cup-up');
+      a.commitMove({ slot, x: 2, y: 4 });
+    });
+    await p.waitForTimeout(900);
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      const m = a.plan('greedy').move;
+      a.freezeNow();
+      a.commitMove(m);
+    });
+    await p.evaluate(() => (window as any).__atoll.freeze(1000));
+    await frames(p);
+  },
   offline: async (p) => {
     await p.getByRole('button', { name: 'Menu' }).click();
     await p
@@ -313,10 +374,12 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
 };
 const special: Record<string, { query?: string; fresh?: boolean }> = {
   'first-run': { query: 'seed=42', fresh: true },
+  'first-capture': { query: 'seed=42', fresh: true },
   offline: { query: 'seed=5&lboffline=1' },
   'results-real': { query: 'seed=8&fast=1' },
   'name-entry': { query: 'mode=daily&fast=1' },
   leaderboard: { query: 'mode=daily&fast=1' },
+  'daily-ranked': { query: 'mode=daily&fast=1' },
 };
 
 for (const [name, run] of Object.entries(screens)) {

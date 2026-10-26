@@ -58,3 +58,41 @@ look → celebration agent (ADR 0012 review fixes); "+N" formatting and "Classic
 Reduced motion (in-place shrink + word cross-fade), contrast system + test, 48 px HUD targets,
 ~60 px rows, the near-miss bar, "58 to pass BODHI", journal silhouettes + section bars, calm normal
 moves.
+
+## What was done (2026-10-26, product design pass)
+- **Must 1 — leaderboards:** a build shows boards only with `VITE_LB_URL` (real server) or
+  `VITE_LB=demo` (dev/test); a plain release build hides the menu tile, results button and name
+  entry exactly like `VITE_LB=off`. Demo is on in `vite` dev (`.env.development`) and in the
+  `dist-e2e/` build Playwright makes, so `make e2e` keeps its leaderboard tests. Demo names: a
+  190-name pool, shuffled per board (no repeats), none a species word (tested). `?nolb` previews the
+  release look. ADR 0010 "Update 2026-10-26", CLAUDE.md, DEPLOY.md updated.
+- **Must 2 — store shots:** five frames on saturated cyan / sunset / deep-sea gradients with dark
+  device rims: (1) Day ring just sealed, water in, "Nice Lagoon! +227", score 4,543; (2) the Octopus
+  reveal over a game at 3,150; (3) the journal; (4) the reefs map after Chapter 2 is cleared
+  ("Hundreds of hand-checked reefs. Then endless."); (5) Night. A creature (rendered by the game's
+  art code) rides every card. No board shot until the real backend (`--with-leaderboard`).
+- **Must 3 — first run:** "Close a ring of blocks" stands in the strip until the first lagoon; the
+  teaching capture's word is "Lagoon!", then the chips "That's a lagoon!" → "Water fills any closed
+  ring". The grey dot is now a pointing-hand glyph (`tap` in the Tidemark set, `drawTap`).
+- **Should 1:** record headline "New high score!" (mode stays the eyebrow), ribbon "PERSONAL BEST"
+  with a looping shimmer, confetti ~2 s from both card edges (results.ts), "Post your score" primary.
+- **Should 2:** name entry drops the gradient hero; one larger slot row; a live preview of your
+  board row with the rank it would take ("#11 · CORAL · 1,734").
+- **Should 3:** solid fade band around the pinned row, one primary button (+ a small × and the
+  grabber), "Resets in 9h 16m" on Daily / This week (local midnight / Monday 00:00 UTC), 38 px
+  shell medals and gold/silver/bronze row washes.
+- **Should 4:** "Depth N m" (1 m per reef) in the header and per chapter ("21–40 m"), a depth gauge
+  and a sea that darkens per chapter, the next two chapters named, tier-tinted tiles, shell (or
+  gold star for no-hint) stickers, cleared tiles warm and bright in both themes, Reef of the day
+  secondary.
+- **Should 5:** the reef result names the chapter it completes ("Chapter 2 complete · Ebbtide
+  Bight") and shows a reward line (shell sticker / no hints / new depth). The review shots now stage
+  the chapter moment on a solved, clean board. **Not done:** the canvas word itself still reads
+  "Chapter 2!" — it is built in `src/app/fx.ts` `chapterComplete()` (celebration owner's file);
+  suggested text: "Chapter 2 complete" over the name.
+- **Should 6:** journal art ~60% of the tile (70 px thumbs, taller tiles), 11 px pips, an EPIC /
+  LEGENDARY tag, "600 caught & released".
+- **Should 7:** "Resume Endless · 3,150" (or "Resume Reef 28"); the 25/47 pill sits beside the icon.
+- **Should 8:** theme segments captioned Auto / Day / Night; font licences behind "Credits".
+- **Nice:** Daily HUD "DAILY · OCT 26 · #11 TODAY" (rank once posted, boards on); the board→hand
+  gap trimmed (1.9 → 1.6 cells of slack; layout tests unchanged).

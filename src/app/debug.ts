@@ -61,7 +61,7 @@ export interface DebugDeps {
     shareCard(id: string): Promise<{ w: number; h: number; png: number; text: string[]; hint: string }>;
     /** Run the real share path for a species card; resolves to the outcome. */
     shareTry(id: string): Promise<string>;
-    showResults(o: { score: number; prevBest: number }): void;
+    showResults(o: { score: number; prevBest: number; lb?: boolean }): void;
   };
 }
 

@@ -158,8 +158,8 @@ can't be posted (tests: `tests/unit/storage.test.ts`). The profile gains `lb: {i
   store, but the **D1 SQL** (`server/src/d1.ts`) has not run against a real D1 (there is no SQLite
   in the Node 20 toolchain). Smoke-test it with `wrangler dev --local` per DEPLOY.md before launch.
 - No admin endpoint (moderation is SQL via wrangler); no Cache API for top-N; no histogram ranks.
-- Shipping the mock in production shows labelled demo players. If that's unwanted before the server
-  exists, build with `VITE_LB=off`: no menu entry, no results button, no network.
+- The mock never ships (see "Update 2026-10-26" below): without `VITE_LB_URL` a release build has no
+  leaderboards at all, exactly as `VITE_LB=off`.
 - The install id is a bearer secret sent in the body or URL. It is never returned by any endpoint,
   but URLs can appear in logs; a signed player token (research §7.2) is the upgrade path.
 - Game Center / Play Games: not used (no custom names, separate populations, the Daily's local-date
@@ -215,3 +215,19 @@ regression test (server: `server/test/handler.test.ts`, `schema.test.ts`; client
    (c) "Choose a name" on a boards sheet posts the last finished game unless the player declined it
    with "No thanks"; (d) the dialog focus trap skips inactive tabs and hidden/inert controls;
    (e) `version.ts` points at the fingerprint pin in `tests/unit/movelog.test.ts`.
+
+## Update 2026-10-26 — the demo backend is dev/test only (UX review S3, must-fix 1)
+A review found the demo boards read as fake (a "Demo" badge and footer, repeated names, a player
+called URCHIN) and that Apple may reject screenshots of placeholder content. Decision (lead):
+- **Build modes** (`LB_ON` in `src/app/main.ts`): `VITE_LB_URL` set → the real server;
+  `VITE_LB=demo` → the on-device `MockBackend`; anything else → **no leaderboards** (no menu tile,
+  no results "Post your score", no name entry, no network), the same as `VITE_LB=off` (which also
+  wins over a URL). So `npm run build` without a URL is safe to ship today.
+- **Demo where it's useful:** `vite` dev loads `.env.development` (`VITE_LB=demo`), so `make dev`,
+  `scripts/screens.ts`, `lb-shots.ts` and `store-shots.ts --with-leaderboard` see boards; Playwright's
+  web server builds its own `dist-e2e/` with `VITE_LB=demo` (`make e2e`'s leaderboard tests keep
+  running). Debug `?nolb` hides the boards on a demo build (the release look; store shots use it).
+- **Demo names** are drawn from a 190-name pool by a seeded shuffle per board, so no name repeats on a
+  board; none is a species word (`lbclient.test.ts` checks both against `src/meta/creatures.ts`).
+- No store asset shows a board until the real backend exists (`store-shots.ts` skips that shot unless
+  `--with-leaderboard`).

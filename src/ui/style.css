@@ -892,10 +892,21 @@ html[data-theme='night'] .round {
   transform: scale(0.95);
   transition-duration: var(--dur-instant);
 }
+.resume-what {
+  font-weight: 700;
+  opacity: 0.85;
+}
+/* the count rides beside the icon as its own pill (it used to sit on top of the book) */
+.link-tile .tile-ic {
+  position: relative;
+  display: inline-flex;
+}
 .link-tile .tile-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  left: 100%;
+  top: 50%;
+  margin-left: 5px;
+  transform: translateY(-50%);
   padding: 2px 6px;
   border-radius: var(--r-pill);
   background: var(--accent-tint);
@@ -908,6 +919,11 @@ html[data-theme='night'] .round {
   margin: 0 0 2px;
   font: 600 calc(22px * var(--fs))/1.2 var(--font-display);
   color: var(--ink);
+}
+.res-head.record {
+  font-weight: 900;
+  font-size: calc(26px * var(--fs));
+  color: var(--gold-ink);
 }
 .res-best {
   margin: 4px auto 0;
@@ -1003,7 +1019,7 @@ html[data-theme='night'] .round {
   align-items: center;
   gap: 3px;
   font: 700 calc(12px * var(--fs))/1.15 var(--font);
-  min-height: 98px;
+  min-height: 124px;
   cursor: pointer;
   transition: transform var(--dur-press) var(--spring-press);
 }
@@ -1015,8 +1031,8 @@ html[data-theme='night'] .round {
   margin-top: -2px;
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 52px;
+  width: 74px;
+  height: 66px;
   border-radius: 50%;
   background: radial-gradient(closest-side, var(--hab), transparent);
   background: radial-gradient(closest-side, color-mix(in srgb, var(--hab) 70%, transparent), transparent);
@@ -1079,6 +1095,22 @@ html[data-theme='night'] .round {
   height: 12px;
   color: var(--gold);
 }
+.j-tile .j-rar {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--frame);
+  color: #fff;
+  font: 900 calc(9px * var(--fs))/1.3 var(--font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.j-tile.locked .j-rar {
+  background: color-mix(in srgb, var(--frame) 70%, var(--ink-3));
+}
 .j-tile .new {
   position: absolute;
   top: 6px;
@@ -1095,8 +1127,8 @@ html[data-theme='night'] .round {
   color: var(--frame, var(--ink-3));
 }
 .pips i {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   background: currentColor;
   -webkit-mask: var(--shell-off) center / contain no-repeat;
   mask: var(--shell-off) center / contain no-repeat;
@@ -1131,10 +1163,42 @@ html[data-theme='night'] .round {
 }
 .chapter-progress {
   margin: var(--s3) auto 0;
-  max-width: 240px;
+  max-width: 280px;
 }
 .chapter-progress .segs {
   margin-top: 8px;
+}
+.chapter-done {
+  margin-bottom: 4px;
+  font: 900 calc(16px * var(--fs))/1.25 var(--font-display);
+  color: var(--gold-ink);
+  text-wrap: balance;
+}
+.reef-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px auto 0;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--gold-tint);
+  color: var(--gold-ink);
+  font: 800 calc(13px * var(--fs)) var(--font);
+}
+.reef-reward i {
+  font-style: normal;
+  opacity: 0.6;
+}
+.reef-reward .ic {
+  width: 16px;
+  height: 16px;
+}
+.reef-reward .rw-shell {
+  color: #f08f6a;
+  --ic-cut: var(--gold-tint);
+}
+.reef-reward .rw-star {
+  color: var(--gold);
 }
 
 /* ═══ Larger text ═══ */

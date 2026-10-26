@@ -300,7 +300,15 @@ export class Ui {
   }
 
   // ─────────────────────────────────────────────────────────────────────────── home
-  showMenu(p: Profile, mode: Mode, canResume: boolean, journalCount = 0, dailyDone = false): void {
+  showMenu(
+    p: Profile,
+    mode: Mode,
+    canResume: boolean,
+    journalCount = 0,
+    dailyDone = false,
+    /** What Resume goes back to, e.g. "Endless · 3,150" or "Reef 28". */
+    resumeWhat = '',
+  ): void {
     const card = document.createElement('div');
     card.className = 'sheet home stagger';
     card.dataset.kind = 'menu';
@@ -323,7 +331,13 @@ export class Ui {
     }
     if (canResume)
       card.append(
-        this.button('', 'btn primary', `${icon('play', { filled: true })}Resume`, 'Resume', () => this.h.onResume()),
+        this.button(
+          'menu-resume',
+          'btn primary',
+          `${icon('play', { filled: true })}Resume${resumeWhat ? ` <span class="resume-what">${resumeWhat}</span>` : ''}`,
+          resumeWhat ? `Resume ${resumeWhat.replace(' · ', ', ')}` : 'Resume',
+          () => this.h.onResume(),
+        ),
       );
     if (mode === 'puzzle')
       card.append(
@@ -386,7 +400,7 @@ export class Ui {
       this.button(
         '',
         'link-tile',
-        `${icon('journal')}<span>Journal</span><small class="num tile-badge">${journalCount}/${SPECIES.length}</small>`,
+        `<span class="tile-ic">${icon('journal')}<small class="num tile-badge">${journalCount}/${SPECIES.length}</small></span><span>Journal</span>`,
         `Beach Journal, ${journalCount} of ${SPECIES.length} found`,
         () => this.h.onJournal(),
       ),
@@ -463,14 +477,29 @@ export class Ui {
     progress?: string;
     /** Chapter segments (20; true = cleared). */
     segs?: readonly boolean[];
+    /** This clear completed a chapter: "Chapter 2 complete · Ebbtide Bight". */
+    chapterDone?: { chapter: number; name: string };
+    /** A small reward line: first clear (shell sticker), no hints (star), a new depth record. */
+    reward?: { first: boolean; pure: boolean; depth?: number };
   }): void {
     const card = document.createElement('div');
     card.className = 'card stagger';
     const segs = o.segs
       ? `<div class="segs" aria-hidden="true">${o.segs.map((s) => `<i${s ? ' class="on"' : ''}></i>`).join('')}</div>`
       : '';
+    const rw = o.reward;
+    const bits: string[] = [];
+    if (rw?.pure) bits.push(`${icon('star', { filled: true, cls: 'rw-star' })}No hints`);
+    else if (rw?.first) bits.push(`${icon('shell', { filled: true, cls: 'rw-shell' })}Shell sticker`);
+    if (rw?.depth) bits.push(`New depth <b class="num">${rw.depth} m</b>`);
+    const reward = bits.length
+      ? `<div class="reef-reward" data-testid="reef-reward">${bits.join('<i>·</i>')}</div>`
+      : '';
+    const chapterLine = o.chapterDone
+      ? `<div class="chapter-done" data-testid="chapter-done">Chapter ${o.chapterDone.chapter} complete · ${o.chapterDone.name}</div>`
+      : '';
     card.innerHTML = o.solved
-      ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2><div class="chapter-progress"><div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>${segs}</div>`
+      ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2>${reward}<div class="chapter-progress">${chapterLine || `<div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`}${segs}</div>`
       : `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word" data-testid="puzzle-result">So close</h2><p class="callout">Every piece must be placed and every pebble popped.</p>`;
     if (o.newIds?.length) card.append(journalStrip(o.newIds, () => this.h.onJournal()));
     if (o.solved) {
@@ -531,23 +560,30 @@ export class Ui {
       [o.dailyStreak, 'Streak'],
     ].filter(([v]) => (v as number) > 0);
     card.innerHTML = `<div class="overline">${o.mode === 'daily' ? 'Daily · complete' : 'Endless'}</div>
-      <h2 class="res-head">${o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
+      <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
       <div class="hero-slot"></div>
       ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
       ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
     card.querySelector('.hero-slot')!.replaceWith(hero.el);
     if (o.caught?.newIds.length) card.append(journalStrip(o.caught.newIds, () => this.h.onJournal()));
-    if (o.mode === 'daily') {
-      card.append(this.button('', 'btn primary', `${icon('share')}Share`, 'Share result', () => this.h.onShare()));
-    } else {
-      card.append(this.button('play-again', 'btn primary', 'Play again', 'Play again', () => this.h.onNewGame()));
-    }
+    // on a record, posting it is the point: the leaderboard button leads as the one primary
+    const lbFirst = !!o.leaderboard && o.newBest;
+    const next =
+      o.mode === 'daily'
+        ? this.button('', `btn ${lbFirst ? 'small' : 'primary'}`, `${icon('share')}Share`, 'Share result', () =>
+            this.h.onShare(),
+          )
+        : this.button('play-again', `btn ${lbFirst ? 'small' : 'primary'}`, 'Play again', 'Play again', () =>
+            this.h.onNewGame(),
+          );
+    if (!lbFirst) card.append(next);
     if (o.leaderboard) {
       const lb = o.leaderboard;
-      const b = this.button('lb-open', 'btn small', lb.label, lb.label, () => lb.open());
+      const b = this.button('lb-open', `btn ${lbFirst ? 'primary' : 'small'}`, lb.label, lb.label, () => lb.open());
       card.append(b);
       lb.mount?.(b);
     }
+    if (lbFirst) card.append(next);
     card.append(
       o.mode === 'daily'
         ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play endless', () => this.h.onClassic())

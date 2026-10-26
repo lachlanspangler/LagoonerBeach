@@ -71,9 +71,11 @@ The client reads `VITE_LB_URL` at **build time**. Pass it on the release build's
 VITE_LB_URL=https://lagooner-lb.<your-subdomain>.workers.dev npm run build
 npx cap sync                       # then build the iOS/Android apps as usual
 ```
-With the variable unset, builds keep using the on-device demo boards (labelled "Demo"). Prefer the
-command line over a committed `.env.production`: `make e2e` builds too, and the e2e tests expect
-the demo boards (they must never post to the live server).
+With the variable unset, a release build ships **without** leaderboards (no menu entry, no results
+button, no name entry, no network; ADR 0010 "Update 2026-10-26"). The on-device demo boards are for
+dev and tests only (`VITE_LB=demo`: on in `vite` dev via `.env.development` and in the e2e build that
+`playwright.config.ts` makes into `dist-e2e/`). Prefer the command line over a committed
+`.env.production`: the e2e tests expect the demo boards (they must never post to the live server).
 
 ## 8. Before you ship that build (store + legal)
 - Add the contact email to `docs/store/PRIVACY.md` and `public/privacy.html`, and host the page.

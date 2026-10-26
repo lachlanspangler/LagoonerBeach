@@ -12,6 +12,7 @@ import {
   type LeaderboardBackend,
 } from '../../src/platform/leaderboard.ts';
 import { DEMO_NAMES, K_MOCK, MockBackend } from '../../src/platform/lbmock.ts';
+import { SPECIES } from '../../src/meta/creatures.ts';
 import {
   RunLog,
   hasPendingLbWork,
@@ -105,6 +106,19 @@ describe('MockBackend', () => {
     expect(a.total).toBeGreaterThanOrEqual(24);
     expect(a.entries[0]!.score).toBeGreaterThan(a.entries.at(-1)!.score);
     for (const n of DEMO_NAMES) expect(validateName(n), n).toEqual({ ok: true });
+  });
+
+  it('demo names are unique on every board and never a species word', async () => {
+    const words = new Set<string>();
+    for (const sp of SPECIES) for (const w of `${sp.id} ${sp.name}`.toUpperCase().split(/[^A-Z]+/)) if (w) words.add(w);
+    for (const n of DEMO_NAMES) expect(words.has(n), n).toBe(false);
+    expect(new Set(DEMO_NAMES).size).toBe(DEMO_NAMES.length);
+    const m = new MockBackend({ kv: new MapKv(), latencyMs: 0, today: () => DAY });
+    for (const b of [`daily:${DAY}`, 'endless:all'] as const) {
+      const v = await m.top(b, 200);
+      const names = v.entries.map((e) => e.name);
+      expect(new Set(names).size, b).toBe(names.length);
+    }
   });
 
   it('posting ranks you among them; around shows your window and who is just above', async () => {

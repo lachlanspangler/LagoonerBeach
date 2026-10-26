@@ -10,6 +10,7 @@ export default tseslint.config(
       'ios/**',
       'android/**',
       'dist/**',
+      'dist-e2e/**',
       'node_modules/**',
       'prototypes/**',
       'coverage/**',

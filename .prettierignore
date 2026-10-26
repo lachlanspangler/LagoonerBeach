@@ -11,3 +11,4 @@ ios/
 android/
 .claude
 artifacts
+dist-e2e

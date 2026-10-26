@@ -3,13 +3,6 @@
   position: relative;
   margin: 2px 0 0;
 }
-.res-hero canvas.res-confetti {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
 .res-score {
   font: 900 calc(76px * var(--fs))/1 var(--font);
   font-variant-numeric: tabular-nums;
@@ -37,6 +30,7 @@ html[data-theme='night'] .res-hero.record .res-score {
   min-height: 44px;
 }
 .res-ribbon {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -63,6 +57,36 @@ html[data-theme='night'] .res-ribbon {
 .res-hero.record.landed .res-ribbon {
   transform: none;
   opacity: 1;
+}
+/* the ribbon keeps a slow shimmer while the card is up (a light band sweeping across) */
+.res-hero.record.landed .res-ribbon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.6) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: ribbon-shimmer 2.6s ease-in-out 0.5s infinite;
+  pointer-events: none;
+}
+html[data-theme='night'] .res-hero.record.landed .res-ribbon::after {
+  background-image: linear-gradient(100deg, transparent 35%, rgba(255, 224, 138, 0.28) 50%, transparent 65%);
+}
+@keyframes ribbon-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .res-hero.record.landed .res-ribbon::after {
+    animation: none;
+    display: none;
+  }
+}
+html[data-rm='1'] .res-hero.record.landed .res-ribbon::after {
+  display: none;
 }
 .res-was {
   margin-top: 6px;

@@ -57,7 +57,9 @@ export function computeLayout(w: number, h: number, inset: Insets = { top: 0, ri
   // the old layout left ~22% of a tall phone as dead sand under the tray.
   let above = Math.min(slack * 0.3, cell * 1.3);
   const below = Math.min(slack * 0.22, cell * 1.0); // under the tray (implicit: what's left)
-  const between = Math.min(slack - above - below, cell * 1.9);
+  // (UX S3: 1.9 cells left ~130 px of sand between board and hand on a 390×844 phone; 1.6 lifts the
+  // hand a little while keeping it within thumb reach — layout.test pins the bottom gap)
+  const between = Math.min(slack - above - below, cell * 1.6);
   // tablets: whatever is left centers the whole stack instead of opening a canyon in the middle
   const rest = slack - above - below - between;
   above += rest / 2;

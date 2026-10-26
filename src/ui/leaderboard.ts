@@ -16,6 +16,7 @@ import type { Journal } from '../meta/journal.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import { NAME_MAX, NAME_REASON_TEXT, sanitizeNameInput, validateName } from '../meta/names.ts';
 import {
+  resetsIn,
   ALL_TIME,
   dailyBoard,
   utcDay,
@@ -244,6 +245,7 @@ export class LeaderboardUi {
         this.showNameEntry({
           score: postable.score,
           mode,
+          board: boardFor(tab, pinDaily),
           onDone: (n) => {
             const p = post(n);
             void p.then((o) => {
@@ -311,10 +313,23 @@ export class LeaderboardUi {
     return w;
   }
 
+  /** The rank `score` would take on `board` (from its top rows), or null if it's below them / offline. */
+  private async rankFor(board: BoardRef, score: number): Promise<number | null> {
+    try {
+      const v = await this.client.backend.top(board, 100);
+      const above = v.entries.filter((e) => typeof e.score === 'number' && e.score >= score && !e.me).length;
+      return above < v.entries.length || v.entries.length >= v.total ? above + 1 : null;
+    } catch {
+      return null;
+    }
+  }
+
   // ── name entry ──────────────────────────────────────────────────────────────────────────
   showNameEntry(o: {
     score?: number;
     mode?: 'classic' | 'daily';
+    /** The board the score would land on: the preview row shows the rank it would take there. */
+    board?: BoardRef;
     error?: string;
     onDone(name: string): void;
     onSkip(): void;
@@ -333,9 +348,16 @@ export class LeaderboardUi {
       );
     else sub.textContent = 'Shown next to your scores on the boards.';
     head.append(el('h2', 'lb-title', 'Your beach name'), sub);
-    const hero = document.createElement('div');
-    hero.className = 'lb-name-hero';
-    hero.setAttribute('aria-hidden', 'true');
+    // a live preview of your row on the board ("#12 · CORAL · 3,766"), in place of a big name hero
+    const preview = document.createElement('div');
+    preview.className = 'lb-row lb-preview';
+    preview.setAttribute('aria-hidden', 'true');
+    const pvRank = el('span', 'lb-rank', '–');
+    const pvName = el('span', 'lb-nm');
+    const pvScore = el('span', 'lb-sc', o.score !== undefined ? num(o.score) : '');
+    preview.append(pvRank, this.avatarEl({ name: '?', avatar: this.avatar() }), pvName, pvScore);
+    if (o.score !== undefined && o.board)
+      void this.rankFor(o.board, o.score).then((r) => r && (pvRank.textContent = `#${num(r)}`));
     const slots = document.createElement('div');
     slots.className = 'lb-slots';
     slots.tabIndex = 0;
@@ -384,8 +406,8 @@ export class LeaderboardUi {
     foot.innerHTML = `Posting shares this name, your score and the moves of the game. <a href="./privacy.html" target="_blank" rel="noopener" style="color:inherit">Privacy</a>`;
 
     const render = (popLast = false) => {
-      hero.textContent = name || '·······';
-      hero.classList.toggle('empty', !name);
+      pvName.textContent = name || 'Your name';
+      pvName.classList.toggle('lb-dim', !name);
       slotEls.forEach((s, i) => {
         s.textContent = name[i] ?? '';
         s.classList.toggle('filled', i < name.length);
@@ -472,7 +494,7 @@ export class LeaderboardUi {
       render(true);
     });
 
-    card.append(head, hero, slots, hint, keys, actions, foot);
+    card.append(head, preview, slots, hint, keys, actions, foot);
     render();
     this.d.ui.present(card, () => o.onSkip());
     if (matchMedia('(pointer: fine)').matches) slots.focus({ preventScroll: true });
@@ -497,6 +519,12 @@ export class LeaderboardUi {
     const head = document.createElement('div');
     head.className = 'lb-head';
     head.innerHTML = `<h2 class="lb-title">Leaderboard</h2>${this.client.demo ? '<span class="lb-chip lb-demo" title="Sample players on this device">Demo</span>' : ''}`;
+    // one primary action at the bottom; closing is the grabber, a swipe down, or this small ×
+    const closeAll = () => {
+      this.refresh = null;
+      this.d.ui.close();
+    };
+    head.append(this.btn('lb-x', icon('close'), 'Close leaderboard', closeAll));
     const tabs = document.createElement('div');
     tabs.className = 'lb-tabs';
     tabs.setAttribute('role', 'tablist');
@@ -634,7 +662,15 @@ export class LeaderboardUi {
       target.replaceChildren();
       const me = v.me;
       const msg = outcomeNote(o.outcome, t, o.boards?.[t]);
-      if (msg) target.append(el('div', `lb-note${o.outcome?.status === 'rejected' ? ' bad' : ''}`, msg));
+      // the note and, for the current Daily / week, when the board starts over
+      const pinned = o.boards?.[t];
+      const live = t !== 'all' && (!pinned || periodLabel(pinned) === (t === 'daily' ? 'today' : 'this week'));
+      if (msg || live) {
+        const meta = el('div', 'lb-meta');
+        meta.append(el('div', `lb-note${o.outcome?.status === 'rejected' ? ' bad' : ''}`, msg ?? ''));
+        if (live) meta.append(el('div', 'lb-reset', resetsIn(t === 'daily' ? 'daily' : 'week', new Date())));
+        target.append(meta);
+      }
       if (dropped)
         target.append(
           el(
@@ -773,12 +809,10 @@ export class LeaderboardUi {
     };
 
     card.append(head, tabs, panel, foot);
-    if (o.back) card.append(this.btn('btn', 'Back to results', 'Back to results', () => o.back!()));
     card.append(
-      this.btn(o.back ? 'btn ghost' : 'btn', 'Close', 'Close leaderboard', () => {
-        this.refresh = null;
-        this.d.ui.close();
-      }),
+      o.back
+        ? this.btn('btn primary', 'Back to results', 'Back to results', () => o.back!())
+        : this.btn('btn primary', 'Done', 'Done', closeAll),
     );
     this.d.ui.present(card, o.back ?? true);
     select(tab);

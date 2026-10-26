@@ -73,7 +73,9 @@ export function showSettings(k: SheetKit, p: Profile): void {
     ['night', 'Night', 'moon'],
   ] as const) {
     const on = s.theme === t;
-    const b = k.button('', 'seg-b', icon(ic, { filled: on }), `Theme ${l}`, () => k.h.onTheme(t));
+    const b = k.button('', 'seg-b seg-cap', `${icon(ic, { filled: on })}<small>${l}</small>`, `Theme ${l}`, () =>
+      k.h.onTheme(t),
+    );
     b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', String(on));
     seg.append(b);
@@ -113,11 +115,16 @@ export function showSettings(k: SheetKit, p: Profile): void {
   const info = document.createElement('div');
   info.className = 'about';
   info.innerHTML = `<b>Lagooner Beach ${__APP_VERSION__}</b> · no ads, no tracking.<br>
-    Fonts: Fraunces, Nunito (SIL Open Font License 1.1) ·
-    <a href="./fonts/OFL-Fraunces.txt" target="_blank" rel="noopener">Fraunces license</a> ·
-    <a href="./fonts/OFL-Nunito.txt" target="_blank" rel="noopener">Nunito license</a><br>
     Sounds and music are made in code, on your device.`;
   about.append(info);
+  // font licences live one tap away, behind Credits
+  const credits = document.createElement('details');
+  credits.className = 'credits';
+  credits.innerHTML = `<summary class="row row-link"><span class="row-ic">${icon('sparkle')}</span><span class="row-label">Credits</span><span class="chev">${icon('chevronDown')}</span></summary>
+    <div class="about">Type: Fraunces and Nunito, under the SIL Open Font License 1.1 ·
+    <a href="./fonts/OFL-Fraunces.txt" target="_blank" rel="noopener">Fraunces license</a> ·
+    <a href="./fonts/OFL-Nunito.txt" target="_blank" rel="noopener">Nunito license</a></div>`;
+  about.append(credits);
   const priv = document.createElement('a');
   priv.className = 'row row-link';
   priv.href = './privacy.html';
@@ -155,8 +162,9 @@ export function showJournal(k: SheetKit, j: Journal): void {
   const sub = document.createElement('p');
   sub.className = 'callout j-sub';
   sub.textContent =
-    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} released` : ''].filter(Boolean).join(' · ') ||
-    'Close a loop to catch your first creature';
+    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught & released` : '']
+      .filter(Boolean)
+      .join(' · ') || 'Close a loop to catch your first creature';
   head.querySelector('.title-m')!.append(sub);
   const ink = night() ? '#6C8193' : '#968672'; // ink.3; silhouettes at 45%
   const life = new JournalLife();
@@ -184,13 +192,16 @@ export function showJournal(k: SheetKit, j: Journal): void {
       b.style.setProperty('--hab-ring', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
       const pool = document.createElement('span');
       pool.className = 'j-pool';
-      const thumb = creatureThumb(sp, 58, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
+      const thumb = creatureThumb(sp, 70, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
       pool.append(thumb);
       b.append(pool);
       if (e && hasNewArt(sp.id)) life.add(thumb, sp, (e.golden ?? 0) > 0);
       b.insertAdjacentHTML(
         'beforeend',
         `<span class="j-name">${e ? sp.name : '???'}</span>${pipsHtml(RARITY_RANK[sp.rarity])}${
+          // epic and legendary say so in a word, not only in pips and frame
+          sp.rarity === 'epic' || sp.rarity === 'legendary' ? `<span class="j-rar">${sp.rarity}</span>` : ''
+        }${
           (e?.golden ?? 0) > 0 ? icon('sparkle', { filled: true, cls: 'spark' }) : ''
         }${isNew ? '<span class="new" aria-hidden="true"></span>' : ''}`,
       );

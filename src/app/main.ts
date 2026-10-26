@@ -35,7 +35,7 @@ import {
   type Profile,
 } from '../platform/storage.ts';
 import { Scene } from '../render/scene.ts';
-import { DAY, NIGHT } from '../render/theme.ts';
+import { DAY, NIGHT, fmt } from '../render/theme.ts';
 import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
 import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
@@ -59,6 +59,7 @@ import { installPreloadRecovery } from '../platform/lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
+import { dailyBoard } from '../meta/boards.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -320,7 +321,7 @@ function syncScene(): void {
   updateHint();
   updateMisfits();
   scene.hudLabel = null;
-  scene.modeTag = mode === 'daily' ? 'Daily' : '';
+  scene.modeTag = mode === 'daily' ? dailyTag() : '';
   const p = mode === 'puzzle' ? reefAt(state.seed) : null;
   if (p) {
     const i = state.seed;
@@ -358,6 +359,8 @@ function updateMisfits(): void {
 
 // ------------------------------------------------------------------ teaching hint
 function updateHint(): void {
+  // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3)
+  scene.coach = teaching && mode === 'classic' && !state.over ? 'Close a ring of blocks' : null;
   if (mode === 'puzzle') {
     scene.hint = null; // puzzle hints are on demand only
     return;
@@ -445,6 +448,9 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
       if (teaching) {
         teaching = false;
         profile.firstRunDone = true;
+        // name it, then the one-line rule, while the water is still on the board
+        scene.toast("That's a lagoon!", t + 350, 1700);
+        scene.toast('Water fills any closed ring', t + 350, 2200);
       } else if (!profile.lesson2Done && e.pockets.reduce((x, p) => x + p.cells.length, 0) >= 2) {
         profile.lesson2Done = true;
         later(900, () => scene.toast('Bigger lagoons, bigger catches', performance.now(), 1800));
@@ -502,6 +508,7 @@ function finishGame(prevBest: number): void {
   profile.stats.totalScore += state.score;
   const newBest = state.score > prevBest;
   if (mode === 'daily') {
+    dailyRank = null; // ask the board again next time (this game may have just been posted)
     profile.dailyBest[dailyDate] = Math.max(prevBest, state.score);
     profile.daily = recordDaily(profile.daily, dayIndex(dailyDate));
   } else if (newBest) profile.best = state.score;
@@ -537,10 +544,45 @@ function finishGame(prevBest: number): void {
   );
 }
 
+/** Daily HUD line: "Daily · Oct 26", plus "#12 today" once you're on today's board (boards on). */
+let dailyRank: { date: string; rank: number | null; asked: boolean } | null = null;
+function dailyTag(): string {
+  const [y, m, d] = dailyDate.split('-').map(Number);
+  const date = new Date(y!, m! - 1, d!).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (dailyRank?.date !== dailyDate) dailyRank = { date: dailyDate, rank: null, asked: false };
+  if (LB_ON && profile.lb?.name && !dailyRank.asked) {
+    dailyRank.asked = true;
+    const want = dailyDate;
+    void lbui()
+      .then((l) => l.client.view(dailyBoard(want)))
+      .then(
+        (v) => {
+          if (dailyRank?.date !== want || !v.me) return;
+          dailyRank.rank = v.me.rank;
+          if (mode === 'daily' && dailyDate === want) {
+            scene.modeTag = dailyTag();
+            dirty = true;
+          }
+        },
+        () => undefined,
+      );
+  }
+  return `Daily · ${date}${dailyRank.rank ? ` · #${fmt(dailyRank.rank)} today` : ''}`;
+}
+
 // ------------------------------------------------------------------ leaderboards (lazy: ui/leaderboard.ts)
 const LB_URL = (import.meta.env.VITE_LB_URL as string | undefined) || undefined;
-/** `VITE_LB=off` builds ship without leaderboards (no menu entry, no results button, no network). */
-const LB_ON = import.meta.env.VITE_LB !== 'off';
+/**
+ * Leaderboards are on only with a real server (`VITE_LB_URL`) or, for dev and tests, the on-device
+ * demo backend (`VITE_LB=demo`: `vite` dev via .env.development, the e2e build in
+ * playwright.config.ts). A release build without a URL — or any build with `VITE_LB=off` — ships
+ * without leaderboards: no menu entry, no results button, no name entry, no network (ADR 0010).
+ */
+const LB_ON =
+  import.meta.env.VITE_LB !== 'off' &&
+  (!!LB_URL || import.meta.env.VITE_LB === 'demo') &&
+  // debug: preview the release look (no boards) on a demo build — store shots use this
+  !(DEBUG && params.has('nolb'));
 let lbMod: Promise<LeaderboardUi> | null = null;
 /** The last results card, so leaderboard sheets opened from it can go back to it. */
 let resultCard: HTMLElement | null = null;
@@ -630,12 +672,17 @@ function checkPuzzle(): void {
       later(900, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
     }
     const first = !profile.puzzle.solved.includes(p.id);
+    // the deepest reef cleared before this one (the reefs list's "Depth N m")
+    const deepestBefore = Math.max(0, ...profile.puzzle.solved.map((id) => Number(id.replace(/\D/g, '')) || 0));
+    let chapterDone: { chapter: number; name: string } | undefined;
     if (first) {
       profile.puzzle.solved.push(p.id);
-      noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      const cd = noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      if (cd) chapterDone = { chapter: cd.chapter, name: cd.name };
     }
     profile.puzzle.pure ??= [];
     const hinted = profile.puzzle.hinted?.includes(p.id) ?? false;
+    const reward = { first, pure: first && !hinted, ...(first && i + 1 > deepestBefore ? { depth: i + 1 } : {}) };
     if (!hinted && !profile.puzzle.pure.includes(p.id)) profile.puzzle.pure.push(p.id);
     profile.puzzle.index = Math.min(MAX_REEF - 1, i + 1);
     saveProfile(profile);
@@ -655,7 +702,17 @@ function checkPuzzle(): void {
       reveal.whenIdle(
         () =>
           token === gameToken &&
-          ui.showPuzzleResult({ solved: true, index: i, total: MAX_REEF, cleared, newIds, progress, segs }),
+          ui.showPuzzleResult({
+            solved: true,
+            index: i,
+            total: MAX_REEF,
+            cleared,
+            newIds,
+            progress,
+            segs,
+            chapterDone,
+            reward,
+          }),
       ),
     );
   } else {
@@ -847,6 +904,9 @@ const ui = new Ui({
       !state.over,
       Object.keys(journal.entries).length,
       profile.daily.lastDay === dayIndex(today()),
+      mode === 'puzzle'
+        ? `Reef ${state.seed + 1}`
+        : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
     ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
@@ -1164,6 +1224,7 @@ function debugDeps(): DebugDeps {
   return {
     state: () => state,
     setState: (g) => {
+      if (g !== state) teaching = false; // a staged board is never the first-run lesson
       state = g;
       syncScene();
     },
@@ -1272,6 +1333,8 @@ function debugDeps(): DebugDeps {
           unlocked: [],
           caught: { count: 9, newIds: [] },
           reducedMotion: scene.reducedMotion,
+          // review shots: the record card with its "Post your score" button (opens nothing)
+          ...(o.lb ? { leaderboard: { label: 'Post your score', open: () => undefined } } : {}),
         }),
     },
   };

@@ -17,6 +17,7 @@ const spring01 = (k: number): number => spring(k * 360, 360, 0.1);
 import { clamp01, easeInCubic, easeInOutSine, easeOutBack, easeOutCubic, easeOutQuad, lerp } from './tween.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import { drawCreature } from './creatures.ts';
+import { drawTap } from '../ui/icons.ts';
 
 export interface DragView {
   slot: number;
@@ -146,6 +147,8 @@ export class Scene {
     /** First-run demo: a ghost of this tray piece glides to the hinted spot, on loop. */
     demo?: { slot: number; ax: number; ay: number } | null;
   } | null = null;
+  /** First run: one standing line in the strip ("Close a ring of blocks"); chips take the slot. */
+  coach: string | null = null;
   /** Replaces the score HUD (puzzle mode); `chapter` is drawn as progress in the strip. */
   hudLabel: {
     top: string;
@@ -220,6 +223,20 @@ export class Scene {
     g.textBaseline = 'middle';
     g.fillText(c.text, l.w / 2, cy + drop + 1, w - size);
     g.globalAlpha = 1;
+  }
+
+  /** The first-run line: quiet text in the strip (no pill), so a chip arriving reads as news. */
+  private drawCoach(now: number): void {
+    const text = this.coach;
+    if (!text || now < this.stripHold || (this.chips.length > 0 && now >= this.chips[0]!.start)) return;
+    const g = this.g;
+    const l = this.layout;
+    const size = Math.round(Math.min(18, l.cell * 0.4) * this.textScale);
+    g.font = `800 ${size}px ${FONT}`;
+    g.fillStyle = this.palette.text;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(text, l.w / 2, this.stripY(), l.w - 24);
   }
 
   /** Vertical center of the strip between the board and the tray's pieces. */
@@ -399,6 +416,7 @@ export class Scene {
     g.restore();
     this.drawPointsPeek();
 
+    this.drawCoach(now);
     this.drawHint(now);
     this.drawTray(now);
     this.drawDrag();
@@ -820,19 +838,17 @@ export class Scene {
     const y = lerp(oy, ty, travel);
     const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
     this.drawPieceAt(p, t.color, x, y, cell, 0.5 * fade);
-    // fingertip under the first cell (where a thumb would hold it)
+    // a pointing hand (the Tidemark "tap" glyph), its fingertip on the first cell, as if holding it
     const [fx, fy] = p.cells[0]!;
-    g.globalAlpha = 0.35 * fade;
-    g.fillStyle = this.palette.text;
-    g.beginPath();
-    g.arc(
+    drawTap(
+      g,
       x + (fx + 0.5) * cell,
-      y + (fy + 0.5) * cell + l.lift * travel * 0.9 + cell * 0.2,
-      l.cell * 0.32,
-      0,
-      Math.PI * 2,
+      y + (fy + 0.5) * cell + l.lift * travel * 0.9,
+      l.cell * 1.15,
+      this.palette.surface,
+      this.palette.text,
+      0.92 * fade,
     );
-    g.fill();
     g.globalAlpha = 1;
   }
 
