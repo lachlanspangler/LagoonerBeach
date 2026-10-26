@@ -350,7 +350,7 @@ export class LeaderboardUi {
     head.append(el('h2', 'lb-title', 'Your beach name'), sub);
     // a live preview of your row on the board ("#12 · CORAL · 3,766"), in place of a big name hero
     const preview = document.createElement('div');
-    preview.className = 'lb-row me lb-preview';
+    preview.className = 'lb-row lb-preview';
     preview.setAttribute('aria-hidden', 'true');
     const pvRank = el('span', 'lb-rank', '–');
     const pvName = el('span', 'lb-nm');

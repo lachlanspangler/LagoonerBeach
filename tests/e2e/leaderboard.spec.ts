@@ -28,7 +28,7 @@ test('daily: name entry strips invalid keys live, posts, and shows you with the 
   for (const k of ['N', 'E', 'M', 'O']) await page.getByRole('button', { name: k, exact: true }).click();
   await expect(slots(page)).toHaveAttribute('aria-valuetext', 'NEMO');
   await expect(page.locator('#lb-name-hint')).toHaveText('3 letters left · A–Z only');
-  await expect(page.locator('.lb-name-hero')).toHaveText('NEMO');
+  await expect(page.locator('.lb-preview .lb-nm')).toHaveText('NEMO'); // the live preview of your row
   await page.getByTestId('lb-post').click();
 
   const me = page.locator('.lb-row.me');

@@ -413,8 +413,11 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
 /* name entry: hero preview, seven pebble slots, A–Z keypad */
 /* the row you'd get on the board, live as you type */
 .lb-preview {
-  position: static;
   margin: 14px 0 12px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  box-shadow:
+    inset 3px 0 0 var(--accent),
+    var(--e2);
 }
 .lb-preview .lb-rank {
   font-size: calc(16px * var(--fs));
