@@ -44,7 +44,7 @@ import { shareText, type LagoonShape } from '../meta/share.ts';
 
 import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
 import { solve } from '../core/solver.ts';
-import { initNative } from '../platform/native.ts';
+import { initNative, isNative } from '../platform/native.ts';
 import { catchCapture, type LagoonCatch } from '../meta/catch.ts';
 import { record, type Journal } from '../meta/journal.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
@@ -54,6 +54,8 @@ import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } 
 import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf, reefId } from '../core/endless.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
+import { showRetry } from '../ui/retry.ts';
+import { installPreloadRecovery } from '../platform/lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
@@ -284,6 +286,9 @@ function syncScene(): void {
   scene.placing = [];
   scene.fish = [];
   scene.sweep = -1e9;
+  scene.ripples = [];
+  scene.shake = { start: -1e9, amp: 0 };
+  scene.scorePunch = { at: -1e9, amp: 0 };
   scene.clearChips();
   scene.particles.clear();
   const now = performance.now();
@@ -402,7 +407,11 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
   if (mode === 'classic' && state.moves === 0 && LB_ON && LB_URL) {
     // a ticketed run starts its server clock at the first move (offline: the run isn't speed-checked)
     const tok = runLog.get('classic')?.runToken;
-    if (tok) void lbui().then((l) => l.client.markStarted(tok));
+    if (tok)
+      void lbui().then(
+        (l) => l.client.markStarted(tok),
+        () => undefined,
+      );
   }
   const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   const prevScore = state.score;
@@ -533,7 +542,8 @@ let lbMod: Promise<LeaderboardUi> | null = null;
 /** The last results card, so leaderboard sheets opened from it can go back to it. */
 let resultCard: HTMLElement | null = null;
 function lbui(): Promise<LeaderboardUi> {
-  lbMod ??= import('../ui/leaderboard.ts').then((m) =>
+  if (lbMod) return lbMod;
+  const p = import('../ui/leaderboard.ts').then((m) =>
     m.createLeaderboardUi({
       ui,
       url: LB_URL,
@@ -549,7 +559,9 @@ function lbui(): Promise<LeaderboardUi> {
       reducedMotion: () => scene.reducedMotion,
     }),
   );
-  return lbMod;
+  // a failed chunk fetch isn't cached: the next use retries
+  p.catch(() => lbMod === p && (lbMod = null));
+  return (lbMod = p);
 }
 /** Results-card hook: Leaderboard button (name entry → board), auto-post when already named. */
 /** The last finished run ("Choose a name" on a boards sheet posts it if it wasn't posted or declined). */
@@ -560,21 +572,46 @@ function lbResult(run: FinishedRun | null, m: 'classic' | 'daily') {
   let hook: Promise<Hook> | null = null;
   let btn: HTMLButtonElement | null = null;
   // the leaderboard module loads only for players who have opted in, or when the button is tapped
-  const get = () =>
-    (hook ??= lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false))));
+  const get = () => {
+    if (hook) return hook;
+    const p = lbui().then((l) => l.forResult(run, m, () => resultCard && ui.present(resultCard, false)));
+    p.catch(() => hook === p && (hook = null));
+    return (hook = p);
+  };
   const named = !!profile.lb?.name;
   if (named) void get(); // opted in: post now, so the rank is ready when the card shows
   return {
     label: named ? 'Leaderboard' : 'Post your score',
-    open: () => void get().then((x) => (btn && x.mount(btn), x.open())),
+    open: function open(): void {
+      get().then(
+        (x) => (btn && x.mount(btn), x.open()),
+        () => showRetry(open),
+      );
+    },
     mount: (b: HTMLButtonElement) => {
       btn = b;
-      if (named) void get().then((x) => x.mount(b));
+      if (named)
+        get().then(
+          (x) => x.mount(b),
+          () => undefined,
+        );
     },
   };
 }
+function openBoards(): void {
+  lbui().then(
+    (l) => l.showBoards(mode === 'daily' ? 'daily' : 'week'),
+    () => showRetry(openBoards),
+  );
+}
 /** Queued scores, pending deletions, a spare Endless seed: only touches the network when needed. */
-const lbBackground = () => LB_ON && (LB_URL || hasPendingLbWork()) && void lbui().then((l) => l.background());
+const lbBackground = () =>
+  LB_ON &&
+  (LB_URL || hasPendingLbWork()) &&
+  void lbui().then(
+    (l) => l.background(),
+    () => undefined,
+  );
 addEventListener('online', lbBackground);
 
 function checkPuzzle(): void {
@@ -804,7 +841,7 @@ const ui = new Ui({
     ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
-  onLeaderboards: LB_ON ? () => void lbui().then((l) => l.showBoards(mode === 'daily' ? 'daily' : 'week')) : undefined,
+  onLeaderboards: LB_ON ? openBoards : undefined,
   onErase: () => {
     erasing = true; // don't let the unload handlers write it all back
     const lbId = profile.lb?.installId;
@@ -1009,7 +1046,24 @@ const taskTimes: number[] = [];
 const pickDrawnAt: number[] = [];
 const dropDrawnAt: number[] = [];
 let lastDrawnMoves = -1;
+/** Errors already logged by the loop (each message once, so a bad frame can't flood the console). */
+const loopErrors = new Set<string>();
 function frame(): void {
+  // schedule first: one throwing draw (an unsupported canvas call, a bad sprite) must not freeze
+  // the game — the next frame still comes, and the error is logged once
+  requestAnimationFrame(frame);
+  try {
+    step();
+  } catch (e) {
+    const msg = String((e as Error)?.stack ?? e);
+    if (!loopErrors.has(msg) && loopErrors.size < 20) {
+      loopErrors.add(msg);
+      console.error('frame failed', e);
+    }
+    dirty = true; // redraw once the fault clears
+  }
+}
+function step(): void {
   // one clock everywhere: input handlers dispatch effects with performance.now(), so frames do too
   const f0 = performance.now();
   const now = clock();
@@ -1035,7 +1089,6 @@ function frame(): void {
     taskTimes.push(performance.now() - f0);
     if (taskTimes.length > 1200) taskTimes.shift();
   }
-  requestAnimationFrame(frame);
 }
 
 // welcome back: once per launch, a quiet nudge if a streak is alive and today's daily isn't done yet
@@ -1049,6 +1102,8 @@ function frame(): void {
     );
 }
 
+// a lazy chunk 404s after a deploy → reload once onto the new index (guarded against loops)
+installPreloadRecovery();
 void initNative();
 // warm up audio off the input path (see Sfx.prepare)
 const idle =
@@ -1074,8 +1129,20 @@ document.fonts?.addEventListener?.('loadingdone', fontsIn);
 void document.fonts?.load?.('800 16px "Lagoon UI"').then(fontsIn);
 void document.fonts?.load?.('900 16px "Lagoon Display"').then(fontsIn);
 
-if (!DEBUG && 'serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));
+// PWA offline cache — web only: inside the native shells the app is already local, and a cache
+// there would only strand players on an old build (ADR 0005). `?sw=1`: e2e (webdriver = debug).
+if ((!DEBUG || params.has('sw')) && 'serviceWorker' in navigator && import.meta.env.PROD && !isNative()) {
+  const url = `./sw.js?v=${encodeURIComponent(__BUILD_ID__)}`;
+  window.addEventListener('load', () => void navigator.serviceWorker.register(url).catch(() => undefined));
+} else if (isNative() && 'serviceWorker' in navigator) {
+  // earlier builds registered the worker in the Android shell too: drop it and its caches (its
+  // cache-first index once stranded the app on deleted chunks — a blank screen after an update)
+  void navigator.serviceWorker
+    .getRegistrations()
+    .then((rs) => Promise.all(rs.map((r) => r.unregister())))
+    .then(() => caches?.keys())
+    .then((ks) => Promise.all((ks ?? []).map((k) => caches.delete(k))))
+    .catch(() => undefined);
 }
 
 // ------------------------------------------------------------------ debug / test hooks
@@ -1169,6 +1236,11 @@ function debugDeps(): DebugDeps {
         const log: string[] = [];
         const c = renderShareCard(sp, { date: today(), log });
         return { w: c.width, h: c.height, png: c.toDataURL('image/png').length, text: log, hint: sp.hint };
+      },
+      shareTry: async (id) => {
+        const { renderShareCard, shareCanvas } = await import('../ui/share-card.ts');
+        const c = renderShareCard(SPECIES_BY_ID.get(id)!, { date: today() });
+        return shareCanvas(c, `lagooner-beach-${id}.png`, 'test');
       },
       showResults: (o) =>
         ui.showGameOver({

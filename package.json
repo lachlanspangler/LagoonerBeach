@@ -22,7 +22,7 @@
     "vite": "7.3.7",
     "vitest": "3.2.7"
   },
-  "description": "Lagooner Beach \u2014 close a loop of blocks; it fills with water and pops.",
+  "description": "Lagooner Beach — close a loop of blocks; it fills with water and pops.",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -p . && vite build",
@@ -46,7 +46,9 @@
   "dependencies": {
     "@capacitor/android": "7.6.9",
     "@capacitor/core": "7.6.9",
+    "@capacitor/filesystem": "7.1.9",
     "@capacitor/haptics": "7.0.5",
-    "@capacitor/ios": "7.6.9"
+    "@capacitor/ios": "7.6.9",
+    "@capacitor/share": "7.0.4"
   }
 }

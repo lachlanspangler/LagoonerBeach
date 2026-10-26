@@ -8,9 +8,14 @@ interface CapGlobal {
   isNativePlatform?: () => boolean;
 }
 
-export async function initNative(): Promise<void> {
+/** True inside the iOS/Android shells (Capacitor's bridge is injected before our script runs). */
+export function isNative(): boolean {
   const cap = (globalThis as unknown as { Capacitor?: CapGlobal }).Capacitor;
-  if (!cap?.isNativePlatform?.()) return;
+  return !!cap?.isNativePlatform?.();
+}
+
+export async function initNative(): Promise<void> {
+  if (!isNative()) return;
   const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
   const map: Record<HapticKind, () => Promise<void>> = {
     tick: () => Haptics.impact({ style: ImpactStyle.Light }),

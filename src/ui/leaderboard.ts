@@ -327,7 +327,7 @@ export class LeaderboardUi {
     const sub = el('div', 'lb-sub');
     if (o.score !== undefined)
       sub.append(
-        `Put your ${o.mode === 'daily' ? 'Daily' : 'Classic'} score of `,
+        `Put your ${o.mode === 'daily' ? 'Daily' : 'Endless'} score of `,
         el('b', 'lb-num', num(o.score)),
         ' on the beach board?',
       );

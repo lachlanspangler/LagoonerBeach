@@ -16,6 +16,8 @@ import type { ReefListModel } from './reefList.ts';
 import type * as Sheets from './sheets.ts';
 import { resultsHero } from './results.ts';
 import { icon, type IconName } from './icons.ts';
+import { retryable } from '../platform/lazy.ts';
+import { showRetry } from './retry.ts';
 import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
 
 export interface UiHandlers {
@@ -56,7 +58,8 @@ export interface UiHandlers {
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 
-let sheetsMod: Promise<typeof Sheets> | null = null;
+/** The sheets chunk; a failed fetch isn't cached (the next tap retries). */
+const loadSheets = retryable(() => import('./sheets.ts'));
 
 /** The Ui surface the lazy sheets module uses. */
 export interface SheetKit {
@@ -135,8 +138,17 @@ export class Ui {
     return b;
   }
 
+  /** Announcements made in the same task, read out together (one would otherwise overwrite the other). */
+  private srQueue: string[] = [];
   announce(text: string): void {
-    this.sr.textContent = text;
+    if (!text || this.srQueue.includes(text)) return;
+    this.srQueue.push(text);
+    if (this.srQueue.length > 1) return;
+    queueMicrotask(() => {
+      const q = this.srQueue;
+      this.srQueue = [];
+      this.sr.textContent = q.length === 1 ? q[0]! : q.map((t) => (/[.!?…]$/.test(t) ? t : `${t}.`)).join(' ');
+    });
   }
 
   /** Top bar for a mode; `unseen` = journal pages not looked at yet (a dot on the journal). */
@@ -343,7 +355,7 @@ export class Ui {
       'Endless',
       'Play on for a high score',
       mode === 'classic' ? 'New game' : 'Play',
-      mode === 'classic' ? 'New game' : 'Classic mode',
+      mode === 'classic' ? 'New game' : 'Endless mode',
       mode === 'classic',
       () => (mode === 'classic' ? this.h.onNewGame() : this.h.onClassic()),
       'go',
@@ -396,21 +408,25 @@ export class Ui {
   // ─────────────────────────────────────────────────────────────────────────── sheets (lazy)
   /** Settings, the Beach Journal, species pages and the reef list live in a lazy chunk (sheets.ts). */
   private sheets(): Promise<typeof Sheets> {
-    return (sheetsMod ??= import('./sheets.ts'));
+    return loadSheets();
+  }
+  /** Open a sheet from the chunk; if it can't load, offer a retry chip instead of a dead tap. */
+  private withSheets(open: (m: typeof Sheets) => void): void {
+    this.sheets().then(open, () => showRetry(() => this.withSheets(open)));
   }
   /** Fetch the sheets chunk ahead of the first tap (idle after boot). */
   prefetchSheets(): void {
     void this.sheets().catch(() => undefined);
   }
   showSettings(p: Profile): void {
-    void this.sheets().then((m) => m.showSettings(this.kit(), p));
+    this.withSheets((m) => m.showSettings(this.kit(), p));
   }
   showJournal(j: Journal): void {
-    void this.sheets().then((m) => m.showJournal(this.kit(), j));
+    this.withSheets((m) => m.showJournal(this.kit(), j));
   }
   /** Reefs by chapter, shipped and endless (src/ui/reefList.ts); tap one to play it. */
   showReefs(m: ReefListModel): void {
-    void this.sheets().then((s) => s.showReefs(this.kit(), m));
+    this.withSheets((s) => s.showReefs(this.kit(), m));
   }
 
   /** What the sheets module needs from the Ui (kept narrow). */
@@ -425,14 +441,14 @@ export class Ui {
     };
   }
 
-  /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Classic. */
+  /** A reef couldn't be charted (generator or pack load failed): retry, or go back to Endless. */
   showReefError(index: number, retry: () => void): void {
     const card = document.createElement('div');
     card.className = 'card stagger';
     card.setAttribute('data-testid', 'reef-error');
     card.innerHTML = `<div class="overline">Reef ${index + 1}</div><h2 class="res-word" style="font-size:30px">Uncharted</h2><p class="callout">This reef couldn't be charted just now.</p>`;
     card.append(this.button('retry-chart', 'btn primary', 'Try again', `Try charting reef ${index + 1} again`, retry));
-    card.append(this.button('', 'btn ghost', 'Classic', 'Classic mode', () => this.h.onClassic()));
+    card.append(this.button('', 'btn ghost', 'Endless', 'Endless mode', () => this.h.onClassic()));
     this.show(card, true, 'reef-error');
     this.announce(`Reef ${index + 1} couldn't be charted. Try again.`);
   }
@@ -464,7 +480,7 @@ export class Ui {
             this.h.onPuzzleNext(),
           ),
         );
-      card.append(this.button('', 'btn ghost', 'Classic', 'Classic mode', () => this.h.onClassic()));
+      card.append(this.button('', 'btn ghost', 'Endless', 'Endless mode', () => this.h.onClassic()));
     } else {
       card.append(
         this.button('retry-reef', 'btn primary', `${icon('restart')}Try again`, 'Try again', () =>
@@ -534,7 +550,7 @@ export class Ui {
     }
     card.append(
       o.mode === 'daily'
-        ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play classic', () => this.h.onClassic())
+        ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play endless', () => this.h.onClassic())
         : this.button('', 'btn ghost', `${icon('daily')}Daily challenge`, 'Daily challenge', () => this.h.onDaily()),
     );
     this.show(card, false, 'results');

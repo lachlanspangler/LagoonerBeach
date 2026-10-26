@@ -11,7 +11,7 @@
   pointer-events: none;
 }
 .res-score {
-  font: 900 76px/1 var(--font);
+  font: 900 calc(76px * var(--fs))/1 var(--font);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   color: var(--ink);
@@ -19,7 +19,7 @@
   white-space: nowrap;
 }
 html[data-large='1'] .res-score {
-  font-size: 64px;
+  font-size: calc(64px * var(--fs));
 }
 .res-hero.record .res-score {
   background: linear-gradient(180deg, #ffe08a, #f2b93b 55%, #b9821f);
@@ -42,7 +42,7 @@ html[data-theme='night'] .res-hero.record .res-score {
   gap: 7px;
   margin-top: 2px;
   padding: 6px 24px;
-  font: 900 20px/1.1 var(--font-display);
+  font: 900 calc(20px * var(--fs))/1.1 var(--font-display);
   letter-spacing: 0.08em;
   color: var(--gold-ink);
   background: var(--gold-tint);
@@ -66,7 +66,7 @@ html[data-theme='night'] .res-ribbon {
 }
 .res-was {
   margin-top: 6px;
-  font: 700 14px var(--font);
+  font: 700 calc(14px * var(--fs)) var(--font);
   color: var(--ink-2);
   transform: translateY(-6px);
   opacity: 0;

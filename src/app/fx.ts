@@ -11,7 +11,7 @@ import { pieceById } from '../core/pieces.ts';
 import { xOf, yOf } from '../core/grid.ts';
 import { Kind } from '../render/particles.ts';
 import type { Scene } from '../render/scene.ts';
-import { MOTION } from '../render/theme.ts';
+import { MOTION, fmt } from '../render/theme.ts';
 import { chimeLayers, chimeStep, comboChange, comboLevel, LIMITS, MomentGuard, momentFor } from '../render/moments.ts';
 import { placeStack, WORD_LIFE, WORD_SIZE, BEST_LIFE } from '../render/celebrate.ts';
 import type { Sfx } from '../audio/sfx.ts';
@@ -31,6 +31,27 @@ export interface DispatchOpts {
   after?: { streak: number; dry: number };
 }
 
+/**
+ * The floating +N's text size: one function for the real sprite and its prewarm (they used to
+ * differ, so the prewarm never hit the sprite cache). Never under 24 px.
+ */
+export const numberPx = (cell: number, withWord: boolean, tier: number, ts: number): number =>
+  Math.max(24, cell * (withWord ? 0.56 : tier >= 1 ? 0.58 : 0.5)) * ts;
+
+/** A scheduled step this overdue keeps its visuals but drops its sound and haptics. */
+export const LATE_MS = 250;
+
+/** `target` whose methods become no-ops while `quiet()` (sound/haptics of late steps). */
+function quietWhen<T extends object>(target: T, quiet: () => boolean): T {
+  return new Proxy(target, {
+    get(t, k) {
+      const v = Reflect.get(t, k, t) as unknown;
+      if (typeof v !== 'function') return v;
+      return (...a: unknown[]) => (quiet() ? undefined : (v as (...a: unknown[]) => unknown).apply(t, a));
+    },
+  });
+}
+
 export class Fx {
   private queue: Scheduled[] = [];
   /** Species already celebrated as "New!" this session (a cascade can catch one twice). */
@@ -41,11 +62,19 @@ export class Fx {
   /** When the latest move's word fades (the NEW BEST banner waits for it). */
   private wordEnd = 0;
 
+  /** True while running a step that is more than LATE_MS overdue: its sound and haptics are dropped. */
+  private late = false;
+  private readonly sfx: Sfx;
+  private readonly haptics: Haptics;
+
   constructor(
     private readonly scene: Scene,
-    private readonly sfx: Sfx,
-    private readonly haptics: Haptics,
-  ) {}
+    sfx: Sfx,
+    haptics: Haptics,
+  ) {
+    this.sfx = quietWhen(sfx, () => this.late);
+    this.haptics = quietWhen(haptics, () => this.late);
+  }
 
   /** Run scheduled steps whose time has come. Call once per frame. */
   tick(now: number): void {
@@ -53,7 +82,16 @@ export class Fx {
     const due = this.queue.filter((q) => q.at <= now);
     if (!due.length) return;
     this.queue = this.queue.filter((q) => q.at > now);
-    for (const q of due) q.fn(q.at);
+    // back from the background (rAF paused): the visuals settle, but a celebration's queued chimes
+    // and buzzes don't all go off at once
+    for (const q of due) {
+      this.late = now - q.at > LATE_MS;
+      try {
+        q.fn(q.at);
+      } finally {
+        this.late = false;
+      }
+    }
   }
 
   get pending(): boolean {
@@ -265,8 +303,7 @@ export class Fx {
             if (tier >= 2) sc.scorePunch = { at: t, amp: [0, 0, 0.08, 0.14, 0.2][tier]! };
             const ts = sc.textScale;
             const word = m.word && this.guard.claimWord(tier, t, life) ? m.word : null;
-            // the +N never under 24 px; 0.2 cell of air between the word's descenders and it
-            const numH = Math.max(24, l.cell * (word ? 0.56 : tier >= 1 ? 0.58 : 0.5)) * ts;
+            const numH = numberPx(l.cell, !!word, tier, ts);
             const gap = word ? l.cell * 0.2 : 0;
             const night = sc.palette.name === 'night';
             const wm = word ? cel.measure(word, l.cell * WORD_SIZE[tier]! * ts, m.style, night) : null;
@@ -283,7 +320,7 @@ export class Fx {
               if (m.sound.sting !== 'none') this.sfx.sting(m.sound.sting);
             }
             cel.showNumber({
-              text: `+${pts}`,
+              text: `+${fmt(pts)}`,
               x: pos.x,
               y: word ? pos.y + wordH * 0.5 + gap + numH * 0.5 : pos.y,
               size: numH,
@@ -295,11 +332,11 @@ export class Fx {
           // render the moment's text off the hot frame: word, number, the combo's next badge
           {
             const ts = sc.textScale;
-            const numPx = l.cell * (m.word ? 0.5 : tier >= 1 ? 0.56 : 0.48) * ts;
+            const numPx = numberPx(l.cell, !!m.word, tier, ts);
             cel.prewarm(
               [
                 ...(m.word ? [[m.word, l.cell * WORD_SIZE[tier]! * ts, m.style] as const] : []),
-                [`+${pts}`, numPx, 'points'] as const,
+                [`+${fmt(pts)}`, numPx, 'points'] as const,
                 ...(e.streak >= 2 ? cel.comboSprites(e.streak, l, ts) : []),
               ],
               sc.palette.name === 'night',

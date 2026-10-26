@@ -59,6 +59,8 @@ export interface DebugDeps {
     revealSkip(): void;
     haptics(): { k: string; t: number }[];
     shareCard(id: string): Promise<{ w: number; h: number; png: number; text: string[]; hint: string }>;
+    /** Run the real share path for a species card; resolves to the outcome. */
+    shareTry(id: string): Promise<string>;
     showResults(o: { score: number; prevBest: number }): void;
   };
 }
@@ -107,6 +109,17 @@ export function installDebugApi(d: DebugDeps): void {
       return d.state().moves;
     },
     restart: d.restart,
+    /** Make the next `n` scene draws throw (the loop must log and keep running). */
+    breakDraw(n = 1) {
+      const sc = d.scene as unknown as { draw: (...a: unknown[]) => void };
+      const orig = sc.draw;
+      let left = n;
+      sc.draw = function (this: unknown, ...a: unknown[]) {
+        if (left-- > 0) throw new Error('injected draw fault');
+        sc.draw = orig;
+        return orig.apply(this, a);
+      };
+    },
     switchMode: d.switchMode,
     /** Open reef at 0-based index i; endless reefs (i ≥ 360) arrive asynchronously from the worker. */
     loadPuzzle: d.loadPuzzle,
