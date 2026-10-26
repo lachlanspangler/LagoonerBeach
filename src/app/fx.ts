@@ -300,7 +300,9 @@ export class Fx {
           const base = last + MOTION.lagoonFill + 40;
           const wordAt = clean
             ? Math.max(base, lastPop + 190)
-            : Math.min(base + 140, Math.max(base, topPop + BURST_LIFT + 90));
+            : m.word
+              ? Math.min(base + 140, Math.max(base, topPop + BURST_LIFT + 90))
+              : base; // pinches: unchanged (just the +N)
           // words fit the 1.3 s settle budget; the rare tier-4 word may hold a little longer
           const life = Math.max(tier === 4 ? 850 : 600, Math.min(WORD_LIFE[tier]!, now + LIMITS.settleMs - wordAt));
           settle = Math.max(settle, wordAt + life);
@@ -344,7 +346,7 @@ export class Fx {
             const pos =
               tier === 4 && clean
                 ? { x: board.x + board.w / 2, y: board.y + board.h * 0.42 }
-                : placeStack(l, lastCells, wordH + gap, numH, wordW);
+                : placeStack(l, lastCells, wordH + gap, numH, wordW, !!word);
             if (word) {
               cel.showWord({ text: word, style: m.style, tier, x: pos.x, y: pos.y, start: t, life }, l, ts);
               if (m.sound.sting !== 'none') this.sfx.sting(m.sound.sting);

@@ -258,6 +258,8 @@ export function placeStack(
   wordH: number,
   numH: number,
   wordW: number,
+  /** A word (not a pinch's lone +N): sit half a cell higher when there's room. */
+  lifted = false,
 ): StackPlace {
   let x0 = 9;
   let x1 = -1;
@@ -280,7 +282,7 @@ export function placeStack(
   const maxY = b.y + b.h + l.cell * 0.15;
   let stackTop: number;
   // half a cell higher when there's room: the ring's top row (still bursting) stays readable
-  const lift = l.cell * 0.5;
+  const lift = lifted ? l.cell * 0.5 : 0;
   if (top - gap - lift - H >= minY) stackTop = top - gap - lift - H;
   else if (top - gap - H >= minY) stackTop = top - gap - H;
   else if (bot + gap + H <= maxY) stackTop = bot + gap;
