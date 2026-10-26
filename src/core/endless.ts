@@ -11,13 +11,10 @@ import { fastGrade, type FastGrade } from './bitsolver.ts';
 import { hashSeed } from './rng.ts';
 import { boardToString, constructPuzzle, type GenParams } from './puzzlegen.ts';
 import type { PuzzleMove, Tier } from './solver.ts';
+import { CHAPTER_SIZE, MAX_REEF, SHIPPED_REEFS } from './reefConst.ts';
 
+export { CHAPTER_SIZE, MAX_REEF, SHIPPED_REEFS };
 export const GENERATOR_VERSION = 1;
-/** Reefs shipped in the pack (ids R001…R360). Generated reefs start after these. */
-export const SHIPPED_REEFS = 360;
-export const CHAPTER_SIZE = 20;
-/** Highest reef number we accept (far beyond anyone's reach; keeps ids and seeds sane). */
-export const MAX_REEF = 9_999_999;
 
 /** Stable save id of reef number n (1-based). Shipped reefs keep their pack ids. */
 export function reefId(n: number): string {

@@ -42,16 +42,16 @@ import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
 import { lookFor } from '../render/skins.ts';
 import { shareText, type LagoonShape } from '../meta/share.ts';
 
-import { newPuzzleGame, puzzleStatus, type PuzzleDef } from '../core/puzzle.ts';
-import { solve } from '../core/solver.ts';
+import type { PuzzleDef } from '../core/puzzle.ts';
 import { initNative, isNative } from '../platform/native.ts';
 import { catchCapture, type LagoonCatch } from '../meta/catch.ts';
 import { record, type Journal } from '../meta/journal.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import type { DebugDeps } from './debug.ts';
-import { ReefSource } from './reefSource.ts';
-import { chapterLabel, noteFirstClear, reefEvents, type ChapterCompleteDetail } from './reefProgress.ts';
-import { CHAPTER_SIZE, MAX_REEF, chapterCleared, chapterName, chapterOf, reefId } from '../core/endless.ts';
+import type { ReefSource } from './reefSource.ts';
+import type * as ReefMode from './reefMode.ts';
+import type { ChapterCompleteDetail } from './reefProgress.ts';
+import { MAX_REEF } from '../core/reefConst.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { showRetry } from '../ui/retry.ts';
@@ -65,9 +65,28 @@ type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
 /** Shipped + endless reefs (generated in a worker, cached, prefetched). Exists once PACK is loaded. */
 let reefs: ReefSource | null = null;
+/**
+ * Reefs-mode code (reef source + generator, puzzle rules, hint solver, chapters): its own chunk,
+ * loaded with the pack and prefetched at idle. Set together with PACK, so every `mode === 'puzzle'`
+ * path (only reachable once the pack is loaded) may use `reefMode!`.
+ */
+let reefMode: typeof ReefMode | null = null;
 async function loadPack(): Promise<NonNullable<typeof PACK>> {
-  PACK ??= (await import('../content/puzzles.json')).default as NonNullable<typeof PACK>;
-  reefs ??= new ReefSource(PACK as unknown as ConstructorParameters<typeof ReefSource>[0]);
+  if (PACK && reefMode) return PACK;
+  // nothing is kept from a failed attempt: the next call fetches again (retry chip / reef error)
+  const [pack, m] = await Promise.all([import('../content/puzzles.json'), import('./reefMode.ts')]);
+  if (!reefMode) {
+    reefMode = m;
+    // Chapter milestone (ADR 0012): a screen-filling moment on the board; the reef card waits for it.
+    m.reefEvents.addEventListener('chapterComplete', (e) => {
+      const d = (e as CustomEvent<ChapterCompleteDetail>).detail;
+      const now = clock();
+      chapterHold = Math.max(0, fx.chapterComplete(now, d.chapter, d.name) - now - 1300 + 250);
+      ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
+    });
+  }
+  PACK ??= pack.default as NonNullable<typeof PACK>;
+  reefs ??= new m.ReefSource(PACK as unknown as ConstructorParameters<typeof ReefSource>[0]);
   return PACK;
 }
 /** Reef at 0-based index i, if available now (shipped, or generated and cached). */
@@ -139,7 +158,7 @@ function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
       night: scene.palette.name === 'night',
       mode,
       tier: mode === 'puzzle' ? reefAt(r.state.seed)?.tier : undefined,
-      reefWin: mode === 'puzzle' && puzzleStatus(r.state) === 'solved',
+      reefWin: mode === 'puzzle' && reefMode!.puzzleStatus(r.state) === 'solved',
     };
     const lc = catchCapture({ waves: e.waves, streak: e.streak, clean: e.score.cleanBonus > 0 }, env, {
       has: (id) => !!journal.entries[id],
@@ -175,7 +194,7 @@ function startState(): GameState {
   if (mode === 'puzzle' && PACK) {
     const want = profile.puzzle.index;
     const i = reefAt(want) ? want : Math.min(want, PACK.length - 1);
-    return newPuzzleGame(reefAt(i)!, i);
+    return reefMode!.newPuzzleGame(reefAt(i)!, i);
   }
   if (mode === 'daily') {
     const g = loadDaily(dailyDate);
@@ -330,18 +349,18 @@ function syncScene(): void {
     // the instruction only while it's news (first three reefs); afterwards the tier and your mark
     const status = pure ? '✓ No hints' : solved ? '✓ Cleared' : i < 3 ? 'Clear every pebble' : '';
     const tag = i === dailyReefIndex() ? 'Reef of the day' : (TIER_LABEL[p.tier ?? ''] ?? '');
-    const c = chapterOf(i + 1);
+    const c = reefMode!.chapterOf(i + 1);
     const first = c.first;
     const solvedNow = new Set(profile.puzzle.solved);
     scene.hudLabel = {
-      top: chapterLabel(i + 1),
+      top: reefMode!.chapterLabel(i + 1),
       big: `Reef ${i + 1}`,
       sub: [tag, status].filter(Boolean).join(' · '),
       tier: p.tier ?? 'endless',
       chapter: {
-        name: `${chapterName(c.chapter)} · ${c.pos} of ${CHAPTER_SIZE}`,
-        segs: Array.from({ length: CHAPTER_SIZE }, (_, k) =>
-          solvedNow.has(reefId(first + k)) ? 1 : k === c.pos - 1 ? 2 : 0,
+        name: `${reefMode!.chapterName(c.chapter)} · ${c.pos} of ${reefMode!.CHAPTER_SIZE}`,
+        segs: Array.from({ length: reefMode!.CHAPTER_SIZE }, (_, k) =>
+          solvedNow.has(reefMode!.reefId(first + k)) ? 1 : k === c.pos - 1 ? 2 : 0,
         ),
       },
     };
@@ -660,7 +679,7 @@ const lbBackground = () =>
 addEventListener('online', lbBackground);
 
 function checkPuzzle(): void {
-  const st = puzzleStatus(state);
+  const st = reefMode!.puzzleStatus(state);
   const i = state.seed;
   const p = reefAt(i);
   if (st === 'playing' || !p) return;
@@ -677,7 +696,7 @@ function checkPuzzle(): void {
     let chapterDone: { chapter: number; name: string } | undefined;
     if (first) {
       profile.puzzle.solved.push(p.id);
-      const cd = noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      const cd = reefMode!.noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
       if (cd) chapterDone = { chapter: cd.chapter, name: cd.name };
     }
     profile.puzzle.pure ??= [];
@@ -688,14 +707,14 @@ function checkPuzzle(): void {
     saveProfile(profile);
     const cleared = profile.puzzle.solved.length;
     const newIds = [...gameCatch.newIds];
-    const ch = chapterOf(i + 1).chapter;
-    const done = chapterCleared(new Set(profile.puzzle.solved), ch);
-    const progress = `${chapterName(ch)} · ${done} of ${CHAPTER_SIZE} cleared`;
+    const ch = reefMode!.chapterOf(i + 1).chapter;
+    const done = reefMode!.chapterCleared(new Set(profile.puzzle.solved), ch);
+    const progress = `${reefMode!.chapterName(ch)} · ${done} of ${reefMode!.CHAPTER_SIZE} cleared`;
     const hold = chapterHold;
     chapterHold = 0;
-    const chFirst = (ch - 1) * CHAPTER_SIZE + 1;
+    const chFirst = (ch - 1) * reefMode!.CHAPTER_SIZE + 1;
     const solvedSet = new Set(profile.puzzle.solved);
-    const segs = Array.from({ length: CHAPTER_SIZE }, (_, k) => solvedSet.has(reefId(chFirst + k)));
+    const segs = Array.from({ length: reefMode!.CHAPTER_SIZE }, (_, k) => solvedSet.has(reefMode!.reefId(chFirst + k)));
     const token = gameToken;
     // a discovery still on screen (the common pop included) finishes first; the card follows it
     later(1300 + hold, () =>
@@ -741,7 +760,7 @@ function nextPuzzleMove(): Move | null {
   const k = puzzleMoves.length;
   if (onPath && sol[k]) return { slot: sol[k].piece, x: sol[k].x, y: sol[k].y };
   const slots = state.tray.map((t, i) => (t ? i : -1)).filter((i) => i >= 0);
-  const res = solve(
+  const res = reefMode!.solve(
     state.board,
     slots.map((i) => state.tray[i]!.pieceId),
   );
@@ -750,7 +769,7 @@ function nextPuzzleMove(): Move | null {
 }
 
 function puzzleHint(): void {
-  if (mode !== 'puzzle' || puzzleStatus(state) !== 'playing') return;
+  if (mode !== 'puzzle' || reefMode!.puzzleStatus(state) !== 'playing') return;
   const next = nextPuzzleMove();
   const l = scene.layout;
   if (!next) {
@@ -807,7 +826,7 @@ function loadPuzzle(i: number): void {
   ui.close();
   profile.puzzle.index = k;
   saveProfile(profile);
-  state = newPuzzleGame(reef, k);
+  state = reefMode!.newPuzzleGame(reef, k);
   puzzleMoves = [];
   syncScene();
 }
@@ -885,15 +904,8 @@ function switchMode(m: Mode): void {
   syncScene();
 }
 
-// Chapter milestone (ADR 0012): a screen-filling moment on the board; the reef card waits for it.
-/** Extra delay for the reef result card while a chapter moment plays (set by the listener). */
+/** Extra delay for the reef result card while a chapter moment plays (set by the listener in loadPack). */
 let chapterHold = 0;
-reefEvents.addEventListener('chapterComplete', (e) => {
-  const d = (e as CustomEvent<ChapterCompleteDetail>).detail;
-  const now = clock();
-  chapterHold = Math.max(0, fx.chapterComplete(now, d.chapter, d.name) - now - 1300 + 250);
-  ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
-});
 
 // ------------------------------------------------------------------ UI
 const ui = new Ui({
@@ -1185,6 +1197,8 @@ idle(() => {
   sfx.prepare();
   setTimeout(() => reveal.prefetch(), 2500);
   setTimeout(() => ui.prefetchSheets(), 1800);
+  // lazy chunks that used to be in the initial bundle: fetched at idle so nothing waits on them
+  setTimeout(() => void import('./reefMode.ts').catch(() => undefined), 3000);
   scene.warmSprites();
   lbBackground();
 });
