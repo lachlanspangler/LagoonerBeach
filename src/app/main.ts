@@ -558,7 +558,7 @@ function finishGame(prevBest: number): void {
       overShown = true;
       // freeze the score behind the card at the final value (no mid-count-up mismatch)
       scene.score = scene.shownScore = card.score;
-      resultCard = ui.showGameOver(card);
+      void ui.showGameOver(card, () => token === gameToken).then((c) => c && (resultCard = c));
     }),
   );
 }
@@ -721,17 +721,10 @@ function checkPuzzle(): void {
       reveal.whenIdle(
         () =>
           token === gameToken &&
-          ui.showPuzzleResult({
-            solved: true,
-            index: i,
-            total: MAX_REEF,
-            cleared,
-            newIds,
-            progress,
-            segs,
-            chapterDone,
-            reward,
-          }),
+          ui.showPuzzleResult(
+            { solved: true, index: i, total: MAX_REEF, cleared, newIds, progress, segs, chapterDone, reward },
+            () => token === gameToken,
+          ),
       ),
     );
   } else {
@@ -740,7 +733,9 @@ function checkPuzzle(): void {
     // "So close": a discovery made on the way still gets its reveal first (the card follows it)
     later(700, () =>
       reveal.whenIdle(
-        () => token === gameToken && ui.showPuzzleResult({ solved: false, index: i, total: MAX_REEF, cleared }),
+        () =>
+          token === gameToken &&
+          ui.showPuzzleResult({ solved: false, index: i, total: MAX_REEF, cleared }, () => token === gameToken),
       ),
     );
   }
@@ -1197,6 +1192,7 @@ idle(() => {
   sfx.prepare();
   setTimeout(() => reveal.prefetch(), 2500);
   setTimeout(() => ui.prefetchSheets(), 1800);
+  setTimeout(() => ui.prefetchResults(), 2200);
   // lazy chunks that used to be in the initial bundle: fetched at idle so nothing waits on them
   setTimeout(() => void import('./reefMode.ts').catch(() => undefined), 3000);
   scene.warmSprites();

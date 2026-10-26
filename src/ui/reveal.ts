@@ -15,6 +15,7 @@
 import { SPECIES, SPECIES_BY_ID, type Rarity, type Species } from '../meta/creatures.ts';
 import { artSizeOf, drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
 import { spring } from '../render/celebrate.ts';
+import './tiles.css';
 import './celebrate.css';
 import {
   HABITAT_TINT,
