@@ -13,7 +13,9 @@ $F --stage spotless --out $O/d-spotless --at 0,200,350,500,700,1000,1250
 $F --stage lagoon --best 500 --score 430 --out $O/e-best --at 200,500,900,1200,1600,2200
 $F --results 5230,4100 --out $O/f-results --at 0,300,600,900,1300
 $F --reveal boxcrab --out $O/g1-uncommon --at 0,150,300,450,700,1300
-$F --reveal kraken --out $O/g2-legendary --at 0,300,700,1000,1300,1700,2100
+$F --reveal kraken --out $O/g2-legendary --at 300,800,1150,1400,1800,2100,2600
+$F --reveal octopus --out $O/g3-epic --at 300,600,800,1000,1200,1500,1900
+$F --reveal clownfish --golden --out $O/g4-golden --at 300,600,900,1200,1500
 $F --stage biggest --out $O/h-biggest --at 0,220,450,600,800,1100,1500
 $F --stage biggest --theme night --out $O/h-biggest-night --at 0,450,800,1100
 $F --chapter --out $O/i-chapter --at 0,700,900,1200,1600,2100
@@ -25,7 +27,9 @@ $C $O/d-spotless $M/d-spotless.jpg "(d) Spotless!: tide wash, word in the middle
 $C $O/e-best $M/e-new-best.jpg "(e) mid-game NEW BEST! banner (once per game, after the word)"
 $C $O/f-results $M/f-new-high-score.jpg "(f) results: count-up, gold, ribbon, confetti" 0.42 5
 $C $O/g1-uncommon $M/g1-reveal-uncommon.jpg "(g) uncommon discovery: pearl -> pop -> card" 0.36 6
-$C $O/g2-legendary $M/g2-reveal-legendary.jpg "(g) legendary discovery: tide, rays, fanfare (<= 2 s)" 0.36 7
+$C $O/g2-legendary $M/g2-reveal-legendary.jpg "(g) legendary: gold coin pulses as the light builds -> big creature -> card slides in, name stamps (2.5 s)" 0.36 7
+$C $O/g3-epic $M/g3-reveal-epic.jpg "(g) epic: purple coin -> big creature -> card (1.8 s)" 0.36 7
+$C $O/g4-golden $M/g4-reveal-golden.jpg "(g) golden: warmer gold finish + moving glint" 0.36 5
 $C $O/h-biggest $M/h-biggest.jpg "biggest: 3 waves + board clear = Unbelievable!, COMBO x20"
 $C $O/h-biggest-night $M/h-biggest-night.jpg "biggest, Night" 0.42 4
 $C $O/i-chapter $M/i-chapter.jpg "chapter complete (endless reefs)" 0.42 6

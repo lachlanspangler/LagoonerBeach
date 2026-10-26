@@ -1,6 +1,7 @@
 /**
- * Share card for a discovery (UI_DESIGN §6.9): a 1080×1350 (4:5) picture of the creature, its name
- * and rarity, with the game's name. Spoiler-free: no hint of how it was caught.
+ * Share card for a discovery (UI_DESIGN §6.9): a 1080×1350 (4:5) picture of the creature in a
+ * lagoon ringed by blocks, on its tier colour, with the app's icon mark, its name (plain Fraunces)
+ * and rarity. Spoiler-free: no hint of how it was caught.
  * Canvas → PNG → native: Filesystem + Share plugins; web: Web Share (files) → download.
  */
 import type { Species } from '../meta/creatures.ts';
@@ -39,42 +40,95 @@ export function renderShareCard(
     const fill = g.fillText.bind(g);
     g.fillText = (t: string, x: number, y: number, m?: number) => (o.log!.push(t), fill(t, x, y, m));
   }
-  const night = sp.habitat === 'night';
-  const [a, b] = HABITAT_TINT[sp.habitat];
+  // session-3 UX review: tier colour + lagoon water (not a grey-blue gradient with generic rays),
+  // the app's icon mark, and plain Fraunces for the name (outlined display type clashed with the
+  // wordmark). The creature sits in a lagoon ringed by blocks: the game in one picture.
+  const rank = RARITY_RANK[sp.rarity];
+  const tier = o.golden ? '#E9B23A' : RARITY_COLOR[sp.rarity];
+  const frame = o.golden ? '#C9922B' : tier;
   const bg = g.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, a);
-  bg.addColorStop(1, b);
+  bg.addColorStop(0, mix(tier, '#FFFFFF', 0.55));
+  bg.addColorStop(0.55, mix(tier, '#FFFFFF', 0.2));
+  bg.addColorStop(1, mix(tier, '#000000', 0.25));
   g.fillStyle = bg;
   g.fillRect(0, 0, W, H);
-  // soft pool of light behind the creature
-  const pool = g.createRadialGradient(W / 2, 530, 40, W / 2, 530, 500);
-  pool.addColorStop(0, night ? 'rgba(160,240,255,0.35)' : 'rgba(255,255,255,0.75)');
-  pool.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = pool;
-  g.fillRect(0, 0, W, H);
-  // rays for rare and up
-  const rank = RARITY_RANK[sp.rarity];
-  if (rank >= 3) {
-    g.save();
-    g.translate(W / 2, 530);
-    const n = rank >= 5 ? 16 : rank >= 4 ? 12 : 8;
-    for (let i = 0; i < n; i++) {
-      g.rotate((Math.PI * 2) / n);
-      const gr = g.createLinearGradient(0, 0, 0, -620);
-      gr.addColorStop(0, rank >= 5 ? 'rgba(255,230,150,0.42)' : 'rgba(255,255,255,0.32)');
-      gr.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = gr;
-      g.beginPath();
-      g.moveTo(0, 0);
-      g.lineTo(-60, -620);
-      g.lineTo(60, -620);
-      g.closePath();
-      g.fill();
-    }
-    g.restore();
+  // the header: the app's icon mark + wordmark, in ink that reads on the tier's light top
+  const ink = '#2B231C';
+  const ink2 = '#5A4B3C';
+  drawIconMark(g, 96, 62, 104);
+  g.textAlign = 'left';
+  g.textBaseline = 'middle';
+  g.fillStyle = ink;
+  g.font = `900 58px ${DISPLAY_STACK}`;
+  g.fillText('Lagooner Beach', 228, 116);
+  // the lagoon: a pool of water with caustics, ringed by blocks
+  const px = 130;
+  const py = 230;
+  const pw = W - 260;
+  const ph = 600;
+  drawBlockRing(g, px, py, pw, ph);
+  g.save();
+  g.beginPath();
+  g.roundRect(px, py, pw, ph, 70);
+  g.clip();
+  const water = g.createLinearGradient(0, py, 0, py + ph);
+  water.addColorStop(0, '#BFF1FA');
+  water.addColorStop(0.5, '#5CC8E0');
+  water.addColorStop(1, '#2B8FC0');
+  g.fillStyle = water;
+  g.fillRect(px, py, pw, ph);
+  caustics(g, px, py, pw, ph);
+  // the tier's light pools behind the creature (rare and up glow more)
+  const glow = g.createRadialGradient(W / 2, 540, 30, W / 2, 540, 420);
+  glow.addColorStop(0, hexA(o.golden ? '#FFE79A' : mix(tier, '#FFFFFF', 0.4), rank >= 3 || o.golden ? 0.85 : 0.55));
+  glow.addColorStop(1, hexA(tier, 0));
+  g.fillStyle = glow;
+  g.fillRect(px, py, pw, ph);
+  g.restore();
+  g.lineWidth = 10;
+  g.strokeStyle = 'rgba(255,255,255,0.85)';
+  g.beginPath();
+  g.roundRect(px, py, pw, ph, 70);
+  g.stroke();
+  // the creature, big and happy
+  drawCreature(g, sp, W / 2, 540, 560, 0, { golden: o.golden, expression: 'happy', t: 0.4 } as DrawOpts);
+  if (o.golden) sparkles(g, W / 2, 540, 320, 7);
+  // the label: a cream panel (dark ink on cream: always readable, whatever the tier)
+  const ly = 880;
+  g.fillStyle = 'rgba(43,35,28,0.18)';
+  g.beginPath();
+  g.roundRect(96, ly + 10, W - 192, H - ly - 92, 48);
+  g.fill();
+  g.fillStyle = '#FFF8EC';
+  g.beginPath();
+  g.roundRect(96, ly, W - 192, H - ly - 92, 48);
+  g.fill();
+  g.textAlign = 'center';
+  g.fillStyle = ink2;
+  g.font = `800 30px ${FONT_STACK}`;
+  g.fillText(o.golden ? 'GOLDEN FIND' : 'NEW DISCOVERY', W / 2, ly + 56);
+  // name: plain Fraunces (no outline)
+  let size = 92;
+  g.font = `900 ${size}px ${DISPLAY_STACK}`;
+  while (g.measureText(sp.name).width > W - 280 && size > 52) {
+    size -= 4;
+    g.font = `900 ${size}px ${DISPLAY_STACK}`;
+  }
+  g.fillStyle = ink;
+  g.fillText(sp.name, W / 2, ly + 136);
+  drawPips(g, W / 2, ly + 212, 16, rank, frame, ink2);
+  g.fillStyle = ink2;
+  g.font = `800 30px ${FONT_STACK}`;
+  g.fillText(`${sp.rarity.toUpperCase()} · No. ${SPECIES.indexOf(sp) + 1} of ${SPECIES.length}`, W / 2, ly + 262);
+  // who found it, and when (UI_DESIGN §6.9: no URL soup, no QR)
+  const foot = [o.name ? `Found by ${o.name.toUpperCase()}` : '', o.date ? longDate(o.date) : '']
+    .filter(Boolean)
+    .join(' · ');
+  if (foot) {
+    g.font = `700 28px ${FONT_STACK}`;
+    g.fillText(foot, W / 2, ly + 316);
   }
   // frame
-  const frame = o.golden ? '#C9922B' : RARITY_COLOR[sp.rarity];
   g.lineWidth = o.golden ? 18 : 12;
   if (o.golden) {
     const fg = g.createLinearGradient(0, 0, W, H);
@@ -82,72 +136,102 @@ export function renderShareCard(
     fg.addColorStop(0.5, '#C9922B');
     fg.addColorStop(1, '#F7D774');
     g.strokeStyle = fg;
-  } else g.strokeStyle = frame;
+  } else g.strokeStyle = mix(frame, '#000000', 0.1);
   g.beginPath();
-  g.roundRect(36, 36, W - 72, H - 72, 64);
+  g.roundRect(30, 30, W - 60, H - 60, 64);
   g.stroke();
-  // overline
-  const ink = night ? '#EEF3F6' : '#2B231C';
-  // the habitat gradient darkens toward the bottom: secondary lines use full ink there (≥ 4.5:1)
-  const ink2 = night ? '#C9D6E0' : '#2B231C';
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillStyle = ink2;
-  g.font = `800 34px ${FONT_STACK}`;
-  g.fillText(o.golden ? 'GOLDEN FIND' : 'NEW DISCOVERY', W / 2, 140);
-  // the creature, big and happy
-  drawCreature(g, sp, W / 2, 520, 600, 0, { golden: o.golden, expression: 'happy', t: 0.4, night } as DrawOpts);
-  if (o.golden) sparkles(g, W / 2, 530, 320, 7);
-  // name: display caps, outlined like the in-game callouts
-  const name = sp.name.toUpperCase();
-  let size = 96;
-  g.font = `900 ${size}px ${DISPLAY_STACK}`;
-  while (g.measureText(name).width > W - 180 && size > 52) {
-    size -= 4;
-    g.font = `900 ${size}px ${DISPLAY_STACK}`;
-  }
-  g.lineJoin = 'round';
-  g.lineWidth = size * 0.16;
-  g.strokeStyle = night ? '#04212D' : '#2B231C';
-  g.strokeText(name, W / 2, 950);
-  const fill = g.createLinearGradient(0, 950 - size / 2, 0, 950 + size / 2);
-  const [f0, f1, f2] = o.golden || rank >= 5 ? ['#FFF4C2', '#F2C14E', '#B9821F'] : ['#E8FCFF', '#6FD3EC', '#2B8FC0'];
-  fill.addColorStop(0, f0);
-  fill.addColorStop(0.5, f1);
-  fill.addColorStop(1, f2);
-  g.fillStyle = fill;
-  g.fillText(name, W / 2, 950);
-  drawPips(g, W / 2, 1042, 16, rank, frame, ink2);
-  g.fillStyle = ink2;
-  g.font = `800 32px ${FONT_STACK}`;
-  g.fillText(`${sp.rarity.toUpperCase()} · No. ${SPECIES.indexOf(sp) + 1} of ${SPECIES.length}`, W / 2, 1096);
-  // who found it, and the game's mark (UI_DESIGN §6.9: no URL soup, no QR)
-  if (o.name) {
-    g.fillStyle = ink2;
-    g.font = `700 34px ${FONT_STACK}`;
-    const lead = 'Found by ';
-    g.textAlign = 'left';
-    g.font = `700 34px ${FONT_STACK}`;
-    const lw = g.measureText(lead).width;
-    g.font = `900 36px ${DISPLAY_STACK}`;
-    const nw = g.measureText(o.name.toUpperCase()).width;
-    const x0 = W / 2 - (lw + nw) / 2;
-    g.font = `700 34px ${FONT_STACK}`;
-    g.fillText(lead, x0, 1166);
-    g.fillStyle = ink;
-    g.font = `900 36px ${DISPLAY_STACK}`;
-    g.fillText(o.name.toUpperCase(), x0 + lw, 1166);
-    g.textAlign = 'center';
-  }
-  g.fillStyle = ink;
-  g.font = `900 46px ${DISPLAY_STACK}`;
-  g.fillText('Lagooner Beach', W / 2, o.name ? 1226 : 1210);
-  if (o.date) {
-    g.fillStyle = ink2;
-    g.font = `700 26px ${FONT_STACK}`;
-    g.fillText(longDate(o.date), W / 2, o.name ? 1268 : 1254);
-  }
   return c;
+}
+
+/** The app icon (public/icon.svg) drawn in canvas: night sea tile, 3×3 blocks, a lagoon cell. */
+function drawIconMark(g: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  const k = s / 512;
+  g.save();
+  g.translate(x, y);
+  g.scale(k, k);
+  const sea = g.createRadialGradient(256, 230, 0, 256, 230, 360);
+  sea.addColorStop(0, '#1B4E6B');
+  sea.addColorStop(1, '#0B1622');
+  g.fillStyle = sea;
+  g.beginPath();
+  g.roundRect(0, 0, 512, 512, 112);
+  g.fill();
+  const cols = ['#F2795B', '#F2B93B', '#F2B93B', '#F2795B', '', '#53C08C', '#8E5BD8', '#8E5BD8', '#53C08C'];
+  cols.forEach((c, i) => {
+    const bx = 96 + (i % 3) * 110;
+    const by = 96 + Math.floor(i / 3) * 110;
+    if (c) g.fillStyle = c;
+    else {
+      const lag = g.createLinearGradient(0, by, 0, by + 100);
+      lag.addColorStop(0, '#BFF1FA');
+      lag.addColorStop(1, '#2FB8D8');
+      g.fillStyle = lag;
+    }
+    g.beginPath();
+    g.roundRect(bx, by, 100, 100, 26);
+    g.fill();
+  });
+  g.restore();
+}
+
+/** Blocks (the game's pebble colours) around the pool, as if the ring just closed. */
+function drawBlockRing(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  const pal = ['#F2795B', '#F2B93B', '#53C08C', '#3D9BE9', '#8E5BD8', '#F28DB2'];
+  const b = 78;
+  const step = 96;
+  const spots: [number, number][] = [];
+  const nx = Math.floor((w + b) / step);
+  const ny = Math.floor((h + b) / step);
+  const ox = x + (w - (nx - 1) * step) / 2;
+  const oy = y + (h - (ny - 1) * step) / 2;
+  for (let i = 0; i < nx; i++) spots.push([ox + i * step, y - 8], [ox + i * step, y + h + 8]);
+  for (let j = 1; j < ny - 1; j++) spots.push([x - 8, oy + j * step], [x + w + 8, oy + j * step]);
+  spots.forEach(([cx, cy], i) => {
+    const c = pal[(i * 7 + 3) % pal.length]!;
+    g.fillStyle = mix(c, '#000000', 0.22);
+    g.beginPath();
+    g.roundRect(cx - b / 2, cy - b / 2 + 7, b, b, 20);
+    g.fill();
+    g.fillStyle = c;
+    g.beginPath();
+    g.roundRect(cx - b / 2, cy - b / 2, b, b, 20);
+    g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.35)';
+    g.beginPath();
+    g.roundRect(cx - b / 2 + 10, cy - b / 2 + 8, b - 20, 14, 7);
+    g.fill();
+  });
+}
+
+/** Lagoon water texture: soft caustic light lines (deterministic, no noise). */
+function caustics(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  g.save();
+  g.strokeStyle = 'rgba(255,255,255,0.22)';
+  g.lineCap = 'round';
+  for (let r = 0; r < 9; r++) {
+    g.lineWidth = r % 3 === 0 ? 7 : 4;
+    g.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const u = i / 40;
+      const xx = x + u * w;
+      const yy = y + 40 + r * (h / 8.5) + Math.sin(u * 9 + r * 1.7) * 16 + Math.sin(u * 23 + r) * 6;
+      if (i === 0) g.moveTo(xx, yy);
+      else g.lineTo(xx, yy);
+    }
+    g.stroke();
+  }
+  g.restore();
+}
+
+function mix(a: string, b: string, k: number): string {
+  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [x, y] = [p(a), p(b)];
+  const c = x.map((v, i) => Math.round(v + (y[i]! - v) * k));
+  return `#${c.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+function hexA(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
 /** 2026-10-16 → "16 October 2026" (unambiguous everywhere). */

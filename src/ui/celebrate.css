@@ -48,6 +48,31 @@
 .reveal.show .rv-card {
   transform: none;
 }
+/* epic/legendary are a scene: the card chrome waits for the big creature, then slides up */
+.reveal.r-scene:not(.chrome) .rv-card {
+  opacity: 0;
+  transform: translateY(48px) scale(0.94);
+}
+.reveal.r-scene .rv-card {
+  transition:
+    transform 380ms cubic-bezier(0.2, 0.9, 0.3, 1.05),
+    opacity 220ms ease;
+}
+/* the name stamps in (scene tiers) */
+.reveal.r-scene .rv-info {
+  transform: none;
+}
+.reveal.r-scene .rv-name {
+  transform: scale(1.7);
+  opacity: 0;
+  transition:
+    transform 220ms cubic-bezier(0.3, 0, 0.8, 0.15),
+    opacity 120ms ease;
+}
+.reveal.r-scene.info .rv-name {
+  transform: none;
+  opacity: 1;
+}
 .r-golden .rv-card {
   /* gold foil: a moving metallic gradient in the border, the warm panel inside */
   border: 3px solid transparent;
@@ -206,35 +231,6 @@ html[data-theme='night'] .r-golden .rv-card {
   text-transform: uppercase;
   color: var(--ink-2);
 }
-.rv-facts {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0 14px;
-  margin: 12px 0 8px;
-  text-align: left;
-}
-.rv-facts div {
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-end;
-  border-left: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
-  padding-left: 10px;
-}
-.rv-facts div:first-child {
-  border-left: none;
-  padding-left: 0;
-}
-.rv-facts b {
-  font-size: 15px;
-  font-weight: 800;
-}
-.rv-facts span {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
 .rv-journal {
   display: flex;
   align-items: center;
@@ -346,14 +342,16 @@ html[data-theme='night'] .r-golden .rv-card {
   .rv-card,
   .reveal-pop,
   .rv-stamp,
-  .rv-info {
+  .rv-info,
+  .rv-name {
     transition-duration: 1ms !important;
   }
 }
 html[data-rm='1'] .rv-card,
 html[data-rm='1'] .reveal-pop,
 html[data-rm='1'] .rv-stamp,
-html[data-rm='1'] .rv-info {
+html[data-rm='1'] .rv-info,
+html[data-rm='1'] .rv-name {
   transition-duration: 1ms !important;
 }
 html[data-rm='1'] .rv-ph i {
