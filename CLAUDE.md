@@ -102,8 +102,10 @@ persistence. The renderer animates events; the logical state is already final.
 `freezeNow()`/`freeze(ms)` render an exact frame after a move, `commitMove(m)`, `stageCombo(n, dry)`,
 `stageRecord(best)`, `revealSpecies(id)`, `revealFreeze(t)`, `chapterMoment(n, name)`, `showResults(o)`. Endless reefs: `loadPuzzle(360)` opens
 reef 361 (async, from the worker), `reefStats()`, `reefReady(i)`, `prefetchReefs(i, n)`.
-Leaderboards: `?lboffline=1` makes the demo backend act offline; build with `VITE_LB_URL=…` for the
-real server or `VITE_LB=off` to ship without leaderboards.
+Leaderboards (ADR 0010): `VITE_LB_URL=…` → real server; `VITE_LB=demo` → on-device demo boards (dev/test
+only: on in `vite` dev via `.env.development` and in the `dist-e2e/` build Playwright makes); neither
+(a plain release build) or `VITE_LB=off` → no leaderboards anywhere. `?lboffline=1` makes the demo
+backend act offline; `?nolb` hides boards on a demo build (release look, used by store shots).
 
 ## Rules that must stay true
 - One core rule (no line clears, no alternative clear rules). Every dealt tray is placeable

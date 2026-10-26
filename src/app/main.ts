@@ -539,8 +539,17 @@ function finishGame(prevBest: number): void {
 
 // ------------------------------------------------------------------ leaderboards (lazy: ui/leaderboard.ts)
 const LB_URL = (import.meta.env.VITE_LB_URL as string | undefined) || undefined;
-/** `VITE_LB=off` builds ship without leaderboards (no menu entry, no results button, no network). */
-const LB_ON = import.meta.env.VITE_LB !== 'off';
+/**
+ * Leaderboards are on only with a real server (`VITE_LB_URL`) or, for dev and tests, the on-device
+ * demo backend (`VITE_LB=demo`: `vite` dev via .env.development, the e2e build in
+ * playwright.config.ts). A release build without a URL — or any build with `VITE_LB=off` — ships
+ * without leaderboards: no menu entry, no results button, no name entry, no network (ADR 0010).
+ */
+const LB_ON =
+  import.meta.env.VITE_LB !== 'off' &&
+  (!!LB_URL || import.meta.env.VITE_LB === 'demo') &&
+  // debug: preview the release look (no boards) on a demo build — store shots use this
+  !(DEBUG && params.has('nolb'));
 let lbMod: Promise<LeaderboardUi> | null = null;
 /** The last results card, so leaderboard sheets opened from it can go back to it. */
 let resultCard: HTMLElement | null = null;
