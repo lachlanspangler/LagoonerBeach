@@ -42,10 +42,10 @@ const tail = blob(
   [
     [-25, -6],
     [-32, -9.5],
-    [-40, -13],
-    [-45.3, -6.5],
-    [-45.3, 6.5],
-    [-40, 13],
+    [-40, -15],
+    [-45.5, -8],
+    [-45.5, 8],
+    [-40, 15],
     [-32, 9.5],
     [-25, 6],
   ],
@@ -54,14 +54,14 @@ const tail = blob(
 // the eyebrow cirri: two branched tufts straddling the eye, splayed ±25° (never bunny ears);
 // each is a stem with one side fork, so it reads as a little feathery antler at 54 px
 // (the front one stands taller: one raised eyebrow, the cheeky look)
-const tuftF = capsule(16, -13, 3.3, 22.5, -31.5, 2.7);
-const forkF = capsule(19.6, -23, 2.3, 25.5, -26.5, 2.2);
-const tuftR = capsule(5, -13.5, 3.3, -0.5, -28.5, 2.7);
-const forkR = capsule(1.8, -22, 2.3, -3.5, -25.5, 2.2);
+const tuftF = capsule(16, -13, 3.4, 26, -35, 2.9);
+const forkF = capsule(20.5, -23.5, 2.4, 27.5, -26.5, 2.3);
+const tuftR = capsule(5, -13.5, 3.4, -3.5, -32, 2.9);
+const forkR = capsule(1, -22.5, 2.4, -5.5, -25, 2.3);
 // a flat pectoral swept back along the flank, well behind the eye (not a second mouth)
 const pectoral = ellipse(-10, 10, 8, 3.6, 22);
 // the perch: blennies sit propped on their stubby pelvic fins under the chin
-const pelvic = capsule(16, 13, 3.4, 13, 23.5, 2.8);
+const pelvic = capsule(18, 13, 3.8, 11, 28, 3.2);
 // darker olive spots (R18 spots, ≥ 6 u), placed by hand along the flank, clear of the eye
 const spots = join(
   circle(-9, -3, 3.3),
