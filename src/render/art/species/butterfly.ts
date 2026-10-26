@@ -13,42 +13,41 @@ const disc = blob(
   [
     [18, 0],
     [14, -17],
-    [4, -31],
-    [-9, -37],
-    [-19, -29],
+    [4, -29],
+    [-8, -35],
+    [-18, -28],
     [-22, -14],
     [-24, -4],
     [-24, 4],
     [-22, 14],
     [-19, 29],
-    [-9, 37],
-    [4, 31],
+    [-8, 36],
+    [4, 30],
     [14, 17],
   ],
   1,
 );
-// the threadfin's pennant: one plump filament trailing off the rear dorsal corner (rounded tip)
+// the threadfin's pennant: a short plump filament off the rear dorsal corner (−40 %, rounded tip)
 const filament = tube(
   [
-    [-16, -32, 3.6],
-    [-28, -36, 3.2],
-    [-40, -34, 3],
-    [-44, -28, 2.8],
+    [-14, -29.5, 3.2],
+    [-21, -32, 2.8],
+    [-27, -30.5, 2.6],
   ],
   1,
 );
 // the short straight tweezer snout (rounded tip, R3)
-const snout = capsule(15, 3, 4.2, 30, 3.5, 3);
+const snout = capsule(15, 3, 4.2, 32.5, 3.5, 2.9);
 // narrow tail root, then a clear fan tail in the pale fin colour
 const tail = blob(
   [
     [-21, -3.5],
     [-30, -7],
-    [-39, -16],
-    [-45, -11],
+    [-40, -19],
+    [-46, -13],
     [-46, 0],
-    [-45, 11],
-    [-39, 16],
+    [-46, 13],
+    [-40, 19],
     [-30, 7],
     [-21, 3.5],
   ],
@@ -67,10 +66,10 @@ const band = tube(
 // white ring so the real eye pops out of its mask
 const ring = circle(5, 1, 7.8);
 // pale fin margins top and bottom at the back (they read as the soft dorsal/anal fins)
-const fins = join(ellipse(-12, -34, 13, 6, 30), ellipse(-12, 34, 13, 6, -30));
-// the false eye near the tail: a small dark dot in a pale ring
-const falseRing = circle(-15, -5, 4.8);
-const falseEye = circle(-15, -5, 3.1);
+const fins = join(ellipse(-13, -31, 12, 5, 24), ellipse(-12, 33, 12, 5.5, -28));
+// the false eye on the rear dorsal: a 7 u dark dot in a pale cream ring
+const falseRing = circle(-12, -21, 5.8);
+const falseEye = circle(-12, -21, 3.5);
 
 export default defineArt({
   id: 'butterfly',
@@ -90,11 +89,11 @@ export default defineArt({
       parts: [
         { d: disc, role: 'body' },
         { d: snout, role: 'body' },
-        { d: filament, role: 'belly', extra: true },
+        { d: filament, role: 'body', extra: true },
         { d: fins, role: 'belly', kind: 'pattern' },
         { d: band, role: 'accent', kind: 'pattern' },
         { d: ring, role: 'white', kind: 'pattern' },
-        { d: falseRing, role: 'white', kind: 'pattern' },
+        { d: falseRing, role: 'belly', kind: 'pattern' },
         { d: falseEye, role: 'ink', kind: 'pattern' },
       ],
     },
@@ -104,7 +103,7 @@ export default defineArt({
     eyes: [[5, 1]],
     eye: 10.6,
     zone: [-8, -25, 38, 46],
-    mouth: { at: [28.5, 6], w: 4.6, shape: 'smile' },
+    mouth: { at: [32, 5.6], w: 4.4, shape: 'smile' },
     sweet: true,
   },
   idle: {
@@ -122,8 +121,12 @@ export default defineArt({
           k: [
             [0, 1],
             [0.08, 1],
+            [0.105, 0.15],
+            [0.106, -0.15],
             [0.13, -1],
             [0.52, -1],
+            [0.535, -0.15],
+            [0.536, 0.15],
             [0.57, 1],
             [1, 1],
           ],
