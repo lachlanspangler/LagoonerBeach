@@ -1,16 +1,17 @@
 /**
- * Leafy Sea Dragon — HORSE class, the legendary showpiece (upright profile). Silhouette: a graceful
- * upright S — a seahorse-sized round head on a slim neck, a small pipette snout, a slender body and
- * a long tail that sweeps back — dressed at the outline in six big forked leaf fronds (R10: the
- * leaves, exaggerated ~2×; none ever crosses the face). Gold body, sea-green leaves, cream bands.
- * Personality: regal, leafy, shy; rests `proud`. Signature: a current sweeps through the fronds
- * (back and front layers with overlapping lag), then a slow royal bow and a wink.
+ * Leafy Sea Dragon — HORSE class, the legendary showpiece (upright profile). Silhouette: an upright
+ * S — a round head on a slim neck, a thin pipette snout, a slender body and a tail that sweeps BACK
+ * (the seahorse curls its tail forward) — dressed in seven big forked leaf fronds that carry ~55 % of
+ * the silhouette (R10; none crosses the face). Olive-gold `#C9A53B` body (off the seahorse's orange
+ * gold), sea-green leaves with pale veins, cream bands. Personality: regal, leafy, shy; tiles rest eyes
+ * open (`proud` is the detail view's). Signature: a current sweeps through the fronds (back and
+ * front layers with overlapping lag), then a slow royal bow and a wink.
  */
 import { blob, capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
 const head = ellipse(3, -27, 12.5, 11, -12);
 // a short, slim pipette snout with a rounded tip
-const snout = capsule(11, -25, 4.4, 25, -21.5, 3.2);
+const snout = capsule(11, -25, 3.5, 25, -21.5, 2.6);
 const torso = blob([
   [-5, -18],
   [6, -15],
@@ -21,12 +22,13 @@ const torso = blob([
   [-10, 9],
   [-11, -5],
 ]);
+// the tail trails down and BACK (a seahorse curls its tail forward into a spiral; a dragon never does)
 const tail = tube([
-  [-3, 13, 6.4],
-  [-6, 23, 5.2],
-  [-6, 32, 4.2],
-  [-1, 36.5, 3.4],
-  [6, 37.5, 2.8],
+  [-3, 13, 6.2],
+  [-7, 22, 4.8],
+  [-12.5, 29, 3.8],
+  [-19, 32.5, 3],
+  [-25, 33.5, 2.5],
 ]);
 
 /**
@@ -54,26 +56,29 @@ type Frond = readonly [number, number, number, number, number];
  */
 const main = ([x, y, d, len, w]: Frond) => blade(x, y, d - 12, len, w);
 const sister = ([x, y, d, len, w]: Frond) => blade(x, y, d + 30, len * 0.62, w * 0.72);
-const fronds = (L: readonly Frond[]) => [
-  { d: join(...L.map(sister)), role: 'belly' as const },
-  { d: join(...L.map(main)), role: 'belly' as const },
+const fronds = (L: readonly Frond[], extra = false) => [
+  { d: join(...L.map(sister)), role: 'belly' as const, extra },
+  { d: join(...L.map(main)), role: 'belly' as const, extra },
 ];
 
 const rib = ([x, y, d, len]: Frond) => {
   const a = ((d - 12) * Math.PI) / 180;
   return `M${x + 4 * Math.cos(a)} ${y + 4 * Math.sin(a)}L${x + len * 0.78 * Math.cos(a)} ${y + len * 0.78 * Math.sin(a)}`;
 };
-// six fronds at the outline: crown, nape, back, rump (behind); belly (front); tail (with the tail)
+// six fronds at the outline: crown, nape, rump (behind); belly (front); tail and tail tip.
+// CRITIQUE-2: +30 % leaves so they carry ≥ 45 % of the silhouette. The crown frond is `extra`: it
+// breaks the tile frame a little, so the legendary reads bigger than an M.
+const CROWN: readonly Frond[] = [[-6, -31, -122, 19.5, 10.4]];
 const BACK: readonly Frond[] = [
-  [-6, -30, -122, 15, 8],
-  [-10, -15, -165, 25, 10],
-  [-11, 3, 168, 25, 10],
+  [-10, -15, -165, 32, 13],
+  [-11, 3, 168, 32, 13],
 ];
-const FRONT: readonly Frond[] = [[10, 8, 22, 22, 9.5]];
-const TAIL: readonly Frond[] = [
-  [-6, 27, 198, 22, 9],
-  [3, 35.5, 24, 13, 7],
+const FRONT: readonly Frond[] = [
+  [10, 9, 40, 25, 11.5],
+  [3, 16, 100, 17, 9.5],
 ];
+const TAIL: readonly Frond[] = [[-7, 25, 198, 28.5, 11.7]];
+const TIP: readonly Frond[] = [[-23, 33, 190, 17, 9]];
 const bands = join(
   tube([
     [-11, -6, 2.2],
@@ -89,22 +94,28 @@ export default defineArt({
   id: 'seadragon',
   klass: 'horse',
   size: 'M',
-  feature: 'an upright S with a round head and small pipette snout, dressed in six big forked leaf fronds',
+  feature:
+    'an upright S with a round head, a thin pipette snout and a back-swept tail, dressed in seven big forked leaf fronds',
   personality: ['regal', 'leafy', 'shy'],
-  palette: { body: '#E0B84A', accent: '#FFF4D6', belly: '#8AB17D' },
-  restExpression: 'proud',
+  palette: { body: '#C9A53B', accent: '#FFF4D6', belly: '#8AB17D' },
+  restExpression: 'proud', // the kit shows it in the detail view only; journal tiles rest eyes-open
+
   groups: [
     {
       id: 'leavesB',
       pivot: [-8, -10],
-      parts: [...fronds(BACK), { d: join(...BACK.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 }],
+      parts: [
+        ...fronds(CROWN, true),
+        ...fronds(BACK),
+        { d: join(...[...CROWN, ...BACK].map(rib)), role: 'white', kind: 'line', w: 3, alpha: 0.45 },
+      ],
     },
     {
       id: 'tail',
       pivot: [-3, 14],
       seamless: true,
       parts: [
-        ...fronds(TAIL),
+        ...fronds([...TAIL, ...TIP], true),
         { d: tail, role: 'body' },
         {
           d: tube([
@@ -114,7 +125,7 @@ export default defineArt({
           role: 'accent',
           kind: 'pattern',
         },
-        { d: join(...TAIL.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 },
+        { d: join(...[...TAIL, ...TIP].map(rib)), role: 'white', kind: 'line', w: 3, alpha: 0.45 },
       ],
     },
     {
@@ -131,7 +142,7 @@ export default defineArt({
     {
       id: 'leavesF',
       pivot: [9, 8],
-      parts: [...fronds(FRONT), { d: join(...FRONT.map(rib)), role: 'ink', kind: 'line', w: 3, alpha: 0.22 }],
+      parts: [...fronds(FRONT), { d: join(...FRONT.map(rib)), role: 'white', kind: 'line', w: 3, alpha: 0.45 }],
     },
   ],
   shine: ellipse(-2, -34, 6, 2.6, -18),
