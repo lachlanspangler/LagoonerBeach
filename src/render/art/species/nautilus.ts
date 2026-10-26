@@ -7,7 +7,7 @@
  * streaming, then drifts back and settles with a polite blink.
  * Groups (back to front): tentacles, shell, body (head and hood; the face rides on it), bubbles (prop).
  */
-import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
+import { blob, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
 const R = 26,
   SX = -16,
@@ -54,20 +54,36 @@ const hood = blob([
   [HX + 2, HY + 1],
   [HX - 8, HY + 3],
 ]);
-const hoodSpots = join(circle(HX - 7, HY - 9, 3.3), circle(HX + 3, HY - 14, 3.4), circle(HX + 11, HY - 9, 3.2));
+// CRITIQUE-2: one darker hood band (the spots read as a cookie)
+const hoodBand = tube([
+  [HX - 14, HY - 6, 3.4],
+  [HX - 2, HY - 13, 4.2],
+  [HX + 10, HY - 13, 4.2],
+  [HX + 18, HY - 7, 3.4],
+]);
+// CRITIQUE-2: 7 tentacles at 5 u, 40 % longer, each curling at the tip (no more five-finger mitten)
+const tentacle = (deg: number, len: number, curl: number) => {
+  const t = (deg * Math.PI) / 180;
+  const c = Math.cos(t),
+    s = Math.sin(t);
+  const nx = -s,
+    ny = c; // the curl bends to the tentacle's right (downward for the forward ones)
+  const P = (f: number, bend: number, r: number) =>
+    [20 + c * len * f + nx * bend, 5 + s * len * f + ny * bend, r] as [number, number, number];
+  return tube([P(0, 0, 2.7), P(0.5, curl * 0.3, 2.6), P(0.85, curl, 2.4), P(1, curl * 1.8, 2.2)]);
+};
 const tentacles = join(
-  capsule(18, 6, 2.6, 23.7, -15.3, 2.5),
-  capsule(18, 6, 2.6, 30.6, -12.0, 2.5),
-  capsule(18, 6, 2.6, 36.0, -6.6, 2.5),
-  capsule(18, 6, 2.6, 39.3, 0.3, 2.5),
-  capsule(18, 6, 2.6, 39.9, 7.9, 2.5),
-  capsule(18, 6, 2.6, 37.9, 15.3, 2.5),
-  capsule(18, 6, 2.6, 33.6, 21.6, 2.5),
-  capsule(18, 6, 2.6, 27.3, 25.9, 2.5),
+  tentacle(-50, 22, -2),
+  tentacle(-28, 26, -1.5),
+  tentacle(-6, 28, 1.5),
+  tentacle(16, 28, 2.5),
+  tentacle(38, 26, 3),
+  tentacle(60, 24, 3),
+  tentacle(82, 21, 2.5),
 );
 // the whole animal rises nose-up by 12° (unhurried, drifting up); it also keeps the silhouette clear
 // of the cuttlefish (oval + arm tuft) and the hermit crab (shell + crab low at the front), R12
-const T = (d: string) => xform(d, { rot: -12, sx: 0.97, sy: 0.97 });
+const T = (d: string) => xform(d, { rot: -12, sx: 0.9, sy: 0.9, tx: -3 });
 const bubbles = join(circle(HX + 4, HY - 24, 3.4), circle(HX + 10, HY - 32, 2.4), circle(HX + 3, HY - 38, 1.8));
 
 export default defineArt({
@@ -76,7 +92,7 @@ export default defineArt({
   size: 'M',
   feature: 'a striped round coil with a hooded head and a fan of slim tentacles',
   personality: ['ancient', 'polite', 'unhurried'],
-  palette: { body: '#E9D0A9', accent: '#C2603A', belly: '#C98A5E' },
+  palette: { body: '#E9D0A9', accent: '#C2603A', belly: '#E39A5E' },
   nocturnal: true,
   groups: [
     { id: 'tentacles', pivot: [HX + 6, HY + 4], parts: [{ d: T(tentacles), role: 'belly' }] },
@@ -93,9 +109,9 @@ export default defineArt({
       id: 'body',
       pivot: [HX, HY],
       parts: [
-        { d: T(head), role: 'accent' },
+        { d: T(head), role: 'body' },
         { d: T(hood), role: 'belly' },
-        { d: T(hoodSpots), role: 'white', kind: 'pattern', alpha: 0.55 },
+        { d: T(hoodBand), role: 'accent', kind: 'pattern', alpha: 0.7 },
       ],
     },
     { id: 'bubbles', pivot: [HX + 6, HY - 30], prop: true, parts: [{ d: bubbles, role: 'white' }] },
@@ -104,7 +120,7 @@ export default defineArt({
   shine: ellipse(SX - R * 0.4, SY - R * 0.62, 10, 4.4, -30),
   face: {
     eyes: [[HX + 4, HY - 3]],
-    eye: 10.5,
+    eye: 12,
     zone: [HX - 12, HY - 21, 32, 32],
     mouth: { at: [HX + 10, HY + 4], w: 4.5, shape: 'smile' },
     sweet: true,

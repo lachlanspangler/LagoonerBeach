@@ -1,136 +1,129 @@
 /**
- * Cockle — OBJECT class (front view), size XS.
- * Silhouette: a ribbed fan-shaped lid with a soft rounded apex over a deep cream bowl, lifted open so
- * a wide lens-shaped gap shows the pink mantle and the face (R6), plus a small cream foot nub at the
- * side (cockles hop with it). R10: the four broad ribs fanning from the apex (R18: 4 ridges).
- * Every rounder, wider, heart-shaped version normalised onto the sand dollar's coin (IoU 0.80–0.93),
- * so the fan apex and the foot nub are the silhouette levers.
- * Personality: dreamy, musical, round. Signature: the lid rocks open while it hums three notes, wink.
- * Groups (back to front): mantle (with the foot; the face rides on it), body (bowl), lid, notes (prop).
+ * Cockle — OBJECT class (front view of one valve), size XS.
+ * Silhouette (CRITIQUE-2): a heart-ish rounded fan 1.35:1 wide, the top edge one smooth arc (no
+ * apex), narrowing to a hinge knob at the bottom centre. R10: four broad ribs (≥ 6 u) fanning up
+ * from that hinge; they fade under a pale face window so the eyes never sit on stripes.
+ * Warmer, pinker than the brown cluster (#F2C9A8, ribs #C27A5A) and nothing like the low limpet dome.
+ * Personality: dreamy, musical, round. Resting mouth: a little "o", humming to itself.
+ * Signature: rocks on its hinge like a metronome while three notes float up, then a wink.
+ * Groups (back to front): body (shell + ribs; the face rides on it), notes (prop).
  */
 import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
-const HINGE: [number, number] = [-40, 4];
-const OPEN = 0; // resting tilt in degrees (the signature tips the lid open on its left hinge)
-const S = 0.9; // the whole shell, scaled to fit the 84-unit box once tipped open
-const fit = (d: string) => xform(d, { sx: S, sy: S });
-const tip = (d: string) => fit(xform(d, { rot: OPEN, ox: HINGE[0], oy: HINGE[1] }));
+const S = 0.8;
+const TX = 8;
+const F = (d: string) => xform(d, { sx: S, sy: S, tx: TX });
+const OPEN = -38; // the back valve, tipped open on the hinge
 
-// the closed lid: convex shoulders, an off-centre umbo knob (cockles' beaks sit a touch forward)
-const lidShape = join(
-  blob([
-    [-38, 2],
-    [-28, -10],
-    [-16, -23],
-    [-6, -34],
-    [0, -38],
-    [6, -34],
-    [16, -23],
-    [28, -10],
-    [38, 2],
-    [22, -5],
-    [0, -9],
-    [-22, -5],
-  ]),
-);
-// four broad ribs fanning from the umbo (pattern strokes ≥ 4 units)
-const rib = (x: number) =>
-  tube([
-    [-1 + x * 0.12, -32, 1.6],
-    [x * 0.55, -14, 2.4],
-    [x, 4, 2.9],
-  ]);
-const ribs = join(rib(-31), rib(-11), rib(10), rib(30));
-// the lower valve: a deep rounded bowl with a soft heart point
-const base = blob([
-  [-40, 5],
-  [-20, 12],
-  [0, 15],
-  [20, 12],
-  [40, 5],
-  [41, 21],
-  [35, 30],
-  [18, 33],
-  [0, 34],
-  [-18, 33],
-  [-35, 30],
-  [-41, 21],
+// four rib lobes along the top arc (the rib ends), convex flanks, a soft heart point at the hinge
+const shell = blob([
+  [0, -26.5],
+  [17, -30],
+  [27, -27],
+  [36, -24],
+  [41, -14],
+  [41, -4],
+  [32, 9],
+  [19, 20],
+  [7, 28],
+  [0, 31],
+  [-7, 28],
+  [-19, 20],
+  [-32, 9],
+  [-41, -4],
+  [-41, -14],
+  [-36, -24],
+  [-27, -27],
+  [-17, -30],
 ]);
-// the mantle: soft and pale inside the gap
-const mantle = ellipse(0, 3, 32, 13);
-// a small cream foot nub peeking out at the side (cockles hop with it)
-const foot = capsule(30, 24, 5.5, 46, 31, 4.6);
+// the hinge knob with its two little "ears" (the auricles), in the rib colour
+const hinge = capsule(-5, 31, 4.4, 5, 31, 4.4);
+// four broad ribs fanning up from the hinge (pattern, clipped to the shell)
+const rib = (xt: number, from: number) =>
+  tube([
+    [xt * from, 30 - 62 * from, 2.6],
+    [xt * (from + 1) * 0.5, 30 - 31 * (from + 1), 3.8],
+    [xt * 1.05, -33, 4.8],
+  ]);
+// the outer pair starts low on the flanks, the inner pair only above the face (no moustache)
+const ribs = join(rib(-38, 0.22), rib(-17, 0.7), rib(17, 0.7), rib(38, 0.22));
+// the pale face window where the ribs fade (CRITIQUE-2 combjelly trick, shared language)
+const window = ellipse(0, -2, 22, 14);
 const notes = join(
-  circle(30, -32, 3),
-  capsule(32.6, -32, 1.3, 32.6, -41, 1.3),
-  circle(39, -38, 2.6),
-  capsule(41.3, -38, 1.2, 41.3, -45, 1.2),
+  circle(28, -36, 3),
+  capsule(30.6, -36, 1.3, 30.6, -45, 1.3),
+  circle(38, -41, 2.6),
+  capsule(40.3, -41, 1.2, 40.3, -48, 1.2),
 );
 
 export default defineArt({
   id: 'cockle',
   klass: 'object',
   size: 'XS',
-  feature: 'a ribbed fan lid lifted open over a cream bowl, face peeking from the gap',
+  feature: 'a heart-ish rounded fan with four broad ribs from a bottom hinge',
   personality: ['dreamy', 'musical', 'round'],
-  palette: { body: '#E8CCA3', accent: '#B07A4E', belly: '#F6C6B2' },
+  palette: { body: '#F5BD98', accent: '#C27A5A', belly: '#FBE4D3' },
   groups: [
     {
-      id: 'mantle',
+      id: 'back',
+      pivot: [TX, 31 * S],
       parts: [
-        { d: fit(foot), role: 'body' },
-        { d: fit(mantle), role: 'belly' },
+        { d: F(xform(shell, { rot: OPEN, ox: 0, oy: 31 })), role: 'body' },
+        { d: F(xform(ribs, { rot: OPEN, ox: 0, oy: 31 })), role: 'accent', kind: 'pattern' },
       ],
     },
     {
       id: 'body',
-      parts: [{ d: fit(base), role: 'body' }],
-    },
-    {
-      id: 'lid',
-      pivot: [HINGE[0] * S, HINGE[1] * S],
+      pivot: [TX, 31 * S],
       parts: [
-        { d: tip(lidShape), role: 'body' },
-        { d: tip(ribs), role: 'accent', kind: 'pattern' },
+        { d: F(shell), role: 'body' },
+        { d: F(ribs), role: 'accent', kind: 'pattern' },
+        { d: F(window), role: 'belly', kind: 'pattern' },
+        { d: F(hinge), role: 'accent' },
       ],
     },
-    { id: 'notes', pivot: [34, -38], prop: true, parts: [{ d: notes, role: 'accent' }] },
+    { id: 'notes', pivot: [34, -42], prop: true, parts: [{ d: notes, role: 'accent' }] },
   ],
-  shineOn: 'lid',
-  shine: tip(ellipse(-20, -22, 8, 3.6, -28)),
+  shine: F(ellipse(-22, -21, 8, 3.6, -28)),
   face: {
-    g: 'mantle',
     eyes: [
-      [-8.6, 2.5],
-      [8.6, 2.5],
+      [TX - 10.5, -2],
+      [TX + 10.5, -2],
     ],
-    eye: 12.6,
-    zone: [-34, -30, 68, 56],
-    mouth: { at: [0, 7.5], w: 5, shape: 'smile' },
+    eye: 13,
+    zone: [TX - 26, -30, 52, 48],
+    mouth: { at: [TX, 5], w: 4.5, shape: 'o' },
     front: true,
     sweet: true,
-  },
-  deviations: {
-    R16S: 'warm cream shell after the critique’s #F1DDBB, deepened so it clears mint (ΔE ≥ 0.1); chroma 0.065; the broad brown ribs carry it on sand',
   },
   idle: {
     ambient: [
       { m: 'breathe', amp: 0.015, period: 3.6 },
-      { m: 'sway', g: 'lid', amp: 1.6, period: 3.6 },
+      { m: 'sway', g: 'back', amp: 3, period: 3.6 },
     ],
     signature: {
       dur: 1.4,
       tracks: [
         {
-          g: 'lid',
           p: 'rot',
           k: [
             [0, 0],
-            [0.18, -8],
-            [0.36, -4],
-            [0.54, -8],
-            [0.72, -4],
-            [0.88, 0.6],
+            [0.15, -7],
+            [0.35, 7],
+            [0.55, -7],
+            [0.75, 7],
+            [0.9, -1.5],
+            [1, 0],
+          ],
+        },
+        {
+          g: 'back',
+          p: 'rot',
+          k: [
+            [0, 0],
+            [0.12, -12],
+            [0.8, -12],
+            [0.95, 1],
             [1, 0],
           ],
         },
@@ -139,8 +132,8 @@ export default defineArt({
           p: 's',
           k: [
             [0, 0],
-            [0.2, 0],
-            [0.32, 1],
+            [0.18, 0],
+            [0.3, 1],
             [0.78, 1],
             [0.92, 0],
           ],
@@ -149,23 +142,13 @@ export default defineArt({
           g: 'notes',
           p: 'ty',
           k: [
-            [0.2, 6],
+            [0.18, 6],
             [0.92, -6],
-          ],
-        },
-        {
-          p: 'rot',
-          k: [
-            [0.2, 0],
-            [0.38, 3],
-            [0.56, -3],
-            [0.74, 2],
-            [0.9, 0],
           ],
         },
       ],
       face: [
-        [0.18, 0.86, 'happy'],
+        [0.12, 0.86, 'happy'],
         [0.88, 1, 'wink'],
       ],
     },
@@ -174,22 +157,22 @@ export default defineArt({
     dur: 0.5,
     tracks: [
       {
-        g: 'lid',
-        p: 'rot',
-        k: [
-          [0, 0],
-          [0.3, -9],
-          [0.7, -6],
-          [1, 0],
-        ],
-      },
-      {
         p: 'sy',
         k: [
           [0, 1],
           [0.2, 0.86],
           [0.45, 1.14],
           [1, 1],
+        ],
+      },
+      {
+        g: 'body',
+        p: 'rot',
+        k: [
+          [0, 0],
+          [0.35, 8],
+          [0.7, -5],
+          [1, 0],
         ],
       },
     ],

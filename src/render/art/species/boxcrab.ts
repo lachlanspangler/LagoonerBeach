@@ -36,8 +36,8 @@ export default defineArt({
       id: 'body',
       parts: [
         { d: shell, role: 'body' },
-        // two little eye-stalk bumps on the shell's top edge (box crabs peek over their lid)
-        { d: join(capsule(-13, -20, 4.6, -15, -30, 5.4), capsule(13, -20, 4.6, 15, -30, 5.4)), role: 'body' },
+        // two little eye-stalk bumps on the shell's top edge, splayed ±35° (CRITIQUE-2: not ears)
+        { d: join(capsule(-12, -20, 4.4, -16.5, -26, 4.8), capsule(12, -20, 4.4, 16.5, -26, 4.8)), role: 'body' },
         {
           d: join(circle(-18, -15, 5.2), circle(1, -19, 4.2), circle(19, -14, 4.8)),
           role: 'accent',

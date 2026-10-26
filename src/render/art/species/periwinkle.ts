@@ -31,8 +31,9 @@ const foot = blob([
 ]);
 // a big round head in front of the shell carries the face; two short stalks with knob tips on top
 const head = circle(28, 4, 14.5);
-const stalks = join(capsule(24, -8, 2.6, 21, -18, 2.5), capsule(33, -8, 2.6, 36, -18, 2.5));
-const knobs = join(circle(21, -19.5, 3.8), circle(36, -19.5, 3.8));
+// CRITIQUE-2: splayed ±30° and 20 % shorter, so the pair reads as snail stalks, not bunny ears
+const stalks = join(capsule(24, -8, 2.6, 19.8, -15.2, 2.5), capsule(33, -8, 2.6, 37.2, -15.2, 2.5));
+const knobs = join(circle(19, -16.4, 3.3), circle(38, -16.4, 3.3));
 
 export default defineArt({
   id: 'periwinkle',
