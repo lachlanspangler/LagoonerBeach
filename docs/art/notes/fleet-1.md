@@ -214,3 +214,61 @@ profile, so the centroid-aligned 24 px masks stay apart (R12 limit < 0.70 within
   silhouette area. Grade A−: fabulous at 54 px, and the fan-open signature works; at 24 px the
   spines are still thin.
 - All three: lint ✓, `tests/unit/art.test.ts` green, e2e + perf art specs green (Chromium + WebKit).
+
+## Round 3 (CRITIQUE-2: blenny fix, grouper C, damsel, barracuda, butterfly, wrasse, sandeel)
+
+IoU numbers are the unit rasteriser; the browser masks (tests/e2e/art.spec.ts) run about +0.015.
+
+### blenny
+- Main failed R12 on blenny/flounder 0.713. Kept the deep peduncle and the branched cirri; made the
+  cirri taller and splayed wider (antlers, not ears), the fan tail taller (±15) and the perch fin
+  longer. blenny/flounder 0.678. Grade B+/A−.
+
+### grouper
+- The previous artist's WIP (coral `#C0674A`, `#BFE6F7` spots, small lips, deep oval) failed R12 at
+  clownfish 0.81: every deep oval with a fan tail lands on the clownfish/boxfish. A wedge fixes the
+  IoU but goes back to the critique's trumpet. What works: a 70 u helmet head on a thick, level trunk
+  (tail root 31 u = 45 % of depth), a long low dorsal, a broad fan tail (±23), and a recessed upper
+  and lower snout so the pout lips are the front. I tuned it with a small parameter search against
+  every fish mask. Lips sit on the snout and stay inside 0.9 eye widths; the pectoral has no outline
+  (the outlined one read as a second mouth); the gill line read as a scar, so it's gone.
+- Rest face: the critique wanted `drowsy` only in the detail view, but `tests/unit/art-kit.test.ts`
+  (shared) requires `restExpression: 'drowsy'` on the tile. I kept drowsy and dropped the blush,
+  which is what made it read tipsy. Lead: please decide.
+- Closest: clownfish 0.694 (browser 0.689), boxfish 0.683. Grade B+/A−: reads as "big boss head"
+  at 24 px; a bit helmet-like at 100 %.
+
+### damsel
+- Pectoral −35 %, unoutlined, flat on the flank and swept back. Dorsal/anal trailing points are
+  shorter, so they no longer run parallel to the tail lobes (the four-pronged X). Eye 9.2 → 10.4.
+  Resting mouth is a flat little frown (brave); `pout` drew a kissy `o`. Closest: lionfish 0.679.
+  Grade A−.
+
+### barracuda
+- The round melon became a pointed upper snout. The jaw juts about 6 u past it, and the two white
+  teeth are taller (5.4 u) and sit on the jaw tip. Chevrons moved back off the face. Closest:
+  wrasse 0.681 (browser 0.687). Grade A−.
+
+### butterfly
+- Dorsal hook and pennant −40 %, in the body yellow with the cream margin. The false eye is a 7 u
+  dark dot in a cream ring on the rear dorsal. The spin snaps from x-scale 0.15 to −0.15, so it is
+  never edge-on. The tweezer snout is longer and thicker, with the smile at its tip; the fan tail is
+  bigger. Browser butterfly/puffer was 0.701 and is now 0.681. Grade A−.
+
+### wrasse
+- The stripe starts 3 u behind the eye at 4 u, arcs with the midline, reaches 10 u at the tail root
+  and fans through the tail fin. It is now a navy accent `#23528F`, not ink, so R18E allows it near
+  the eye. The front half moved to the belly role. Wider spa smile. Closest: barracuda 0.681.
+  Grade A−.
+
+### sandeel
+- The jaw juts 6 u past a shorter snout. Belly `#E8ECEF`. The back is `#DCC58A`: the critique's
+  `#D8C79A` is chroma 0.06 and fails R16S, so I nudged it to 0.08. The blue stripe is now a darker
+  sand band `#A08A50`, and the head is slimmer (it read as a dolphin). The body is +0.4 u because
+  the e2e "every species draws" coverage floor needs > 1280 px. Grade A−/B+.
+
+### cockle (lead's extra, NOT done)
+- Browser cockle/nautilus is 0.709 Chromium / 0.700 WebKit, which fails e2e. A trial of
+  `OPEN = -48` (back valve tipped further) plus `S = 0.785` (to stay inside 84) took unit
+  cockle/nautilus from 0.692 to 0.660 and cockle/sanddollar to 0.663. The permission classifier
+  blocked further edits to another species' file, so I reverted it. Needs a go-ahead.
