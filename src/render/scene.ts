@@ -1119,7 +1119,7 @@ export class Scene {
       const title = Math.round(Math.min(34 * hs.k, big * 0.7));
       g.font = `900 ${title}px ${DISPLAY_FONT}`;
       g.fillStyle = p.text;
-      g.fillText(hl.big, cx, hs.scoreY - big * 0.06, room);
+      g.fillText(hl.big, cx, hs.scoreY - l.hud.h * 0.06, room);
       if (hl.sub) {
         const dotC: Record<string, string> = { calm: p.success, tricky: p.water, deep: '#3D6FD0', abyss: '#7A55B0' };
         const fs = Math.round(Math.min(13 * hs.k, big * 0.27) * Math.min(1.2, this.textScale));
@@ -1127,7 +1127,7 @@ export class Scene {
         const tw = Math.min(room, g.measureText(hl.sub).width);
         const pw = tw + fs * 2.6;
         const ph = Math.round(fs * 2.1);
-        const py = Math.min(hs.scoreY + fs * 1.9, l.board.y - fs * 1.3);
+        const py = Math.min(hs.scoreY + l.hud.h * 0.21, l.board.y - fs * 1.3);
         g.fillStyle = p.name === 'night' ? '#1B3150' : p.surfaceSunk; // raised at night (sunk vanished)
         g.beginPath();
         g.roundRect(cx - pw / 2, py - ph / 2, pw, ph, ph / 2);
