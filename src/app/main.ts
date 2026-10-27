@@ -139,6 +139,9 @@ let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
 let lastDispatchAt = 0;
 let bestCelebrated = false;
+/** The best before this Endless/Daily run (the record to beat; profile.best moves as you beat it). */
+let runStartBest = 0;
+const storedBest = (): number => (mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best);
 /** Which game the per-game tallies below belong to. */
 let tallyKey = '';
 let journal: Journal = loadJournal();
@@ -321,7 +324,6 @@ function syncScene(): void {
   scene.score = state.score;
   scene.pendingScore = null;
   scene.shownScore = state.score;
-  scene.best = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   scene.streak = state.streak;
   scene.dry = state.dry;
   scene.gameOverAt = state.over ? now : -1;
@@ -337,10 +339,15 @@ function syncScene(): void {
   if (state.moves === 0 || key !== tallyKey) {
     tallyKey = key;
     bestCelebrated = false;
+    // a reload mid-run still knows the record it is chasing (the best itself is already saved)
+    const rb = profile.runBest;
+    runStartBest = state.moves > 0 && rb?.key === key ? Math.min(rb.best, storedBest()) : storedBest();
+    if (mode !== 'puzzle') profile.runBest = { key, best: runStartBest };
     gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
     puzzleMoves = [];
   }
+  scene.best = mode === 'puzzle' ? profile.best : runStartBest;
   updateHint();
   updateMisfits();
   scene.hudLabel = null;
@@ -440,11 +447,13 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
         () => undefined,
       );
   }
-  const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
+  const prevBest = mode === 'puzzle' ? profile.best : runStartBest;
   const prevScore = state.score;
   state = r.state;
-  // the moment you pass your best, mid-game (once per game)
   persist();
+  // a beaten best is saved at once (saveProfile below): abandoning the run or killing the app keeps it
+  if (mode === 'daily' && state.score > (profile.dailyBest[dailyDate] ?? 0)) profile.dailyBest[dailyDate] = state.score;
+  else if (mode === 'classic' && state.score > profile.best) profile.best = state.score;
   const caught = catchFor(r);
   const t = clock();
   lastDispatchAt = t;
@@ -532,9 +541,9 @@ function finishGame(prevBest: number): void {
   const newBest = state.score > prevBest;
   if (mode === 'daily') {
     dailyRank = null; // ask the board again next time (this game may have just been posted)
-    profile.dailyBest[dailyDate] = Math.max(prevBest, state.score);
+    profile.dailyBest[dailyDate] = Math.max(prevBest, state.score, profile.dailyBest[dailyDate] ?? 0);
     profile.daily = recordDaily(profile.daily, dayIndex(dailyDate));
-  } else if (newBest) profile.best = state.score;
+  } else if (newBest) profile.best = Math.max(profile.best, state.score);
   const unlockedNow = refreshUnlocks();
   saveProfile(profile);
   // snapshot now: the card must describe *this* game even if it shows a moment later
@@ -920,6 +929,7 @@ const ui = new Ui({
       mode === 'puzzle'
         ? `Reef ${state.seed + 1}`
         : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
+      mode === 'classic' && state.moves > 0 && !state.over,
     ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
@@ -1333,7 +1343,8 @@ function debugDeps(): DebugDeps {
       stageRecord: (best) => {
         if (mode === 'daily') profile.dailyBest[dailyDate] = best;
         else profile.best = best;
-        scene.best = best;
+        scene.best = runStartBest = best;
+        if (mode !== 'puzzle') profile.runBest = { key: tallyKey, best };
         bestCelebrated = false;
         dirty = true;
       },

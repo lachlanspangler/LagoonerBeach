@@ -63,6 +63,39 @@ test('progress survives a reload', async ({ page }) => {
   expect(after.board).toEqual(before.board);
 });
 
+test('a beaten best is saved at once; New game mid-run asks once, inline, and keeps it', async ({ page }) => {
+  await boot(page, '');
+  await page.evaluate(() => (window as any).__atoll.stageRecord(30));
+  for (let i = 0; i < 40 && (await state(page)).score <= 30; i++)
+    await page.evaluate(() => (window as any).__atoll.autoplay('greedy', 1));
+  const run = await state(page);
+  expect(run.score).toBeGreaterThan(30);
+  expect(run.over).toBe(false);
+  expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
+  // an app kill / reload mid-run: the best is kept, and the run still knows the record it beat
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__atoll);
+  expect((await state(page)).score).toBe(run.score);
+  const p = await page.evaluate(() => (window as any).__atoll.profile());
+  expect(p.best).toBe(run.score);
+  expect(p.runBest.best).toBe(30);
+  // New game: the first tap asks on the card itself, the run is untouched
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const card = page.locator('.mode-card').first();
+  await card.click();
+  await expect(card).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(run.moves);
+  // the second starts over; the best stays
+  await card.click();
+  await expect.poll(async () => (await state(page)).moves).toBe(0);
+  expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
+  // with no move made yet, New game is one tap
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const seed = (await state(page)).seed;
+  await page.locator('.mode-card').first().click();
+  await expect.poll(async () => (await state(page)).seed).not.toBe(seed);
+});
+
 test('game over shows the card; play again starts fresh', async ({ page }) => {
   await boot(page, 'seed=3&fast=1');
   await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));

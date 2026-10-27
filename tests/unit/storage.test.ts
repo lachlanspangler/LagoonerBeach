@@ -63,6 +63,15 @@ describe('profile migration', () => {
     expect(sanitizeLbProfile(undefined)).toEqual({});
     expect(sanitizeLbProfile({ name: 7, installId: 5 })).toEqual({});
   });
+  it('the best a live run started from round-trips; junk is dropped', () => {
+    const p = loadProfile();
+    expect(p.runBest).toBeUndefined();
+    p.runBest = { key: 'classic::77', best: 32 };
+    saveProfile(p);
+    expect(loadProfile().runBest).toEqual({ key: 'classic::77', best: 32 });
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, runBest: { key: 5, best: 'x' } }));
+    expect(loadProfile().runBest).toBeUndefined();
+  });
 });
 
 describe('move logs saved alongside games', () => {

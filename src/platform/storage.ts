@@ -46,6 +46,11 @@ export interface Profile {
   puzzle: { index: number; solved: string[]; pure?: string[]; hinted?: string[]; dailyDone?: string[] };
   /** Leaderboards: random install id + chosen name, both created only when the player first posts. */
   lb?: LbProfile;
+  /**
+   * The best as it stood when the live Endless/Daily run began (`key` names the run). The best
+   * itself is saved the moment a run beats it; this keeps "NEW BEST" true for that run after a reload.
+   */
+  runBest?: { key: string; best: number };
 }
 
 /** Leaderboard bits of the profile. Both are created only when the player first posts a score. */
@@ -150,6 +155,9 @@ export function loadProfile(): Profile {
         : [],
     },
     lb: sanitizeLbProfile(o.lb),
+    ...(o.runBest && typeof o.runBest.key === 'string' && num(o.runBest.best, -1) >= 0
+      ? { runBest: { key: o.runBest.key.slice(0, 64), best: num(o.runBest.best, 0) } }
+      : {}),
   };
 }
 
