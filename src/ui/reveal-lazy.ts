@@ -15,6 +15,8 @@ export class LazyReveal {
   private idleFns: (() => void)[] = [];
   /** Bumped by clear(): enqueues from before it are dropped when the chunk arrives. */
   private gen = 0;
+  /** endGame() was called in this generation: late-arriving enqueues are folded the same way. */
+  private endedGen = -1;
 
   constructor(
     private readonly root: HTMLElement,
@@ -52,6 +54,7 @@ export class LazyReveal {
       (r) => {
         this.inFlight--;
         if (gen === this.gen) r.enqueue(items, at);
+        if (gen === this.gen && this.endedGen === this.gen) r.endGame();
         this.flush();
       },
       () => {
@@ -77,6 +80,12 @@ export class LazyReveal {
       if (this.impl) this.impl.whenIdle(f);
       else f();
     }
+  }
+
+  /** The game ended: fold pending commons into the results, keep at most one modal (Reveal.endGame). */
+  endGame(): void {
+    this.endedGen = this.gen;
+    this.impl?.endGame();
   }
 
   clear(): void {

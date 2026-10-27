@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { boot, dragMove, state } from './helpers.ts';
+import { boot, dragMove, state, untilShown } from './helpers.ts';
 
 test('boots cleanly and draws the board', async ({ page }) => {
   const errors = await boot(page);
@@ -305,6 +305,7 @@ test('reef puzzle: playing the stored solution with real drags clears it', async
     await page.mouse.up();
     await page.waitForTimeout(150);
   }
+  await untilShown(page, page.getByTestId('puzzle-result'));
   await expect(page.getByTestId('puzzle-result')).toHaveText('Cleared');
   // no hint used: the star line, which reads as the better clear
   await expect(page.getByTestId('reef-reward')).toContainText('No hints');
@@ -403,6 +404,7 @@ test('endless reef 361: generated in the worker, cleared with real drags, next r
     await page.mouse.up();
     await page.waitForTimeout(150);
   }
+  await untilShown(page, page.getByTestId('puzzle-result'));
   await expect(page.getByTestId('puzzle-result')).toHaveText('Cleared');
   const p = await page.evaluate(() => (window as any).__atoll.profile());
   expect(p.puzzle.solved).toContain('g361');

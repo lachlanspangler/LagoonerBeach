@@ -55,7 +55,7 @@ export interface DebugDeps {
     stageCombo(n: number, dry?: number): void;
     /** Set the stored best (so a capture crosses it, or the results show a record). */
     stageRecord(best: number): void;
-    revealSpecies(id: string, o?: { golden?: boolean; size?: number }): void;
+    revealSpecies(id: string, o?: { golden?: boolean; size?: number; intro?: boolean }): void;
     /** Play the chapter-complete moment now (relative times as after a move). */
     chapterMoment(chapter: number, name: string): void;
     /** The word on the board right now (if any). */
@@ -67,11 +67,13 @@ export interface DebugDeps {
     revealState(): { id: string; modal: boolean; settled: boolean; expr?: string } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;
+    /** The game ended: fold pending commons, keep at most one modal (Reveal.endGame). */
+    revealEndGame(): void;
     haptics(): { k: string; t: number }[];
     shareCard(id: string): Promise<{ w: number; h: number; png: number; text: string[]; hint: string }>;
     /** Run the real share path for a species card; resolves to the outcome. */
     shareTry(id: string): Promise<string>;
-    showResults(o: { score: number; prevBest: number; lb?: boolean }): void;
+    showResults(o: { score: number; prevBest: number; lb?: boolean; newIds?: string[]; unlocked?: string[] }): void;
   };
 }
 
@@ -144,6 +146,9 @@ export function installDebugApi(d: DebugDeps): void {
     playFromBoard: d.playFromBoard,
     /** Show a chip (lesson / reef of the day / welcome back) now. */
     toast: (text: string, life = 3000) => d.scene.toast(text, performance.now(), life),
+    /** When the last queued strip chip leaves, and whether something holds the strip right now. */
+    chipsEnd: () => d.scene.chipsEnd(),
+    stripHeld: () => performance.now() < d.scene.stripHold,
     stageJournal: d.stageJournal,
     markSeen: d.markSeen,
     ...d.celebrate,

@@ -172,3 +172,11 @@
   width: 14px;
   height: 14px;
 }
+/* small tiles (results "New in your journal" thumbnails): five 9 px shells fit inside 64 px */
+.pips.sm {
+  gap: 1px;
+}
+.pips.sm i {
+  width: 9px;
+  height: 9px;
+}

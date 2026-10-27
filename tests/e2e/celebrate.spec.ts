@@ -4,7 +4,7 @@
  * Update baselines intentionally: npx playwright test tests/e2e/celebrate.spec.ts --update-snapshots
  */
 import { expect, test, type Page } from '@playwright/test';
-import { boot, settleReveal } from './helpers.ts';
+import { boot, settleReveal, untilShown } from './helpers.ts';
 import { BOARDS, boardString } from './celebrate-boards.ts';
 
 test.describe.configure({ mode: 'parallel' });
@@ -379,7 +379,7 @@ test('a discovery that completes a chapter is revealed after the chapter moment,
   await boot(page, 'seed=42');
   const ring = ['........', '........', '..1.1...', '..1.1...', '..111...', '........', '........', '........'];
   await stageReefEnd(page, ring, true);
-  await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
+  await untilShown(page, page.getByTestId('puzzle-result'));
   const seen = await page.evaluate(() => (window as any).__seen);
   expect(seen['Chapter 1'], 'chapter moment played').toBeGreaterThan(0);
   expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);
@@ -393,7 +393,7 @@ test('a discovery on a failed reef ("So close") is still revealed before the car
   // the ring captures, but another pebble stays: the tray is empty and the board isn't → failed
   const ring = ['........', '........', '..1.1...', '..1.1...', '..111...', '........', '........', '......2.'];
   await stageReefEnd(page, ring, false);
-  await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
+  await untilShown(page, page.getByTestId('puzzle-result'));
   await expect(page.getByTestId('puzzle-result')).not.toHaveText('Cleared');
   const seen = await page.evaluate(() => (window as any).__seen);
   expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);
@@ -409,6 +409,8 @@ test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page 
   expect(card.text).toContain('Box Crab');
   expect(card.text).toContain('Lagooner Beach');
   expect(card.text.join(' ')).not.toContain(card.hint);
+  // a way back to the game: "Free on iOS & Android" and the short link (SHARE_URL placeholder)
+  expect(card.text.join(' ')).toMatch(/Free on iOS & Android .*lagooner\.beach/);
 });
 
 test('every modal reveal settles eyes-open on idle (scene tiers by the time the card settles)', async ({ page }) => {

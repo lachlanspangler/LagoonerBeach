@@ -15,6 +15,8 @@ import { fmt } from '../render/theme.ts';
 import { icon } from './icons.ts';
 import { creatureThumb, type SheetKit } from './overlay.ts';
 import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
+import { SKINS } from '../meta/unlocks.ts';
+import { lookFor } from '../render/skins.ts';
 
 const CROWN = icon('crown', { filled: true });
 const night = (): boolean => document.documentElement.dataset.theme === 'night';
@@ -87,7 +89,8 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
 
 /**
  * Confetti from both edges of the card (~2 s): gold and coral flecks and foam rings fired up and
- * inward from the left and right sides, fluttering down past the score. A fixed overlay canvas
+ * inward from the left and right sides, fluttering down beside the score (never over the headline,
+ * the record numerals or the ribbon: they're clipped out and the flecks pass behind them). A fixed overlay canvas
  * (the card scrolls and would clip it); ≤ 64 particles; gone when the card is.
  */
 export const CONFETTI_MS = 2100;
@@ -138,6 +141,18 @@ function confetti(card: HTMLElement): void {
     const t = (performance.now() - t0) / 1000;
     g.clearRect(0, 0, W, H);
     if (t > life || !card.isConnected) return c.remove();
+    // the record numerals and headline stay clean: nothing is drawn over them (it passes behind).
+    // Their text boxes (they're full-width blocks; the hero may have been passed before it was
+    // attached, so look from its card) are cut out of the frame after the flecks are drawn.
+    const cr = c.getBoundingClientRect();
+    const host = card.closest('.card') ?? card;
+    const keep: DOMRect[] = [];
+    for (const el of host.querySelectorAll('.res-head, .res-score, .res-sub')) {
+      const rg = document.createRange();
+      rg.selectNodeContents(el);
+      const b = rg.getBoundingClientRect();
+      if (b.width) keep.push(b);
+    }
     for (const p of parts) {
       const u = t - p.delay;
       if (u <= 0) continue;
@@ -147,7 +162,7 @@ function confetti(card: HTMLElement): void {
       const y = p.y + (p.vy / 1.6) * drag + 0.5 * 420 * u * u * 0.55;
       g.globalAlpha = u > life - 0.6 - p.delay ? Math.max(0, (life - p.delay - u) / 0.6) : 1;
       if (p.foam) {
-        g.strokeStyle = '#FFFFFF';
+        g.strokeStyle = '#4FB7D3'; // sea-blue foam rings (white vanished on the cream card)
         g.lineWidth = 1.6;
         g.beginPath();
         g.arc(x, y, p.r * 1.3, 0, Math.PI * 2);
@@ -163,6 +178,13 @@ function confetti(card: HTMLElement): void {
       }
     }
     g.globalAlpha = 1;
+    g.globalCompositeOperation = 'destination-out';
+    for (const b of keep) {
+      g.beginPath();
+      g.roundRect(b.left - cr.left - 14, b.top - cr.top - 8, b.width + 28, b.height + 16, 14);
+      g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
@@ -232,6 +254,7 @@ export interface GameOverOpts {
   lagoon: number;
   mode: Mode;
   dailyStreak: number;
+  /** Style ids unlocked by this game (at most one; meta/unlocks.ts nextUnlocks). */
   unlocked: string[];
   shape?: { cells: readonly number[]; ring: readonly number[] } | null;
   caught?: { count: number; newIds: string[] };
@@ -266,8 +289,9 @@ export function showGameOver(k: Kit, o: GameOverOpts): HTMLElement {
     <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
     <div class="hero-slot"></div>
     ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
-    ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
+`;
   card.querySelector('.hero-slot')!.replaceWith(hero.el);
+  if (o.unlocked.length) card.append(styleStrip(o.unlocked, k));
   if (o.caught?.newIds.length) card.append(journalStrip(o.caught.newIds, () => k.h.onJournal()));
   // on a record, posting it is the point: the leaderboard button leads as the one primary
   const lbFirst = !!o.leaderboard && o.newBest;
@@ -328,7 +352,7 @@ function journalStrip(ids: readonly string[], open?: () => void): HTMLElement {
     t.className = `j-tile got r-${sp.rarity}`;
     t.style.cssText = `--hab:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};--hab-ring:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};min-height:0;width:64px;padding:4px 2px 5px;gap:2px`;
     t.append(creatureThumb(sp, 44));
-    t.insertAdjacentHTML('beforeend', pipsHtml(RARITY_RANK[sp.rarity]));
+    t.insertAdjacentHTML('beforeend', pipsHtml(RARITY_RANK[sp.rarity], 'sm')); // 9 px: fits the 64 px tile
     row.append(t);
   }
   if (ids.length > 4) row.insertAdjacentHTML('beforeend', `<span class="more num">+${ids.length - 3}</span>`);
@@ -338,5 +362,37 @@ function journalStrip(ids: readonly string[], open?: () => void): HTMLElement {
       e.stopPropagation();
       open();
     });
+  return wrap;
+}
+
+/** "New style": its colours as swatches, its name, and a Try it button that switches to it now. */
+function styleStrip(ids: readonly string[], k: Kit): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'chip gold unlock';
+  wrap.dataset.testid = 'unlock';
+  for (const id of ids) {
+    const def = SKINS.find((x) => x.id === id);
+    if (!def) continue;
+    const sw = lookFor(id)
+      .colors.slice(1, 7)
+      .map((c) => `<i style="background:${c}"></i>`)
+      .join('');
+    const row = document.createElement('div');
+    row.className = 'unlock-row';
+    row.innerHTML = `${icon('style')}<span class="unlock-text">New style: <b>${def.name}</b></span><span class="swatches" aria-hidden="true">${sw}</span>`;
+    const tryIt = document.createElement('button');
+    tryIt.type = 'button';
+    tryIt.className = 'btn ghost try';
+    tryIt.textContent = 'Try it';
+    tryIt.setAttribute('aria-label', `Try the ${def.name} style`);
+    tryIt.addEventListener('click', () => {
+      k.h.onTrySkin?.(id);
+      tryIt.textContent = 'On';
+      tryIt.disabled = true;
+      k.announce(`Style: ${def.name}`);
+    });
+    row.append(tryIt);
+    wrap.append(row);
+  }
   return wrap;
 }

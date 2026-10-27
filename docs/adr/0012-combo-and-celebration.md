@@ -212,3 +212,38 @@ timing and placement; "Nice Lagoon!" keeps its size and treatment (it only moves
 - Review: `docs/media/celebrate/` (g2 legendary, g3 epic, g4 golden added), clips re-recorded.
   Perf: the biggest-moment p95 under 4× throttle measured the same as main on a heavily loaded
   machine (main 8.4–11.6 ms vs this 7.4–10.8 ms in the same minute); re-measure when idle.
+
+## Final review fixes (discovery) — 2026-10-27
+
+From the fresh-profile UX review (`/tmp/lbux/`: first game, reef 40 end, fast play, record card):
+- **The first-ever catch is a present, after the lesson.** On a fresh journal the first new species
+  (`RevealItem.intro`) is a full modal card whatever its rarity (`tierOf`: a common is presented
+  uncommon-style), overline "Your first catch!", line "Lagoons catch beach creatures — they live in
+  your Beach Journal". It is queued after the first-run chips ("That's a lagoon!", "Water fills any
+  closed ring": `Scene.chipsEnd()`) and still waits for a still board. When it closes the journal
+  button glows (3 soft pulses) with a small "Your journal" arrow under it (4.8 s, or until pressed).
+  No creature flies to the button (owner decision stands: they leap and splash beside the board).
+- **One pop at a time; a pop owns the strip until gone.** A closing reveal fades for `LEAVE_MS`
+  (220 ms) before the next opens (the reef-40 "Butterflyfish over Periwinkle" cross-fade), and the
+  common pop holds the strip through its fade, so the reef chapter progress line (and chips) never
+  show under it. A waiting modal card no longer blocks the quick pops (they never take input; only
+  the intro card goes first), and pops open whenever no drag/menu is up (`canOpen(modal)`); modal
+  cards still wait for `REVEAL_QUIET_MS` of stillness.
+- **Fast play.** Commons that piled up leave as one "+N new" pop (`RevealItem.more`; the live region
+  names them all). At game over / a reef result `Reveal.endGame()` drops pending commons (the results
+  card's "New in your journal" row lists every find) and keeps at most one modal card, the rarest
+  (intro first). The 260 ms-per-move run that played 7 pops + a card ~10 s after game over now
+  shows one card and the results ~2 s after.
+- **NEW HIGH SCORE card.** Confetti still fires from the card edges, but the headline, the record
+  numerals and the ribbon are cut out of every frame (flecks pass behind); foam rings are sea-blue
+  (white vanished on cream). Day and night checked.
+- **"Pebble" means the reef blocks only.** Unlocks read "New style: Sea Glass" with six colour
+  swatches and a Try it button (switches now); the default style is named "Classic" (id stays
+  `pebble`). At most one new style per game (`nextUnlocks`, catalog order: a fresh first game used to
+  unlock four); Moonstone needs 3 cascades; boot only adds the always-on styles; old saves keep
+  every style they have.
+- **Share card footer**: the app mark, "Free on iOS & Android" and `SHARE_URL` (`lagooner.beach`,
+  a placeholder for the owner; no QR). **Results thumbnails**: 9 px pips (they overflowed the tile).
+- Tests: `tests/e2e/discovery.spec.ts` (intro order, one pop + strip held, "+N new", endGame,
+  pips fit, New style, confetti off the record); `tests/unit/unlocks.test.ts` (one per game, old saves).
+

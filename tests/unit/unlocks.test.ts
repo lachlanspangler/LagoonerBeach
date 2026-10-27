@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SKINS, newlyUnlocked, unlockedIds, type ProgressSnapshot } from '../../src/meta/unlocks.ts';
+import { SKINS, newlyUnlocked, nextUnlocks, unlockedIds, type ProgressSnapshot } from '../../src/meta/unlocks.ts';
 
 const zero: ProgressSnapshot = {
   best: 0,
@@ -32,5 +32,25 @@ describe('unlocks', () => {
     };
     expect(unlockedIds(max)).toHaveLength(SKINS.length);
     expect(new Set(SKINS.map((s) => s.id)).size).toBe(SKINS.length);
+  });
+  it('a first game that crosses several milestones unlocks one style; the rest come one per game', () => {
+    const big: ProgressSnapshot = { ...zero, games: 1, best: 5000, bestPocket: 14, cascades: 4 };
+    let have = unlockedIds(zero);
+    const got: string[] = [];
+    for (let g = 0; g < 6; g++) {
+      const r = nextUnlocks(have, big);
+      if (r.fresh) got.push(r.fresh);
+      have = r.ids;
+    }
+    expect(got).toEqual(['seaglass', 'lantern', 'moonstone', 'atoll']);
+    expect(nextUnlocks(unlockedIds(zero), big).fresh).toBe('seaglass');
+  });
+  it('old saves keep every style they already have, even below a moved threshold', () => {
+    const r = nextUnlocks(['pebble', 'glyph', 'moonstone', 'lantern'], { ...zero, cascades: 1 });
+    expect(r.ids).toEqual(['pebble', 'glyph', 'lantern', 'moonstone']);
+    expect(r.fresh).toBeNull();
+  });
+  it('thresholds are spread out: one cascade or a small lagoon is not enough for later styles', () => {
+    expect(unlockedIds({ ...zero, cascades: 1, bestPocket: 5 })).toEqual(['pebble', 'glyph']);
   });
 });
