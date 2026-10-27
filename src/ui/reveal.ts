@@ -13,7 +13,7 @@
  * Reduced motion: no rays/tide motion, no hops — the same information.
  */
 import { SPECIES, SPECIES_BY_ID, type Rarity, type Species } from '../meta/creatures.ts';
-import { artSizeOf, drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
+import { artSizeOf, artTileScaleOf, drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
 import { spring } from '../render/celebrate.ts';
 import './tiles.css';
 import './celebrate.css';
@@ -375,7 +375,7 @@ export class Reveal {
     const c = document.createElement('canvas');
     c.width = c.height = STAGE;
     const g = c.getContext('2d', { willReadFrequently: true })!;
-    const s = Math.min(POOL_W, POOL_H) * 0.84 * REVEAL_SCALE[cls];
+    const s = Math.min(POOL_W, POOL_H) * 0.84 * REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id);
     drawCreature(g, a.sp, STAGE / 2, STAGE / 2, s, 0, { expression: 'idle', night: this.d.night() });
     const d = g.getImageData(0, 0, STAGE, STAGE).data;
     let top = -1;
@@ -518,7 +518,7 @@ export class Reveal {
     const s = Math.min(w, h) * (a.modal ? 0.84 : 0.7);
     // the creature (not the pearl) is scaled by its size class in the modal card
     const cls = artSizeOf(a.sp.id);
-    const big = a.modal && cls ? REVEAL_SCALE[cls] : 1;
+    const big = a.modal && cls ? REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id) : 1;
     const tier = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
     const night = this.d.night();
     type Expr = NonNullable<DrawOpts['expression']>;
@@ -839,7 +839,7 @@ export class Reveal {
     }
     const u = t - popAt;
     const cls = artSizeOf(a.sp.id);
-    const big = cls ? REVEAL_SCALE[cls] : 1;
+    const big = cls ? REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id) : 1;
     const bigS = Math.min(W * 0.78, H * 0.4, 400);
     // into the pool once the chrome slides in
     const h = easeInOut(Math.min(1, Math.max(0, (t - a.chromeAt) / HANDOFF_MS)));

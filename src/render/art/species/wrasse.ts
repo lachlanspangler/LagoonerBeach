@@ -67,6 +67,7 @@ export default defineArt({
   id: 'wrasse',
   klass: 'fish',
   size: 'S',
+  tileScale: 1.1,
   feature: 'slim even cigar with a round tail; pale front, blue back, one bold stripe widening to the tail',
   personality: ['helpful', 'busy', 'tidy'],
   palette: { body: '#7464DA', accent: '#1E2740', belly: '#F3EED8' },

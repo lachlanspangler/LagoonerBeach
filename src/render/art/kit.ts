@@ -200,6 +200,12 @@ export interface SpeciesArt {
    * sharks, eels, seahorses, rays point); `hide` = groups not drawn in the leap (the garden eel's mound).
    */
   readonly leap?: { readonly point?: boolean; readonly hide?: readonly string[] };
+  /**
+   * CRITIQUE-4: per-species scale within the size class's framed fill (journal tile, species page,
+   * reveal art box), clamped to `TILE_SCALE` (0.85–1.3). For a long thin body that reads small at its
+   * class fill (seadragon) or a chunky one that crowds the box (grouper). Not applied to the leap.
+   */
+  readonly tileScale?: number;
   /** XXL tile crop: keep the head in frame (default) or crop both ends evenly. */
   readonly crop?: 'head' | 'center';
   /** R-number → one-line reason for each deliberate deviation from the guide. */
@@ -217,12 +223,22 @@ export const TILE_FILL: Record<SizeClass, number> = { XS: 0.5, S: 0.6, M: 0.7, L
 /** The journal art box (CSS px) the fill table refers to, and the bleed the tile canvas allows past it. */
 export const TILE_PX = 54;
 export const TILE_BLEED = 8;
+/** CRITIQUE-4: allowed `SpeciesArt.tileScale` range (the renderer clamps, the validator warns). */
+export const TILE_SCALE: readonly [number, number] = [0.85, 1.3];
+/** A species' framed-fill scale, clamped to `TILE_SCALE` (1 when unset). */
+export function tileScaleOf(art: Pick<SpeciesArt, 'tileScale'>): number {
+  const v = art.tileScale ?? 1;
+  return Number.isFinite(v) ? Math.min(TILE_SCALE[1], Math.max(TILE_SCALE[0], v)) : 1;
+}
 /** R28: XL frame-break past the art box, in CSS px at TILE_PX. */
 export const FRAME_BREAK: readonly [number, number] = [2, 4];
 
-/** CRITIQUE-1 #2: absolute eye floor in units — ≥ 4 CSS px in a 54 px tile and ≥ 9 % of the body-box height. */
-export function eyeFloorUnits(size: SizeClass, long: number, boxH: number): number {
-  const ppu = (TILE_FILL[size] * TILE_PX) / long;
+/**
+ * CRITIQUE-1 #2: absolute eye floor in units — ≥ 4 CSS px in a 54 px tile and ≥ 9 % of the body-box
+ * height. `scale` is the species' `tileScaleOf` (its tile is that much bigger or smaller).
+ */
+export function eyeFloorUnits(size: SizeClass, long: number, boxH: number, scale = 1): number {
+  const ppu = (TILE_FILL[size] * scale * TILE_PX) / long;
   return Math.max(4 / ppu, 0.09 * boxH);
 }
 /** Default eye height when a species omits `face.eye`. */

@@ -89,6 +89,7 @@ export default defineArt({
   id: 'barracuda',
   klass: 'fish',
   size: 'L',
+  tileScale: 1.12,
   feature: 'a true needle with an underbite, two white upper teeth, a slate back and four bars',
   personality: ['sleek', 'toothy', 'aloof'],
   palette: { body: '#9AA5AE', accent: '#3F5568' },

@@ -13,6 +13,7 @@ import { boundsOf, flatten, unionBox, type Box } from './path.ts';
 import {
   defaultEye,
   eyeFloorUnits,
+  tileScaleOf,
   type Expression,
   type Group,
   type Part,
@@ -102,7 +103,12 @@ export function prepare(art: SpeciesArt): Prepared {
   const long = Math.max(box.w, box.h) || 1;
   const f = art.face;
   const authored = f.eye ?? defaultEye(art.klass, f);
-  const eye = f.eyeFloor === false ? authored : Math.max(authored, eyeFloorUnits(art.size, long, box.h));
+  // CRITIQUE-4: a species drawn smaller than its class (tileScale < 1) still gets ≥ 4 px eyes; a
+  // bigger one keeps the eye it was authored with (the class floor is the authoring target)
+  const eye =
+    f.eyeFloor === false
+      ? authored
+      : Math.max(authored, eyeFloorUnits(art.size, long, box.h, Math.min(1, tileScaleOf(art))));
   const p: Prepared = {
     art,
     groups,

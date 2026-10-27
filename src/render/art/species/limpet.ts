@@ -55,6 +55,7 @@ export default defineArt({
   id: 'limpet',
   klass: 'object',
   size: 'XS',
+  tileScale: 1.15,
   feature: 'a little ribbed volcano with an apex nub, on a skirt of foot',
   personality: ['clingy', 'stubborn', 'sweet'],
   // CRITIQUE-3 asked slate-buff #B8A88E: C 0.04 fails R16S (and sits ΔE 5 from the flounder), so

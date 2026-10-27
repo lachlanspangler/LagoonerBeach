@@ -6,10 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { SPECIES_BY_ID } from '../../src/meta/creatures.ts';
 import { ART } from '../../src/render/art/species/index.ts';
 import { metrics, validateArt } from '../../src/render/art/validate.ts';
-import { restingFace } from '../../src/render/art/creature-art.ts';
+import { restingFace, spanFor } from '../../src/render/art/creature-art.ts';
 import { blushStyle, mouthFor, NIGHT_BLUSH } from '../../src/render/art/face.ts';
 import { restTilt } from '../../src/render/art/silhouette.ts';
-import { eyeFloorUnits, TILE_FILL, xform } from '../../src/render/art/kit.ts';
+import { eyeFloorUnits, TILE_FILL, TILE_SCALE, tileScaleOf, xform } from '../../src/render/art/kit.ts';
 import { pose } from '../../src/render/art/motion.ts';
 
 const fish = ART.get('clownfish')!;
@@ -68,6 +68,23 @@ describe('CRITIQUE-1 kit rules', () => {
     const u = eyeFloorUnits('S', 84, 60);
     expect(u * ((TILE_FILL.S * 54) / 84)).toBeCloseTo(4, 5);
     expect(eyeFloorUnits('XL', 84, 84)).toBeGreaterThanOrEqual(0.09 * 84);
+  });
+  it('tileScale (CRITIQUE-4): clamped to 0.85–1.3, scales tile + detail only, out of range is an error', () => {
+    expect(TILE_SCALE).toEqual([0.85, 1.3]);
+    expect(tileScaleOf({})).toBe(1);
+    expect(tileScaleOf({ tileScale: 2 })).toBe(1.3);
+    expect(tileScaleOf({ tileScale: 0.5 })).toBe(0.85);
+    const big = { ...fish, tileScale: 1.2 };
+    expect(spanFor(big, 54, 'tile')).toBeCloseTo(spanFor(fish, 54, 'tile') * 1.2, 6);
+    expect(spanFor(big, 200, 'detail')).toBeCloseTo(spanFor(fish, 200, 'detail') * 1.2, 6);
+    expect(spanFor(big, 40, 'leap')).toBe(spanFor(fish, 40, 'leap'));
+    expect(spanFor(big, 40, 'avatar')).toBe(spanFor(fish, 40, 'avatar'));
+    expect(validateArt(big).some((i) => i.rule === 'R27S')).toBe(false);
+    expect(validateArt({ ...fish, tileScale: 1.4 }).some((i) => i.rule === 'R27S' && i.level === 'error')).toBe(true);
+    expect(validateArt({ ...fish, tileScale: 0.8 }).some((i) => i.rule === 'R27S')).toBe(true);
+    expect(validateArt({ ...fish, size: 'XL', tileScale: 1 }).some((i) => i.rule === 'R27S')).toBe(true);
+    expect(ART.get('seadragon')!.tileScale).toBe(1.25);
+    for (const a of ART.values()) if (a.size === 'XL' || a.size === 'XXL') expect(a.tileScale).toBeUndefined();
   });
   it('tilt: a level fish measures < 10°, the same fish rotated 30° is flagged', () => {
     expect(restTilt(fish)).toBeLessThan(10);

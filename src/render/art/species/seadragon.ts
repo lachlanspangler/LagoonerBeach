@@ -92,6 +92,7 @@ export default defineArt({
   id: 'seadragon',
   klass: 'horse',
   size: 'M',
+  tileScale: 1.25,
   feature:
     'an upright S with a small round head, a long straight tube snout and a back-swept tail, five spiky forked fronds at the tips',
   personality: ['regal', 'leafy', 'shy'],

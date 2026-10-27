@@ -84,6 +84,7 @@ export default defineArt({
   id: 'lionfish',
   klass: 'fish',
   size: 'M',
+  tileScale: 0.95,
   feature: 'a huge fan of plump, round-tipped spines and feathery pectoral rays',
   personality: ['fabulous', 'vain', 'dramatic'],
   palette: { body: '#A0363C', accent: '#FFF1E6' },

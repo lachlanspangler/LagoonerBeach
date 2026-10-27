@@ -36,6 +36,11 @@ export function loadCreatureArt(): Promise<typeof ArtChunk> {
 export const hasNewArt = (id: string): boolean => chunk?.ART.has(id) ?? false;
 /** The species' R27 size class when it has new art (XS … XXL), else undefined. */
 export const artSizeOf = (id: string): 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | undefined => chunk?.ART.get(id)?.size;
+/** CRITIQUE-4: the species' framed-fill scale (`tileScale`, clamped; 1 without new art). */
+export const artTileScaleOf = (id: string): number => {
+  const art = chunk?.ART.get(id);
+  return art && chunk ? chunk.tileScaleOf(art) : 1;
+};
 /** The species dozes on this theme (its journal tile rests `drowsy` and may wake for a look). */
 export const dozesNow = (sp: Species, night: boolean): boolean => {
   const art = chunk?.ART.get(sp.id);

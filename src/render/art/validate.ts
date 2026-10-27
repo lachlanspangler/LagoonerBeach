@@ -15,6 +15,8 @@ import type { Species } from '../../meta/creatures.ts';
 import {
   defaultEye,
   eyeFloorUnits,
+  tileScaleOf,
+  TILE_SCALE,
   FRAME_BREAK,
   sizeClassFor,
   TILE_BLEED,
@@ -100,7 +102,7 @@ export function metrics(art: SpeciesArt): Metrics {
   const nightL = oklch(SHARED.nightTile)[0];
   const rimL = oklch(blend(SHARED.nightTile, SHARED.rim, rimAlpha(art.palette.body)))[0];
   const long = Math.max(box.w, box.h) || 1;
-  const ppu = (TILE_FILL[art.size] * TILE_PX) / long;
+  const ppu = (TILE_FILL[art.size] * tileScaleOf(art) * TILE_PX) / long;
   const cx = box.x + box.w / 2,
     cy = box.y + box.h / 2,
     half = TILE_PX / 2;
@@ -122,7 +124,7 @@ export function metrics(art: SpeciesArt): Metrics {
     nightDL: Math.max(L, rimL) - nightL,
     tilt: restTilt(art),
     eye: art.face.eye ?? defaultEye(art.klass, art.face),
-    eyeFloor: eyeFloorUnits(art.size, long, box.h),
+    eyeFloor: eyeFloorUnits(art.size, long, box.h), // authored against the class fill (tileScale aside)
     overhang,
   };
 }
@@ -262,6 +264,12 @@ export function validateArt(art: SpeciesArt, sp?: Species): Issue[] {
   if (['fish', 'shark', 'horse', 'long'].includes(art.klass) && m.tilt > LINT.tiltMax)
     warn('R5T', `body tilts ${Math.round(m.tilt)}° at rest (≤ ${LINT.tiltMax}°; signatures may tilt)`);
   // #4 frame-break (XL must break the 54 px art box by 2–4 px; nobody else may be clipped by the bleed)
+  if (art.tileScale !== undefined) {
+    if (!Number.isFinite(art.tileScale) || art.tileScale < TILE_SCALE[0] || art.tileScale > TILE_SCALE[1])
+      bad('R27S', `tileScale ${art.tileScale} outside ${TILE_SCALE[0]}–${TILE_SCALE[1]} (clamped)`);
+    if (art.size === 'XL' || art.size === 'XXL')
+      bad('R27S', `tileScale on ${art.size} (XL/XXL keep their frame rules)`);
+  }
   if (art.size === 'XL' && (m.overhang < FRAME_BREAK[0] - 0.25 || m.overhang > FRAME_BREAK[1] + 0.25))
     warn('R28', `XL frame-break ${r2(m.overhang)} px past the art box (needs ${FRAME_BREAK[0]}–${FRAME_BREAK[1]} px)`);
   if (art.size !== 'XXL' && m.overhang > TILE_BLEED)

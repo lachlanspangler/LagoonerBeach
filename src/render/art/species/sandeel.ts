@@ -37,6 +37,7 @@ export default defineArt({
   id: 'sandeel',
   klass: 'long',
   size: 'M',
+  tileScale: 1.15,
   feature: 'a true needle with a slim head, a pointed lower jaw jutting past the snout and a forked tail',
   personality: ['zippy', 'shy', 'sandy'],
   palette: { body: '#DCC58A', accent: '#A08A50', belly: '#E8ECEF' },

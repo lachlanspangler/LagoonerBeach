@@ -53,6 +53,7 @@ export default defineArt({
   id: 'boxfish',
   klass: 'fish',
   size: 'M',
+  tileScale: 0.95,
   feature: 'a near-cube rounded-square body with tiny fins',
   personality: ['earnest', 'chunky', 'polite'],
   palette: { body: '#F2D43B', accent: '#B08A1E', belly: '#FBEFA6' },
