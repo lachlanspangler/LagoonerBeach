@@ -88,3 +88,56 @@ test('real touch drag (CDP touch events) places a piece', async ({ page, browser
   await touch('touchEnd', plan.up.x, plan.up.y);
   await expect.poll(async () => (await state(page)).moves).toBe(before.moves + 1);
 });
+
+/** One real drag, no retry: it must count. */
+async function fastDrag(page: Page): Promise<void> {
+  const before = (await state(page)).moves;
+  const plan = await page.evaluate(() => (window as any).__atoll.plan('greedy'));
+  await page.mouse.move(plan.down.x, plan.down.y);
+  await page.mouse.down();
+  await page.mouse.move(plan.up.x, plan.up.y, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(async () => (await state(page)).moves, { timeout: 2000 }).toBe(before + 1);
+}
+
+test('a discovery due between quick moves waits until the player pauses (no drag is eaten)', async ({ page }) => {
+  await boot(page, 'seed=606');
+  for (let i = 0; i < 9; i++) {
+    await fastDrag(page);
+    // a discovery is due right after this move; the next drag follows 40 ms later
+    if (i % 3 === 0) await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+    await page.waitForTimeout(40);
+    if ((await state(page)).over) break;
+  }
+  // once the player pauses, it opens
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.id), { timeout: 5000 })
+    .toBe('kraken');
+});
+
+test('the first press within 250 ms of a card opening neither skips nor closes it', async ({ page }) => {
+  await boot(page, 'seed=42');
+  const r = await page.evaluate(
+    () =>
+      new Promise<{ settled: boolean; open: boolean }>((resolve) => {
+        const a = (window as any).__atoll;
+        a.revealSpecies('kraken');
+        const wait = (): void => {
+          const el = document.querySelector('.reveal');
+          if (!el || !a.revealState()) return void requestAnimationFrame(wait);
+          const o = { bubbles: true, isPrimary: true, pointerId: 1 };
+          el.dispatchEvent(new PointerEvent('pointerdown', o));
+          el.dispatchEvent(new PointerEvent('pointerup', o));
+          el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          const s = a.revealState();
+          resolve({ settled: !!s?.settled, open: !!s });
+        };
+        wait();
+      }),
+  );
+  expect(r).toEqual({ settled: false, open: true });
+  // a later press does skip the animation, as before
+  await page.waitForTimeout(300);
+  await page.mouse.click(20, 20);
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
+});

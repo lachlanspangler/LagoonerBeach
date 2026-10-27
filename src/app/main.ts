@@ -999,6 +999,28 @@ const ui = new Ui({
   },
 });
 
+// A discovery never opens between a quick player's moves: it waits until the board and tray have
+// been still for REVEAL_QUIET_MS (no press, no drag), so the next drag can't land on a fresh card.
+const REVEAL_QUIET_MS = 600;
+/** A press this soon after a card opens was aimed at the board: it never skips or closes the card. */
+const REVEAL_GRACE_MS = 250;
+let boardActiveAt = -Infinity;
+let revealOpenedAt = -Infinity;
+// any pointer event on the board/tray counts (a mouse homing in on the next piece is play too)
+const markBoardActive = (): void => void (boardActiveAt = performance.now());
+for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'] as const)
+  canvas.addEventListener(t, markBoardActive, { capture: true, passive: true });
+const revealGrace = (e: Event): void => {
+  if (performance.now() - revealOpenedAt >= REVEAL_GRACE_MS || !reveal.current()?.modal) return;
+  const t = e.target;
+  if (!(t instanceof Element) || !t.closest('.reveal')) return;
+  e.stopImmediatePropagation();
+  e.preventDefault();
+};
+// window capture, registered before the reveal's own listeners, so it runs first
+addEventListener('pointerdown', revealGrace, true);
+addEventListener('click', revealGrace, true);
+
 const reveal = new LazyReveal(document.getElementById('ui')!, {
   sfx,
   haptics,
@@ -1009,7 +1031,11 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   playerName: () => profile.lb?.name || undefined,
   now: clock,
-  canOpen: () => scene.drag === null && !ui.open,
+  canOpen: () => {
+    const ok = scene.drag === null && !ui.open && performance.now() - boardActiveAt >= REVEAL_QUIET_MS;
+    if (ok) revealOpenedAt = performance.now(); // the reveal opens right after a yes
+    return ok;
+  },
   onStrip: (ms) => {
     scene.holdStrip(performance.now() + ms);
     dirty = true;
