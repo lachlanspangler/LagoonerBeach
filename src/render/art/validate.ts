@@ -23,7 +23,7 @@ import {
   type SpeciesArt,
 } from './kit.ts';
 import { boundsOf, flatten, parsePath, polyArea, unionBox, type Box, type Poly } from './path.ts';
-import { blend, deriveBelly, deriveInk, hueDelta, oklch, rimAlpha, SHARED } from './palette.ts';
+import { blend, cielab, deltaE2000, deriveBelly, deriveInk, hueDelta, oklch, rimAlpha, SHARED } from './palette.ts';
 import { restTilt } from './silhouette.ts';
 
 export type Level = 'error' | 'warn';
@@ -317,5 +317,94 @@ export function validateArt(art: SpeciesArt, sp?: Species): Issue[] {
         'R16M',
         `body ΔE ${r2(okDist(pal.body, mint))} from the ${theme} journal tile (mint ${mint}) < ${LINT.mintDE}`,
       );
+  return out;
+}
+
+// ── CRITIQUE-3 cast lints: colour identity across the whole cast (warnings) ──────────────────────
+/** Flip to `true` (or run tests with ART_CAST_STRICT=1) to make the cast lints errors. */
+export const CAST_LINT_AS_ERRORS = false;
+/**
+ * CRITIQUE-3 thresholds. `dE` is CIEDE2000 (CIELAB, D65); hues and chroma are OKLCH (as everywhere
+ * else in the kit). Near-neutral bodies (OKLCH chroma < `neutralC`) have no meaningful hue: they sit
+ * out the hue rules (but count in a habitat's total).
+ */
+export const CAST = { dE: 6, window: 30, share: 0.4, legendHue: 15, neutralC: 0.05 } as const;
+
+export interface CastEntry {
+  readonly id: string;
+  readonly body: string;
+  readonly habitat: string;
+  readonly legendary: boolean;
+}
+/** The cast as the lints see it: each drawn species' body colour, habitat and legendary flag. */
+export const castOf = (arts: Iterable<SpeciesArt>, species: (id: string) => Species | undefined): CastEntry[] =>
+  [...arts].flatMap((a) => {
+    const sp = species(a.id);
+    return sp ? [{ id: a.id, body: a.palette.body, habitat: sp.habitat, legendary: sp.rarity === 'legendary' }] : [];
+  });
+
+/**
+ * The cast-level checks (CRITIQUE-3 must-do #3), per species:
+ * - **C1** body colour identity: no two species share a body hex, none within ΔE00 < 6;
+ * - **C2** habitat hue histogram: ≤ 40 % of a habitat's species inside any 30° hue window;
+ * - **C3** legendaries own their hue: no non-legendary within 15° of a legendary's body hue.
+ * Pure; every issue is a warning (strict: `CAST_LINT_AS_ERRORS` / ART_CAST_STRICT=1).
+ */
+export function validateCast(cast: readonly CastEntry[]): Map<string, Issue[]> {
+  const out = new Map<string, Issue[]>(cast.map((c) => [c.id, []]));
+  const warn = (id: string, rule: string, msg: string) => out.get(id)!.push({ rule, msg, level: 'warn' });
+  const lab = new Map(cast.map((c) => [c.id, cielab(c.body)]));
+  const lch = new Map(cast.map((c) => [c.id, oklch(c.body)]));
+  const hued = (c: CastEntry) => lch.get(c.id)![1] >= CAST.neutralC;
+  const hue = (c: CastEntry) => lch.get(c.id)![2];
+  const deg = (c: CastEntry) => Math.round(hue(c));
+  // C1
+  for (let i = 0; i < cast.length; i++)
+    for (let j = i + 1; j < cast.length; j++) {
+      const [p, q] = [cast[i]!, cast[j]!];
+      if (p.body.toUpperCase() === q.body.toUpperCase()) {
+        warn(p.id, 'C1', `body ${p.body.toUpperCase()} is also ${q.id}'s body`);
+        warn(q.id, 'C1', `body ${q.body.toUpperCase()} is also ${p.id}'s body`);
+        continue;
+      }
+      const d = deltaE2000(lab.get(p.id)!, lab.get(q.id)!);
+      if (d < CAST.dE) {
+        warn(p.id, 'C1', `body ΔE00 ${r2(d)} from ${q.id} (${q.body}) < ${CAST.dE}`);
+        warn(q.id, 'C1', `body ΔE00 ${r2(d)} from ${p.id} (${p.body}) < ${CAST.dE}`);
+      }
+    }
+  // C2: for each hued species, the fullest 30° window (starting at a member's hue) that contains it
+  const habitats = new Map<string, CastEntry[]>();
+  for (const c of cast) habitats.set(c.habitat, [...(habitats.get(c.habitat) ?? []), c]);
+  const off = (x: CastEntry, s: CastEntry) => (hue(x) - hue(s) + 360) % 360;
+  for (const [hab, all] of habitats) {
+    const max = Math.max(1, Math.floor(all.length * CAST.share + 1e-9)); // one alone is no cluster
+    const hs = all.filter(hued);
+    for (const c of hs) {
+      let best: CastEntry[] = [];
+      let from = 0;
+      for (const s of hs) {
+        if (off(c, s) > CAST.window) continue;
+        const inWin = hs.filter((x) => off(x, s) <= CAST.window);
+        if (inWin.length > best.length) [best, from] = [inWin, deg(s)];
+      }
+      if (best.length > max)
+        warn(
+          c.id,
+          'C2',
+          `${hab}: ${best.length}/${all.length} species in ${from}–${(from + CAST.window) % 360}° (${best.map((x) => x.id).join(', ')}; ≤ ${max} allowed)`,
+        );
+    }
+  }
+  // C3
+  for (const L of cast.filter((c) => c.legendary && hued(c)))
+    for (const c of cast)
+      if (!c.legendary && hued(c)) {
+        const d = hueDelta(hue(L), hue(c));
+        if (d < CAST.legendHue) {
+          warn(c.id, 'C3', `hue ${deg(c)}° within ${Math.round(d)}° of legendary ${L.id} (${deg(L)}°)`);
+          warn(L.id, 'C3', `${c.id} (${deg(c)}°) sits within ${Math.round(d)}° of this legendary's hue`);
+        }
+      }
   return out;
 }
