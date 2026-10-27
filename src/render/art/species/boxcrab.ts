@@ -36,9 +36,8 @@ export default defineArt({
       id: 'body',
       parts: [
         { d: shell, role: 'body' },
-        // two little eye-stalk bumps on the shell's top edge, splayed a further ±25° (≈ 60° off
-        // vertical, CRITIQUE-3): low nubs leaning out over the corners, never ears
-        { d: join(capsule(-12, -22, 4.4, -18.5, -25.5, 4.4), capsule(12, -22, 4.4, 18.5, -25.5, 4.4)), role: "body" },
+        // two little eye-stalk bumps on the shell's top edge, splayed ±35° (CRITIQUE-2: not ears)
+        { d: join(capsule(-12, -20, 4.4, -16.5, -26, 4.8), capsule(12, -20, 4.4, 16.5, -26, 4.8)), role: 'body' },
         {
           d: join(circle(-18, -15, 5.2), circle(1, -19, 4.2), circle(19, -14, 4.8)),
           role: 'accent',
