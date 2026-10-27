@@ -37,6 +37,8 @@ export interface DebugDeps {
   journal(): unknown;
   /** Screenshots only: show a believable best score / a well-filled journal (not saved). */
   stageBest(n: number, score?: number): void;
+  /** How many times the loaded font set changed and the text sprites were rebuilt. */
+  fontsRuns(): number;
   /** A leaderboard's Play button for that mode (asks first when it would end a run in progress). */
   playFromBoard(m: 'classic' | 'daily'): void;
   stageJournal(ids: string[]): void;
@@ -136,6 +138,7 @@ export function installDebugApi(d: DebugDeps): void {
     prefetchReefs: (i: number, count: number) => d.reefSource()?.prefetch(i - 1, count),
     journal: d.journal,
     stageBest: d.stageBest,
+    fontsRuns: d.fontsRuns,
     playFromBoard: d.playFromBoard,
     /** Show a chip (lesson / reef of the day / welcome back) now. */
     toast: (text: string, life = 3000) => d.scene.toast(text, performance.now(), life),

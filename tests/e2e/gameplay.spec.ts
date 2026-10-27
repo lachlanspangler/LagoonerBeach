@@ -497,4 +497,12 @@ test('first-frame fonts: fetched once each, early, with no "preloaded but not us
   expect(warns).toEqual([]);
   expect(fonts.sort()).toEqual(['/fonts/lagoon-display-900.woff2', '/fonts/lagoon-ui.woff2']);
   expect(await page.evaluate(() => document.fonts.check('900 16px "Lagoon Display"'))).toBe(true);
+  // the text sprites are rebuilt once per real change of the font set (at most once per face), not
+  // once per load() promise plus loadingdone; a loadingdone with nothing new rebuilds nothing
+  const runs = await page.evaluate(() => (window as any).__atoll.fontsRuns());
+  expect(runs).toBeGreaterThanOrEqual(1);
+  expect(runs).toBeLessThanOrEqual(fonts.length);
+  await page.evaluate(() => document.fonts.dispatchEvent(new Event('loadingdone')));
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => (window as any).__atoll.fontsRuns())).toBe(runs);
 });

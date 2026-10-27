@@ -1302,11 +1302,30 @@ applyTheme();
 syncScene();
 if (bootMode === 'puzzle') switchMode('puzzle');
 requestAnimationFrame(frame);
-// bundled fonts arrive after first paint (font-display: swap): redraw once they're in
+// bundled fonts arrive after first paint (font-display: swap): redraw once they're in. Two load()
+// promises and `loadingdone` all report the same arrival: the text sprites are cleared and rewarmed
+// once per real change of the loaded font set (coalesced to a frame, then compared).
+let fontsSig = '';
+let fontsQueued = false;
+let fontsRuns = 0;
+const loadedFaces = (): string => {
+  const out: string[] = [];
+  document.fonts?.forEach?.((f) => void (f.status === 'loaded' && out.push(`${f.family} ${f.weight} ${f.style}`)));
+  return out.sort().join('|');
+};
 const fontsIn = () => {
-  scene.fontsReady();
-  fx.warmPeaks(true); // the text sprites were just cleared: build the peak words again, off-frame
-  dirty = true;
+  if (fontsQueued) return;
+  fontsQueued = true;
+  requestAnimationFrame(() => {
+    fontsQueued = false;
+    const sig = loadedFaces();
+    if (sig === fontsSig) return;
+    fontsSig = sig;
+    fontsRuns++;
+    scene.fontsReady();
+    fx.warmPeaks(true); // the text sprites were just cleared: build the peak words again, off-frame
+    dirty = true;
+  });
 };
 document.fonts?.addEventListener?.('loadingdone', fontsIn);
 void document.fonts?.load?.('800 16px "Lagoon UI"').then(fontsIn);
@@ -1354,6 +1373,7 @@ function debugDeps(): DebugDeps {
     loadPuzzle,
     journal: () => journal,
     playFromBoard: playMode,
+    fontsRuns: () => fontsRuns,
     stageBest: (n, score) => {
       scene.best = n;
       if (score !== undefined) {
