@@ -428,14 +428,63 @@ test('every modal reveal settles eyes-open on idle (scene tiers by the time the 
     ['kraken', 2700],
     ['seadragon', 2700],
     ['whaleshark', 2700],
+    // art critique round 5: every reveal is eyes-open idle by 2.1 s (a golden seahorse was still proud)
+    ['seahorse*', 2100],
+    ['moray', 2100],
+    ['octopus*', 2100],
   ];
-  for (const [id, t] of cases) {
-    await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
+  for (const [key, t] of cases) {
+    const id = key.replace('*', '');
+    await page.evaluate(([id, golden]) => (window as any).__atoll.revealSpecies(id, { golden }), [
+      id,
+      key.endsWith('*'),
+    ] as const);
     await page.waitForFunction(() => (window as any).__atoll.revealState());
     await page.evaluate((t) => (window as any).__atoll.revealFreeze(t), t);
     const st = await page.evaluate(() => (window as any).__atoll.revealState());
     expect(st.settled, id).toBe(true);
     expect(st.expr, `${id} at ${t} ms`).toBe('idle');
+    await page.evaluate(() => (window as any).__atoll.revealSkip());
+    await expect(page.locator('.reveal')).toHaveCount(0);
+  }
+});
+
+test('a non-legendary present is at least 130 px tall on the card, whatever its size class', async ({ page }) => {
+  await boot(page, 'seed=42');
+  for (const [id, golden] of [
+    ['seahorse', true],
+    ['seahorse', false],
+    ['damsel', false],
+    ['boxcrab', false],
+    ['moray', false],
+  ] as const) {
+    await page.evaluate(([id, golden]) => (window as any).__atoll.revealSpecies(id, { golden }), [id, golden] as const);
+    await page.waitForFunction(() => (window as any).__atoll.revealState());
+    await page.waitForTimeout(400); // the CSS entrance (a scale-in) is over: measure at full size
+    // the settle frame, eyes-open idle (its signature, later, may curl it up for a moment)
+    await page.evaluate(() => (window as any).__atoll.revealFreeze(2100));
+    const box = await page.evaluate(() => {
+      const c = document.querySelector('.reveal canvas:not(.rv-fx)') as HTMLCanvasElement;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let y0 = -1;
+      let y1 = -1;
+      let x0 = c.width;
+      let x1 = -1;
+      for (let i = 3; i < d.length; i += 4)
+        if (d[i]! > 40) {
+          const p = (i - 3) / 4;
+          const x = p % c.width;
+          const y = (p - x) / c.width;
+          if (y0 < 0) y0 = y;
+          y1 = y;
+          x0 = Math.min(x0, x);
+          x1 = Math.max(x1, x);
+        }
+      const k = c.width / c.getBoundingClientRect().width;
+      return { h: (y1 - y0) / k, w: (x1 - x0) / k, cw: c.width / k };
+    });
+    expect(box.h, `${id}${golden ? ' (golden)' : ''}`).toBeGreaterThanOrEqual(130);
+    expect(box.w, `${id} fits its stage`).toBeLessThan(box.cw - 8);
     await page.evaluate(() => (window as any).__atoll.revealSkip());
     await expect(page.locator('.reveal')).toHaveCount(0);
   }
