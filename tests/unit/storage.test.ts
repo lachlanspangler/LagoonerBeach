@@ -52,6 +52,18 @@ describe('profile migration', () => {
     expect(p.settings.sound).toBe(false);
     expect(p.daily.current).toBe(3);
     expect(p.lb).toEqual({});
+    expect(p.lastMode).toBeUndefined(); // boots into Endless, as before
+    expect(p.puzzle.index).toBe(4);
+  });
+  it('the last mode round-trips; anything else is dropped', () => {
+    const p = loadProfile();
+    for (const m of ['daily', 'puzzle', 'classic'] as const) {
+      p.lastMode = m;
+      saveProfile(p);
+      expect(loadProfile().lastMode).toBe(m);
+    }
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, lastMode: 'arcade' }));
+    expect(loadProfile().lastMode).toBeUndefined();
   });
   it('leaderboard fields round-trip and are sanitized', () => {
     const p = loadProfile();
@@ -62,6 +74,15 @@ describe('profile migration', () => {
     expect(loadProfile().lb).toEqual({});
     expect(sanitizeLbProfile(undefined)).toEqual({});
     expect(sanitizeLbProfile({ name: 7, installId: 5 })).toEqual({});
+  });
+  it('the best a live run started from round-trips; junk is dropped', () => {
+    const p = loadProfile();
+    expect(p.runBest).toBeUndefined();
+    p.runBest = { key: 'classic::77', best: 32 };
+    saveProfile(p);
+    expect(loadProfile().runBest).toEqual({ key: 'classic::77', best: 32 });
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, runBest: { key: 5, best: 'x' } }));
+    expect(loadProfile().runBest).toBeUndefined();
   });
 });
 

@@ -720,8 +720,14 @@ export class LeaderboardUi {
         box.append(txt);
         box.setAttribute('aria-label', `${name} is ${num(score(a) - score(me))} ahead. Beat them!`);
       }
+      // Play sits in the target card (a full-width button under it left the list ~2 rows on a phone)
+      if (me.rank > 1 && t !== 'daily') {
+        const play = playBtn(t);
+        play.classList.add('lb-target-play');
+        play.textContent = 'Play';
+        box.append(play);
+      }
       target.append(box);
-      if (me.rank > 1 && t !== 'daily') target.append(playBtn(t));
     };
 
     const renderBoard = (t: Tab, v: BoardView) => {
@@ -761,7 +767,8 @@ export class LeaderboardUi {
             : [this.youRow(t, v, (p) => this.showBoards(current, p ? { ...o, outcome: undefined, pending: p } : o))]),
         );
         list.replaceChildren(...rows);
-        list.querySelector('.me')?.scrollIntoView?.({ block: 'nearest' });
+        scrollToMe(list);
+        requestAnimationFrame(() => scrollToMe(list)); // again once the sheet has its final size
       }
       foot.replaceChildren();
       const bits: string[] = [];
@@ -885,6 +892,40 @@ export function rejectionText(reason: string): string {
     default:
       return "This score couldn't be posted.";
   }
+}
+
+/**
+ * Open the list on you and the row you're chasing, both in full: your row is sticky, so
+ * scrollIntoView thinks it's already visible (pinned over the rows above it). Centre the pair
+ * [row above, you] at your row's natural place; on a short list, the row above goes to the top.
+ */
+export function scrollToMe(list: HTMLElement): void {
+  const me = list.querySelector<HTMLElement>('.lb-row.me');
+  if (!me || !list.clientHeight) return;
+  const prev = me.previousElementSibling;
+  const above = prev instanceof HTMLElement && prev.classList.contains('lb-row') ? prev : null;
+  const top0 = list.getBoundingClientRect().top - list.scrollTop;
+  const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+  let start: number;
+  let end: number;
+  if (above) {
+    start = above.getBoundingClientRect().top - top0;
+    end = start + above.offsetHeight + gap + me.offsetHeight;
+  } else {
+    // first row, or straight after the "…" gap: your natural place is under the previous element
+    const p = me.previousElementSibling as HTMLElement | null;
+    start = p ? p.getBoundingClientRect().bottom - top0 + gap : 0;
+    end = start + me.offsetHeight;
+  }
+  const room = list.clientHeight;
+  // your row sticks this far inside the scrollport (its sticky offset + the list's padding):
+  // keep its natural place inside, so it never pins over the row you're chasing
+  const cs = getComputedStyle(list);
+  const ms = getComputedStyle(me);
+  const mt = (parseFloat(ms.top) || 0) + (parseFloat(cs.paddingTop) || 0) + 2;
+  const mb = (parseFloat(ms.bottom) || 0) + (parseFloat(cs.paddingBottom) || 0) + 2;
+  const want = end - start <= room - mt - mb ? (start + end) / 2 - (mt + room - mb) / 2 : end - (room - mb); // too short for both: you in full, the row above cut by the top edge
+  list.scrollTop = Math.max(0, Math.min(want, list.scrollHeight - room));
 }
 
 /** One-line feedback after posting, for the board the tab shows (the server's board id). */

@@ -125,7 +125,18 @@ const runLog = new RunLog();
 const classicSeed = (): number =>
   (!params.has('seed') && profile.firstRunDone ? runLog.ticketSeed() : null) ?? freshSeed();
 
-let mode: Mode = params.get('mode') === 'daily' ? 'daily' : 'classic';
+// ?mode= / ?seed= pick the mode; otherwise a relaunch opens the one last played (Reefs: once the
+// pack is in, below — the classic game shows until then)
+const bootMode: Mode = params.has('mode')
+  ? params.get('mode') === 'daily'
+    ? 'daily'
+    : params.get('mode') === 'puzzle'
+      ? 'puzzle'
+      : 'classic'
+  : params.has('seed')
+    ? 'classic'
+    : (profile.lastMode ?? 'classic');
+let mode: Mode = bootMode === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
 let state: GameState = startState();
 /** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
@@ -139,6 +150,9 @@ let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
 let lastDispatchAt = 0;
 let bestCelebrated = false;
+/** The best before this Endless/Daily run (the record to beat; profile.best moves as you beat it). */
+let runStartBest = 0;
+const storedBest = (): number => (mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best);
 /** Which game the per-game tallies below belong to. */
 let tallyKey = '';
 let journal: Journal = loadJournal();
@@ -321,7 +335,6 @@ function syncScene(): void {
   scene.score = state.score;
   scene.pendingScore = null;
   scene.shownScore = state.score;
-  scene.best = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
   scene.streak = state.streak;
   scene.dry = state.dry;
   scene.gameOverAt = state.over ? now : -1;
@@ -337,10 +350,15 @@ function syncScene(): void {
   if (state.moves === 0 || key !== tallyKey) {
     tallyKey = key;
     bestCelebrated = false;
+    // a reload mid-run still knows the record it is chasing (the best itself is already saved)
+    const rb = profile.runBest;
+    runStartBest = state.moves > 0 && rb?.key === key ? Math.min(rb.best, storedBest()) : storedBest();
+    if (mode !== 'puzzle') profile.runBest = { key, best: runStartBest };
     gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
     puzzleMoves = [];
   }
+  scene.best = mode === 'puzzle' ? profile.best : runStartBest;
   updateHint();
   updateMisfits();
   scene.hudLabel = null;
@@ -440,11 +458,13 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
         () => undefined,
       );
   }
-  const prevBest = mode === 'daily' ? (profile.dailyBest[dailyDate] ?? 0) : profile.best;
+  const prevBest = mode === 'puzzle' ? profile.best : runStartBest;
   const prevScore = state.score;
   state = r.state;
-  // the moment you pass your best, mid-game (once per game)
   persist();
+  // a beaten best is saved at once (saveProfile below): abandoning the run or killing the app keeps it
+  if (mode === 'daily' && state.score > (profile.dailyBest[dailyDate] ?? 0)) profile.dailyBest[dailyDate] = state.score;
+  else if (mode === 'classic' && state.score > profile.best) profile.best = state.score;
   const caught = catchFor(r);
   const t = clock();
   lastDispatchAt = t;
@@ -532,9 +552,9 @@ function finishGame(prevBest: number): void {
   const newBest = state.score > prevBest;
   if (mode === 'daily') {
     dailyRank = null; // ask the board again next time (this game may have just been posted)
-    profile.dailyBest[dailyDate] = Math.max(prevBest, state.score);
+    profile.dailyBest[dailyDate] = Math.max(prevBest, state.score, profile.dailyBest[dailyDate] ?? 0);
     profile.daily = recordDaily(profile.daily, dayIndex(dailyDate));
-  } else if (newBest) profile.best = state.score;
+  } else if (newBest) profile.best = Math.max(profile.best, state.score);
   const unlockedNow = refreshUnlocks();
   saveProfile(profile);
   // snapshot now: the card must describe *this* game even if it shows a moment later
@@ -895,6 +915,8 @@ function switchMode(m: Mode): void {
   ui.close();
   persist();
   mode = m;
+  profile.lastMode = m;
+  saveProfile(profile);
   startToken++; // a fresh-ticket start still in flight is for a game the player has left
   startWaiting = false;
 
@@ -920,6 +942,7 @@ const ui = new Ui({
       mode === 'puzzle'
         ? `Reef ${state.seed + 1}`
         : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
+      mode === 'classic' && state.moves > 0 && !state.over,
     ),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
@@ -999,6 +1022,28 @@ const ui = new Ui({
   },
 });
 
+// A discovery never opens between a quick player's moves: it waits until the board and tray have
+// been still for REVEAL_QUIET_MS (no press, no drag), so the next drag can't land on a fresh card.
+const REVEAL_QUIET_MS = 600;
+/** A press this soon after a card opens was aimed at the board: it never skips or closes the card. */
+const REVEAL_GRACE_MS = 250;
+let boardActiveAt = -Infinity;
+let revealOpenedAt = -Infinity;
+// any pointer event on the board/tray counts (a mouse homing in on the next piece is play too)
+const markBoardActive = (): void => void (boardActiveAt = performance.now());
+for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'] as const)
+  canvas.addEventListener(t, markBoardActive, { capture: true, passive: true });
+const revealGrace = (e: Event): void => {
+  if (performance.now() - revealOpenedAt >= REVEAL_GRACE_MS || !reveal.current()?.modal) return;
+  const t = e.target;
+  if (!(t instanceof Element) || !t.closest('.reveal')) return;
+  e.stopImmediatePropagation();
+  e.preventDefault();
+};
+// window capture, registered before the reveal's own listeners, so it runs first
+addEventListener('pointerdown', revealGrace, true);
+addEventListener('click', revealGrace, true);
+
 const reveal = new LazyReveal(document.getElementById('ui')!, {
   sfx,
   haptics,
@@ -1009,7 +1054,11 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   playerName: () => profile.lb?.name || undefined,
   now: clock,
-  canOpen: () => scene.drag === null && !ui.open,
+  canOpen: () => {
+    const ok = scene.drag === null && !ui.open && performance.now() - boardActiveAt >= REVEAL_QUIET_MS;
+    if (ok) revealOpenedAt = performance.now(); // the reveal opens right after a yes
+    return ok;
+  },
   onStrip: (ms) => {
     scene.holdStrip(performance.now() + ms);
     dirty = true;
@@ -1209,6 +1258,7 @@ idle(() => {
 resize();
 applyTheme();
 syncScene();
+if (bootMode === 'puzzle') switchMode('puzzle');
 requestAnimationFrame(frame);
 // bundled fonts arrive after first paint (font-display: swap): redraw once they're in
 const fontsIn = () => {
@@ -1307,7 +1357,8 @@ function debugDeps(): DebugDeps {
       stageRecord: (best) => {
         if (mode === 'daily') profile.dailyBest[dailyDate] = best;
         else profile.best = best;
-        scene.best = best;
+        scene.best = runStartBest = best;
+        if (mode !== 'puzzle') profile.runBest = { key: tallyKey, best };
         bestCelebrated = false;
         dirty = true;
       },

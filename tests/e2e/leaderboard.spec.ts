@@ -124,6 +124,45 @@ test('"Choose a name" on the boards posts the game you just finished', async ({ 
   await expect(me.locator('.lb-sc')).toContainText(score.toLocaleString('en-US'));
 });
 
+for (const [label, query] of [
+  ['daily', 'mode=daily&fast=1'],
+  ['endless', 'seed=303&fast=1'],
+] as const) {
+  test(`${label} board opens on you and the row you're chasing, both in full`, async ({ page }) => {
+    await boot(page, query);
+    await page.evaluate(() => (window as any).__atoll.autoplay('human', 400));
+    await expect(page.getByTestId('final-score')).toBeVisible();
+    await page.locator('#lb-open').click();
+    await expect(page.getByTestId('lb-slots')).toBeVisible();
+    await page.keyboard.type('reefy');
+    await page.keyboard.press('Enter');
+    const me = page.locator('.lb-list .lb-row.me');
+    await expect(me).toBeVisible();
+    await page.waitForTimeout(300);
+    const g = await page.evaluate(() => {
+      const list = document.querySelector('.lb-list')!.getBoundingClientRect();
+      const me = document.querySelector('.lb-list .lb-row.me')!;
+      const above = me.previousElementSibling?.classList.contains('lb-row') ? me.previousElementSibling : null;
+      const r = me.getBoundingClientRect();
+      const a = above?.getBoundingClientRect();
+      return {
+        list: [list.top, list.bottom] as [number, number],
+        me: [r.top, r.bottom] as [number, number],
+        above: a ? ([a.top, a.bottom] as [number, number]) : null,
+        rank: Number(me.getAttribute('aria-label')!.match(/rank (\d+)/)![1]),
+      };
+    });
+    expect(g.me[0]).toBeGreaterThanOrEqual(g.list[0] - 1);
+    expect(g.me[1]).toBeLessThanOrEqual(g.list[1] + 1);
+    if (g.rank > 1) {
+      expect(g.above).not.toBeNull();
+      // the target row is fully in view and not under your (sticky) row or its fade band
+      expect(g.above![0]).toBeGreaterThanOrEqual(g.list[0] - 1);
+      expect(g.me[0]).toBeGreaterThanOrEqual(g.above![1]);
+    }
+  });
+}
+
 test('"No thanks" declines that score: naming yourself later does not post it', async ({ page }) => {
   await boot(page, 'mode=daily&fast=1');
   await finishDaily(page);

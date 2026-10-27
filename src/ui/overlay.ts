@@ -311,6 +311,8 @@ export class Ui {
     dailyDone = false,
     /** What Resume goes back to, e.g. "Endless · 3,150" or "Reef 28". */
     resumeWhat = '',
+    /** An Endless run is in progress: New game asks once, inline ("This one ends here"). */
+    confirmNew = false,
   ): void {
     const card = document.createElement('div');
     card.className = 'sheet home stagger';
@@ -357,7 +359,7 @@ export class Ui {
       current: boolean,
       go: () => void,
       statusCls = '',
-    ) => {
+    ): HTMLButtonElement => {
       const b = this.button(
         '',
         `mode-card${current ? ' current' : ''}`,
@@ -366,15 +368,29 @@ export class Ui {
         go,
       );
       modes.append(b);
+      return b;
     };
-    card3(
+    const endless = card3(
       'endless',
       'Endless',
       'Play on for a high score',
       mode === 'classic' ? 'New game' : 'Play',
       mode === 'classic' ? 'New game' : 'Endless mode',
       mode === 'classic',
-      () => (mode === 'classic' ? this.h.onNewGame() : this.h.onClassic()),
+      () => {
+        if (mode !== 'classic') return this.h.onClassic();
+        // a run in progress: the first tap asks, right on the card; the second starts over
+        if (confirmNew && !endless.classList.contains('confirm')) {
+          endless.classList.add('confirm');
+          endless.querySelector('.mc-title')!.textContent = 'Start a new game?';
+          endless.querySelector('.mc-line')!.textContent = 'This one ends here.';
+          endless.querySelector('.mc-status')!.textContent = 'Start new';
+          endless.setAttribute('aria-label', 'Start a new game? This one ends here. Press again to start new');
+          this.announce('Start a new game? This one ends here. Press again to confirm.');
+          return;
+        }
+        this.h.onNewGame();
+      },
       'go',
     );
     card3(

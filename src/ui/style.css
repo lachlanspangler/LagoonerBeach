@@ -860,6 +860,13 @@ html[data-theme='night'] .round {
 .mc-status.go {
   color: var(--accent);
 }
+/* New game while a run is on: asked once, on the card itself */
+.mode-card.confirm .mc-status {
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+}
 .home-links {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
