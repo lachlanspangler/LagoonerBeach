@@ -645,3 +645,24 @@ what exists (no feature rebuilds); every test's intent kept.
   sims under a loaded machine; not a perf budget).
 - Interruptions this session: API timeouts and a laptop shutdown. Commit-per-item meant each cost
   minutes; WIP was salvaged from worktrees by diff/patch every time.
+
+## 2026-10-27 (session 4, close) — Release candidate
+- **Owner feedback mid-session:** creatures flying into the journal felt wrong → they now leap out of
+  the lagoon on one ballistic arc and dive back into the water just past the board (beside it when
+  there's room, below it on phones), with water rings, a crown of drops and a soft plop; only a new
+  species pulses the journal. ADR 0012 and CLAUDE.md updated.
+- **Final UX review fixes:** HUD stack sized with text scale (Larger text no longer overlaps BEST and
+  the COMBO badge), the chapter moment holds ~2 s on a clean board and the card teases the next
+  chapter, the first catch ever is a full card introducing the journal (no flight to the button),
+  one pop at a time, fast-play discoveries fold into the results, "New style" unlocks (one per game,
+  swatches + Try it), confetti off the numerals, share footer, name slots, board masks, iPad HUD.
+  Reverted one change: a uniform tray cell size made the whole hand ~35% smaller whenever a 5-long
+  piece was dealt — readability wins over uniformity.
+- **Test robustness without loosening anything:** a debug hook reported a stale (already faded) word;
+  the quick-moves discovery test now drives drags in-page so its 40 ms gaps are real; the a11y sweep
+  polls until sheet springs settle (a truly small control still fails).
+- **Release assets regenerated** from the final build (store frames, feature graphic, icons/splashes,
+  clips, screens Day/Night, creature sheets). iOS Simulator (release) and Android emulator (debug APK
+  via the real WebView) re-verified. Simulators, emulator, servers and browsers shut down.
+- **End state:** main only, everything committed, make check + make e2e green. Left for the owner:
+  accounts, bundle id, name check, backend (optional), privacy URL/email, share link, a real phone.

@@ -1,81 +1,78 @@
 # Status
 
-## Milestone summary (session 3: quality leap) — 2026-10-26
+## Final state (v1.0.0 release candidate) — 2026-10-27
 **Lagooner Beach**: *Close a loop. Water fills it, the ring pops.* Every lagoon catches a beach
-creature for your Beach Journal.
+creature for your Beach Journal. Everything is committed on `main` (no other branches, no worktrees).
+Nothing is pushed.
 
-**What I built this session** (on top of v1.0.0, keeping the core rule, modes, saves and tests):
-- **Research** (`docs/research/`):
-  - HUNGRY_STUDIO.md: Block Blast's celebration system, frame by frame.
-  - CREATURE_ART.md: style guide R1–R39.
-  - UI_DESIGN.md: chooses Fraunces + Nunito, both under the SIL Open Font License.
-  - LEADERBOARDS.md: chooses Cloudflare Workers + D1, verified by replaying the move log.
-  - 46 new ideas in the ledger, including rejected ones with reasons.
-- **Creatures (ADR 0011):** all 47 species redrawn.
-  - How they're made: SVG path art, one file per species, a shared face rig, size classes XS–XXL, idle motions and a signature move each, 8 expressions, real golden variants. The art loads lazily (38.8 KB gz).
-  - How they were reviewed: by an independent art critic over 3 rounds. Round 1 was 11 A / 22 B / 13 C / 1 D; round 2 was 27 A / 15 B / 5 C. Round 3 redrew the remaining B/C species, and the redrawing artists self-graded A−/A. Notes are in `docs/art/`.
-  - Style-guide checks, silhouette-overlap tests and Path2D parity tests run on Chromium and WebKit.
-- **Combo & celebrations (ADR 0012):**
-  - COMBO ×N is our existing streak; bots show it can't be farmed.
-  - A one-word praise ladder: Nice! → Nice Lagoon! → Twin Lagoons! → Atoll! / Archipelago! / Ripple ×2 → Riptide! / Spotless! / Amazing! / Unbelievable!
-  - Ring-burst physics, tiered sound, haptics and sweeps, plus NEW BEST and NEW HIGH SCORE moments.
-  - Big moments get big (gold sweep, shake, score roll); normal moves stay calm.
-- **Discovery moments:** a reveal scaled by rarity.
-  - Common is a pop; uncommon is a card with a vignette; epic and legendary become a scene (the coin builds light, the creature bursts in, the name stamps in).
-  - Golden variants get a foil card. Every reveal ends with the creature's signature dance.
-  - A share card (tier colour, lagoon art) works through native share on iOS and Android.
-- **Leaderboards (ADR 0010):**
-  - Name entry is 7 letters, A–Z only, enforced live, with an on-screen keypad. A profanity filter catches lookalikes and has a reserved-name list.
-  - Boards: Daily, This week and All-time, with your rank, "58 to pass BODHI", podium tints and reset countdowns.
-  - A Cloudflare Worker re-checks every score by replaying its move log, with signed endless run tickets, IP-based caps and deletion. It is tested in-memory but has never run against a real database.
-  - **Hidden in release builds until the server exists** (demo boards are dev/test only).
-- **Endless reefs (ADR 0009):** reef N > 360 is generated from N in a Web Worker and checked by the solver before it's shown. It has a smooth curve, chapters of 20 with names, a depth meter, "Chapter N · Complete" moments, and a bitboard solver about 40× faster.
-- **Aesthetic pass:**
-  - Visual system: design tokens (CSS + canvas mirror, contrast-tested), the Fraunces/Nunito type system, a custom icon set, pebble buttons and sheets.
-  - Screens redesigned: results / NEW HIGH SCORE, journal with rarity frames, reefs map, first-run lesson, settings / credits.
-  - New store screenshots (gradient frames, a creature on every shot).
-- **Robustness:**
-  - Larger text scales type, not boxes, so sheets fit small phones.
-  - Lazy chunks retry after a failed load.
-  - The service worker is network-first for the app shell and versioned per build, and only runs on the web.
-  - iOS minimum is now 16.4 (ADR 0005), and the render loop survives a draw that throws.
-  - Initial JS is 55.9 KB gz (budget 64).
-- **Verified on real engines:** Chromium and WebKit e2e, the iOS Simulator, and the Android emulator. A new `scripts/android-probe.ts` drives the real app in the emulator's WebView over CDP.
+**Green:**
+- `make check`: 512 unit, property and server tests.
+- `make e2e`: 165 functional tests on Chromium and WebKit, then 8 perf budgets run alone and serially. Zero failures, with no budgets loosened.
+- Release build: initial JS 55 KB gz (budget 64). `make build` fails if debug hooks or demo boards leak into a release.
+
+**What's final:**
+- **Game:**
+  - Endless: every dealt tray can be placed.
+  - Daily: a shared seed, a streak, and a spoiler-free share card.
+  - Reefs: 360 hand-checked reefs, then reef N > 360 generated from N forever and solver-verified, with chapters, names and a depth meter.
+  - The one rule only: closed loops pop. No line clears.
+- **Creatures:** 47 species in a cohesive style.
+  - The independent art critic's final round: **39 A / 8 A−**, with 45/47 named correctly on a cold read at 54 px.
+  - Each species has its own size class and tile scale, a signature move and 8 expressions. Yellow species get a deeper gold golden variant; the gold legendary's golden is pearl.
+  - Caught creatures leap out of the lagoon and **splash back into the water beside the board** (your call). Only a brand-new species pulses the journal.
+- **Celebrations:** COMBO ×N (our streak), a one-word praise ladder, ring burst, peak moments with a gold sweep, shake and score roll, a chapter moment, and NEW BEST / NEW HIGH SCORE. Normal moves stay calm.
+- **Discovery:**
+  - Reveals scale with rarity: common pop → uncommon card → epic or legendary scene. Golden variants get a foil card.
+  - The first catch ever is a full card that introduces the journal.
+  - A reveal never interrupts a fast player.
+  - Share card with a footer.
+- **Leaderboards:**
+  - Name entry: 7 letters, A–Z only.
+  - Boards: Daily, This week and All-time, showing your rank and the next player to pass.
+  - A Cloudflare Worker re-checks every score by replaying its move log.
+  - **Release builds hide leaderboards until a server URL is set.** Demo boards exist only in dev and tests.
+- **Polish:** design tokens, Fraunces + Nunito (SIL OFL), a custom icon set, Day/Night themes, Larger text, reduced motion, ≥ 44 px targets and WCAG AA contrast (both tested), and audio muted in every automated run.
+- **Verified on:** Chromium and WebKit e2e, the iOS Simulator (release build) and the Android emulator (debug APK driven through its real WebView).
 
 **Before / after:**
-- Screens: `docs/media/before/` → `docs/media/after/` (`compare-*.jpg` side by side, `screen-*` Day/Night, `store-*`).
-- Creatures: `docs/media/after/creatures-compare-day.jpg` (all 47 before → after), `creatures-cast-*.jpg`, and per-species sheets in `docs/media/art/<id>.jpg`.
-- Moments: `docs/media/celebrate/*.jpg` (contact sheets).
-- Recordings: `docs/media/video/*.mp4` (COMBO lagoon, cascade, biggest moment, Spotless, uncommon and legendary discoveries, NEW HIGH SCORE, Daily → name → leaderboard).
-- Devices: `docs/media/after/android-emulator.jpg`, `ios-simulator.jpg`.
+- `docs/media/before/` → `docs/media/after/`:
+  - `final-vs-before-play-start.jpg`, `final-vs-before-results-record.jpg`, `final-vs-before-journal.jpg`;
+  - every screen, Day and Night (`screen-*`);
+  - creatures before → after for all 47 (`creatures-compare-day.jpg`, `-night.jpg`) and the whole cast (`creatures-cast-*.jpg`);
+  - store frames (`store-*`);
+  - devices (`ios-simulator.jpg`, `android-emulator.jpg`).
+- Clips: `docs/media/video/*.mp4` (COMBO lagoon, cascade, biggest moment, Spotless, discoveries, NEW HIGH SCORE, Daily → name → leaderboard).
+- Store PNGs at full size: `npx tsx scripts/store-shots.ts` → `artifacts/store/`. Native icons and splashes: `scripts/native-assets.ts`.
 
-**Tree:** everything is committed. `make check` passes (476 unit/property/server tests). On the last full e2e run, 119 of 125 browser tests passed on Chromium + WebKit. The 6 failures:
-1. **Waiting on you:** `tests/e2e/art.spec.ts` fails because the cockle and nautilus silhouettes overlap at 0.709 against a 0.70 limit (Chromium and WebKit). The fix is a two-constant change in `src/render/art/species/cockle.ts` (`OPEN = -48`, `S = 0.785`). An agent's edit to that file was blocked by the permission system, so it needs your OK before I apply it.
-2. **Perf under load:** 4 perf tests failed in the full run while another project kept the machine's load at 30–100. Run serially, all passed except "biggest celebration": its draw p95 was 8.3–12.3 ms against an 8 ms budget, versus 2.1–3.4 ms measured on a quieter machine. Re-run `npx playwright test tests/perf --workers=1` when the machine is idle.
+**Unmerged branches:** none. Everything is on `main`.
 
 ## What I need from you
-1. **OK to edit `cockle.ts`** (above). Then e2e is fully green.
-2. **Leaderboard backend:**
-   - Create a Cloudflare account (Workers Paid, $5/mo before launch) and follow `docs/server/DEPLOY.md`: D1 database, one secret, deploy, then build with `VITE_LB_URL=…`. About 20 minutes.
-   - Until then, release builds simply have no leaderboards.
-   - Before launch, add server-side name moderation (a maintained word list or moderation API, plus a report/ban path). The hand-written filter is a floor; see the ADR 0010 note.
-3. **Name and trademark check** for "Lagooner Beach"; a **bundle id** to replace `com.example.atoll`.
-4. **Accounts and signing:** Apple Developer (team id), Play Console, Android upload keystore (`android/keystore.properties`).
-5. **Privacy:** host `public/privacy.html` and add a contact email. When the leaderboard goes live, use the privacy labels written in `docs/store/LISTING.md`.
-6. **A real phone session:** I want to know how haptic patterns, celebration loudness, reveal timing and drag feel come across on a mid-range phone. Everything so far ran in headless browsers, the Simulator and the emulator.
-7. **CI:** push, then check that GitHub Actions passes. Pixel baselines are macOS-only; perf budgets are ×3 on CI.
-8. **Monetization:** go or no-go on ADR 0008's cosmetic Supporter Pack.
+1. **Name and trademark check** for "Lagooner Beach".
+2. **Bundle id:** replace `com.example.atoll` in `capacitor.config.ts` before the first store upload.
+3. **Accounts and signing:**
+   - Apple Developer (team id; signing in Xcode).
+   - Play Console.
+   - An Android upload keystore in `android/keystore.properties` (format in `android/app/build.gradle`).
+4. **Leaderboard backend (optional for launch):** a Cloudflare account on Workers Paid ($5/mo), then follow `docs/server/DEPLOY.md` (D1, one secret, deploy, build with `VITE_LB_URL=…`). Before boards go public, add server-side name moderation (ADR 0010 note) and update the store privacy forms (`docs/store/LISTING.md`). Without it, the game ships with no leaderboards and "Data Not Collected".
+5. **Privacy:** host `public/privacy.html` and add a contact email.
+6. **Share link:** replace the `SHARE_URL = 'lagooner.beach'` placeholder in `src/ui/share-card.ts` with your real store/landing link.
+7. **A real phone:** 10–20 minutes on a mid-range iPhone and Android. Check drag feel, haptics, sound levels (including the new splash plop), reveal pacing and Larger text.
+8. **Monetization:** go or no-go on ADR 0008's cosmetic Supporter Pack. It isn't built.
+
+## How to ship
+1. Set the bundle id, version and signing (above).
+2. `make check && make e2e`. Both must be green.
+3. Web build: `npm run build`. For leaderboards add `VITE_LB_URL=https://…`; without it they're hidden.
+4. iOS: `npx cap sync ios`, open `ios/App/App.xcworkspace`, Archive, upload.
+5. Android: `make android-release` (signed AAB), then upload to Play.
+6. Store listing copy and screenshots are in `docs/store/LISTING.md` and `artifacts/store/`; privacy is in `docs/store/PRIVACY.md`.
 
 ## What I'd do next
-- **Art round 4:** an independent critic pass on the round-3 redraws (the redrawing artists self-graded A−/A, but no critic has looked since), then fix any species still graded B. Kit backlog:
-  - per-species scale within a size class;
-  - colour cycles on more species;
-  - a mask metric that's fairer to round bodies.
-- **Real data:** tune `DEFAULT_RAMP`, catch odds and the endless reef curve once real play data exists. The tools are `make tune`, `scripts/catch-sim.ts` and `scripts/reef-curve.ts`.
-- **Accessibility:** a cell-cursor mode for screen-reader play; localization.
-- **Smaller gaps:**
-  - The share card's iOS user-activation timing (verify on a device).
-  - Golden variants of yellow species (critic note).
+- After launch, tune `DEFAULT_RAMP`, catch odds and the endless reef curve from real play (`make tune`, `scripts/catch-sim.ts`, `scripts/reef-curve.ts`).
+  - A search bot never runs out of moves, so expert Endless runs can be very long.
+  - Changing the dealer changes every daily and needs a `RULES_VERSION` bump.
+- Optional art: lift the eight A− species to A (notes in `docs/art/CRITIQUE-5.md`).
+- A cell-cursor mode so screen readers can play; localization.
 
 ## What works
 | Area | State | Evidence |
