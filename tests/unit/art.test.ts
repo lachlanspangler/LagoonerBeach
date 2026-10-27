@@ -34,9 +34,11 @@ import {
   fromOklch,
   GOLDEN_DEEP,
   goldenKind,
+  PEARL,
   oklch,
 } from '../../src/render/art/palette.ts';
 import { blinking, pose, sample, signatureProgress } from '../../src/render/art/motion.ts';
+import { colorsFor } from '../../src/render/art/render.ts';
 
 const arts = [...ART.values()];
 const STRICT = LINT_AS_ERRORS || process.env.ART_LINT_STRICT === '1';
@@ -150,6 +152,17 @@ describe('golden remap (CRITIQUE-3 #4)', () => {
     for (const hex of ['#F2D43B', '#F2B93B', '#D9C27A']) expect(goldenKind(hex), hex).toBe('deep');
     for (const hex of ['#3D9BE9', '#C9503A', '#E9DCC4']) expect(goldenKind(hex), hex).toBe('gold'); // cream: no hue
     expect(goldenKind('#E8B23E', 'rose')).toBe('rose');
+    // CRITIQUE-4: the gold legendary's golden is pearl/platinum with gold trim, jewels kept
+    expect(goldenKind('#E8B23E', 'rose', 'goldturtle')).toBe('pearl');
+    expect(PEARL.body).toBe('#F4F1EA');
+    expect(PEARL.belly).toBe('#E9C46A');
+    const gt = colorsFor(ART.get('goldturtle')!, true);
+    expect([gt.body, gt.belly, gt.accent, gt.pearl]).toEqual([
+      '#F4F1EA',
+      '#E9C46A',
+      ART.get('goldturtle')!.palette.accent,
+      true,
+    ]);
     expect(GOLDEN_DEEP.body).toBe('#E9A93A');
   });
 });

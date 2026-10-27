@@ -187,8 +187,11 @@ export interface SpeciesArt {
   readonly nocturnal?: boolean;
   /** Squash pivots at the bottom of the body box instead of its centre. */
   readonly ground?: boolean;
-  /** Golden variant palette: `rose` for the Golden Turtle (R33). */
-  readonly golden?: 'gold' | 'rose';
+  /**
+   * Golden variant palette (R33): `rose` (rose gold) or `pearl` (platinum + gold trim, own jewels
+   * kept). The kit can override by id (`GOLDEN_BY_ID` in palette.ts: the Golden Turtle wears pearl).
+   */
+  readonly golden?: 'gold' | 'rose' | 'pearl';
   /** Resting face in the journal when awake (default `idle`; e.g. the grouper's `drowsy` half-lid). */
   readonly restExpression?: Expression;
   /** Never shown `sleepy`, on either theme (the kraken). */
