@@ -20,7 +20,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Pixel 7'] } },
+    // functional e2e (everything except tests/perf)
+    { name: 'chromium', use: { ...devices['Pixel 7'] }, testIgnore: ['perf/**'] },
+    // frame budgets measure our own draw cost under a 4× CPU throttle: they only mean something on an
+    // otherwise idle machine, so they run after the functional suites, one test at a time
+    // (`make e2e` and CI run this project with --workers=1)
+    { name: 'perf', use: { ...devices['Pixel 7'] }, testMatch: ['perf/**/*.spec.ts'] },
     // Safari engine: gameplay flows only (perf numbers are Chromium-specific via CDP)
     {
       name: 'webkit',

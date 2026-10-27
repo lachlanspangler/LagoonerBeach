@@ -22,7 +22,8 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run build
       - run: npm run size
-      - run: npx playwright test
+      - run: npx playwright test --project=chromium --project=webkit
+      - run: npx playwright test --project=perf --workers=1
       - uses: actions/upload-artifact@v7
         if: always()
         with:

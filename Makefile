@@ -16,11 +16,12 @@ build:            ## typecheck + production build into dist/ (+ bundle budget)
 test:             ## unit + property + balance tests
 	npm test
 
-e2e: build        ## browser tests (gameplay, screenshots, perf) against the production build
-	npx playwright test
+e2e: build        ## browser tests (gameplay, screenshots), then the perf budgets alone and serially
+	npx playwright test --project=chromium --project=webkit
+	npx playwright test --project=perf --workers=1
 
 perf: build       ## only the frame-time budget test
-	npx playwright test tests/perf
+	npx playwright test --project=perf --workers=1
 
 check:            ## everything CI runs (minus e2e)
 	npm run check
