@@ -460,6 +460,7 @@ export class Fx {
         case 'dealt': {
           const base = now + flight + 140;
           e.tray.forEach((t, i) => (sc.tray[i] = { t, dealStart: base + i * MOTION.dealStagger, back: null }));
+          sc.hand = e.tray.flatMap((t) => (t ? [t.pieceId] : []));
           this.at(base, () => this.sfx.deal());
           break;
         }

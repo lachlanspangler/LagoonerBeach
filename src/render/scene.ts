@@ -361,9 +361,23 @@ export class Scene {
   }
 
   /** Top-left CSS px of a tray piece at rest in its slot. */
+  /** The hand as dealt (piece ids): its pieces share one tray cell size (`trayCell`). */
+  hand: readonly string[] = [];
+
+  /**
+   * Cell size of a piece in the tray: one size for the whole hand, the largest every piece of it
+   * fits at (a 5-long piece used to sit visibly smaller than its neighbours). Stable until the next
+   * deal, so placing the long piece doesn't make the others jump.
+   */
+  trayCell(p: Piece): number {
+    let c = trayCellFor(this.layout, p);
+    for (const id of this.hand) c = Math.min(c, trayCellFor(this.layout, pieceById(id)));
+    return c;
+  }
+
   trayPieceOrigin(slot: number, p: Piece): [number, number] {
     const s = this.layout.slots[slot]!;
-    const c = trayCellFor(this.layout, p);
+    const c = this.trayCell(p);
     return [s.cx - (p.w * c) / 2, s.cy - (p.h * c) / 2];
   }
 
@@ -766,7 +780,7 @@ export class Scene {
         x = lerp(slot.back.x, ox, e);
         y = lerp(slot.back.y, oy, e);
         if (bt >= 1) slot.back = null;
-        const cell = lerp(l.cell, trayCellFor(l, p), e);
+        const cell = lerp(l.cell, this.trayCell(p), e);
         this.drawPieceAt(p, slot.t.color, x, y, cell);
         return;
       }
@@ -784,7 +798,7 @@ export class Scene {
         this.g.stroke();
         y -= l.cell * 0.15;
       }
-      this.drawPieceAt(p, slot.t.color, x, y, trayCellFor(l, p), a * (dimmed ? 0.45 : 1));
+      this.drawPieceAt(p, slot.t.color, x, y, this.trayCell(p), a * (dimmed ? 0.45 : 1));
     });
   }
 
@@ -795,7 +809,7 @@ export class Scene {
     if (!slot?.t) return;
     const l = this.layout;
     const p = pieceById(slot.t.pieceId);
-    const cell = lerp(trayCellFor(l, p), l.cell, easeOutCubic(d.grow));
+    const cell = lerp(this.trayCell(p), l.cell, easeOutCubic(d.grow));
     // magnet: once it has a legal spot, the held piece leans ~20% toward it so snapping feels sticky
     const sn = this.preview && d.grow >= 1 ? this.preview : null;
     const dx0 = sn ? lerp(d.x, l.board.x + sn.ax * l.cell, 0.2) : d.x;
@@ -835,7 +849,7 @@ export class Scene {
     const [ox, oy] = this.trayPieceOrigin(d.slot, p);
     const tx = l.board.x + d.ax * l.cell;
     const ty = l.board.y + d.ay * l.cell;
-    const cell = lerp(trayCellFor(l, p), l.cell, travel);
+    const cell = lerp(this.trayCell(p), l.cell, travel);
     const x = lerp(ox, tx, travel);
     const y = lerp(oy, ty, travel);
     const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
