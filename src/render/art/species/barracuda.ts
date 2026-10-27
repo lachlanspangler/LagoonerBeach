@@ -1,39 +1,42 @@
 /**
  * Barracuda — the long one (fish class, profile view, level).
- * Silhouette (R10): a true needle (≈ 3.5 : 1) with a lower jaw that juts 6 units past the snout, two
- * white rounded teeth on it, and a crisp forked tail taller than the body.
+ * Silhouette (R10): a true needle (≈ 4.5 : 1) whose snout tapers over the front 18 %, a lower jaw
+ * jutting 6 units past it, two white upper teeth over the lip, and a crisp forked tail. Steel silver
+ * with a slate back whose flat edge is the aloof brow, and four dark slanted bars.
  * Personality: sleek, toothy, aloof. Signature: a fast 10-unit lunge, then it acts as if nothing
  * happened (nose up, smug `proud` face).
  */
 import { blob, capsule, defineArt, ellipse, join, tube } from '../kit.ts';
 
-// needle body: a pointed upper snout at +36.5 (never a round dolphin melon), the lower jaw juts
-// on to +42, tail root at −30
+// needle body (depth ±7.2): the upper snout tapers over the front 18 % to a point at +35; the
+// lower jaw juts 6 units on past it to +41; tail root at −30
 const body = blob([
-  [36.5, 1],
-  [29, -5.5],
-  [12, -8.5],
-  [-6, -8.5],
-  [-22, -6],
-  [-30, -3],
-  [-30, 3],
-  [-22, 6],
-  [-6, 8.5],
-  [12, 8.5],
-  [29, 7.5],
-  [35, 4],
+  [35, 0.5],
+  [30, -3],
+  [22, -6],
+  [10, -7.2],
+  [-6, -7.2],
+  [-22, -5],
+  [-30, -2.6],
+  [-30, 2.6],
+  [-22, 5],
+  [-6, 7.2],
+  [10, 7.2],
+  [22, 6],
+  [30, 3.5],
 ]);
-// the jutting lower jaw (R10, exaggerated): a plump rounded wedge under and past the snout
+// the jutting lower jaw (underbite +6 u): a plump wedge under and past the snout, tip lifted
 const jaw = blob([
-  [24, 3],
-  [34, 2],
-  [41.5, 3.2],
-  [42, 5.6],
-  [37, 8.4],
-  [24, 8.5],
+  [19, 3.5],
+  [30, 3],
+  [38, 1.6],
+  [41.5, 2.4],
+  [41, 5],
+  [36, 7],
+  [21, 7.2],
 ]);
-// two white rounded teeth standing on the jaw tip
-const teeth = join(capsule(37.6, 3, 1.8, 37.4, -2.4, 1.4), capsule(40.8, 3.6, 1.6, 40.6, -1, 1.3));
+// two white upper teeth hanging from the snout over the lower lip (5 u showing, rounded tips)
+const teeth = join(capsule(26.5, 1.5, 1.9, 26.5, 9.3, 1.5), capsule(31.2, 0.5, 1.8, 31.2, 7.6, 1.4));
 // crisp fork, taller than the body
 const tail = blob(
   [
@@ -53,30 +56,46 @@ const tail = blob(
 );
 const dorsal = blob(
   [
-    [2, -9],
-    [-4, -14.5],
-    [-10, -13.5],
-    [-12, -8],
+    [2, -7],
+    [-4, -13.5],
+    [-10, -12.5],
+    [-12, -6.5],
   ],
   0.9,
 );
-const pectoral = ellipse(4, 5, 5, 2.4, 18);
-// six filled chevron bands (R18 bands, ≥ 6 units), mid-dark slate, behind the face
-const chevron = (x: number) =>
+const pectoral = ellipse(3, 4.5, 5, 2.4, 18);
+// the dark back: its lower edge runs flat just over the eye (the aloof, level brow) and on back
+const back = blob(
+  [
+    [27, -4.6],
+    [14, -5.9],
+    [0, -4.4],
+    [-16, -3.2],
+    [-34, -1.8],
+    [-34, -16],
+    [27, -16],
+  ],
+  0.6,
+);
+// four dark bars slanting back from the back line (R18 bands, ≥ 4 u), clear of the face
+const bar = (x: number) =>
   tube([
-    [x - 3, -11, 2.8],
-    [x + 1.5, -3, 3],
-    [x - 1, 4, 2.4],
+    [x + 2, -5, 2.4],
+    [x - 0.5, 0, 2.3],
+    [x - 2.5, 4.5, 1.9],
   ]);
-const chevrons = join(chevron(-29), chevron(-21), chevron(-13), chevron(-5), chevron(3), chevron(10.5));
-
+const bars = join(bar(-25), bar(-17), bar(-9), bar(-1));
 export default defineArt({
   id: 'barracuda',
   klass: 'fish',
   size: 'L',
-  feature: 'a true needle with a jaw that juts past the snout, two white teeth, and a forked tail',
+  feature: 'a true needle with an underbite, two white upper teeth, a slate back and four bars',
   personality: ['sleek', 'toothy', 'aloof'],
-  palette: { body: '#7AA3D4', accent: '#5F7385' },
+  palette: { body: '#9AA5AE', accent: '#3F5568' },
+  deviations: {
+    R16: 'steel silver (CRITIQUE-3): chroma 0.02 is the identity, darkened to L 0.72 to sit ΔE ≥ 6 off the minnow',
+    R16S: 'silver identity; the slate back, dark bars and ink outline keep it off the sand and mint',
+  },
   groups: [
     {
       id: 'tail',
@@ -90,8 +109,8 @@ export default defineArt({
       id: 'jaw',
       pivot: [22, 5],
       parts: [
-        { d: teeth, role: 'white' },
         { d: jaw, role: 'body' },
+        { d: teeth, role: 'white' },
       ],
     },
     {
@@ -99,18 +118,19 @@ export default defineArt({
       parts: [
         { d: dorsal, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(4, 10, 34, 4.5), role: 'belly', kind: 'pattern' },
-        { d: chevrons, role: 'accent', kind: 'pattern', alpha: 0.85 },
+        { d: ellipse(2, 8.5, 34, 3.6), role: 'belly', kind: 'pattern' },
+        { d: back, role: 'accent', kind: 'pattern' },
+        { d: bars, role: 'accent', kind: 'pattern', alpha: 0.9 },
       ],
     },
     { id: 'finA', pivot: [0, 4], parts: [{ d: pectoral, role: 'body' }] },
   ],
-  shine: ellipse(22, -5.5, 8, 2, -6),
+  shine: ellipse(-14, -4.6, 8, 1.6, -4),
   face: {
-    eyes: [[18, -1.5]],
+    eyes: [[15, -1.5]],
     eye: 8.2,
-    zone: [4, -24, 38, 39],
-    mouth: { at: [32, 3], w: 6, shape: 'flat' },
+    zone: [1, -24, 38, 39],
+    mouth: { at: [22, 4.2], w: 5, shape: 'flat' },
   },
   idle: {
     ambient: [
