@@ -86,7 +86,10 @@ export default defineArt({
   size: 'M',
   feature: 'a huge fan of plump, round-tipped spines and feathery pectoral rays',
   personality: ['fabulous', 'vain', 'dramatic'],
-  palette: { body: '#C9503A', accent: '#FFF1E6' },
+  palette: { body: '#A0363C', accent: '#FFF1E6' },
+  deviations: {
+    R16: 'dark maroon identity L 0.49 (CRITIQUE-3 maroon-red, off the box crab hex; the dark-body rim carries Night)',
+  },
   groups: [
     {
       id: 'tail',
