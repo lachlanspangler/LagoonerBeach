@@ -17,6 +17,7 @@ import type * as Sheets from './sheets.ts';
 import type * as Results from './results.ts';
 import type { GameOverOpts, PuzzleResultOpts } from './results.ts';
 import { icon, type IconName } from './icons.ts';
+import { pageFace } from './pageFace.ts';
 import { retryable } from '../platform/lazy.ts';
 import { showRetry } from './retry.ts';
 
@@ -619,9 +620,6 @@ function dragToDismiss(sheet: HTMLElement, dismiss: () => void): void {
  * species' size class (ADR 0011, R27); the species page (`animate`) runs the idle loop at ≤ 30 fps
  * while it's on screen (blinks only under reduced motion). Redraws once the art chunk arrives.
  */
-/** Species page wake-up (CRITIQUE-4): the dozing face holds this long, then one blink, then awake. */
-const WAKE_OPEN_MS = 650;
-const WAKE_BLINK_MS = 140;
 export type ThumbRedraw = (t?: number, sig?: number, expression?: NonNullable<DrawOpts['expression']>) => void;
 
 export function creatureThumb(
@@ -655,16 +653,15 @@ export function creatureThumb(
   g.scale(dpr, dpr);
   const nite = night();
   const shyFace = o.shy && !silhouette ? 'shy' : undefined;
-  // CRITIQUE-4: a new catch opens its eyes on its first page view (the clock starts at first draw)
-  let wakeT0 = -1;
-  const face = (t: number | undefined, still: boolean): Pick<DrawOpts, 'expression' | 'awake'> => {
-    if (!o.wake || still || !o.animate) return { expression: shyFace, awake: o.wake || (o.awake?.() ?? false) };
+  // a species page opens eyes-open (pageFace); the clock starts at its first animated draw
+  let t0 = -1;
+  const face = (t: number | undefined, still: boolean) => {
     const now = t === undefined ? 0 : t * 1000;
-    if (wakeT0 < 0 && t !== undefined) wakeT0 = now;
-    const dt = wakeT0 < 0 ? 0 : now - wakeT0;
-    if (dt < WAKE_OPEN_MS) return { expression: undefined, awake: false };
-    if (dt < WAKE_OPEN_MS + WAKE_BLINK_MS) return { expression: 'blink', awake: true };
-    return { expression: shyFace, awake: true };
+    if (t0 < 0 && t !== undefined) t0 = now;
+    return pageFace(
+      { animate: o.animate, wake: o.wake, shy: !!shyFace, awake: o.awake?.() ?? false, still },
+      t0 < 0 ? null : now - t0,
+    );
   };
   const draw = (t?: number) => {
     g.clearRect(0, 0, W, W);

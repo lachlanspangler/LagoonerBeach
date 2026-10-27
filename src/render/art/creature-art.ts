@@ -34,6 +34,8 @@ export interface DrawOpts {
   readonly flip?: boolean;
   readonly action?: { readonly kind: 'catch' | 'release'; readonly u: number };
   readonly signatureAt?: number;
+  /** Animated, but no scheduled signature (a detail page's opening moment stays eyes-open idle). */
+  readonly noSignature?: boolean;
   /**
    * Framed views: show the awake resting face even when the species would doze on this theme
    * (CRITIQUE-4: the Night journal caps dozers per habitat page; a new catch wakes on its page).
@@ -152,6 +154,7 @@ function drawArt(
     still: o.still,
     action: o.action,
     signatureAt: o.signatureAt,
+    noSignature: o.noSignature,
     hide,
     zzz: o.fit === 'detail',
   });
