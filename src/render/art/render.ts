@@ -19,7 +19,7 @@ import {
   type Role,
   type SpeciesArt,
 } from './kit.ts';
-import { deriveBelly, deriveInk, GOLDEN, oklch, rimAlpha, ROSE_GOLD, SHARED } from './palette.ts';
+import { deriveBelly, deriveInk, GOLDEN_PALETTES, goldenKind, oklch, rimAlpha, SHARED } from './palette.ts';
 import { pose, seedOf, type Pose, type PoseOpts, type Xf } from './motion.ts';
 import { drawFace } from './face.ts';
 
@@ -130,6 +130,8 @@ export interface Colors {
   readonly light: string;
   /** OKLCH lightness of the body (face rig). */
   readonly bodyL: number;
+  /** Golden on a yellow base: the deep metallic gold, with a stronger sheen and a body glint. */
+  readonly metal?: boolean;
 }
 const colorMemo = new Map<string, Colors>();
 export function colorsFor(art: SpeciesArt, golden = false): Colors {
@@ -139,8 +141,10 @@ export function colorsFor(art: SpeciesArt, golden = false): Colors {
   const pal = art.palette;
   let c: Colors;
   if (golden) {
-    const G = art.golden === 'rose' ? ROSE_GOLD : GOLDEN;
+    const kind = goldenKind(pal.body, art.golden);
+    const G = GOLDEN_PALETTES[kind];
     c = {
+      metal: kind === 'deep',
       body: G.body,
       belly: G.belly,
       accent: G.accent,
@@ -317,8 +321,15 @@ function buildLayer(p: Prepared, pg: PGroup, s: LayerSpec, mode: Mode, step: num
       if (s.golden) {
         const bb = p.box;
         const gr = g.createLinearGradient(bb.x, bb.y, bb.x + bb.w * 0.6, bb.y + bb.h * 0.7);
-        gr.addColorStop(0, 'rgba(255,255,255,0.75)');
-        gr.addColorStop(1, 'rgba(255,248,214,0.1)');
+        if (col.metal) {
+          // metallic: a hard bright band, then the warm falloff (reads as polished, not paint)
+          gr.addColorStop(0, 'rgba(255,255,255,0.9)');
+          gr.addColorStop(0.4, 'rgba(255,246,206,0.5)');
+          gr.addColorStop(1, 'rgba(255,226,150,0.05)');
+        } else {
+          gr.addColorStop(0, 'rgba(255,255,255,0.75)');
+          gr.addColorStop(1, 'rgba(255,248,214,0.1)');
+        }
         g.fillStyle = gr;
       } else {
         g.fillStyle = SHARED.white;
@@ -489,6 +500,12 @@ function goldenSparkles(g: G, p: Prepared, t: number | undefined): void {
   const cx = b.x + b.w / 2,
     cy = b.y + b.h / 2;
   const R = p.long * 0.56;
+  // deep (yellow-base) gold: a white glint sits on the body's upper shoulder, tiles included
+  if (colorsFor(p.art, true).metal) {
+    g.fillStyle = '#FFFFFF';
+    const tw = t === undefined ? 1 : 0.75 + 0.25 * Math.sin(t * 4);
+    sparkle(g, b.x + b.w * 0.34, b.y + b.h * 0.3, p.long * 0.075 * tw);
+  }
   g.fillStyle = '#FFF6D0';
   if (t === undefined) {
     sparkle(g, cx + R * 0.78, cy - R * 0.62, p.long * 0.07);

@@ -86,6 +86,20 @@ export const SHARED = {
 /** R33 golden remap. `rose` is the Golden Turtle's own variant. */
 export const GOLDEN = { body: '#F2C14E', accent: '#FFF1C2', belly: '#FFE08A', ink: '#8A5A12' } as const;
 export const ROSE_GOLD = { body: '#F2A65A', accent: '#FFE3C2', belly: '#FFD0A0', ink: '#8A4A22' } as const;
+/**
+ * CRITIQUE-3 #4: a yellow species turned golden looked like itself. Bases within 25° of the golden
+ * hue (and with real chroma, ≥ 0.05) get a more orange, metallic gold plus a body glint instead.
+ */
+export const GOLDEN_DEEP = { body: '#E9A93A', accent: '#FFF1C2', belly: '#F8CF7A', ink: '#7A4810' } as const;
+export const GOLDEN_YELLOW = { hue: 25, minC: 0.05 } as const;
+export type GoldenKind = 'gold' | 'deep' | 'rose';
+/** Which golden a species wears: its own `rose`, the deep metallic gold for yellow bases, else gold. */
+export function goldenKind(body: string, variant?: 'gold' | 'rose'): GoldenKind {
+  if (variant === 'rose') return 'rose';
+  const [, C, H] = oklch(body);
+  return C >= GOLDEN_YELLOW.minC && hueDelta(H, oklch(GOLDEN.body)[2]) <= GOLDEN_YELLOW.hue ? 'deep' : 'gold';
+}
+export const GOLDEN_PALETTES = { gold: GOLDEN, deep: GOLDEN_DEEP, rose: ROSE_GOLD } as const;
 
 /** Alpha-blend `top` (at alpha) over `base`, in sRGB (what a canvas does). */
 export function blend(base: string, top: string, alpha: number): string {
