@@ -45,9 +45,12 @@ describe('CRITIQUE-1 kit rules', () => {
     for (const night of [false, true]) {
       expect(['idle', 'proud', 'shy']).toContain(restingFace(ART.get('kraken')!, sp('kraken'), night, 'tile'));
     }
-    // a closed-eyed rest face (the seadragon's proud) is the detail view's; the tile is eyes-open
-    expect(restingFace(ART.get('seadragon')!, sp('seadragon'), false, 'tile')).toBe('idle');
-    expect(restingFace(ART.get('seadragon')!, sp('seadragon'), false, 'detail')).toBe('proud');
+    // a closed-eyed rest face (e.g. proud) is the detail view's; the tile is eyes-open
+    const proudRest = { ...fish, restExpression: 'proud' as const };
+    expect(restingFace(proudRest, sp('clownfish'), false, 'tile')).toBe('idle');
+    expect(restingFace(proudRest, sp('clownfish'), false, 'detail')).toBe('proud');
+    // CRITIQUE-3: the seadragon now rests eyes open in its detail view too (proud is a signature beat)
+    expect(restingFace(ART.get('seadragon')!, sp('seadragon'), false, 'detail')).toBe('idle');
     // no journal tile rests eyes-closed on either theme
     for (const night of [false, true])
       for (const [id, art] of ART) {
