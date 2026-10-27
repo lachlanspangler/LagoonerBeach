@@ -1044,17 +1044,32 @@ const markBoardActive = (): void => void (boardActiveAt = performance.now());
 for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'] as const)
   canvas.addEventListener(t, markBoardActive, { capture: true, passive: true });
 // A press this soon after a card is first painted (REVEAL_GRACE_MS, timed from the event, not from
-// when it is dispatched) was aimed at the board: it never skips or closes the card.
+// when it is dispatched) was aimed at the board: it never skips or closes the card. Whatever it hits
+// (with reduced motion the card is settled at once and its backdrop lets presses through to the
+// board, and to the outside-closes handler), the whole press is swallowed, down → up → click, even
+// if it lifts after the grace (it must not land on Continue either).
+let graceHeld: number | null = null; // pointerId of a press being swallowed
+let graceClick = false; // ...and its click is still to come
 const revealGrace = (e: Event): void => {
-  if (!reveal.inGrace(e.timeStamp)) return;
-  const t = e.target;
-  if (!(t instanceof Element) || !t.closest('.reveal')) return;
+  if (e.type === 'pointerdown') {
+    graceClick = false;
+    if (!reveal.inGrace(e.timeStamp)) return;
+    graceHeld = (e as PointerEvent).pointerId;
+    graceClick = true;
+  } else if (e.type === 'pointerup' || e.type === 'pointercancel') {
+    if (graceHeld === null || (e as PointerEvent).pointerId !== graceHeld) return;
+    graceHeld = null;
+  } else {
+    // click
+    const swallow = graceClick || reveal.inGrace(e.timeStamp);
+    graceClick = false;
+    if (!swallow) return;
+  }
   e.stopImmediatePropagation();
   e.preventDefault();
 };
-// window capture, registered before the reveal's own listeners, so it runs first
-addEventListener('pointerdown', revealGrace, true);
-addEventListener('click', revealGrace, true);
+// window capture, registered before the reveal's own listeners (and the board's), so it runs first
+for (const t of ['pointerdown', 'pointerup', 'pointercancel', 'click'] as const) addEventListener(t, revealGrace, true);
 
 const reveal = new LazyReveal(document.getElementById('ui')!, {
   sfx,

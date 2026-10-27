@@ -231,6 +231,56 @@ test('the reveal grace runs from the first paint: a slow open never eats it', as
   await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
 });
 
+test('reduced motion: a press in the reveal grace is swallowed whatever it hits, and so is its click', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await boot(page, 'seed=42');
+  // a press on the board just as the (at once settled) card paints: it must not close the card
+  const openAndPress = (target: 'board' | 'continue') =>
+    page.evaluate(
+      (target) =>
+        new Promise<void>((done) => {
+          const root = document.getElementById('ui')!;
+          const mo = new MutationObserver(() => {
+            const el = root.querySelector('.reveal');
+            if (!el) return;
+            mo.disconnect();
+            requestAnimationFrame(() =>
+              setTimeout(() => {
+                const t = target === 'board' ? document.querySelector('canvas')! : el.querySelector('.btn.primary')!;
+                const r = t.getBoundingClientRect();
+                const at = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
+                t.dispatchEvent(new PointerEvent('pointerdown', { ...at, pointerId: 7 }));
+                // it lifts after the grace: still the same press
+                setTimeout(() => {
+                  t.dispatchEvent(new PointerEvent('pointerup', { ...at, pointerId: 7 }));
+                  t.dispatchEvent(new MouseEvent('click', at));
+                  done();
+                }, 350);
+              }, 0),
+            );
+          });
+          mo.observe(root, { childList: true, subtree: true });
+          (window as any).__atoll.revealSpecies('kraken');
+        }),
+      target,
+    );
+  await openAndPress('board');
+  expect(await page.evaluate(() => (window as any).__atoll.revealState())).toMatchObject({
+    id: 'kraken',
+    settled: true,
+  });
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  await page.evaluate(() => (window as any).__atoll.revealSkip());
+  await expect(page.locator('.reveal')).toHaveCount(0);
+  await openAndPress('continue');
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  // a fresh press after the grace closes it as before
+  await page.locator('.reveal .btn.primary').click();
+  await expect(page.locator('.reveal')).toHaveCount(0);
+});
+
 test('reveal a11y: the rest is inert, Tab stays in the dialog, focus returns; read once', async ({ page }) => {
   await boot(page, 'seed=42');
   const menu = page.locator('#menu-btn');
