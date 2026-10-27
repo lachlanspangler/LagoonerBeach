@@ -108,8 +108,8 @@ export default defineArt({
   shine: ellipse(20, -15, 9, 3.6, -20),
   face: {
     eyes: [[14, -5]],
-    eye: 11,
-    zone: [-2, -33, 42, 50],
+    eye: 12.6, // CRITIQUE-4: +15 % (was 11)
+    zone: [-2, -35, 42, 53],
     // grumpy-sweet: the pout is the lips themselves; a short seam between them
     mouth: { at: [39.5, 7.6], w: 5, shape: 'flat' },
   },
