@@ -34,3 +34,18 @@ interface and can be swapped.
 - Mobile realities handled explicitly: `pointercancel`, visibility changes, audio unlock on first
   gesture, safe-area insets, persisting the game on every move.
 - `npm run build` produces a static `dist/` deployable anywhere; `cap sync` takes it to native.
+
+## 2026-10-26 — initial bundle back under budget (lazy chunks, no budget raise)
+After the UX/robustness/leaderboard merges `npm run size` failed: initial JS 67.3 KB gz (budget 64),
+CSS 6.1 KB gz (budget 6). Code the first frame of Endless play doesn't need now loads lazily, each
+chunk prefetched at idle and failure-safe (`retryable`: a rejected import is never cached; the
+results card offers the retry chip): Reefs mode (`app/reefMode.ts`: reef source + endless generator
+and its sync fallback, puzzle rules, hint solver, chapter names; loaded with the pack, 2.9 + 4.4 KB
+shared with sheets), the results and reef-result cards (`ui/results.ts` + `results.css`, 3.5 KB JS +
+1.4 KB CSS), the generative music (`audio/music.ts` behind `LazyMusic`, started on the first
+gesture, 1.5 KB), and the leaderboard name filter (main no longer imports `meta/boards.ts`). Journal
+tiles/pips/inline stats moved to `ui/tiles.css` (1.1 KB, shared by results, sheets and reveal);
+the reef-error headline stays eager (it's what shows when a chunk can't load). Now: **initial JS
+55.9 KB gz, CSS 4.6 KB gz**. First-frame screenshots (`scripts/screens.ts`) before/after differ only
+within run-to-run noise. Still eager and the next candidates if we grow again: legacy creature art
+(`render/creatures.ts`, ~3.4 KB), the full icon set (~2.5 KB), `platform/runlog.ts` (~1 KB).
