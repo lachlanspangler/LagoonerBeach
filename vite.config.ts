@@ -16,7 +16,9 @@ export default defineConfig({
   test: {
     include: ['tests/unit/**/*.test.ts', 'server/test/**/*.test.ts'],
     environment: 'node',
-    testTimeout: 30_000,
+    // a hang guard, not a perf budget: the pack / balance / endless sims take ~6 s alone and several
+    // times that when the whole suite shares a loaded machine
+    testTimeout: 120_000,
     coverage: {
       include: ['src/core/**', 'src/sim/**', 'src/meta/**', 'src/render/color.ts'],
       reporter: ['text-summary', 'html'],
