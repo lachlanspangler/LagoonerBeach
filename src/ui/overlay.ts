@@ -8,17 +8,17 @@
  */
 import type { Profile, ThemePref } from '../platform/storage.ts';
 import { loadSeen, saveSeen } from '../platform/storage.ts';
-import { SPECIES, SPECIES_BY_ID, type Species } from '../meta/creatures.ts';
+import { SPECIES, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
 import { drawCreature, hasNewArt, whenArtReady, type DrawOpts } from '../render/creatures.ts';
 import { fmt } from '../render/theme.ts';
 import type { ReefListModel } from './reefList.ts';
 import type * as Sheets from './sheets.ts';
-import { resultsHero } from './results.ts';
+import type * as Results from './results.ts';
+import type { GameOverOpts, PuzzleResultOpts } from './results.ts';
 import { icon, type IconName } from './icons.ts';
 import { retryable } from '../platform/lazy.ts';
 import { showRetry } from './retry.ts';
-import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
@@ -60,6 +60,8 @@ type Mode = 'classic' | 'daily' | 'puzzle';
 
 /** The sheets chunk; a failed fetch isn't cached (the next tap retries). */
 const loadSheets = retryable(() => import('./sheets.ts'));
+/** The end-of-game cards chunk (results, reef cleared); same retry rule. */
+const loadResults = retryable(() => import('./results.ts'));
 
 /** The Ui surface the lazy sheets module uses. */
 export interface SheetKit {
@@ -72,6 +74,7 @@ export interface SheetKit {
   ): { card: HTMLElement; head: HTMLElement; body: HTMLElement; title: HTMLElement };
   seenFor(j: Journal): Set<string>;
   markUnseen(j: Journal): void;
+  announce(text: string): void;
 }
 
 let lastInput: 'key' | 'pointer' = 'pointer';
@@ -452,6 +455,7 @@ export class Ui {
       sheet: (title, o) => this.sheet(title, o),
       seenFor: (j) => this.seenFor(j),
       markUnseen: (j) => this.markUnseen(j),
+      announce: (t) => this.announce(t),
     };
   }
 
@@ -467,132 +471,27 @@ export class Ui {
     this.announce(`Reef ${index + 1} couldn't be charted. Try again.`);
   }
 
-  showPuzzleResult(o: {
-    solved: boolean;
-    index: number;
-    total: number;
-    cleared: number;
-    newIds?: string[];
-    /** Replaces "N of M reefs cleared" (endless reefs: chapter progress). */
-    progress?: string;
-    /** Chapter segments (20; true = cleared). */
-    segs?: readonly boolean[];
-    /** This clear completed a chapter: "Chapter 2 complete · Ebbtide Bight". */
-    chapterDone?: { chapter: number; name: string };
-    /** A small reward line: first clear (shell sticker), no hints (star), a new depth record. */
-    reward?: { first: boolean; pure: boolean; depth?: number };
-  }): void {
-    const card = document.createElement('div');
-    card.className = 'card stagger';
-    const segs = o.segs
-      ? `<div class="segs" aria-hidden="true">${o.segs.map((s) => `<i${s ? ' class="on"' : ''}></i>`).join('')}</div>`
-      : '';
-    const rw = o.reward;
-    const bits: string[] = [];
-    if (rw?.pure) bits.push(`${icon('star', { filled: true, cls: 'rw-star' })}No hints`);
-    else if (rw?.first) bits.push(`${icon('shell', { filled: true, cls: 'rw-shell' })}Shell sticker`);
-    if (rw?.depth) bits.push(`New depth <b class="num">${rw.depth} m</b>`);
-    const reward = bits.length
-      ? `<div class="reef-reward" data-testid="reef-reward">${bits.join('<i>·</i>')}</div>`
-      : '';
-    const chapterLine = o.chapterDone
-      ? `<div class="chapter-done" data-testid="chapter-done">Chapter ${o.chapterDone.chapter} complete · ${o.chapterDone.name}</div>`
-      : '';
-    card.innerHTML = o.solved
-      ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2>${reward}<div class="chapter-progress">${chapterLine || `<div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`}${segs}</div>`
-      : `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word" data-testid="puzzle-result">So close</h2><p class="callout">Every piece must be placed and every pebble popped.</p>`;
-    if (o.newIds?.length) card.append(journalStrip(o.newIds, () => this.h.onJournal()));
-    if (o.solved) {
-      if (o.index + 1 < o.total)
-        card.append(
-          this.button('next-reef', 'btn primary', `Next reef${icon('chevronRight')}`, 'Next reef', () =>
-            this.h.onPuzzleNext(),
-          ),
-        );
-      card.append(this.button('', 'btn ghost', 'Endless', 'Endless mode', () => this.h.onClassic()));
-    } else {
-      card.append(
-        this.button('retry-reef', 'btn primary', `${icon('restart')}Try again`, 'Try again', () =>
-          this.h.onPuzzleRetry(),
-        ),
-      );
-      card.append(this.button('', 'btn ghost', 'Skip', 'Skip to next reef', () => this.h.onPuzzleNext()));
-    }
-    this.show(card, false, 'reef-result');
-    this.announce(o.solved ? `Reef ${o.index + 1} cleared` : 'Not cleared. Try again.');
+  // ─────────────────────────────────────────────────────────────────────────── results (lazy)
+  /** Prefetch the end-of-game cards chunk (results.ts + its CSS) at idle. */
+  prefetchResults(): void {
+    void loadResults().catch(() => undefined);
   }
-
-  // ─────────────────────────────────────────────────────────────────────────── results
-  showGameOver(o: {
-    score: number;
-    best: number;
-    newBest: boolean;
-    moves: number;
-    lagoon: number;
-    mode: Mode;
-    dailyStreak: number;
-    unlocked: string[];
-    shape?: { cells: readonly number[]; ring: readonly number[] } | null;
-    caught?: { count: number; newIds: string[] };
-    /** Leaderboard hook (Daily/Classic): a button that opens name entry → board; `mount` lets the
-     *  leaderboard module update its label (e.g. "#37 this week") when a result arrives. */
-    leaderboard?: { label: string; open(): void; mount?(b: HTMLButtonElement): void };
-    /** Best before this game (for "was 1200" on a record). */
-    prevBest?: number;
-    reducedMotion?: boolean;
-  }): HTMLElement {
-    const card = document.createElement('div');
-    card.className = 'card results stagger';
-    const hero = resultsHero({
-      score: o.score,
-      best: o.best,
-      prevBest: o.prevBest ?? 0,
-      newBest: o.newBest,
-      reducedMotion: o.reducedMotion ?? false,
-      nearMiss: nearMiss(o.score, o.best),
-      onRecord: () => this.h.onRecord?.(),
-      onSettled: () => this.h.onResultsSettled?.({ score: o.score, newBest: o.newBest, mode: o.mode }, card),
-    });
-    const stats = [
-      [o.moves, 'Moves'],
-      [o.lagoon, 'Top lagoon'],
-      [o.caught?.count ?? 0, 'Caught'],
-      [o.dailyStreak, 'Streak'],
-    ].filter(([v]) => (v as number) > 0);
-    card.innerHTML = `<div class="overline">${o.mode === 'daily' ? 'Daily · complete' : 'Endless'}</div>
-      <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
-      <div class="hero-slot"></div>
-      ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
-      ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
-    card.querySelector('.hero-slot')!.replaceWith(hero.el);
-    if (o.caught?.newIds.length) card.append(journalStrip(o.caught.newIds, () => this.h.onJournal()));
-    // on a record, posting it is the point: the leaderboard button leads as the one primary
-    const lbFirst = !!o.leaderboard && o.newBest;
-    const next =
-      o.mode === 'daily'
-        ? this.button('', `btn ${lbFirst ? 'small' : 'primary'}`, `${icon('share')}Share`, 'Share result', () =>
-            this.h.onShare(),
-          )
-        : this.button('play-again', `btn ${lbFirst ? 'small' : 'primary'}`, 'Play again', 'Play again', () =>
-            this.h.onNewGame(),
-          );
-    if (!lbFirst) card.append(next);
-    if (o.leaderboard) {
-      const lb = o.leaderboard;
-      const b = this.button('lb-open', `btn ${lbFirst ? 'primary' : 'small'}`, lb.label, lb.label, () => lb.open());
-      card.append(b);
-      lb.mount?.(b);
-    }
-    if (lbFirst) card.append(next);
-    card.append(
-      o.mode === 'daily'
-        ? this.button('', 'btn ghost', `${icon('endless')}Play endless`, 'Play endless', () => this.h.onClassic())
-        : this.button('', 'btn ghost', `${icon('daily')}Daily challenge`, 'Daily challenge', () => this.h.onDaily()),
+  /**
+   * Build a card from the results chunk. Resolves null if `still()` turned false while it loaded
+   * (the player moved on). A failed load offers the retry chip; tapping it tries again.
+   */
+  private withResults<T>(build: (m: typeof Results) => T, still: () => boolean): Promise<T | null> {
+    return loadResults().then(
+      (m) => (still() ? build(m) : null),
+      () => new Promise<T | null>((done) => showRetry(() => void this.withResults(build, still).then(done))),
     );
-    this.show(card, false, 'results');
-    hero.start();
-    this.announce(`Game over. Score ${o.score}.${o.newBest ? ' New high score!' : ''}`);
-    return card;
+  }
+  showPuzzleResult(o: PuzzleResultOpts, still: () => boolean = () => true): void {
+    void this.withResults((m) => m.showPuzzleResult(this.kit(), o), still);
+  }
+  /** The game-over card; resolves with it once shown. */
+  showGameOver(o: GameOverOpts, still: () => boolean = () => true): Promise<HTMLElement | null> {
+    return this.withResults((m) => m.showGameOver(this.kit(), o), still);
   }
 }
 
@@ -638,16 +537,6 @@ function dragToDismiss(sheet: HTMLElement, dismiss: () => void): void {
   };
   sheet.addEventListener('pointerup', end);
   sheet.addEventListener('pointercancel', end);
-}
-
-/** "Best 12,480 · 2,840 to go" + a track toward it — the pull of almost. */
-function nearMiss(score: number, best: number): string {
-  if (best <= 0 || score >= best)
-    return `<div class="callout">Best <b class="num">${fmt(Math.max(best, score))}</b></div>`;
-  const pct = Math.max(0, Math.min(100, Math.round((score / best) * 100)));
-  const gap = best - score;
-  return `<div class="callout">Best <b class="num">${fmt(best)}</b>${gap > 0 && pct >= 70 ? ` · just <b class="num">${fmt(gap)}</b> short` : ''}</div>
-    <div class="track" role="progressbar" aria-label="${pct}% of best" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
 }
 
 /**
@@ -722,37 +611,4 @@ export function creatureThumb(
     });
   };
   return c;
-}
-
-/** "New in your journal" strip for end-of-game cards: framed 56 px tiles, max 4 + "+N". */
-function journalStrip(ids: readonly string[], open?: () => void): HTMLElement {
-  const wrap = document.createElement('button');
-  wrap.type = 'button';
-  wrap.className = 'jstrip';
-  wrap.setAttribute(
-    'aria-label',
-    `New in your journal: ${ids.map((id) => SPECIES_BY_ID.get(id)?.name).join(', ')}. Open the Beach Journal`,
-  );
-  wrap.innerHTML = '<div class="overline">New in your journal</div>';
-  const row = document.createElement('div');
-  row.className = 'jstrip-row';
-  const shown = ids.slice(0, ids.length > 4 ? 3 : 4);
-  for (const id of shown) {
-    const sp = SPECIES_BY_ID.get(id);
-    if (!sp) continue;
-    const t = document.createElement('span');
-    t.className = `j-tile got r-${sp.rarity}`;
-    t.style.cssText = `--hab:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};--hab-ring:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};min-height:0;width:64px;padding:4px 2px 5px;gap:2px`;
-    t.append(creatureThumb(sp, 44));
-    t.insertAdjacentHTML('beforeend', pipsHtml(RARITY_RANK[sp.rarity]));
-    row.append(t);
-  }
-  if (ids.length > 4) row.insertAdjacentHTML('beforeend', `<span class="more num">+${ids.length - 3}</span>`);
-  wrap.append(row);
-  if (open)
-    wrap.addEventListener('click', (e) => {
-      e.stopPropagation();
-      open();
-    });
-  return wrap;
 }

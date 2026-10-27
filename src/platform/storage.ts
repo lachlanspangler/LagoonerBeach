@@ -5,7 +5,7 @@
 import { NO_STREAK, type DailyStreak } from '../core/daily.ts';
 import { decodeGame, encodeGame } from '../core/serialize.ts';
 import type { GameState } from '../core/game.ts';
-import { MAX_REEF } from '../core/endless.ts';
+import { MAX_REEF } from '../core/reefConst.ts';
 import { unpackMoves } from '../core/movelog.ts';
 
 export type ThemePref = 'auto' | 'day' | 'night';

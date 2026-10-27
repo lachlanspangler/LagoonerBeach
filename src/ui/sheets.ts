@@ -3,6 +3,7 @@
  * Journal (rarity frames, habitat pools, the one-at-a-time ambient signature), species pages
  * (size line) and the reef list. They render through the Ui's components (overlay.ts `SheetKit`).
  */
+import './tiles.css';
 import './sheets.css';
 import type { Profile } from '../platform/storage.ts';
 import { saveSeen } from '../platform/storage.ts';
