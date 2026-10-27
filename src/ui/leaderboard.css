@@ -169,6 +169,13 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
 .lb-target .btn {
   margin: 0 0 8px;
 }
+.lb-target-card .btn.lb-target-play {
+  flex: none;
+  width: auto;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 var(--s4);
+}
 .lb-note {
   font: 700 calc(14px * var(--fs))/1.35 var(--font);
   color: var(--ink-2);
