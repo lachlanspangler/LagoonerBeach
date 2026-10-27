@@ -242,7 +242,17 @@ export class Scene {
     g.fillStyle = this.palette.text;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillText(text, l.w / 2, this.stripY(), l.w - 24);
+    // the demo ghost and its hand glide up through the strip: the line steps back while they pass
+    const cy = this.stripY();
+    const pose = this.demoPose(now);
+    if (pose) {
+      const top = pose.y - l.cell * 0.2;
+      const bottom = pose.y + pose.p.h * pose.cell + l.cell * 1.3; // the hand hangs below the piece
+      const gap = Math.max(top - (cy + size), cy - size - bottom, 0);
+      g.globalAlpha = lerp(1, 0.12, pose.fade * (1 - clamp01(gap / (l.cell * 0.8))));
+    }
+    g.fillText(text, l.w / 2, cy, l.w - 24);
+    g.globalAlpha = 1;
   }
 
   /** Vertical center of the strip between the board and the tray's pieces. */
@@ -810,6 +820,28 @@ export class Scene {
       g.drawImage(lit?.(dx, dy) ? bright : normal, dx0 + dx * cell, dy0 + dy * cell, cell, cell);
   }
 
+  /** Where the first-run demo ghost is now (null when it isn't showing). */
+  private demoPose(now: number) {
+    const h = this.hint;
+    const d = h?.demo;
+    const t = d ? this.tray[d.slot]?.t : null;
+    if (!h || !d || !t || this.drag || this.reducedMotion) return null;
+    const k = (now - h.start) / 1000;
+    const p = pieceById(t.pieceId);
+    const l = this.layout;
+    const cyc = (k % 2.2) / 2.2;
+    if (cyc > 0.86) return null;
+    const travel = easeInOutSine(clamp01((cyc - 0.12) / 0.5));
+    const [ox, oy] = this.trayPieceOrigin(d.slot, p);
+    const tx = l.board.x + d.ax * l.cell;
+    const ty = l.board.y + d.ay * l.cell;
+    const cell = lerp(trayCellFor(l, p), l.cell, travel);
+    const x = lerp(ox, tx, travel);
+    const y = lerp(oy, ty, travel);
+    const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
+    return { p, x, y, cell, fade, travel, color: t.color };
+  }
+
   private drawHint(now: number): void {
     const h = this.hint;
     // out of the way while the player is holding a piece
@@ -832,22 +864,11 @@ export class Scene {
     g.setLineDash([]);
     g.globalAlpha = 1;
     // demo: a ghost of the piece glides from the tray to the spot, with a fingertip
-    const d = h.demo;
-    const t = d ? this.tray[d.slot]?.t : null;
-    if (!d || !t || this.drag || this.reducedMotion) return;
-    const p = pieceById(t.pieceId);
+    const pose = this.demoPose(now);
+    if (!pose) return;
+    const { p, x, y, cell, fade, travel, color } = pose;
     const l = this.layout;
-    const cyc = (k % 2.2) / 2.2;
-    if (cyc > 0.86) return;
-    const travel = easeInOutSine(clamp01((cyc - 0.12) / 0.5));
-    const [ox, oy] = this.trayPieceOrigin(d.slot, p);
-    const tx = l.board.x + d.ax * l.cell;
-    const ty = l.board.y + d.ay * l.cell;
-    const cell = lerp(trayCellFor(l, p), l.cell, travel);
-    const x = lerp(ox, tx, travel);
-    const y = lerp(oy, ty, travel);
-    const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
-    this.drawPieceAt(p, t.color, x, y, cell, 0.5 * fade);
+    this.drawPieceAt(p, color, x, y, cell, 0.5 * fade);
     // a pointing hand (the Tidemark "tap" glyph), its fingertip on the first cell, as if holding it
     const [fx, fy] = p.cells[0]!;
     drawTap(
