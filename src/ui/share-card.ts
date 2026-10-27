@@ -14,6 +14,14 @@ export { drawPips, HABITAT_TINT, RARITY_COLOR, RARITY_RANK };
 
 let lastCard: { key: string; c: HTMLCanvasElement } | null = null;
 
+/**
+ * PLACEHOLDER (owner): the short link printed on share cards. Replace with the real store/landing
+ * short link before launch (it is drawn as plain text, no QR).
+ */
+export const SHARE_URL = 'lagooner.beach';
+/** The share card's way back to the game (footer line next to the app mark). */
+export const SHARE_FOOT = 'Free on iOS & Android';
+
 export const W = 1080;
 export const H = 1350;
 
@@ -94,19 +102,19 @@ export function renderShareCard(
   drawCreature(g, sp, W / 2, 540, 560, 0, { golden: o.golden, expression: 'happy', t: 0.4 } as DrawOpts);
   if (o.golden) sparkles(g, W / 2, 540, 320, 7);
   // the label: a cream panel (dark ink on cream: always readable, whatever the tier)
-  const ly = 880;
+  const ly = 856;
   g.fillStyle = 'rgba(43,35,28,0.18)';
   g.beginPath();
-  g.roundRect(96, ly + 10, W - 192, H - ly - 92, 48);
+  g.roundRect(96, ly + 10, W - 192, H - ly - 158, 48);
   g.fill();
   g.fillStyle = '#FFF8EC';
   g.beginPath();
-  g.roundRect(96, ly, W - 192, H - ly - 92, 48);
+  g.roundRect(96, ly, W - 192, H - ly - 158, 48);
   g.fill();
   g.textAlign = 'center';
   g.fillStyle = ink2;
   g.font = `800 30px ${FONT_STACK}`;
-  g.fillText(o.golden ? 'GOLDEN FIND' : 'NEW DISCOVERY', W / 2, ly + 56);
+  g.fillText(o.golden ? 'GOLDEN FIND' : 'NEW DISCOVERY', W / 2, ly + 54);
   // name: plain Fraunces (no outline)
   let size = 92;
   g.font = `900 ${size}px ${DISPLAY_STACK}`;
@@ -115,19 +123,34 @@ export function renderShareCard(
     g.font = `900 ${size}px ${DISPLAY_STACK}`;
   }
   g.fillStyle = ink;
-  g.fillText(sp.name, W / 2, ly + 136);
-  drawPips(g, W / 2, ly + 212, 16, rank, frame, ink2);
+  g.fillText(sp.name, W / 2, ly + 130);
+  drawPips(g, W / 2, ly + 202, 16, rank, frame, ink2);
   g.fillStyle = ink2;
   g.font = `800 30px ${FONT_STACK}`;
-  g.fillText(`${sp.rarity.toUpperCase()} · No. ${SPECIES.indexOf(sp) + 1} of ${SPECIES.length}`, W / 2, ly + 262);
+  g.fillText(`${sp.rarity.toUpperCase()} · No. ${SPECIES.indexOf(sp) + 1} of ${SPECIES.length}`, W / 2, ly + 250);
   // who found it, and when (UI_DESIGN §6.9: no URL soup, no QR)
   const foot = [o.name ? `Found by ${o.name.toUpperCase()}` : '', o.date ? longDate(o.date) : '']
     .filter(Boolean)
     .join(' · ');
   if (foot) {
     g.font = `700 28px ${FONT_STACK}`;
-    g.fillText(foot, W / 2, ly + 316);
+    g.fillText(foot, W / 2, ly + 300);
   }
+  // the way back to the game: app mark · "Free on iOS & Android" · short link (cream on the tier's
+  // dark foot; no QR)
+  const fy = H - 96;
+  g.font = `800 30px ${FONT_STACK}`;
+  const line = `${SHARE_FOOT}  ·  ${SHARE_URL}`;
+  const lw = g.measureText(line).width;
+  const mark = 50;
+  const fx0 = W / 2 - (mark + 18 + lw) / 2;
+  drawIconMark(g, fx0, fy - mark / 2, mark);
+  g.textAlign = 'left';
+  g.fillStyle = 'rgba(20,14,8,0.35)';
+  g.fillText(line, fx0 + mark + 18, fy + 2);
+  g.fillStyle = '#FFF8EC';
+  g.fillText(line, fx0 + mark + 18, fy);
+  g.textAlign = 'center';
   // frame
   g.lineWidth = o.golden ? 18 : 12;
   if (o.golden) {

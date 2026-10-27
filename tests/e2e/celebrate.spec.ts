@@ -409,6 +409,8 @@ test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page 
   expect(card.text).toContain('Box Crab');
   expect(card.text).toContain('Lagooner Beach');
   expect(card.text.join(' ')).not.toContain(card.hint);
+  // a way back to the game: "Free on iOS & Android" and the short link (SHARE_URL placeholder)
+  expect(card.text.join(' ')).toMatch(/Free on iOS & Android .*lagooner\.beach/);
 });
 
 test('every modal reveal settles eyes-open on idle (scene tiers by the time the card settles)', async ({ page }) => {
