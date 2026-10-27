@@ -80,7 +80,7 @@ export default defineArt({
   size: 'L',
   feature: 'a huge scalloped shell parted like lips around a teal mantle',
   personality: ['wise', 'sleepy', 'ancient'],
-  palette: { body: '#3BC9A0', accent: '#2E6FD8', belly: '#F3E3BC' },
+  palette: { body: '#10B5AC', accent: '#6A5AE0', belly: '#F3E3BC' },
   groups: [
     {
       id: 'mantle',
