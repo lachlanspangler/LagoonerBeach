@@ -306,3 +306,49 @@ test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page 
   expect(card.text).toContain('Lagooner Beach');
   expect(card.text.join(' ')).not.toContain(card.hint);
 });
+
+test('every modal reveal settles eyes-open on idle (scene tiers by the time the card settles)', async ({ page }) => {
+  await boot(page, 'seed=42');
+  // [species, freeze at (ms)]: uncommon/rare once the beat is over; epic/legendary at the settle frame
+  const cases: [string, number][] = [
+    ['boxcrab', 3200],
+    ['moray', 3400],
+    ['octopus', 1800],
+    ['kraken', 2500],
+    ['seadragon', 2500],
+    ['whaleshark', 2500],
+  ];
+  for (const [id, t] of cases) {
+    await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
+    await page.waitForFunction(() => (window as any).__atoll.revealState());
+    await page.evaluate((t) => (window as any).__atoll.revealFreeze(t), t);
+    const st = await page.evaluate(() => (window as any).__atoll.revealState());
+    expect(st.settled, id).toBe(true);
+    expect(st.expr, `${id} at ${t} ms`).toBe('idle');
+    await page.evaluate(() => (window as any).__atoll.revealSkip());
+    await expect(page.locator('.reveal')).toHaveCount(0);
+  }
+});
+
+test('legendary backdrop: the rays never drop out around the settle (frozen frames, back to back)', async ({
+  page,
+}) => {
+  await boot(page, 'seed=42');
+  await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+  await page.waitForFunction(() => (window as any).__atoll.revealState());
+  const lum: number[] = [];
+  for (const t of [2300, 2400, 2450, 2500, 2510, 2600, 2800, 3200]) {
+    lum.push(
+      await page.evaluate((t) => {
+        (window as any).__atoll.revealFreeze(t);
+        const c = document.querySelector<HTMLCanvasElement>('.rv-fx:not(.rv-hero)')!;
+        // the band above the card: scrim + rays (a dropout leaves it transparent)
+        const d = c.getContext('2d')!.getImageData(0, 0, c.width, Math.round(c.height * 0.2)).data;
+        let s = 0;
+        for (let i = 0; i < d.length; i += 4) s += (d[i]! * d[i + 3]!) / 255;
+        return s / (d.length / 4);
+      }, t),
+    );
+  }
+  for (const v of lum) expect(v).toBeGreaterThan(lum[0]! * 0.8);
+});
