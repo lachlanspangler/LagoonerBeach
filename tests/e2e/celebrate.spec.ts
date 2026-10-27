@@ -490,6 +490,28 @@ test('a non-legendary present is at least 130 px tall on the card, whatever its 
   }
 });
 
+test('legendary cards: the creature ends well clear of "New discovery" (kraken arm tips)', async ({ page }) => {
+  await boot(page, 'seed=42');
+  for (const id of ['kraken', 'seadragon', 'whaleshark', 'goldturtle']) {
+    await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
+    await page.waitForFunction(() => (window as any).__atoll.revealState());
+    await page.waitForTimeout(400); // the CSS entrance is over
+    await page.evaluate(() => (window as any).__atoll.revealFreeze(2700));
+    const gap = await page.evaluate(() => {
+      const c = document.querySelector('.reveal .rv-pool canvas') as HTMLCanvasElement;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let y1 = -1;
+      for (let i = 3; i < d.length; i += 4) if (d[i]! > 40) y1 = Math.floor((i - 3) / 4 / c.width);
+      const r = c.getBoundingClientRect();
+      const bottom = r.top + (y1 * r.height) / c.height;
+      return document.querySelector('.reveal .rv-over')!.getBoundingClientRect().top - bottom;
+    });
+    expect(gap, id).toBeGreaterThanOrEqual(12);
+    await page.evaluate(() => (window as any).__atoll.revealSkip());
+    await expect(page.locator('.reveal')).toHaveCount(0);
+  }
+});
+
 test('legendary backdrop: the rays never drop out around the settle (frozen frames, back to back)', async ({
   page,
 }) => {
