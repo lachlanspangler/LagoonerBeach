@@ -47,10 +47,11 @@ export interface Profile {
   /** Leaderboards: random install id + chosen name, both created only when the player first posts. */
   lb?: LbProfile;
   /**
-   * The best as it stood when the live Endless/Daily run began (`key` names the run). The best
-   * itself is saved the moment a run beats it; this keeps "NEW BEST" true for that run after a reload.
+   * The best as it stood when the live Endless/Daily run began (`key` names the run), one slot per
+   * mode so switching Endless ↔ Daily mid-run keeps both. The best itself is saved the moment a run
+   * beats it; this keeps "NEW BEST" true for that run after a reload or a mode switch.
    */
-  runBest?: { key: string; best: number };
+  runBest?: RunBest;
   /** The mode last played: a relaunch opens it (Reefs on `puzzle.index`). Older saves: Endless. */
   lastMode?: 'classic' | 'daily' | 'puzzle';
 }
@@ -99,6 +100,40 @@ function store(): Storage | null {
 
 const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : d);
 const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
+
+export interface RunBestSlot {
+  key: string;
+  best: number;
+}
+export interface RunBest {
+  classic?: RunBestSlot;
+  daily?: RunBestSlot;
+}
+
+const runBestSlot = (v: unknown): RunBestSlot | undefined => {
+  const o = v as { key?: unknown; best?: unknown } | null | undefined;
+  return o && typeof o.key === 'string' && num(o.best, -1) >= 0
+    ? { key: o.key.slice(0, 64), best: num(o.best, 0) }
+    : undefined;
+};
+
+/** Per-mode run-best slots; the old single `{key, best}` shape moves into the slot its key names. */
+export function sanitizeRunBest(v: unknown): RunBest | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const o = v as Record<string, unknown>;
+  const out: RunBest = {};
+  if ('key' in o) {
+    const s = runBestSlot(o);
+    if (s?.key.startsWith('classic:')) out.classic = s;
+    else if (s?.key.startsWith('daily:')) out.daily = s;
+  } else {
+    const c = runBestSlot(o.classic);
+    const d = runBestSlot(o.daily);
+    if (c) out.classic = c;
+    if (d) out.daily = d;
+  }
+  return out.classic || out.daily ? out : undefined;
+}
 
 export function loadProfile(): Profile {
   const raw = safeParse(store()?.getItem(K_PROFILE));
@@ -158,9 +193,7 @@ export function loadProfile(): Profile {
     },
     lb: sanitizeLbProfile(o.lb),
     ...(o.lastMode === 'classic' || o.lastMode === 'daily' || o.lastMode === 'puzzle' ? { lastMode: o.lastMode } : {}),
-    ...(o.runBest && typeof o.runBest.key === 'string' && num(o.runBest.best, -1) >= 0
-      ? { runBest: { key: o.runBest.key.slice(0, 64), best: num(o.runBest.best, 0) } }
-      : {}),
+    ...(sanitizeRunBest(o.runBest) ? { runBest: sanitizeRunBest(o.runBest) } : {}),
   };
 }
 

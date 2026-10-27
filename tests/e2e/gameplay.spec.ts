@@ -82,7 +82,7 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   expect((await state(page)).score).toBe(run.score);
   const p = await page.evaluate(() => (window as any).__atoll.profile());
   expect(p.best).toBe(run.score);
-  expect(p.runBest.best).toBe(30);
+  expect(p.runBest.classic.best).toBe(30);
   // New game: the first tap asks on the card itself, the run is untouched
   await page.getByRole('button', { name: 'Menu' }).click();
   const card = page.locator('.mode-card').first();
@@ -98,6 +98,34 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   const seed = (await state(page)).seed;
   await page.locator('.mode-card').first().click();
   await expect.poll(async () => (await state(page)).seed).not.toBe(seed);
+});
+
+test('a trip to the Daily mid-run (and a reload) keeps the record the Endless run chases', async ({ page }) => {
+  await boot(page, 'fast=1');
+  const hud = () => page.evaluate(() => (window as any).__atoll.hudBest());
+  await page.evaluate(() => {
+    const a = (window as any).__atoll;
+    a.autoplay('greedy', 1); // a run in progress
+    a.stageRecord(3000);
+    a.stageBest(3000, 5000);
+    a.autoplay('greedy', 1); // this move beats the old best: saved at once
+  });
+  const run = await state(page);
+  expect(run.score).toBeGreaterThan(5000);
+  expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
+  await expect.poll(hud).toEqual({ best: 3000, newBest: true });
+  await page.evaluate(() => (window as any).__atoll.switchMode('daily'));
+  await page.evaluate(() => (window as any).__atoll.autoplay('greedy', 2)); // the Daily run gets its own slot
+  await page.evaluate(() => (window as any).__atoll.switchMode('classic'));
+  expect((await state(page)).score).toBe(run.score);
+  await expect.poll(hud).toEqual({ best: 3000, newBest: true });
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__atoll);
+  await expect.poll(hud).toEqual({ best: 3000, newBest: true });
+  // the run ends: the card is a record "was 3000"
+  await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));
+  await expect(page.getByTestId('new-high-score')).toBeVisible();
+  await expect(page.locator('.res-was')).toContainText('3,000');
 });
 
 test('a relaunch opens the mode last played (and the reef you were on)', async ({ page }) => {

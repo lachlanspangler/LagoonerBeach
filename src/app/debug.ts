@@ -56,6 +56,8 @@ export interface DebugDeps {
     celebrateWord(): string | null;
     /** NEW BEST: when a banner started (-1e9 = never) and whether the HUD line says it. */
     celebrateBest(): { bannerAt: number; hud: boolean };
+    /** The best the HUD compares against (the record this run chases) and whether it says NEW BEST. */
+    hudBest(): { best: number; newBest: boolean };
     revealState(): { id: string; modal: boolean; settled: boolean; expr?: string } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;

@@ -78,11 +78,27 @@ describe('profile migration', () => {
   it('the best a live run started from round-trips; junk is dropped', () => {
     const p = loadProfile();
     expect(p.runBest).toBeUndefined();
-    p.runBest = { key: 'classic::77', best: 32 };
+    p.runBest = { classic: { key: 'classic::77', best: 32 }, daily: { key: 'daily:2026-10-27:9', best: 5 } };
     saveProfile(p);
-    expect(loadProfile().runBest).toEqual({ key: 'classic::77', best: 32 });
+    expect(loadProfile().runBest).toEqual(p.runBest);
     ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, runBest: { key: 5, best: 'x' } }));
     expect(loadProfile().runBest).toBeUndefined();
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, runBest: { classic: { key: 1 }, daily: 'x' } }));
+    expect(loadProfile().runBest).toBeUndefined();
+  });
+  it('the old single run-best slot migrates into the slot of the mode its key names', () => {
+    const p = loadProfile();
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, runBest: { key: 'classic::77', best: 32 } }));
+    expect(loadProfile().runBest).toEqual({ classic: { key: 'classic::77', best: 32 } });
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, runBest: { key: 'daily:2026-10-27:9', best: 4 } }));
+    expect(loadProfile().runBest).toEqual({ daily: { key: 'daily:2026-10-27:9', best: 4 } });
+  });
+  it('a run-best slot of one mode survives updates to the other', () => {
+    const p = loadProfile();
+    p.runBest = { classic: { key: 'classic::1', best: 3000 } };
+    p.runBest = { ...p.runBest, daily: { key: 'daily:d:2', best: 10 } };
+    saveProfile(p);
+    expect(loadProfile().runBest?.classic).toEqual({ key: 'classic::1', best: 3000 });
   });
 });
 

@@ -351,9 +351,10 @@ function syncScene(): void {
     tallyKey = key;
     bestCelebrated = false;
     // a reload mid-run still knows the record it is chasing (the best itself is already saved)
-    const rb = profile.runBest;
+    // (one slot per mode: a trip to the other mode mid-run must not forget it)
+    const rb = mode === 'puzzle' ? undefined : profile.runBest?.[mode];
     runStartBest = state.moves > 0 && rb?.key === key ? Math.min(rb.best, storedBest()) : storedBest();
-    if (mode !== 'puzzle') profile.runBest = { key, best: runStartBest };
+    if (mode !== 'puzzle') profile.runBest = { ...profile.runBest, [mode]: { key, best: runStartBest } };
     gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
     puzzleMoves = [];
@@ -1358,7 +1359,7 @@ function debugDeps(): DebugDeps {
         if (mode === 'daily') profile.dailyBest[dailyDate] = best;
         else profile.best = best;
         scene.best = runStartBest = best;
-        if (mode !== 'puzzle') profile.runBest = { key: tallyKey, best };
+        if (mode !== 'puzzle') profile.runBest = { ...profile.runBest, [mode]: { key: tallyKey, best } };
         bestCelebrated = false;
         dirty = true;
       },
@@ -1375,6 +1376,10 @@ function debugDeps(): DebugDeps {
       },
       celebrateWord: () => scene.celebrate.word?.text ?? null,
       celebrateBest: () => ({ bannerAt: scene.celebrate.bestAt, hud: scene.celebrate.bestShown }),
+      hudBest: () => ({
+        best: scene.best,
+        newBest: (scene.score > scene.best && scene.best > 0) || scene.celebrate.bestShown,
+      }),
       revealState: () => reveal.current(),
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),
