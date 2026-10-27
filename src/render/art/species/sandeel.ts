@@ -1,8 +1,8 @@
 /**
  * Sand Eel — LONG class (profile, level). Silhouette: a true needle (≈ 4 : 1) with a slim head
- * (30 % of the length), a pointed lower jaw that juts 6 u past the snout and a tiny forked tail; a low
- * double wave travels down the body (R10: the needle and the jaw). Silver belly #E8ECEF under a sand back,
- * no blue (CRITIQUE-2: off the minnow's silver-blue).
+ * (30 % of the length), a pointed lower jaw that juts 4 u past the snout and a tiny forked tail; a low
+ * double wave travels down the body (R10: the needle and the jaw). CRITIQUE-4: sage-silver #B8C9B0
+ * with a darker sage back band and a silver belly #E8ECEF (no blue: off the minnow).
  * Personality: zippy, shy, sandy. Signature: dives tail-first into the tile floor and pops back up.
  * Three seamless segments carry the travelling wave without seams (ADR 0011 Amendment 1).
  */
@@ -30,8 +30,8 @@ const body = tube([
 ]);
 const head = ellipse(22.5, -0.5, 14, 11.6);
 const snout = capsule(29, -3.5, 6, 33.6, -2, 3.2);
-// the lower jaw juts a full 6 u past the snout (R10: the sand eel's pointed underbite)
-const jaw = capsule(29, 4, 5, 40.6, 3.2, 2.2);
+// CRITIQUE-4: the lower jaw juts 4 u past the snout (R10: the sand eel's pointed underbite)
+const jaw = capsule(29, 4, 5, 38.6, 3.2, 2.2);
 
 export default defineArt({
   id: 'sandeel',
@@ -39,7 +39,8 @@ export default defineArt({
   size: 'M',
   feature: 'a true needle with a slim head, a pointed lower jaw jutting past the snout and a forked tail',
   personality: ['zippy', 'shy', 'sandy'],
-  palette: { body: '#DCC58A', accent: '#A08A50', belly: '#E8ECEF' },
+  // CRITIQUE-4: sage-silver #B8C9B0 (off the Lagoon tan trio), a darker sage back band, silver belly
+  palette: { body: '#B8C9B0', accent: '#7E9478', belly: '#E8ECEF' },
   groups: [
     {
       id: 'tail2',
@@ -130,6 +131,7 @@ export default defineArt({
   },
   deviations: {
     R7: 'long class (R5): the eye sits in the big head (front 30 % of a 4 : 1 needle), not 34 % back',
+    R16S: 'sage-silver identity (CRITIQUE-4 #B8C9B0, chroma 0.04); the sage back band and ink outline keep it off sand and mint',
   },
   idle: {
     ambient: [
