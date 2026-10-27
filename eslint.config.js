@@ -11,6 +11,7 @@ export default tseslint.config(
       'android/**',
       'dist/**',
       'dist-e2e/**',
+      'dist-debug/**',
       'node_modules/**',
       'prototypes/**',
       'coverage/**',

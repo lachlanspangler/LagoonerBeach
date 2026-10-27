@@ -32,15 +32,18 @@ ideas:            ## regenerate docs/IDEAS.md from the ledger
 	npm run ideas
 
 clean:
-	rm -rf dist coverage test-results playwright-report artifacts/tmp
+	rm -rf dist dist-e2e dist-debug coverage test-results playwright-report artifacts/tmp
 
 ios-sim: build     ## build web, sync, build+launch on an iPhone simulator, screenshot
 	npx cap sync ios
 	./scripts/ios-sim.sh
 
-android-emu:  ## debug APK (web build with debug hooks + demo boards) on a headless Android emulator, screenshot
-	npx tsc -p . && VITE_DEBUG=1 VITE_LB=demo npx vite build --logLevel warn
-	./scripts/android-emu.sh
+# The debug bundle goes to dist-debug/ (never dist/), and one sync points at it; afterwards (pass or
+# fail) the Android assets are copied back from the release dist/, so a later manual archive can't
+# ship debug hooks or demo boards.
+android-emu: build  ## debug APK (web build with debug hooks + demo boards) on a headless Android emulator, screenshot
+	VITE_DEBUG=1 VITE_LB=demo npx vite build --outDir dist-debug --emptyOutDir --logLevel warn
+	CAP_WEB_DIR=dist-debug ./scripts/android-emu.sh; s=$$?; npx cap copy android; exit $$s
 
 android-release: build  ## signed release AAB + APK (needs android/keystore.properties; unsigned otherwise)
 	npx cap sync android
