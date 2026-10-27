@@ -431,21 +431,26 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   color: var(--accent);
 }
 .lb-slots {
+  box-sizing: border-box;
   width: 100%;
   display: flex;
   justify-content: center;
   gap: 6px;
   border-radius: 16px;
-  padding: 2px;
+  /* ≥ 8 px each side: the row (and its focus ring) never hugs the sheet's edges */
+  padding: 2px 8px;
+  container-type: inline-size;
 }
 .lb-slot {
-  width: min(46px, calc((100% - 36px) / 7));
+  --slot-w: min(46px, calc((100cqw - 36px) / 7));
+  width: var(--slot-w);
   height: 58px;
   border-radius: 15px;
   background: var(--surface-sunk);
   display: grid;
   place-items: center;
-  font: 900 calc(30px * var(--fs)) var(--font-display);
+  /* wide glyphs (W, M) keep air inside the pebble: the letter is at most 0.62× the slot */
+  font: 900 min(calc(30px * var(--fs)), calc(var(--slot-w) * 0.62)) var(--font-display);
   color: var(--text);
 }
 .lb-slot.filled {
