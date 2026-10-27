@@ -3,6 +3,10 @@ import { expect, test, type Page } from '@playwright/test';
 import { boot } from './helpers.ts';
 
 async function checkTargets(page: Page, where: string) {
+  // measure settled layouts: sheets scale in/out, so mid-animation sizes read 43.9 px
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity),
+  );
   const bad = await page.evaluate(() => {
     const out: string[] = [];
     for (const el of document.querySelectorAll<HTMLElement>(
