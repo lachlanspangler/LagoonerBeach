@@ -31,9 +31,10 @@ const foot = blob([
 ]);
 // a big round head in front of the shell carries the face; two short stalks with knob tips on top
 const head = circle(28, 4, 14.5);
-// CRITIQUE-2: splayed ±30° and 20 % shorter, so the pair reads as snail stalks, not bunny ears
-const stalks = join(capsule(24, -8, 2.6, 19.8, -15.2, 2.5), capsule(33, -8, 2.6, 37.2, -15.2, 2.5));
-const knobs = join(circle(19, -16.4, 3.3), circle(38, -16.4, 3.3));
+// CRITIQUE-3: splayed a further 25° (≈ 55° off vertical) and another 20 % shorter: a snail's
+// feelers: a V from the crown leaning out to the sides, never bunny (or teddy) ears
+const stalks = join(capsule(25.5, -9, 2.6, 20.6, -13.5, 2.5), capsule(30.5, -9, 2.6, 35.4, -13.5, 2.5));
+const knobs = join(circle(19.8, -14.6, 3.1), circle(36.2, -14.6, 3.1));
 
 export default defineArt({
   id: 'periwinkle',
@@ -41,7 +42,7 @@ export default defineArt({
   size: 'XS',
   feature: 'a round spiral shell on a long foot, two eye-stalks',
   personality: ['slow', 'content', 'homebody'],
-  palette: { body: '#A8724D', accent: '#F1E2C6', belly: '#F2E4CB' },
+  palette: { body: '#6584BA', accent: '#EEF0F2', belly: '#F2E4CB' },
   groups: [
     {
       id: 'body',
