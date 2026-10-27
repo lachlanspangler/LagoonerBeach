@@ -141,6 +141,7 @@
 }
 .j-sub {
   margin: 2px 0 0;
+  text-wrap: balance;
 }
 .j-sec {
   display: grid;
