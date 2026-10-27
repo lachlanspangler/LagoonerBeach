@@ -38,7 +38,10 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // CDP screenshots of a WebView miss GPU canvases (they come out blank) → use the device's screencap
 const ADB = `${process.env.HOME}/Library/Android/sdk/platform-tools/adb`;
 const shot = async (name: string) => {
-  writeFileSync(`artifacts/shots/android-${name}.png`, execFileSync(ADB, ['exec-out', 'screencap', '-p']));
+  writeFileSync(
+    `artifacts/shots/android-${name}.png`,
+    execFileSync(ADB, ['exec-out', 'screencap', '-p'], { maxBuffer: 64 * 1024 * 1024 }),
+  );
 };
 await send('Page.enable');
 await ev(`location.href = 'https://localhost/?debug=1&mute=1&seed=7'`);
