@@ -2,7 +2,8 @@
  * Barracuda — the long one (fish class, profile view, level).
  * Silhouette (R10): a true needle (≈ 4.5 : 1) whose snout tapers over the front 18 %, a lower jaw
  * jutting 6 units past it, two white upper teeth over the lip, and a crisp forked tail. Steel silver
- * with a slate back whose flat edge is the aloof brow, and four dark slanted bars.
+ * with a slate back whose flat edge is the aloof brow, four dark slanted bars, a white belly band
+ * along 70 % and black-tipped tail lobes (CRITIQUE-4).
  * Personality: sleek, toothy, aloof. Signature: a fast 10-unit lunge, then it acts as if nothing
  * happened (nose up, smug `proud` face).
  */
@@ -82,7 +83,7 @@ const bar = (x: number) =>
   tube([
     [x + 2, -5, 2.4],
     [x - 0.5, 0, 2.3],
-    [x - 2.5, 4.5, 1.9],
+    [x - 2, 3.5, 1.9],
   ]);
 const bars = join(bar(-25), bar(-17), bar(-9), bar(-1));
 export default defineArt({
@@ -91,7 +92,7 @@ export default defineArt({
   size: 'L',
   feature: 'a true needle with an underbite, two white upper teeth, a slate back and four bars',
   personality: ['sleek', 'toothy', 'aloof'],
-  palette: { body: '#9AA5AE', accent: '#3F5568' },
+  palette: { body: '#9AA5AE', accent: '#3F5568', belly: '#EEF2F5' },
   deviations: {
     R16: 'steel silver (CRITIQUE-3): chroma 0.02 is the identity, darkened to L 0.72 to sit ΔE ≥ 6 off the minnow',
     R16S: 'silver identity; the slate back, dark bars and ink outline keep it off the sand and mint',
@@ -102,7 +103,13 @@ export default defineArt({
       pivot: [-30, 0],
       parts: [
         { d: tail, role: 'body' },
-        { d: join(ellipse(-42, -14, 4, 4), ellipse(-42, 14, 4, 4)), role: 'accent', kind: 'pattern' },
+        // black-tipped lobes (CRITIQUE-4 #2B3440: the derived ink at 88 % over the silver)
+        {
+          d: join(ellipse(-42, -14.5, 4.6, 4.6), ellipse(-42, 14.5, 4.6, 4.6)),
+          role: 'ink',
+          kind: 'pattern',
+          alpha: 0.88,
+        },
       ],
     },
     {
@@ -118,9 +125,10 @@ export default defineArt({
       parts: [
         { d: dorsal, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(2, 8.5, 34, 3.6), role: 'belly', kind: 'pattern' },
         { d: back, role: 'accent', kind: 'pattern' },
         { d: bars, role: 'accent', kind: 'pattern', alpha: 0.9 },
+        // the white belly band along 70 % of the body (CRITIQUE-4)
+        { d: ellipse(3, 7, 23, 4.6), role: 'belly', kind: 'pattern' },
       ],
     },
     { id: 'finA', pivot: [0, 4], parts: [{ d: pectoral, role: 'body' }] },
@@ -128,8 +136,8 @@ export default defineArt({
   shine: ellipse(-14, -4.6, 8, 1.6, -4),
   face: {
     eyes: [[15, -1.5]],
-    eye: 8.2,
-    zone: [1, -24, 38, 39],
+    eye: 10,
+    zone: [1, -26, 38, 42],
     mouth: { at: [22, 4.2], w: 5, shape: 'flat' },
   },
   idle: {
