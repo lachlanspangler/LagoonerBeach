@@ -100,7 +100,7 @@ export default defineArt({
   id: 'seadragon',
   klass: 'horse',
   size: 'M',
-  tileScale: 1.25,
+  tileScale: 1.22,
   feature:
     'a long arched dragon with a straight tube snout, a trailing tail and seven stalked lime leaves all sweeping back',
   personality: ['regal', 'leafy', 'shy'],

@@ -174,7 +174,7 @@ export function showJournal(k: SheetKit, j: Journal): void {
     const got = list.filter((sp) => j.entries[sp.id]).length;
     const sec = document.createElement('div');
     sec.className = 'j-sec';
-    sec.innerHTML = `<h3 class="title-s">${h.name}</h3><span class="overline num">${got}/${list.length}</span><div class="track"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
+    sec.innerHTML = `<h3 class="title-s">${h.name}</h3><span class="overline num">${got}/${list.length}</span><div class="track${got === list.length ? ' full' : ''}"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
     const grid = document.createElement('div');
     grid.className = 'j-grid';
     // CRITIQUE-4: ≤ 30 % of the page dozes (the same ones every time), the rest are awake. Lazy:

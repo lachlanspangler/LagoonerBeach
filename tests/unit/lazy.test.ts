@@ -50,4 +50,12 @@ describe('vite:preloadError recovery', () => {
     fire();
     expect(w.location.reload).toHaveBeenCalledTimes(1);
   });
+
+  it('a beforeunload that goes nowhere (cancelled navigation, a download) leaves recovery on', () => {
+    const { w, fire } = fakeWin();
+    installPreloadRecovery(w as never, () => 1_000_000);
+    fire('beforeunload'); // no pagehide follows, and no pageshow
+    fire();
+    expect(w.location.reload).toHaveBeenCalledTimes(1);
+  });
 });

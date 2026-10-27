@@ -4,7 +4,15 @@
  * species without new art) the legacy procedural drawing is used.
  */
 import type { Species } from '../../meta/creatures.ts';
-import { DETAIL_FILL, LEAP_SCALE, TILE_FILL, tileScaleOf, type Expression, type SpeciesArt } from './kit.ts';
+import {
+  DETAIL_FILL,
+  LEAP_SCALE,
+  TILE_FILL,
+  tileScaleOf,
+  tileViewScale,
+  type Expression,
+  type SpeciesArt,
+} from './kit.ts';
 import { SHARED } from './palette.ts';
 import { renderCreature } from './render.ts';
 
@@ -34,6 +42,8 @@ export interface DrawOpts {
   readonly flip?: boolean;
   readonly action?: { readonly kind: 'catch' | 'release'; readonly u: number };
   readonly signatureAt?: number;
+  /** Animated, but no scheduled signature (a detail page's opening moment stays eyes-open idle). */
+  readonly noSignature?: boolean;
   /**
    * Framed views: show the awake resting face even when the species would doze on this theme
    * (CRITIQUE-4: the Night journal caps dozers per habitat page; a new catch wakes on its page).
@@ -75,7 +85,7 @@ export function dozing(art: SpeciesArt, sp: Species, night: boolean): boolean {
 export function spanFor(art: SpeciesArt, s: number, fit: DrawOpts['fit']): number {
   // CRITIQUE-4: `tileScale` adjusts the framed views (tile, species page) only; the leap keeps R27
   return fit === 'tile'
-    ? s * TILE_FILL[art.size] * tileScaleOf(art)
+    ? s * TILE_FILL[art.size] * tileViewScale(art)
     : fit === 'detail'
       ? s * DETAIL_FILL[art.size] * tileScaleOf(art)
       : fit === 'leap'
@@ -152,6 +162,7 @@ function drawArt(
     still: o.still,
     action: o.action,
     signatureAt: o.signatureAt,
+    noSignature: o.noSignature,
     hide,
     zzz: o.fit === 'detail',
   });

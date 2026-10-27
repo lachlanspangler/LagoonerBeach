@@ -51,6 +51,7 @@ export default defineArt({
   id: 'manta',
   klass: 'wing',
   size: 'XL',
+  tileScale: 0.9,
   feature: 'a wide level chevron of great rounded wings with two fins curling inward under a smiling face',
   personality: ['majestic', 'friendly', 'waving'],
   palette: { body: '#7A72B8', belly: '#E9EEF5' },

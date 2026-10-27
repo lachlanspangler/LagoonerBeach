@@ -154,7 +154,7 @@ html[data-theme='night'] .r-golden .rv-card {
   margin-top: -36px; /* = the art box sits high, so an XL needs only a small shift to break the top */
 }
 .reveal.r-legendary .rv-over {
-  margin: 8px 0 6px; /* clear of a tall creature's lowest point (kraken arms, seadragon tail) */
+  margin: 24px 0 6px; /* clear of a tall creature's lowest point (kraken arm tips: ≥ 12 px, round 5) */
 }
 .reveal.r-legendary .rv-lower,
 .reveal.r-legendary .rv-btns {

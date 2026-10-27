@@ -99,9 +99,13 @@ describe('CRITIQUE-1 kit rules', () => {
     expect(validateArt(big).some((i) => i.rule === 'R27S')).toBe(false);
     expect(validateArt({ ...fish, tileScale: 1.4 }).some((i) => i.rule === 'R27S' && i.level === 'error')).toBe(true);
     expect(validateArt({ ...fish, tileScale: 0.8 }).some((i) => i.rule === 'R27S')).toBe(true);
-    expect(validateArt({ ...fish, size: 'XL', tileScale: 1 }).some((i) => i.rule === 'R27S')).toBe(true);
-    expect(ART.get('seadragon')!.tileScale).toBe(1.25);
-    for (const a of ART.values()) if (a.size === 'XL' || a.size === 'XXL') expect(a.tileScale).toBeUndefined();
+    // art critique round 5: an XL/XXL may shrink to fit its detail page (≤ 1), never grow
+    expect(validateArt({ ...fish, size: 'XL', tileScale: 1.1 }).some((i) => i.rule === 'R27S')).toBe(true);
+    expect(validateArt({ ...fish, size: 'XL', tileScale: 0.9 }).some((i) => i.rule === 'R27S')).toBe(false);
+    expect(validateArt({ ...fish, size: 'XXL', tileScale: 1 }).some((i) => i.rule === 'R27S')).toBe(false);
+    expect(ART.get('seadragon')!.tileScale).toBe(1.22);
+    for (const a of ART.values())
+      if (a.size === 'XL' || a.size === 'XXL') expect(a.tileScale ?? 1, a.id).toBeLessThanOrEqual(1);
   });
   it('tilt: a level fish measures < 10°, the same fish rotated 30° is flagged', () => {
     expect(restTilt(fish)).toBeLessThan(10);

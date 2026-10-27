@@ -5,6 +5,7 @@ artifacts/
 coverage/
 dist/
 dist-e2e/
+dist-debug/
 node_modules/
 playwright-report/
 test-results/

@@ -12,3 +12,4 @@ android/
 .claude
 artifacts
 dist-e2e
+dist-debug

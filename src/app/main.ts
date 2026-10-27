@@ -126,7 +126,7 @@ const classicSeed = (): number =>
   (!params.has('seed') && profile.firstRunDone ? runLog.ticketSeed() : null) ?? freshSeed();
 
 // ?mode= / ?seed= pick the mode; otherwise a relaunch opens the one last played (Reefs: once the
-// pack is in, below — the classic game shows until then)
+// pack is in, below — until then a neutral, empty board that takes no input)
 const bootMode: Mode = params.has('mode')
   ? params.get('mode') === 'daily'
     ? 'daily'
@@ -138,14 +138,31 @@ const bootMode: Mode = params.has('mode')
     : (profile.lastMode ?? 'classic');
 let mode: Mode = bootMode === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
-let state: GameState = startState();
+/**
+ * Relaunching into Reefs: the pack (and maybe the reef) is still loading. The board shows empty and
+ * takes no input — not a playable Endless deal (which would spend a spare ticket and could be
+ * saved over the player's Endless game). If the pack fails, the Endless game is the fallback.
+ */
+let reefBoot = bootMode === 'puzzle';
+const neutralState = (): GameState => ({ ...newGame(0), tray: [null, null, null] });
+let state: GameState = reefBoot ? neutralState() : startState();
+/** The reef pack didn't come: show the Endless game after all (the reef error offers a retry). */
+function endReefBoot(): void {
+  if (!reefBoot) return;
+  reefBoot = false;
+  state = startState();
+  saveIfTicketed();
+  teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+  syncScene();
+}
 /** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
 function saveIfTicketed(): void {
+  if (reefBoot) return;
   const rec = mode === 'classic' && state.moves === 0 ? runLog.get('classic', state) : null;
   if (rec?.runToken) saveGame(state, rec);
 }
 saveIfTicketed();
-let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+let teaching = !reefBoot && !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
 let lastDispatchAt = 0;
@@ -351,9 +368,10 @@ function syncScene(): void {
     tallyKey = key;
     bestCelebrated = false;
     // a reload mid-run still knows the record it is chasing (the best itself is already saved)
-    const rb = profile.runBest;
+    // (one slot per mode: a trip to the other mode mid-run must not forget it)
+    const rb = mode === 'puzzle' ? undefined : profile.runBest?.[mode];
     runStartBest = state.moves > 0 && rb?.key === key ? Math.min(rb.best, storedBest()) : storedBest();
-    if (mode !== 'puzzle') profile.runBest = { key, best: runStartBest };
+    if (mode !== 'puzzle' && !reefBoot) profile.runBest = { ...profile.runBest, [mode]: { key, best: runStartBest } };
     gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
     puzzleMoves = [];
@@ -521,7 +539,7 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
 }
 
 function persist(): void {
-  if (mode === 'puzzle') return; // puzzles are short; progress is the solved list
+  if (mode === 'puzzle' || reefBoot) return; // puzzles are short; progress is the solved list
   if (mode === 'daily') saveDaily(dailyDate, state, runLog.get('daily'));
   else saveGame(state, runLog.get('classic', state));
 }
@@ -641,8 +659,8 @@ function lbui(): Promise<LeaderboardUi> {
       save: () => saveProfile(profile),
       journal: () => journal,
       clientVersion: __APP_VERSION__,
-      playDaily: () => (mode === 'daily' ? restart() : switchMode('daily')),
-      playEndless: () => (mode === 'classic' ? restart() : switchMode('classic')),
+      playDaily: () => playMode('daily'),
+      playEndless: () => playMode('classic'),
       offline: DEBUG && params.has('lboffline'),
       lastRun: () => lastFinished,
       click: () => (wakeAudio(), sfx.click()),
@@ -902,6 +920,7 @@ function switchMode(m: Mode): void {
         // (never "Charting…" forever, and the player's place is kept)
         () => {
           if (wantedMode !== 'puzzle') return;
+          endReefBoot();
           const i = profile.puzzle.index;
           if (!Number.isInteger(i) || i < 0 || i >= MAX_REEF) {
             profile.puzzle.index = 0; // not a reef at all: start from the first one
@@ -915,6 +934,7 @@ function switchMode(m: Mode): void {
   ui.close();
   persist();
   mode = m;
+  reefBoot = false;
   profile.lastMode = m;
   saveProfile(profile);
   startToken++; // a fresh-ticket start still in flight is for a game the player has left
@@ -931,19 +951,31 @@ function switchMode(m: Mode): void {
 let chapterHold = 0;
 
 // ------------------------------------------------------------------ UI
+/** An Endless or Daily run with moves on it: starting that mode over asks first (inline, on its card). */
+const runAtStake = (): boolean => mode !== 'puzzle' && state.moves > 0 && !state.over;
+/** The home menu; `armed`: open with the current mode's card already asking "this one ends here". */
+function openMenu(armed = false): void {
+  ui.showMenu(
+    profile,
+    mode,
+    !state.over,
+    Object.keys(journal.entries).length,
+    profile.daily.lastDay === dayIndex(today()),
+    mode === 'puzzle'
+      ? `Reef ${state.seed + 1}`
+      : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
+    runAtStake(),
+    armed,
+  );
+}
+/** Play this mode from elsewhere (a leaderboard): a run in progress is never ended without asking. */
+function playMode(m: 'classic' | 'daily'): void {
+  if (mode !== m) return switchMode(m);
+  if (runAtStake()) return openMenu(true);
+  restart();
+}
 const ui = new Ui({
-  onOpenMenu: () =>
-    ui.showMenu(
-      profile,
-      mode,
-      !state.over,
-      Object.keys(journal.entries).length,
-      profile.daily.lastDay === dayIndex(today()),
-      mode === 'puzzle'
-        ? `Reef ${state.seed + 1}`
-        : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
-      mode === 'classic' && state.moves > 0 && !state.over,
-    ),
+  onOpenMenu: () => openMenu(),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
   onLeaderboards: LB_ON ? openBoards : undefined,
@@ -1025,24 +1057,38 @@ const ui = new Ui({
 // A discovery never opens between a quick player's moves: it waits until the board and tray have
 // been still for REVEAL_QUIET_MS (no press, no drag), so the next drag can't land on a fresh card.
 const REVEAL_QUIET_MS = 600;
-/** A press this soon after a card opens was aimed at the board: it never skips or closes the card. */
-const REVEAL_GRACE_MS = 250;
 let boardActiveAt = -Infinity;
-let revealOpenedAt = -Infinity;
 // any pointer event on the board/tray counts (a mouse homing in on the next piece is play too)
 const markBoardActive = (): void => void (boardActiveAt = performance.now());
 for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'] as const)
   canvas.addEventListener(t, markBoardActive, { capture: true, passive: true });
+// A press this soon after a card is first painted (REVEAL_GRACE_MS, timed from the event, not from
+// when it is dispatched) was aimed at the board: it never skips or closes the card. Whatever it hits
+// (with reduced motion the card is settled at once and its backdrop lets presses through to the
+// board, and to the outside-closes handler), the whole press is swallowed, down → up → click, even
+// if it lifts after the grace (it must not land on Continue either).
+let graceHeld: number | null = null; // pointerId of a press being swallowed
+let graceClick = false; // ...and its click is still to come
 const revealGrace = (e: Event): void => {
-  if (performance.now() - revealOpenedAt >= REVEAL_GRACE_MS || !reveal.current()?.modal) return;
-  const t = e.target;
-  if (!(t instanceof Element) || !t.closest('.reveal')) return;
+  if (e.type === 'pointerdown') {
+    graceClick = false;
+    if (!reveal.inGrace(e.timeStamp)) return;
+    graceHeld = (e as PointerEvent).pointerId;
+    graceClick = true;
+  } else if (e.type === 'pointerup' || e.type === 'pointercancel') {
+    if (graceHeld === null || (e as PointerEvent).pointerId !== graceHeld) return;
+    graceHeld = null;
+  } else {
+    // click
+    const swallow = graceClick || reveal.inGrace(e.timeStamp);
+    graceClick = false;
+    if (!swallow) return;
+  }
   e.stopImmediatePropagation();
   e.preventDefault();
 };
-// window capture, registered before the reveal's own listeners, so it runs first
-addEventListener('pointerdown', revealGrace, true);
-addEventListener('click', revealGrace, true);
+// window capture, registered before the reveal's own listeners (and the board's), so it runs first
+for (const t of ['pointerdown', 'pointerup', 'pointercancel', 'click'] as const) addEventListener(t, revealGrace, true);
 
 const reveal = new LazyReveal(document.getElementById('ui')!, {
   sfx,
@@ -1054,11 +1100,7 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   playerName: () => profile.lb?.name || undefined,
   now: clock,
-  canOpen: () => {
-    const ok = scene.drag === null && !ui.open && performance.now() - boardActiveAt >= REVEAL_QUIET_MS;
-    if (ok) revealOpenedAt = performance.now(); // the reveal opens right after a yes
-    return ok;
-  },
+  canOpen: () => scene.drag === null && !ui.open && performance.now() - boardActiveAt >= REVEAL_QUIET_MS,
   onStrip: (ms) => {
     scene.holdStrip(performance.now() + ms);
     dirty = true;
@@ -1078,7 +1120,7 @@ let sealKey = '';
 const drag = new DragController(canvas, {
   layout: () => scene.layout,
   state: () => state,
-  enabled: () => !ui.open && !reveal.blocking,
+  enabled: () => !ui.open && !reveal.blocking && !reefBoot,
   onPick: () => {
     // fast play: the previous move's word leaves quickly (it won't describe the next board)
     scene.celebrate.hurry(clock());
@@ -1260,11 +1302,30 @@ applyTheme();
 syncScene();
 if (bootMode === 'puzzle') switchMode('puzzle');
 requestAnimationFrame(frame);
-// bundled fonts arrive after first paint (font-display: swap): redraw once they're in
+// bundled fonts arrive after first paint (font-display: swap): redraw once they're in. Two load()
+// promises and `loadingdone` all report the same arrival: the text sprites are cleared and rewarmed
+// once per real change of the loaded font set (coalesced to a frame, then compared).
+let fontsSig = '';
+let fontsQueued = false;
+let fontsRuns = 0;
+const loadedFaces = (): string => {
+  const out: string[] = [];
+  document.fonts?.forEach?.((f) => void (f.status === 'loaded' && out.push(`${f.family} ${f.weight} ${f.style}`)));
+  return out.sort().join('|');
+};
 const fontsIn = () => {
-  scene.fontsReady();
-  fx.warmPeaks(true); // the text sprites were just cleared: build the peak words again, off-frame
-  dirty = true;
+  if (fontsQueued) return;
+  fontsQueued = true;
+  requestAnimationFrame(() => {
+    fontsQueued = false;
+    const sig = loadedFaces();
+    if (sig === fontsSig) return;
+    fontsSig = sig;
+    fontsRuns++;
+    scene.fontsReady();
+    fx.warmPeaks(true); // the text sprites were just cleared: build the peak words again, off-frame
+    dirty = true;
+  });
 };
 document.fonts?.addEventListener?.('loadingdone', fontsIn);
 void document.fonts?.load?.('800 16px "Lagoon UI"').then(fontsIn);
@@ -1311,6 +1372,8 @@ function debugDeps(): DebugDeps {
     switchMode,
     loadPuzzle,
     journal: () => journal,
+    playFromBoard: playMode,
+    fontsRuns: () => fontsRuns,
     stageBest: (n, score) => {
       scene.best = n;
       if (score !== undefined) {
@@ -1358,7 +1421,7 @@ function debugDeps(): DebugDeps {
         if (mode === 'daily') profile.dailyBest[dailyDate] = best;
         else profile.best = best;
         scene.best = runStartBest = best;
-        if (mode !== 'puzzle') profile.runBest = { key: tallyKey, best };
+        if (mode !== 'puzzle') profile.runBest = { ...profile.runBest, [mode]: { key: tallyKey, best } };
         bestCelebrated = false;
         dirty = true;
       },
@@ -1375,6 +1438,10 @@ function debugDeps(): DebugDeps {
       },
       celebrateWord: () => scene.celebrate.word?.text ?? null,
       celebrateBest: () => ({ bannerAt: scene.celebrate.bestAt, hud: scene.celebrate.bestShown }),
+      hudBest: () => ({
+        best: scene.best,
+        newBest: (scene.score > scene.best && scene.best > 0) || scene.celebrate.bestShown,
+      }),
       revealState: () => reveal.current(),
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),

@@ -69,6 +69,7 @@ export default defineArt({
   id: 'hammerhead',
   klass: 'shark',
   size: 'XL',
+  tileScale: 0.9,
   feature: 'a wide horizontal T hammer with an eye on each round tip, tall dorsal behind',
   personality: ['earnest', 'curious', 'wide-eyed'],
   palette: { body: '#4FA0AE', belly: '#E6F0EF' },

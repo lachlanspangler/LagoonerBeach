@@ -82,14 +82,15 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   expect((await state(page)).score).toBe(run.score);
   const p = await page.evaluate(() => (window as any).__atoll.profile());
   expect(p.best).toBe(run.score);
-  expect(p.runBest.best).toBe(30);
+  expect(p.runBest.classic.best).toBe(30);
   // New game: the first tap asks on the card itself, the run is untouched
   await page.getByRole('button', { name: 'Menu' }).click();
   const card = page.locator('.mode-card').first();
   await card.click();
   await expect(card).toContainText('This one ends here.');
   expect((await state(page)).moves).toBe(run.moves);
-  // the second starts over; the best stays
+  // the second (not a double tap: later than the guard) starts over; the best stays
+  await page.waitForTimeout(500);
   await card.click();
   await expect.poll(async () => (await state(page)).moves).toBe(0);
   expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
@@ -98,6 +99,89 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   const seed = (await state(page)).seed;
   await page.locator('.mode-card').first().click();
   await expect.poll(async () => (await state(page)).seed).not.toBe(seed);
+});
+
+test('the New-game confirm ignores a double tap, a held Enter, and disarms on blur; Play elsewhere asks too', async ({
+  page,
+}) => {
+  await boot(page, 'fast=1');
+  const A = (f: string, ...args: unknown[]) =>
+    page.evaluate(([f, args]) => (window as any).__atoll[f as string](...(args as unknown[])), [f, args] as const);
+  await A('autoplay', 'greedy', 2);
+  const moves = (await state(page)).moves;
+  expect(moves).toBe(2);
+  const card = page.locator('.mode-card').first();
+  // a double tap only asks
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await card.dblclick();
+  await expect(card).toContainText('This one ends here.');
+  await page.waitForTimeout(300);
+  expect((await state(page)).moves).toBe(moves);
+  // focus leaving the card disarms it (WebKit doesn't focus a clicked button: focus it first)
+  await card.focus();
+  await page.keyboard.press('Tab');
+  await expect(card).not.toContainText('This one ends here.');
+  await expect(card).toContainText('New game');
+  // a held Enter: the first keydown asks, its auto-repeats don't confirm
+  await card.focus();
+  await page.keyboard.down('Enter');
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(100);
+    await page.keyboard.down('Enter');
+  }
+  await page.keyboard.up('Enter');
+  await expect(card).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(moves);
+  // a leaderboard's Play mid-run opens the menu with the card asking; the run is untouched
+  await page.keyboard.press('Escape');
+  await A('playFromBoard', 'classic');
+  await expect(card).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(moves);
+  await page.waitForTimeout(500);
+  await card.click();
+  await expect.poll(async () => (await state(page)).moves).toBe(0);
+  // with no run at stake, Play is immediate
+  await A('playFromBoard', 'classic');
+  await expect(page.locator('.mode-card')).toHaveCount(0);
+  // the Daily card mid-daily asks too (replaying would end today's run)
+  await A('switchMode', 'daily');
+  await A('autoplay', 'greedy', 2);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const daily = page.locator('.mode-card').nth(1);
+  await daily.click();
+  await expect(daily).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(2);
+  await page.waitForTimeout(500);
+  await daily.click();
+  await expect.poll(async () => (await state(page)).moves).toBe(0);
+});
+
+test('a trip to the Daily mid-run (and a reload) keeps the record the Endless run chases', async ({ page }) => {
+  await boot(page, 'fast=1');
+  const hud = () => page.evaluate(() => (window as any).__atoll.hudBest());
+  await page.evaluate(() => {
+    const a = (window as any).__atoll;
+    a.autoplay('greedy', 1); // a run in progress
+    a.stageRecord(3000);
+    a.stageBest(3000, 5000);
+    a.autoplay('greedy', 1); // this move beats the old best: saved at once
+  });
+  const run = await state(page);
+  expect(run.score).toBeGreaterThan(5000);
+  expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
+  await expect.poll(hud).toEqual({ best: 3000, newBest: true });
+  await page.evaluate(() => (window as any).__atoll.switchMode('daily'));
+  await page.evaluate(() => (window as any).__atoll.autoplay('greedy', 2)); // the Daily run gets its own slot
+  await page.evaluate(() => (window as any).__atoll.switchMode('classic'));
+  expect((await state(page)).score).toBe(run.score);
+  await expect.poll(hud).toEqual({ best: 3000, newBest: true });
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__atoll);
+  await expect.poll(hud).toEqual({ best: 3000, newBest: true });
+  // the run ends: the card is a record "was 3000"
+  await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));
+  await expect(page.getByTestId('new-high-score')).toBeVisible();
+  await expect(page.locator('.res-was')).toContainText('3,000');
 });
 
 test('a relaunch opens the mode last played (and the reef you were on)', async ({ page }) => {
@@ -121,6 +205,40 @@ test('a relaunch opens the mode last played (and the reef you were on)', async (
   await relaunch();
   expect(await mode()).toBe('classic');
   expect(errors).toEqual([]);
+});
+
+test('a relaunch into Reefs shows no playable Endless board while the pack loads; Endless is the fallback', async ({
+  page,
+}) => {
+  const errors = await boot(page, '');
+  await page.evaluate(() => (window as any).__atoll.autoplay('greedy', 2));
+  const endless = await state(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  // the pack is slow: until it lands the board is empty and takes no input
+  let held: (() => Promise<void>) | null = null;
+  await page.route('**/assets/puzzles-*.js', (r) => void (held = () => r.continue()));
+  // WebKit holds the load event for the stalled chunk: don't wait for it
+  await page.goto('/?debug=1', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => (window as any).__atoll);
+  await expect.poll(() => held !== null).toBe(true);
+  const loading = await state(page);
+  expect(loading.tray).toEqual([null, null, null]);
+  expect(loading.moves).toBe(0);
+  await page.mouse.click(200, 600);
+  expect((await state(page)).moves).toBe(0);
+  await held!();
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  // the pack fails: the Endless game (as it was, not overwritten) and a retry
+  await page.unroute('**/assets/puzzles-*.js');
+  await page.route('**/assets/puzzles-*.js', (r) => r.abort());
+  await page.goto('/?debug=1', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => (window as any).__atoll);
+  await expect(page.getByTestId('reef-error')).toBeVisible({ timeout: 15_000 });
+  const back = await state(page);
+  expect(back.moves).toBe(endless.moves);
+  expect(back.board).toEqual(endless.board);
+  expect(errors.filter((e) => !/puzzles|Failed to fetch|dynamically imported|net::/i.test(e))).toEqual([]);
 });
 
 test('game over shows the card; play again starts fresh', async ({ page }) => {
@@ -380,4 +498,12 @@ test('first-frame fonts: fetched once each, early, with no "preloaded but not us
   expect(warns).toEqual([]);
   expect(fonts.sort()).toEqual(['/fonts/lagoon-display-900.woff2', '/fonts/lagoon-ui.woff2']);
   expect(await page.evaluate(() => document.fonts.check('900 16px "Lagoon Display"'))).toBe(true);
+  // the text sprites are rebuilt once per real change of the font set (at most once per face), not
+  // once per load() promise plus loadingdone; a loadingdone with nothing new rebuilds nothing
+  const runs = await page.evaluate(() => (window as any).__atoll.fontsRuns());
+  expect(runs).toBeGreaterThanOrEqual(1);
+  expect(runs).toBeLessThanOrEqual(fonts.length);
+  await page.evaluate(() => document.fonts.dispatchEvent(new Event('loadingdone')));
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => (window as any).__atoll.fontsRuns())).toBe(runs);
 });

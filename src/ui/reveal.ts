@@ -67,6 +67,9 @@ export interface RevealDeps {
   onStrip?: (ms: number) => void;
 }
 
+/** A press this soon after a modal card is first painted was aimed at the board: it's swallowed. */
+export const REVEAL_GRACE_MS = 250;
+
 /** How long the common pop stays settled before it leaves by itself (ms after REVEAL_MS). */
 export const POP_HOLD_MS = 600;
 
@@ -99,11 +102,13 @@ const STAGE = 300;
 /** Stage offset: the pool's creature centre (POOL_W/2, POOL_H·0.55) is the stage centre. */
 const STAGE_X = STAGE / 2 - POOL_W / 2;
 const STAGE_Y = STAGE / 2 - POOL_H * 0.55;
-/**
- * CRITIQUE-2 NEW 5: the present is scaled by the creature's size class (an S seahorse no longer looks
- * as big as the legendary XL kraken, which breaks the card top). XS stays clearly readable.
- */
-export const REVEAL_SCALE = { XS: 0.8, S: 0.9, M: 1, L: 1.15, XL: 1.3, XXL: 1.3 } as const;
+export { REVEAL_SCALE, REVEAL_SCALE_MAX, revealScaleOf } from './revealScale.ts';
+import { revealScaleOf } from './revealScale.ts';
+/** Art critique round 5: a non-legendary present is at least this tall on the card (CSS px). */
+// measured once at rest on a 1x scratch (antialiasing, the idle bob): lands ≥ 130 on screen
+export const REVEAL_MIN_ART_PX = 134;
+/** ...but never wider than this (CSS px; the stage canvas is STAGE wide, the card ~340). */
+const REVEAL_MAX_ART_W = 250;
 /** How far a legendary breaks the card top (CSS px). */
 export const REVEAL_BREAK_PX = 10;
 /** The most a legendary is drawn off its pool's centre to break the card top by REVEAL_BREAK_PX (CSS px). */
@@ -117,6 +122,8 @@ const BLINK_MS = 140;
 export function beatEnd(rank: number): number {
   return BEAT_END_MS + (rank >= 3 ? PROUD_MS : 0);
 }
+/** Every reveal is eyes-open idle from this reveal time on (ms; its one blink comes 420 ms later). */
+export const IDLE_BY_MS = 1900;
 /** Epic/legendary: the proud beat's length before the card settles. */
 const SCENE_PROUD_MS = 350;
 /**
@@ -159,6 +166,11 @@ interface Active {
   /** The press that skipped the animation: its click must not land on the buttons it reveals. */
   swallow: boolean;
   /**
+   * performance.now() of the first-paint frame (the grace window starts when the card is on screen,
+   * not when open() began building it); unset until then.
+   */
+  shownAt?: number;
+  /**
    * Reveal time (ms, the `t` drawn) of the last fx-canvas draw: once settled the backdrop redraws at
    * ~15 fps (or once, reduced motion). Reveal time, not the wall clock: a frozen frame (`freeze`)
    * always paints its own backdrop (CRITIQUE-3: a kraken frame at 2500 ms showed no rays).
@@ -168,6 +180,8 @@ interface Active {
   expr?: string;
   /** CSS px the pool creature is drawn above the pool centre (a legendary breaking the card top). */
   lift?: number;
+  /** Modal: the present's scale (size class × tileScale, capped; floored to REVEAL_MIN_ART_PX tall). */
+  big?: number;
   /** Elements made inert while the dialog is up (restored on close), and where focus was. */
   inerted: Element[];
   returnTo: HTMLElement | null;
@@ -302,6 +316,8 @@ export class Reveal {
       const cont = button('Continue', 'btn primary', () => this.cur?.settled && this.finish());
       const share = button('Share', 'btn ghost', () => this.cur?.settled && void this.share(sp, item));
       btns.append(cont, share);
+      // epic/legendary show them (dimmed) before they act: say so to assistive tech until settled
+      for (const b of [cont, share]) b.setAttribute('aria-disabled', 'true');
       el.append(fx, card);
       if (scene) {
         hero = document.createElement('canvas');
@@ -351,6 +367,7 @@ export class Reveal {
       // must not eat the animation), unless a skip/freeze already set it
       const c = this.cur;
       if (c && c.el === el && !c.clocked) c.start = this.now();
+      if (c && c.el === el) c.shownAt = performance.now();
     });
     this.cur = {
       item,
@@ -369,6 +386,7 @@ export class Reveal {
       inerted,
       returnTo,
     };
+    if (modal) this.cur.big = this.presentScale(this.cur);
     if (modal) this.frameBreak(this.cur);
     // focus the dialog itself (no ring); keyboard users move to Continue once it's there to press
     if (modal) {
@@ -404,7 +422,7 @@ export class Reveal {
     const c = document.createElement('canvas');
     c.width = c.height = STAGE;
     const g = c.getContext('2d', { willReadFrequently: true })!;
-    const s = Math.min(POOL_W, POOL_H) * 0.84 * REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id);
+    const s = Math.min(POOL_W, POOL_H) * 0.84 * revealScaleOf(cls, artTileScaleOf(a.sp.id), a.sp.id);
     drawCreature(g, a.sp, STAGE / 2, STAGE / 2, s, 0, { expression: 'idle', night: this.d.night() });
     const d = g.getImageData(0, 0, STAGE, STAGE).data;
     let top = -1;
@@ -421,6 +439,45 @@ export class Reveal {
     if (Math.abs(lift) < 0.5) return;
     a.lift = lift;
     a.stage.style.top = `${-STAGE_Y - lift}px`;
+  }
+
+  /**
+   * Art critique round 5: the present's scale on the card. Size class × tileScale (capped, see
+   * revealScaleOf), but a non-legendary is never shorter than REVEAL_MIN_ART_PX (a golden S seahorse
+   * was ~75 px tall on a ~340 px card): one scratch render measures its resting height.
+   */
+  private presentScale(a: Active): number {
+    const cls = artSizeOf(a.sp.id);
+    const base = cls ? revealScaleOf(cls, artTileScaleOf(a.sp.id), a.sp.id) : 1;
+    if (a.sp.rarity === 'legendary') return base;
+    const c = document.createElement('canvas');
+    c.width = c.height = STAGE;
+    const g = c.getContext('2d', { willReadFrequently: true })!;
+    const s = Math.min(POOL_W, POOL_H) * 0.84;
+    g.translate(STAGE / 2, STAGE / 2);
+    g.scale(base, base);
+    drawCreature(g, a.sp, 0, 0, s, 0, { expression: 'idle', night: this.d.night(), golden: a.item.golden });
+    const d = g.getImageData(0, 0, STAGE, STAGE).data;
+    let top = -1;
+    let bottom = -1;
+    let left = STAGE;
+    let right = -1;
+    for (let i = 3; i < d.length; i += 4)
+      if (d[i]! > 40) {
+        const p = (i - 3) / 4;
+        const x = p % STAGE;
+        const y = (p - x) / STAGE;
+        if (top < 0) top = y;
+        bottom = y;
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+      }
+    if (top < 0) return base;
+    const tall = bottom - top + 1;
+    const wide = right - left + 1;
+    if (tall >= REVEAL_MIN_ART_PX) return base;
+    // a long, low species (sand eel) grows only as far as the stage allows
+    return base * Math.max(1, Math.min(REVEAL_MIN_ART_PX / tall, REVEAL_MAX_ART_W / wide));
   }
 
   /** Skip the animation: draw the settled card now. */
@@ -498,6 +555,7 @@ export class Reveal {
     if (!a.settled && t >= settleAt) {
       a.settled = settledNow = true;
       a.el.classList.add('settled', 'info');
+      for (const b of a.el.querySelectorAll('.rv-btns .btn')) b.removeAttribute('aria-disabled');
       // settled: the backdrop lets presses through; one outside the card closes the reveal
       addEventListener('pointerdown', this.outside, true);
       // keyboard users land on Continue now that it can be pressed
@@ -552,9 +610,8 @@ export class Reveal {
     const cx = w / 2;
     const cy = h * 0.55;
     const s = Math.min(w, h) * (a.modal ? 0.84 : 0.7);
-    // the creature (not the pearl) is scaled by its size class in the modal card
-    const cls = artSizeOf(a.sp.id);
-    const big = a.modal && cls ? REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id) : 1;
+    // the creature (not the pearl) is scaled by its size class in the modal card (presentScale)
+    const big = a.modal ? (a.big ?? 1) : 1;
     const tier = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
     const night = this.d.night();
     type Expr = NonNullable<DrawOpts['expression']>;
@@ -688,7 +745,11 @@ export class Reveal {
       // the beat ends: eyes open, one blink, then the idle loop (never an eyes-closed last frame).
       // Scene tiers (epic/legendary) land late, so their beat ends when the card settles: the card
       // waiting for Continue shows the creature eyes-open (CRITIQUE-3: the seadragon sat on `happy`).
-      const end = a.hero ? sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity) : beatEnd(rank);
+      // Art critique round 5: every reveal is eyes-open `idle` by 2.1 s (a rare golden seahorse
+      // was still on its closed-eyed proud beat): the pool beat ends by IDLE_BY_MS at the latest
+      const end = a.hero
+        ? sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity)
+        : Math.min(beatEnd(rank), IDLE_BY_MS - popAt);
       if (rank >= 3 && u > Math.min(BEAT_END_MS, end - SCENE_PROUD_MS)) expr = 'proud';
       if (u >= end) expr = u - end >= BLINK_AT_MS && u - end < BLINK_AT_MS + BLINK_MS ? 'blink' : 'idle';
     }
@@ -883,8 +944,7 @@ export class Reveal {
       return;
     }
     const u = t - popAt;
-    const cls = artSizeOf(a.sp.id);
-    const big = cls ? REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id) : 1;
+    const big = a.big ?? 1;
     const bigS = Math.min(W * 0.78, H * 0.4, 400);
     // into the pool once the chrome slides in
     const h = easeInOut(Math.min(1, Math.max(0, (t - a.chromeAt) / HANDOFF_MS)));
@@ -1008,6 +1068,15 @@ export class Reveal {
   current(): { id: string; modal: boolean; settled: boolean; expr?: string } | null {
     const a = this.cur;
     return a ? { id: a.sp.id, modal: a.modal, settled: a.settled, expr: a.expr } : null;
+  }
+
+  /**
+   * A modal card is younger than REVEAL_GRACE_MS (or not painted yet) at `t` (an event's timeStamp,
+   * performance.now() time base): a press then was aimed at the board, not at the card.
+   */
+  inGrace(t: number): boolean {
+    const a = this.cur;
+    return !!a && a.modal && (a.shownAt === undefined || t - a.shownAt < REVEAL_GRACE_MS);
   }
 
   /** Debug/test: close whatever is showing. */

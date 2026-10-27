@@ -67,7 +67,7 @@ test.describe('baselines', () => {
     await ctx.close();
   });
 
-  for (const id of ['boxcrab', 'kraken'])
+  for (const id of ['boxcrab', 'kraken', 'seadragon'])
     test(`discovery reveal: ${id}`, async ({ browser }) => {
       const ctx = await browser.newContext(rmContext);
       const page = await ctx.newPage();
@@ -184,7 +184,7 @@ test('a tap mid-reveal on where Continue will be only skips the animation (never
   expect(await page.evaluate(() => getComputedStyle(document.querySelector('.reveal .rv-btns')!).visibility)).toBe(
     'hidden',
   );
-  await page.waitForTimeout(Math.max(0, 250 - (Date.now() - t0)));
+  await page.waitForTimeout(Math.max(0, 400 - (Date.now() - t0))); // past the grace (from first paint)
   expect(await page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(false);
   await page.mouse.click(pt.x, pt.y);
   await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
@@ -193,6 +193,110 @@ test('a tap mid-reveal on where Continue will be only skips the animation (never
   // now Continue does close it
   await page.locator('.reveal .btn.primary').click();
   await expect(page.locator('.reveal')).toHaveCount(0);
+});
+
+test('the reveal grace runs from the first paint: a slow open never eats it', async ({ page }) => {
+  await boot(page, 'seed=42');
+  // open() is followed by a long task (a loaded phone building the card), then the first paint; a
+  // press right after that paint was aimed at the board: it must not skip (or close) the card
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        const root = document.getElementById('ui')!;
+        const mo = new MutationObserver(() => {
+          const el = root.querySelector('.reveal');
+          if (!el) return;
+          mo.disconnect();
+          const t = performance.now();
+          while (performance.now() - t < 400); // the slow build, before anything is painted
+          requestAnimationFrame(() =>
+            setTimeout(() => {
+              el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 20, clientY: 20 }));
+              el.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 20, clientY: 20 }));
+              done();
+            }, 0),
+          );
+        });
+        mo.observe(root, { childList: true, subtree: true });
+        (window as any).__atoll.revealSpecies('kraken');
+      }),
+  );
+  expect(await page.evaluate(() => (window as any).__atoll.revealState())).toMatchObject({
+    id: 'kraken',
+    settled: false,
+  });
+  // after the grace a tap skips as before
+  await page.waitForTimeout(300);
+  await page.mouse.click(20, 20);
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
+});
+
+test('reduced motion: a press in the reveal grace is swallowed whatever it hits, and so is its click', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await boot(page, 'seed=42');
+  // a press on the board just as the (at once settled) card paints: it must not close the card
+  const openAndPress = (target: 'board' | 'continue') =>
+    page.evaluate(
+      (target) =>
+        new Promise<void>((done) => {
+          const root = document.getElementById('ui')!;
+          const mo = new MutationObserver(() => {
+            const el = root.querySelector('.reveal');
+            if (!el) return;
+            mo.disconnect();
+            requestAnimationFrame(() =>
+              setTimeout(() => {
+                const t = target === 'board' ? document.querySelector('canvas')! : el.querySelector('.btn.primary')!;
+                const r = t.getBoundingClientRect();
+                const at = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
+                t.dispatchEvent(new PointerEvent('pointerdown', { ...at, pointerId: 7 }));
+                // it lifts after the grace: still the same press
+                setTimeout(() => {
+                  t.dispatchEvent(new PointerEvent('pointerup', { ...at, pointerId: 7 }));
+                  t.dispatchEvent(new MouseEvent('click', at));
+                  done();
+                }, 350);
+              }, 0),
+            );
+          });
+          mo.observe(root, { childList: true, subtree: true });
+          (window as any).__atoll.revealSpecies('kraken');
+        }),
+      target,
+    );
+  await openAndPress('board');
+  expect(await page.evaluate(() => (window as any).__atoll.revealState())).toMatchObject({
+    id: 'kraken',
+    settled: true,
+  });
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  await page.evaluate(() => (window as any).__atoll.revealSkip());
+  await expect(page.locator('.reveal')).toHaveCount(0);
+  await openAndPress('continue');
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  // a fresh press after the grace closes it as before
+  await page.locator('.reveal .btn.primary').click();
+  await expect(page.locator('.reveal')).toHaveCount(0);
+});
+
+test('scene-tier buttons shown before the card settles are aria-disabled until it does', async ({ page }) => {
+  await boot(page, 'seed=42');
+  await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+  const cont = page.locator('.reveal .btn.primary');
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  // the card is in (chrome at 1750 ms, info at +200) but not settled (2100 ms): dimmed, visible, inert
+  await page.evaluate(() => (window as any).__atoll.revealFreeze(2000));
+  await expect(page.locator('.reveal.info:not(.settled)')).toHaveCount(1);
+  expect(await cont.evaluate((b) => getComputedStyle(b).visibility)).toBe('visible');
+  await expect(cont).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.reveal .btn.ghost')).toHaveAttribute('aria-disabled', 'true');
+  await page.waitForTimeout(300); // past the grace
+  await page.mouse.click(20, 20);
+  await expect(page.locator('.reveal.settled')).toHaveCount(1);
+  await expect(cont).not.toHaveAttribute('aria-disabled');
+  await expect(page.locator('.reveal .btn.ghost')).not.toHaveAttribute('aria-disabled');
 });
 
 test('reveal a11y: the rest is inert, Tab stays in the dialog, focus returns; read once', async ({ page }) => {
@@ -324,14 +428,85 @@ test('every modal reveal settles eyes-open on idle (scene tiers by the time the 
     ['kraken', 2700],
     ['seadragon', 2700],
     ['whaleshark', 2700],
+    // art critique round 5: every reveal is eyes-open idle by 2.1 s (a golden seahorse was still proud)
+    ['seahorse*', 2100],
+    ['moray', 2100],
+    ['octopus*', 2100],
   ];
-  for (const [id, t] of cases) {
-    await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
+  for (const [key, t] of cases) {
+    const id = key.replace('*', '');
+    await page.evaluate(([id, golden]) => (window as any).__atoll.revealSpecies(id, { golden }), [
+      id,
+      key.endsWith('*'),
+    ] as const);
     await page.waitForFunction(() => (window as any).__atoll.revealState());
     await page.evaluate((t) => (window as any).__atoll.revealFreeze(t), t);
     const st = await page.evaluate(() => (window as any).__atoll.revealState());
     expect(st.settled, id).toBe(true);
     expect(st.expr, `${id} at ${t} ms`).toBe('idle');
+    await page.evaluate(() => (window as any).__atoll.revealSkip());
+    await expect(page.locator('.reveal')).toHaveCount(0);
+  }
+});
+
+test('a non-legendary present is at least 130 px tall on the card, whatever its size class', async ({ page }) => {
+  await boot(page, 'seed=42');
+  for (const [id, golden] of [
+    ['seahorse', true],
+    ['seahorse', false],
+    ['damsel', false],
+    ['boxcrab', false],
+    ['moray', false],
+  ] as const) {
+    await page.evaluate(([id, golden]) => (window as any).__atoll.revealSpecies(id, { golden }), [id, golden] as const);
+    await page.waitForFunction(() => (window as any).__atoll.revealState());
+    await page.waitForTimeout(400); // the CSS entrance (a scale-in) is over: measure at full size
+    // the settle frame, eyes-open idle (its signature, later, may curl it up for a moment)
+    await page.evaluate(() => (window as any).__atoll.revealFreeze(2100));
+    const box = await page.evaluate(() => {
+      const c = document.querySelector('.reveal canvas:not(.rv-fx)') as HTMLCanvasElement;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let y0 = -1;
+      let y1 = -1;
+      let x0 = c.width;
+      let x1 = -1;
+      for (let i = 3; i < d.length; i += 4)
+        if (d[i]! > 40) {
+          const p = (i - 3) / 4;
+          const x = p % c.width;
+          const y = (p - x) / c.width;
+          if (y0 < 0) y0 = y;
+          y1 = y;
+          x0 = Math.min(x0, x);
+          x1 = Math.max(x1, x);
+        }
+      const k = c.width / c.getBoundingClientRect().width;
+      return { h: (y1 - y0) / k, w: (x1 - x0) / k, cw: c.width / k };
+    });
+    expect(box.h, `${id}${golden ? ' (golden)' : ''}`).toBeGreaterThanOrEqual(130);
+    expect(box.w, `${id} fits its stage`).toBeLessThan(box.cw - 8);
+    await page.evaluate(() => (window as any).__atoll.revealSkip());
+    await expect(page.locator('.reveal')).toHaveCount(0);
+  }
+});
+
+test('legendary cards: the creature ends well clear of "New discovery" (kraken arm tips)', async ({ page }) => {
+  await boot(page, 'seed=42');
+  for (const id of ['kraken', 'seadragon', 'whaleshark', 'goldturtle']) {
+    await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
+    await page.waitForFunction(() => (window as any).__atoll.revealState());
+    await page.waitForTimeout(400); // the CSS entrance is over
+    await page.evaluate(() => (window as any).__atoll.revealFreeze(2700));
+    const gap = await page.evaluate(() => {
+      const c = document.querySelector('.reveal .rv-pool canvas') as HTMLCanvasElement;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let y1 = -1;
+      for (let i = 3; i < d.length; i += 4) if (d[i]! > 40) y1 = Math.floor((i - 3) / 4 / c.width);
+      const r = c.getBoundingClientRect();
+      const bottom = r.top + (y1 * r.height) / c.height;
+      return document.querySelector('.reveal .rv-over')!.getBoundingClientRect().top - bottom;
+    });
+    expect(gap, id).toBeGreaterThanOrEqual(12);
     await page.evaluate(() => (window as any).__atoll.revealSkip());
     await expect(page.locator('.reveal')).toHaveCount(0);
   }

@@ -48,6 +48,7 @@ export default defineArt({
   id: 'sunfish',
   klass: 'fish',
   size: 'XL',
+  tileScale: 0.85,
   feature: 'a tall disc with no tail, a scalloped frill and long fins up and down',
   personality: ['sunny', 'dopey', 'gentle'],
   palette: { body: '#9FC0D4', accent: '#6B8BA2', belly: '#D9E6EE' },

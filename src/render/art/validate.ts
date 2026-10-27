@@ -15,7 +15,7 @@ import type { Species } from '../../meta/creatures.ts';
 import {
   defaultEye,
   eyeFloorUnits,
-  tileScaleOf,
+  tileViewScale,
   TILE_SCALE,
   FRAME_BREAK,
   sizeClassFor,
@@ -102,7 +102,7 @@ export function metrics(art: SpeciesArt): Metrics {
   const nightL = oklch(SHARED.nightTile)[0];
   const rimL = oklch(blend(SHARED.nightTile, SHARED.rim, rimAlpha(art.palette.body)))[0];
   const long = Math.max(box.w, box.h) || 1;
-  const ppu = (TILE_FILL[art.size] * tileScaleOf(art) * TILE_PX) / long;
+  const ppu = (TILE_FILL[art.size] * tileViewScale(art) * TILE_PX) / long;
   const cx = box.x + box.w / 2,
     cy = box.y + box.h / 2,
     half = TILE_PX / 2;
@@ -267,8 +267,9 @@ export function validateArt(art: SpeciesArt, sp?: Species): Issue[] {
   if (art.tileScale !== undefined) {
     if (!Number.isFinite(art.tileScale) || art.tileScale < TILE_SCALE[0] || art.tileScale > TILE_SCALE[1])
       bad('R27S', `tileScale ${art.tileScale} outside ${TILE_SCALE[0]}–${TILE_SCALE[1]} (clamped)`);
-    if (art.size === 'XL' || art.size === 'XXL')
-      bad('R27S', `tileScale on ${art.size} (XL/XXL keep their frame rules)`);
+    // art critique round 5: an XL/XXL may shrink (≤ 1) so its detail page fits; never grow
+    if ((art.size === 'XL' || art.size === 'XXL') && art.tileScale > 1)
+      bad('R27S', `tileScale ${art.tileScale} on ${art.size} (XL/XXL may only shrink: ≤ 1)`);
   }
   if (art.size === 'XL' && (m.overhang < FRAME_BREAK[0] - 0.25 || m.overhang > FRAME_BREAK[1] + 0.25))
     warn('R28', `XL frame-break ${r2(m.overhang)} px past the art box (needs ${FRAME_BREAK[0]}–${FRAME_BREAK[1]} px)`);

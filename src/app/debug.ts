@@ -12,6 +12,8 @@ import type { Profile } from '../platform/storage.ts';
 import type { Scene } from '../render/scene.ts';
 import { trayCellFor } from '../render/layout.ts';
 import { lookFor } from '../render/skins.ts';
+import { drawCreature, loadCreatureArt } from '../render/creatures.ts';
+import { SPECIES_BY_ID } from '../meta/creatures.ts';
 import { BOTS, type BotName } from '../sim/bots.ts';
 import { Music } from '../audio/music.ts';
 import type { ReefSource } from './reefSource.ts';
@@ -37,6 +39,10 @@ export interface DebugDeps {
   journal(): unknown;
   /** Screenshots only: show a believable best score / a well-filled journal (not saved). */
   stageBest(n: number, score?: number): void;
+  /** How many times the loaded font set changed and the text sprites were rebuilt. */
+  fontsRuns(): number;
+  /** A leaderboard's Play button for that mode (asks first when it would end a run in progress). */
+  playFromBoard(m: 'classic' | 'daily'): void;
   stageJournal(ids: string[]): void;
   /** The journal's "new" dots: mark these species as looked at. */
   markSeen(ids: string[]): void;
@@ -56,6 +62,8 @@ export interface DebugDeps {
     celebrateWord(): string | null;
     /** NEW BEST: when a banner started (-1e9 = never) and whether the HUD line says it. */
     celebrateBest(): { bannerAt: number; hud: boolean };
+    /** The best the HUD compares against (the record this run chases) and whether it says NEW BEST. */
+    hudBest(): { best: number; newBest: boolean };
     revealState(): { id: string; modal: boolean; settled: boolean; expr?: string } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;
@@ -132,6 +140,8 @@ export function installDebugApi(d: DebugDeps): void {
     prefetchReefs: (i: number, count: number) => d.reefSource()?.prefetch(i - 1, count),
     journal: d.journal,
     stageBest: d.stageBest,
+    fontsRuns: d.fontsRuns,
+    playFromBoard: d.playFromBoard,
     /** Show a chip (lesson / reef of the day / welcome back) now. */
     toast: (text: string, life = 3000) => d.scene.toast(text, performance.now(), life),
     stageJournal: d.stageJournal,
@@ -157,6 +167,42 @@ export function installDebugApi(d: DebugDeps): void {
       return true;
     },
     /** Show a skin without touching the saved profile or unlocks. */
+    /**
+     * Framed-view fit (art critique round 5): the species drawn at rest (idle, still) in an `s` px
+     * box with `fit`, measured on a scratch 3s canvas. Returns how far its opaque pixels reach past
+     * the box on the worst side, as a share of the box (negative = margin to spare).
+     */
+    speciesIds: () => [...SPECIES_BY_ID.keys()],
+    async artFit(id: string, fit: 'detail' | 'tile' = 'detail', s = 176, night = false) {
+      await loadCreatureArt();
+      const sp = SPECIES_BY_ID.get(id);
+      if (!sp) return null;
+      const W = s * 3;
+      const c = document.createElement('canvas');
+      c.width = c.height = W;
+      const g = c.getContext('2d', { willReadFrequently: true })!;
+      drawCreature(g, sp, W / 2, W / 2, s, 0, { fit, still: true, night, expression: 'idle', awake: true });
+      const d = g.getImageData(0, 0, W, W).data;
+      let l = W;
+      let r = -1;
+      let t = -1;
+      let b = -1;
+      for (let i = 3; i < d.length; i += 4)
+        if (d[i]! > 40) {
+          const p = (i - 3) / 4;
+          const x = p % W;
+          const y = (p - x) / W;
+          if (t < 0) t = y;
+          b = y;
+          l = Math.min(l, x);
+          r = Math.max(r, x);
+        }
+      if (t < 0) return null;
+      const box0 = W / 2 - s / 2;
+      const box1 = W / 2 + s / 2;
+      const over = Math.max(box0 - l, r + 1 - box1, box0 - t, b + 1 - box1);
+      return { over: over / s, w: (r - l + 1) / s, h: (b - t + 1) / s };
+    },
     debugSkin(id: string) {
       d.scene.sprites.setLook(lookFor(id));
       d.setState(d.state());
