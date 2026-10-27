@@ -4,7 +4,7 @@
  * Update baselines intentionally: npx playwright test tests/e2e/celebrate.spec.ts --update-snapshots
  */
 import { expect, test, type Page } from '@playwright/test';
-import { boot, settleReveal } from './helpers.ts';
+import { boot, settleReveal, untilShown } from './helpers.ts';
 import { BOARDS, boardString } from './celebrate-boards.ts';
 
 test.describe.configure({ mode: 'parallel' });
@@ -379,7 +379,7 @@ test('a discovery that completes a chapter is revealed after the chapter moment,
   await boot(page, 'seed=42');
   const ring = ['........', '........', '..1.1...', '..1.1...', '..111...', '........', '........', '........'];
   await stageReefEnd(page, ring, true);
-  await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
+  await untilShown(page, page.getByTestId('puzzle-result'));
   const seen = await page.evaluate(() => (window as any).__seen);
   expect(seen['Chapter 1'], 'chapter moment played').toBeGreaterThan(0);
   expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);
@@ -393,7 +393,7 @@ test('a discovery on a failed reef ("So close") is still revealed before the car
   // the ring captures, but another pebble stays: the tray is empty and the board isn't → failed
   const ring = ['........', '........', '..1.1...', '..1.1...', '..111...', '........', '........', '......2.'];
   await stageReefEnd(page, ring, false);
-  await expect(page.getByTestId('puzzle-result')).toBeVisible({ timeout: 10_000 });
+  await untilShown(page, page.getByTestId('puzzle-result'));
   await expect(page.getByTestId('puzzle-result')).not.toHaveText('Cleared');
   const seen = await page.evaluate(() => (window as any).__seen);
   expect(seen.reveal, 'discovery revealed').toBeGreaterThan(0);

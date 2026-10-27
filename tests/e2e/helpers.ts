@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export async function boot(page: Page, query = 'seed=42'): Promise<string[]> {
   const errors: string[] = [];
@@ -49,3 +49,18 @@ export async function dragMove(page: Page, bot = 'greedy', wait = 60): Promise<b
 }
 
 export const state = (page: Page) => page.evaluate(() => (window as any).__atoll.state());
+
+/**
+ * Wait for `target` to show, pressing Continue on any discovery card on the way (on a fresh profile
+ * the first-ever catch is a modal card that introduces the journal; the result cards wait for it).
+ */
+export async function untilShown(page: Page, target: Locator, timeout = 10_000): Promise<void> {
+  const end = Date.now() + timeout;
+  while (Date.now() < end) {
+    if (await target.isVisible().catch(() => false)) return;
+    const cont = page.locator('.reveal.settled .btn.primary');
+    if (await cont.count()) await cont.click({ timeout: 1000 }).catch(() => undefined);
+    await page.waitForTimeout(150);
+  }
+  await expect(target).toBeVisible();
+}
