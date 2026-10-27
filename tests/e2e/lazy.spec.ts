@@ -39,3 +39,17 @@ test('vite:preloadError reloads the page once, not in a loop', async ({ page }) 
   await page.waitForTimeout(2500); // idle prefetches fail too: still no second reload
   expect(loads).toBe(2);
 });
+
+test('a blocked results chunk shows a retry chip at game over; once unblocked, the card appears', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('lb.chunkReload', String(Date.now())));
+  let blocked = true;
+  await page.route(/\/assets\/results-[^/]*\.(js|css)$/, (r) => (blocked ? r.abort() : r.continue()));
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.showResults({ score: 1234, prevBest: 900 }));
+  const chip = page.getByTestId('retry-chip');
+  await expect(chip).toBeVisible();
+  blocked = false;
+  await chip.click();
+  await expect(page.getByTestId('final-score')).toHaveText('1234');
+  await expect(chip).toHaveCount(0);
+});

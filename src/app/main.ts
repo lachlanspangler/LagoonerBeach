@@ -1332,8 +1332,9 @@ function debugDeps(): DebugDeps {
         const c = renderShareCard(SPECIES_BY_ID.get(id)!, { date: today() });
         return shareCanvas(c, `lagooner-beach-${id}.png`, 'test');
       },
+      // void: the card arrives with the results chunk (a blocked chunk must not hang the caller)
       showResults: (o) =>
-        ui.showGameOver({
+        void ui.showGameOver({
           score: o.score,
           best: Math.max(o.score, o.prevBest),
           newBest: o.score > o.prevBest && o.prevBest > 0,
