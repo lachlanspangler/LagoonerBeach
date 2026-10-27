@@ -422,7 +422,7 @@ export class Reveal {
     const c = document.createElement('canvas');
     c.width = c.height = STAGE;
     const g = c.getContext('2d', { willReadFrequently: true })!;
-    const s = Math.min(POOL_W, POOL_H) * 0.84 * revealScaleOf(cls, artTileScaleOf(a.sp.id));
+    const s = Math.min(POOL_W, POOL_H) * 0.84 * revealScaleOf(cls, artTileScaleOf(a.sp.id), a.sp.id);
     drawCreature(g, a.sp, STAGE / 2, STAGE / 2, s, 0, { expression: 'idle', night: this.d.night() });
     const d = g.getImageData(0, 0, STAGE, STAGE).data;
     let top = -1;
@@ -448,7 +448,7 @@ export class Reveal {
    */
   private presentScale(a: Active): number {
     const cls = artSizeOf(a.sp.id);
-    const base = cls ? revealScaleOf(cls, artTileScaleOf(a.sp.id)) : 1;
+    const base = cls ? revealScaleOf(cls, artTileScaleOf(a.sp.id), a.sp.id) : 1;
     if (a.sp.rarity === 'legendary') return base;
     const c = document.createElement('canvas');
     c.width = c.height = STAGE;
