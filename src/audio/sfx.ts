@@ -20,12 +20,49 @@ export class Sfx {
    */
   prepare(): void {
     if (!this.ctx) this.create();
+    // nodes can be built on a suspended context: warm the engine at idle, long before a jackpot
+    if (this.ctx && !this.primed) {
+      this.primed = true;
+      this.prime();
+    }
   }
 
   /** Call from a user-gesture handler (pointerdown). Safe to call repeatedly. */
   unlock(): void {
     if (!this.ctx) this.create();
     if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume();
+    if (this.ctx && !this.primed) {
+      this.primed = true;
+      // first use of each node type starts engine machinery (10–20 ms at 4× throttle); pay it now,
+      // in a separate task, instead of on the first jackpot frame
+      setTimeout(() => this.prime(), 0);
+    }
+  }
+  private primed = false;
+
+  /** Silently create, wire and run one node of every type the sounds use. */
+  private prime(): void {
+    const c = this.ctx;
+    if (!c) return;
+    const t = c.currentTime;
+    const sink = c.createGain();
+    sink.gain.value = 0;
+    sink.connect(c.destination);
+    const osc = c.createOscillator();
+    const bq = c.createBiquadFilter();
+    const g = c.createGain();
+    const dl = c.createDelay(0.1);
+    osc.connect(bq).connect(g).connect(dl).connect(sink);
+    osc.start(t);
+    osc.stop(t + 0.02);
+    if (this.noise) {
+      const src = c.createBufferSource();
+      src.buffer = this.noise;
+      src.connect(sink);
+      src.start(t);
+      src.stop(t + 0.02);
+    }
+    setTimeout(() => sink.disconnect(), 200);
   }
 
   private create(): void {

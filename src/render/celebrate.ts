@@ -81,7 +81,7 @@ export class TextSprites {
     }
     s = this.render(text, size, style, night, weight);
     this.cache.set(key, s);
-    if (this.cache.size > 64) this.cache.delete(this.cache.keys().next().value!);
+    if (this.cache.size > 96) this.cache.delete(this.cache.keys().next().value!);
     return s;
   }
 
@@ -324,13 +324,9 @@ export class Celebrate {
    * the word landing), so the jackpot frame doesn't pay for 3-pass text rendering.
    */
   prewarm(items: readonly (readonly [string, number, TextStyle, number?])[], night: boolean): void {
-    const run = () => {
-      for (const [t, px, st, w] of items) this.sprites.get(t, px, st, night, w ?? 900);
-    };
-    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void })
-      .requestIdleCallback;
-    if (ric) ric(run, { timeout: 120 });
-    else setTimeout(run, 0);
+    // one sprite per task, starting right after the current frame: an idle callback can arrive after
+    // the word has already landed under load (the cold jackpot frame then paid 10–20 ms)
+    items.forEach(([t, px, st, w], i) => setTimeout(() => this.sprites.get(t, px, st, night, w ?? 900), i * 4));
   }
 
   /** The COMBO badge's text sizes for a combo of n (for prewarm). */

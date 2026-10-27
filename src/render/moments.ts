@@ -119,6 +119,17 @@ export function wordFor(f: Features): { tier: Tier; word: string | null; style: 
 }
 const T = (tier: Tier, word: string | null, style: WordStyle) => ({ tier, word, style });
 
+/** The peak words (tier 3–4) with their tier and style — prewarmed so a first jackpot is cheap. */
+export const PEAK_WORDS: readonly (readonly [string, Tier, WordStyle])[] = [
+  ['Atoll!', 3, 'warm'],
+  ['Archipelago!', 3, 'warm'],
+  ['Ripple ×2', 3, 'water'],
+  ['Riptide!', 4, 'water'],
+  ['Spotless!', 4, 'water'],
+  ['Amazing!', 4, 'gold'],
+  ['Unbelievable!', 4, 'gold'],
+];
+
 const STING: Record<string, Sting> = {
   'Nice!': 'nice',
   'Nice Lagoon!': 'lagoon',

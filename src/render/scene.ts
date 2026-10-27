@@ -910,10 +910,15 @@ export class Scene {
         g.fill();
         g.stroke();
         g.fillStyle = '#4A3300';
-        g.font = `900 ${Math.round(r * 1.0)}px ${FONT_STACK}`;
+        // fixed font size scaled by transform (a per-frame size re-rasterises the glyphs: 13 ms
+        // of cold frames in the biggest moment at 4× throttle)
+        const r0 = Math.max(6, Math.round(f.size * 0.62));
+        g.font = `900 ${r0}px ${FONT_STACK}`;
         g.textAlign = 'center';
         g.textBaseline = 'middle';
-        g.fillText(`+${f.chip}`, x, y + 1);
+        g.translate(x, y + 1);
+        g.scale(r / r0, r / r0);
+        g.fillText(`+${f.chip}`, 0, 0);
         g.restore();
         continue;
       }
@@ -1066,10 +1071,18 @@ export class Scene {
     // a peak's points land in gold for a beat
     if (this.scorePunch.gold && pk >= 0 && pk < 1.6) g.fillStyle = night ? p.gold : p.goldInk;
     const base = l.hud.y + l.hud.h * 0.5;
-    g.font = `900 ${Math.round(big * punch)}px ${FONT}`;
+    // one font size, scaled by transform: a per-frame font size re-rasterises every glyph (perf)
+    g.font = `900 ${Math.round(big)}px ${FONT}`;
     const ls = g as CanvasRenderingContext2D & { letterSpacing?: string };
     if ('letterSpacing' in ls) ls.letterSpacing = `${(-big * 0.02).toFixed(2)}px`;
-    g.fillText(fmt(this.shownScore), cx, base + (punch - 1) * big * 0.3);
+    const sy = base + (punch - 1) * big * 0.3;
+    if (punch !== 1) {
+      g.save();
+      g.translate(cx, sy);
+      g.scale(punch, punch);
+      g.fillText(fmt(this.shownScore), 0, 0);
+      g.restore();
+    } else g.fillText(fmt(this.shownScore), cx, sy);
     if ('letterSpacing' in ls) ls.letterSpacing = '0px';
     // best second, as on the results card; hidden until there is one (first run)
     const beat = (this.score > this.best && this.best > 0) || this.celebrate.bestShown;

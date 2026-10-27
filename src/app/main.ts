@@ -1193,6 +1193,7 @@ const idle =
   ((cb: () => void) => setTimeout(cb, 300));
 idle(() => {
   sfx.prepare();
+  fx.warmPeaks(); // a first jackpot shouldn't build its text mid-burst
   setTimeout(() => reveal.prefetch(), 2500);
   setTimeout(() => ui.prefetchSheets(), 1800);
   setTimeout(() => ui.prefetchResults(), 2200);
@@ -1209,6 +1210,7 @@ requestAnimationFrame(frame);
 // bundled fonts arrive after first paint (font-display: swap): redraw once they're in
 const fontsIn = () => {
   scene.fontsReady();
+  fx.warmPeaks(true); // the text sprites were just cleared: build the peak words again, off-frame
   dirty = true;
 };
 document.fonts?.addEventListener?.('loadingdone', fontsIn);

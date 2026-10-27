@@ -13,7 +13,16 @@ import { Kind } from '../render/particles.ts';
 import { BURST_LIFT } from '../render/burst.ts';
 import { FISH_LIFE, type Scene } from '../render/scene.ts';
 import { MOTION, fmt } from '../render/theme.ts';
-import { chimeLayers, chimeStep, comboChange, comboLevel, LIMITS, MomentGuard, momentFor } from '../render/moments.ts';
+import {
+  chimeLayers,
+  chimeStep,
+  comboChange,
+  comboLevel,
+  LIMITS,
+  MomentGuard,
+  momentFor,
+  PEAK_WORDS,
+} from '../render/moments.ts';
 import { placeStack, WORD_LIFE, WORD_SIZE, BEST_LIFE } from '../render/celebrate.ts';
 import type { Sfx } from '../audio/sfx.ts';
 import type { Haptics } from '../platform/haptics.ts';
@@ -173,12 +182,40 @@ export class Fx {
     return t + life;
   }
 
+  private warmKey = '';
+  /**
+   * Render the peak words and the stepped COMBO badges for the current layout/theme off the hot
+   * frames (a first jackpot used to build its 3-pass text sprites mid-burst: 10–20 ms frames at 4×
+   * throttle). Cheap to call often: it only works when the layout, text scale or theme changed.
+   */
+  warmPeaks(force = false): void {
+    if (force) this.warmKey = '';
+    const sc = this.scene;
+    const l = sc.layout;
+    const ts = sc.textScale;
+    const night = sc.palette.name === 'night';
+    const key = `${l.cell}|${ts}|${night ? 1 : 0}`;
+    if (key === this.warmKey || !l.cell) return;
+    this.warmKey = key;
+    const cel = sc.celebrate;
+    cel.prewarm(
+      [
+        ...PEAK_WORDS.map(([w, tier, st]) => [w, l.cell * WORD_SIZE[tier]! * ts, st] as const),
+        ...cel.comboSprites(5, l, ts),
+        ...cel.comboSprites(10, l, ts),
+        ...cel.comboSprites(20, l, ts),
+      ],
+      night,
+    );
+  }
+
   dispatch(
     events: readonly GameEvent[],
     now: number,
     from: { x: number; y: number } | null,
     opts: DispatchOpts = {},
   ): number {
+    this.warmPeaks();
     const sc = this.scene;
     const l = sc.layout;
     const cel = sc.celebrate;
