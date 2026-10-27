@@ -98,6 +98,9 @@ export function tabbable(root: HTMLElement): HTMLElement[] {
   );
 }
 
+/** A second press this soon after a mode card starts asking "this one ends here" is a double tap: ignored. */
+export const CONFIRM_GUARD_MS = 450;
+
 const night = (): boolean => document.documentElement.dataset.theme === 'night';
 /** Journal fun unit: one board pebble ≈ 4 cm (CREATURE_ART R28). */
 export const PEBBLE_CM = 4;
@@ -140,6 +143,53 @@ export class Ui {
       fn();
     });
     return b;
+  }
+
+  /**
+   * An inline "this run ends here" confirm on a mode card. `go()` (call from the card's press) says
+   * whether to go ahead: with no run at stake at once; otherwise the first press arms the card and a
+   * later one confirms. A second press within CONFIRM_GUARD_MS of arming (a double tap) is ignored,
+   * as is a held key's auto-repeat, and the card disarms when focus leaves it.
+   */
+  private confirmOnCard(b: HTMLButtonElement, needed: boolean, ask: string): { go(): boolean; arm(): void } {
+    let armedAt = -1;
+    const parts = ['.mc-title', '.mc-line', '.mc-status'].map((s) => b.querySelector<HTMLElement>(s));
+    const was = parts.map((e) => e?.innerHTML ?? '');
+    const label = b.getAttribute('aria-label') ?? '';
+    const arm = () => {
+      armedAt = performance.now();
+      b.classList.add('confirm');
+      parts[0]!.textContent = ask;
+      parts[1]!.textContent = 'This one ends here.';
+      parts[2]!.textContent = 'Start new';
+      b.setAttribute('aria-label', `${ask} This one ends here. Press again to start new`);
+      this.announce(`${ask} This one ends here. Press again to confirm.`);
+    };
+    const disarm = () => {
+      if (armedAt < 0) return;
+      armedAt = -1;
+      b.classList.remove('confirm');
+      parts.forEach((e, i) => e && (e.innerHTML = was[i]!));
+      b.setAttribute('aria-label', label);
+    };
+    if (needed) {
+      // Enter clicks on every auto-repeat keydown: a held key must not arm *and* confirm
+      b.addEventListener('keydown', (e) => {
+        if (e.repeat && (e.key === 'Enter' || e.key === ' ')) e.preventDefault();
+      });
+      b.addEventListener('blur', disarm);
+    }
+    return {
+      go: () => {
+        if (!needed) return true;
+        if (armedAt < 0) {
+          arm();
+          return false;
+        }
+        return performance.now() - armedAt >= CONFIRM_GUARD_MS;
+      },
+      arm: () => needed && arm(),
+    };
   }
 
   /** Announcements made in the same task, read out together (one would otherwise overwrite the other). */
@@ -318,8 +368,13 @@ export class Ui {
     dailyDone = false,
     /** What Resume goes back to, e.g. "Endless · 3,150" or "Reef 28". */
     resumeWhat = '',
-    /** An Endless run is in progress: New game asks once, inline ("This one ends here"). */
+    /**
+     * An Endless (or Daily) run is in progress: starting that mode over asks once, inline, on its
+     * card ("This one ends here").
+     */
     confirmNew = false,
+    /** Open with that card already asking (a Play elsewhere, e.g. on a leaderboard, mid-run). */
+    armed = false,
   ): void {
     const card = document.createElement('div');
     card.className = 'sheet home stagger';
@@ -386,30 +441,27 @@ export class Ui {
       mode === 'classic',
       () => {
         if (mode !== 'classic') return this.h.onClassic();
-        // a run in progress: the first tap asks, right on the card; the second starts over
-        if (confirmNew && !endless.classList.contains('confirm')) {
-          endless.classList.add('confirm');
-          endless.querySelector('.mc-title')!.textContent = 'Start a new game?';
-          endless.querySelector('.mc-line')!.textContent = 'This one ends here.';
-          endless.querySelector('.mc-status')!.textContent = 'Start new';
-          endless.setAttribute('aria-label', 'Start a new game? This one ends here. Press again to start new');
-          this.announce('Start a new game? This one ends here. Press again to confirm.');
-          return;
-        }
-        this.h.onNewGame();
+        if (endlessAsk.go()) this.h.onNewGame();
       },
       'go',
     );
-    card3(
+    const daily = card3(
       'daily',
       'Daily',
       'One board for everyone today',
       dailyDone ? `${icon('check', { size: 16 })}` : p.daily.current > 0 ? `Day ${p.daily.current + 1}` : 'Today',
       mode === 'daily' ? 'Replay the daily challenge' : 'Daily challenge',
       mode === 'daily',
-      () => this.h.onDaily(),
+      () => {
+        if (mode !== 'daily') return this.h.onDaily();
+        if (dailyAsk.go()) this.h.onDaily();
+      },
       dailyDone ? '' : 'go',
     );
+    // a run in progress: the first press asks, right on the card; a second one starts over
+    const endlessAsk = this.confirmOnCard(endless, mode === 'classic' && confirmNew, 'Start a new game?');
+    const dailyAsk = this.confirmOnCard(daily, mode === 'daily' && confirmNew, "Replay today's board?");
+    if (armed) (mode === 'daily' ? dailyAsk : endlessAsk).arm();
     card3(
       'reef',
       'Reefs',

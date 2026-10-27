@@ -89,7 +89,8 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   await card.click();
   await expect(card).toContainText('This one ends here.');
   expect((await state(page)).moves).toBe(run.moves);
-  // the second starts over; the best stays
+  // the second (not a double tap: later than the guard) starts over; the best stays
+  await page.waitForTimeout(500);
   await card.click();
   await expect.poll(async () => (await state(page)).moves).toBe(0);
   expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
@@ -98,6 +99,61 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   const seed = (await state(page)).seed;
   await page.locator('.mode-card').first().click();
   await expect.poll(async () => (await state(page)).seed).not.toBe(seed);
+});
+
+test('the New-game confirm ignores a double tap, a held Enter, and disarms on blur; Play elsewhere asks too', async ({
+  page,
+}) => {
+  await boot(page, 'fast=1');
+  const A = (f: string, ...args: unknown[]) =>
+    page.evaluate(([f, args]) => (window as any).__atoll[f as string](...(args as unknown[])), [f, args] as const);
+  await A('autoplay', 'greedy', 2);
+  const moves = (await state(page)).moves;
+  expect(moves).toBe(2);
+  const card = page.locator('.mode-card').first();
+  // a double tap only asks
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await card.dblclick();
+  await expect(card).toContainText('This one ends here.');
+  await page.waitForTimeout(300);
+  expect((await state(page)).moves).toBe(moves);
+  // focus leaving the card disarms it (WebKit doesn't focus a clicked button: focus it first)
+  await card.focus();
+  await page.keyboard.press('Tab');
+  await expect(card).not.toContainText('This one ends here.');
+  await expect(card).toContainText('New game');
+  // a held Enter: the first keydown asks, its auto-repeats don't confirm
+  await card.focus();
+  await page.keyboard.down('Enter');
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(100);
+    await page.keyboard.down('Enter');
+  }
+  await page.keyboard.up('Enter');
+  await expect(card).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(moves);
+  // a leaderboard's Play mid-run opens the menu with the card asking; the run is untouched
+  await page.keyboard.press('Escape');
+  await A('playFromBoard', 'classic');
+  await expect(card).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(moves);
+  await page.waitForTimeout(500);
+  await card.click();
+  await expect.poll(async () => (await state(page)).moves).toBe(0);
+  // with no run at stake, Play is immediate
+  await A('playFromBoard', 'classic');
+  await expect(page.locator('.mode-card')).toHaveCount(0);
+  // the Daily card mid-daily asks too (replaying would end today's run)
+  await A('switchMode', 'daily');
+  await A('autoplay', 'greedy', 2);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const daily = page.locator('.mode-card').nth(1);
+  await daily.click();
+  await expect(daily).toContainText('This one ends here.');
+  expect((await state(page)).moves).toBe(2);
+  await page.waitForTimeout(500);
+  await daily.click();
+  await expect.poll(async () => (await state(page)).moves).toBe(0);
 });
 
 test('a trip to the Daily mid-run (and a reload) keeps the record the Endless run chases', async ({ page }) => {

@@ -642,8 +642,8 @@ function lbui(): Promise<LeaderboardUi> {
       save: () => saveProfile(profile),
       journal: () => journal,
       clientVersion: __APP_VERSION__,
-      playDaily: () => (mode === 'daily' ? restart() : switchMode('daily')),
-      playEndless: () => (mode === 'classic' ? restart() : switchMode('classic')),
+      playDaily: () => playMode('daily'),
+      playEndless: () => playMode('classic'),
       offline: DEBUG && params.has('lboffline'),
       lastRun: () => lastFinished,
       click: () => (wakeAudio(), sfx.click()),
@@ -932,19 +932,31 @@ function switchMode(m: Mode): void {
 let chapterHold = 0;
 
 // ------------------------------------------------------------------ UI
+/** An Endless or Daily run with moves on it: starting that mode over asks first (inline, on its card). */
+const runAtStake = (): boolean => mode !== 'puzzle' && state.moves > 0 && !state.over;
+/** The home menu; `armed`: open with the current mode's card already asking "this one ends here". */
+function openMenu(armed = false): void {
+  ui.showMenu(
+    profile,
+    mode,
+    !state.over,
+    Object.keys(journal.entries).length,
+    profile.daily.lastDay === dayIndex(today()),
+    mode === 'puzzle'
+      ? `Reef ${state.seed + 1}`
+      : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
+    runAtStake(),
+    armed,
+  );
+}
+/** Play this mode from elsewhere (a leaderboard): a run in progress is never ended without asking. */
+function playMode(m: 'classic' | 'daily'): void {
+  if (mode !== m) return switchMode(m);
+  if (runAtStake()) return openMenu(true);
+  restart();
+}
 const ui = new Ui({
-  onOpenMenu: () =>
-    ui.showMenu(
-      profile,
-      mode,
-      !state.over,
-      Object.keys(journal.entries).length,
-      profile.daily.lastDay === dayIndex(today()),
-      mode === 'puzzle'
-        ? `Reef ${state.seed + 1}`
-        : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`,
-      mode === 'classic' && state.moves > 0 && !state.over,
-    ),
+  onOpenMenu: () => openMenu(),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
   onLeaderboards: LB_ON ? openBoards : undefined,
@@ -1312,6 +1324,7 @@ function debugDeps(): DebugDeps {
     switchMode,
     loadPuzzle,
     journal: () => journal,
+    playFromBoard: playMode,
     stageBest: (n, score) => {
       scene.best = n;
       if (score !== undefined) {
