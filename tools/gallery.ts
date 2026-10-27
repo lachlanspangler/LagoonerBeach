@@ -517,6 +517,52 @@ function cast(): void {
   }
 }
 
+/**
+ * ?cold[&night][&golden]: the CRITIQUE-3 "what is it?" cold read. Every species' 54 px journal tile
+ * alone (wide gutters, so neighbours don't prompt), grouped by habitat, no names: only a code per
+ * tile (habitat initial + number) so a reviewer can write answers down. The key is `window.__key`
+ * (scripts/art-sheet.ts --cold writes it next to the PNG). Pass only if the answer is the species.
+ */
+function cold(): void {
+  const theme = q.has('night') ? MINT_NIGHT : MINT_DAY;
+  const golden = q.has('golden');
+  const T = 54,
+    cellW = 104,
+    rowH = 100,
+    per = 8;
+  const rows = HABITATS.reduce((n, h) => n + Math.ceil(SPECIES.filter((s) => s.habitat === h.id).length / per), 0);
+  const g = sheet(per * cellW + 130, 54 + rows * rowH + HABITATS.length * 14, theme);
+  label(
+    g,
+    `Cold read · ${theme.night ? 'Night' : 'Day'}${golden ? ' · golden' : ''} — what is each one? (54 px tiles, no names)`,
+    12,
+    30,
+    theme,
+    15,
+    'left',
+    900,
+    true,
+  );
+  const key: string[] = [];
+  let y = 54;
+  for (const h of HABITATS) {
+    const list = SPECIES.filter((s) => s.habitat === h.id);
+    label(g, h.name, 12, y + T / 2 + 10, theme, 13, 'left', 600, true);
+    list.forEach((sp, i) => {
+      const x = 130 + (i % per) * cellW,
+        yy = y + Math.floor(i / per) * rowH;
+      const code = String(key.length + 1);
+      key.push(`${code} ${sp.id}`);
+      inTile(g, sp, x + (cellW - T) / 2, yy + 10, T, theme, golden ? { golden: true } : {});
+      g.globalAlpha = 0.7;
+      label(g, code, x + cellW / 2, yy + T + 28, theme, 10, 'center', 600);
+      g.globalAlpha = 1;
+    });
+    y += Math.ceil(list.length / per) * rowH + 14;
+  }
+  (window as unknown as { __key: string[] }).__key = key;
+}
+
 const mode = q.has('sheet')
   ? 'sheet'
   : q.has('film')
@@ -527,8 +573,11 @@ const mode = q.has('sheet')
         ? 'sil'
         : q.has('cast')
           ? 'cast'
-          : 'all';
+          : q.has('cold')
+            ? 'cold'
+            : 'all';
 if (mode === 'cast') cast();
+else if (mode === 'cold') cold();
 else if (mode === 'sheet') speciesSheet((q.get('sheet') || [...ART.keys()].join(',')).split(',').filter(Boolean));
 else if (mode === 'film') film(q.get('film')!);
 else if (mode === 'compare') compare();

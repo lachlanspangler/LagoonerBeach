@@ -6,7 +6,14 @@
 import { describe, expect, it } from 'vitest';
 import { SPECIES, SPECIES_BY_ID } from '../../src/meta/creatures.ts';
 import { ART } from '../../src/render/art/species/index.ts';
-import { failing, LINT_AS_ERRORS, validateArt } from '../../src/render/art/validate.ts';
+import {
+  CAST_LINT_AS_ERRORS,
+  castOf,
+  failing,
+  LINT_AS_ERRORS,
+  validateArt,
+  validateCast,
+} from '../../src/render/art/validate.ts';
 import { pairScores, silhouetteMask } from '../../src/render/art/silhouette.ts';
 import { boundsOf, flatten, iou, parsePath, polyArea } from '../../src/render/art/path.ts';
 import {
@@ -20,7 +27,15 @@ import {
   sizeClassFor,
   EXPRESSIONS,
 } from '../../src/render/art/kit.ts';
-import { deriveInk, fromOklch, oklch } from '../../src/render/art/palette.ts';
+import {
+  cielab,
+  deltaE2000,
+  deriveInk,
+  fromOklch,
+  GOLDEN_DEEP,
+  goldenKind,
+  oklch,
+} from '../../src/render/art/palette.ts';
 import { blinking, pose, sample, signatureProgress } from '../../src/render/art/motion.ts';
 
 const arts = [...ART.values()];
@@ -127,6 +142,64 @@ describe('palette (R16)', () => {
       expect(L).toBeGreaterThanOrEqual(0.19);
       expect(L).toBeLessThanOrEqual(0.33);
     }
+  });
+});
+
+describe('golden remap (CRITIQUE-3 #4)', () => {
+  it('yellow bases get the deep metallic gold; others gold; the turtle keeps rose', () => {
+    for (const hex of ['#F2D43B', '#F2B93B', '#D9C27A']) expect(goldenKind(hex), hex).toBe('deep');
+    for (const hex of ['#3D9BE9', '#C9503A', '#E9DCC4']) expect(goldenKind(hex), hex).toBe('gold'); // cream: no hue
+    expect(goldenKind('#E8B23E', 'rose')).toBe('rose');
+    expect(GOLDEN_DEEP.body).toBe('#E9A93A');
+  });
+});
+
+describe('cast lints (CRITIQUE-3: colour identity across the cast)', () => {
+  it('CIEDE2000 matches the Sharma et al. reference pairs', () => {
+    const pairs: [number[], number[], number][] = [
+      [[50, 2.6772, -79.7751], [50, 0, -82.7485], 2.0425],
+      [[50, -1.3802, -84.2814], [50, 0, -82.7485], 1.0],
+      [[50, 2.49, -0.001], [50, -2.49, 0.0009], 7.1792],
+      [[60.2574, -34.0099, 36.2677], [60.4626, -34.1751, 39.4387], 1.2644],
+      [[2.0776, 0.0795, -1.135], [0.9033, -0.0636, -0.5514], 0.9082],
+    ];
+    for (const [p, q, d] of pairs)
+      expect(deltaE2000(p as [number, number, number], q as [number, number, number])).toBeCloseTo(d, 3);
+    expect(deltaE2000(cielab('#F2D43B'), cielab('#F2D43B'))).toBe(0);
+  });
+  const e = (id: string, body: string, habitat = 'reef', legendary = false) => ({ id, body, habitat, legendary });
+  const rules = (m: Map<string, { rule: string }[]>, id: string) => m.get(id)!.map((i) => i.rule);
+  it('C1: shared hex and near-twins (ΔE00 < 6) are flagged on both species', () => {
+    const m = validateCast([
+      e('a', '#3D9BE9', 'x'),
+      e('b', '#3d9be9', 'y'),
+      e('c', '#3F9DEA', 'z'),
+      e('d', '#C9503A', 'w'),
+    ]);
+    expect(rules(m, 'a')).toContain('C1');
+    expect(rules(m, 'b')).toContain('C1');
+    expect(rules(m, 'c')).toContain('C1');
+    expect(rules(m, 'd')).toEqual([]);
+  });
+  it('C2: more than 40 % of a habitat inside 30° of hue is flagged; neutrals sit out', () => {
+    // 5 species: ≤ 2 may share a window. Three blues (hue ≈ 250–265°) is one too many.
+    const hab = [e('b1', '#3D9BE9'), e('b2', '#4A78E0'), e('b3', '#7C9FD0'), e('r', '#C9503A'), e('g', '#C3CDD6')];
+    const m = validateCast(hab);
+    for (const id of ['b1', 'b2', 'b3']) expect(rules(m, id), id).toContain('C2');
+    expect(rules(m, 'r')).toEqual([]);
+    expect(rules(m, 'g')).toEqual([]); // chroma 0.017: no hue to speak of
+    expect(validateCast(hab.map((x) => (x.id === 'b3' ? e('b3', '#3BC9A0') : x))).get('b1')).toEqual([]);
+  });
+  it('C3: a non-legendary within 15° of a legendary hue is flagged (and the legendary)', () => {
+    const m = validateCast([e('L', '#714B99', 'legend', true), e('u', '#8A68AE', 'shallows'), e('f', '#3BC9A0')]);
+    expect(rules(m, 'u')).toContain('C3');
+    expect(rules(m, 'L')).toContain('C3');
+    expect(rules(m, 'f')).toEqual([]);
+  });
+  it('the cast has no cast-lint errors (warnings are listed in docs/art/LINT.md)', () => {
+    const strict = CAST_LINT_AS_ERRORS || process.env.ART_CAST_STRICT === '1';
+    const m = validateCast(castOf(arts, (id) => SPECIES_BY_ID.get(id)));
+    for (const [id, issues] of m) expect(failing(issues, strict), id).toEqual([]);
   });
 });
 
