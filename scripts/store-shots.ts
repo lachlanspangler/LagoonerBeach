@@ -200,6 +200,12 @@ const shots: Shot[] = [
         const a = (window as any).__atoll;
         for (const s of a.puzzleSolution()) a.commitMove({ slot: s.piece, x: s.x, y: s.y });
       });
+      // a fresh profile's first catch is a card that waits for Continue before the reef result
+      for (let i = 0; i < 100 && !(await p.getByTestId('puzzle-result').isVisible()); i++) {
+        const cont = p.locator('.reveal.settled .btn.primary');
+        if (await cont.count()) await cont.click({ timeout: 1000 }).catch(() => undefined);
+        await p.waitForTimeout(150);
+      }
       await p.getByTestId('puzzle-result').waitFor({ timeout: 15000 });
       await p.waitForTimeout(1100);
       // then the map: chapter 2 all cleared (shell stickers, stars for no-hint clears), Depth 40 m,
