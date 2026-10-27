@@ -26,10 +26,11 @@ type Win = Pick<Window, 'addEventListener' | 'sessionStorage'> & { location: Pic
  */
 export function installPreloadRecovery(w: Win = window, now: () => number = Date.now): void {
   // a chunk aborted because the page is being left (reload, navigation) is not a stale deploy:
-  // reloading then would fight the navigation already under way
+  // reloading then would fight the navigation already under way. pagehide only: `beforeunload`
+  // also fires for a navigation that is then cancelled, or one that turns into a download, and
+  // nothing would clear the flag (no pageshow), leaving recovery off for the rest of the session.
   let leaving = false;
   w.addEventListener('pagehide', () => (leaving = true));
-  w.addEventListener('beforeunload', () => (leaving = true));
   w.addEventListener('pageshow', () => (leaving = false));
   w.addEventListener('vite:preloadError', () => {
     if (leaving) return;
