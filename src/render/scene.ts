@@ -5,7 +5,7 @@
 import { CELLS, N, xOf, yOf } from '../core/grid.ts';
 import { pieceById, type Piece } from '../core/pieces.ts';
 import type { TrayPiece } from '../core/dealer.ts';
-import { computeLayout, trayCellFor, type Insets, type Layout } from './layout.ts';
+import { computeLayout, hudStack, trayCellFor, type Insets, type Layout } from './layout.ts';
 import { Kind, Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, fmt, type Palette } from './theme.ts';
@@ -1071,26 +1071,26 @@ export class Scene {
     const night = p.name === 'night';
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    const ts = Math.min(1.15, this.textScale);
-    // score.hud: Nunito 900, 52 px on a 390-pt phone (tabular digits: the count-up never jitters)
-    const big = Math.round(Math.min(52, l.hud.h * 0.5, l.cell * 1.2) * ts);
-    const lab = Math.round(Math.min(12, big * 0.25) * Math.min(1.2, this.textScale));
+    // score.hud: Nunito 900, 52 px on a 390-pt phone (tabular digits: the count-up never jitters);
+    // the stack is laid out bottom-up so Larger text never runs the best line into the badge
+    const hs = hudStack(l, this.textScale);
+    const { big, lab } = hs;
     const room = l.w - 2 * 70; // clear of the 44 px corner buttons
     if (this.hudLabel) {
       const hl = this.hudLabel;
       // "Reef 28" in the display face, the tier (and the reef's mark) as a quiet chip under it
-      const title = Math.round(Math.min(34, big * 0.7));
+      const title = Math.round(Math.min(34 * hs.k, big * 0.7));
       g.font = `900 ${title}px ${DISPLAY_FONT}`;
       g.fillStyle = p.text;
-      g.fillText(hl.big, cx, l.hud.y + l.hud.h * 0.44, room);
+      g.fillText(hl.big, cx, hs.scoreY - big * 0.06, room);
       if (hl.sub) {
         const dotC: Record<string, string> = { calm: p.success, tricky: p.water, deep: '#3D6FD0', abyss: '#7A55B0' };
-        const fs = Math.round(Math.min(13, big * 0.27) * Math.min(1.2, this.textScale));
+        const fs = Math.round(Math.min(13 * hs.k, big * 0.27) * Math.min(1.2, this.textScale));
         g.font = `800 ${fs}px ${FONT}`;
         const tw = Math.min(room, g.measureText(hl.sub).width);
         const pw = tw + fs * 2.6;
         const ph = Math.round(fs * 2.1);
-        const py = l.hud.y + l.hud.h * 0.71;
+        const py = Math.min(hs.scoreY + fs * 1.9, l.board.y - fs * 1.3);
         g.fillStyle = p.name === 'night' ? '#1B3150' : p.surfaceSunk; // raised at night (sunk vanished)
         g.beginPath();
         g.roundRect(cx - pw / 2, py - ph / 2, pw, ph, ph / 2);
@@ -1104,7 +1104,8 @@ export class Scene {
         g.fillText(hl.sub, cx + fs * 0.45, py + 1, room);
         g.textBaseline = 'alphabetic';
       }
-      this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false);
+      // Reefs have no score: no COMBO badge either
+      this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, true, hs.badgeY);
       return;
     }
     g.fillStyle = p.text;
@@ -1113,7 +1114,7 @@ export class Scene {
     const punch = pk >= 0 && pk < 1 && !this.reducedMotion ? 1 + this.scorePunch.amp * (1 - spring01(pk)) : 1;
     // a peak's points land in gold for a beat
     if (this.scorePunch.gold && pk >= 0 && pk < 1.6) g.fillStyle = night ? p.gold : p.goldInk;
-    const base = l.hud.y + l.hud.h * 0.5;
+    const base = hs.scoreY;
     // one font size, scaled by transform: a per-frame font size re-rasterises every glyph (perf)
     g.font = `900 ${Math.round(big)}px ${FONT}`;
     const ls = g as CanvasRenderingContext2D & { letterSpacing?: string };
@@ -1131,10 +1132,9 @@ export class Scene {
     const beat = (this.score > this.best && this.best > 0) || this.celebrate.bestShown;
     const tag = this.modeTag ? `${this.modeTag} · ` : '';
     const text = beat ? `${tag}NEW BEST` : this.best > 0 ? `${tag}BEST ${fmt(this.best)}` : this.modeTag;
-    if (text)
-      this.label(text.toUpperCase(), cx, base + lab * 1.8, lab, beat ? (night ? p.gold : p.goldInk) : p.textDim, room);
+    if (text) this.label(text.toUpperCase(), cx, hs.bestY, lab, beat ? (night ? p.gold : p.goldInk) : p.textDim, room);
     // chips live in the strip: the COMBO badge always keeps its slot under the score
-    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false);
+    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false, hs.badgeY);
   }
 
   private gc(now: number): void {

@@ -247,7 +247,7 @@ a {
 .icon-btn {
   pointer-events: auto;
   position: absolute;
-  top: calc(var(--safe-top) + 10px);
+  top: var(--hud-btn-top, calc(var(--safe-top) + 10px));
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -268,10 +268,10 @@ a {
   transition-timing-function: var(--ease-standard);
 }
 #menu-btn {
-  left: calc(var(--safe-left) + 14px);
+  left: var(--hud-btn-x, calc(var(--safe-left) + 14px));
 }
 #side-btn {
-  right: calc(var(--safe-right) + 14px);
+  right: var(--hud-btn-x, calc(var(--safe-right) + 14px));
 }
 /* unseen journal pages: a coral dot (shape + position, never colour alone: it's a dot) */
 .icon-btn .dot {

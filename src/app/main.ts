@@ -35,6 +35,7 @@ import {
   type Profile,
 } from '../platform/storage.ts';
 import { Scene } from '../render/scene.ts';
+import { CAP, hudStack } from '../render/layout.ts';
 import { DAY, NIGHT, fmt } from '../render/theme.ts';
 import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
@@ -308,6 +309,11 @@ function resize(): void {
   const root = document.documentElement.style;
   root.setProperty('--board-top', `${l.board.y}px`);
   root.setProperty('--board-bottom', `${l.board.y + l.board.h}px`);
+  // tablets: the round HUD buttons flank the score at the board's edges, not in the far corners
+  const hs = hudStack(l, 1);
+  const tablet = hs.k > 1 || Math.min(w, h) >= 600;
+  root.setProperty('--hud-btn-top', tablet ? `${Math.round(hs.scoreY - (hs.big * CAP) / 2 - 24)}px` : '');
+  root.setProperty('--hud-btn-x', tablet ? `${Math.round(l.board.x)}px` : '');
   // the common-discovery pop (≈56 px tall) centers in the strip, never over the board's last row
   root.setProperty('--strip-y', `${Math.max(scene.stripY(), l.board.y + l.board.h + 38)}px`);
   idle(() => scene.warmSprites());

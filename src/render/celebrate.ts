@@ -562,8 +562,9 @@ export class Celebrate {
     rm: boolean,
     ts: number,
     hide: boolean,
+    badgeY?: number,
   ): void {
-    const cy = l.hud.y + l.hud.h * 0.9;
+    const cy = badgeY ?? l.hud.y + l.hud.h * 0.9;
     const night = p.name === 'night';
     const bk = (now - this.bestAt) / BEST_LIFE;
     const bannerUp = bk >= 0 && bk < 1;
