@@ -36,6 +36,33 @@ export function loadCreatureArt(): Promise<typeof ArtChunk> {
 export const hasNewArt = (id: string): boolean => chunk?.ART.has(id) ?? false;
 /** The species' R27 size class when it has new art (XS … XXL), else undefined. */
 export const artSizeOf = (id: string): 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | undefined => chunk?.ART.get(id)?.size;
+/** CRITIQUE-4: at most this share of a habitat page's tiles doze (the rest are awake). */
+export const DROWSY_SHARE = 0.3;
+/** FNV-1a, for stable per-species picks (no flicker between openings). */
+function idHash(id: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 0x01000193) >>> 0;
+  return h;
+}
+/**
+ * CRITIQUE-4 (all 10 Shallows tiles drowsy at Night): of a habitat page's `total` tiles, the dozing
+ * species (`dozers`) that keep dozing — at most `floor(DROWSY_SHARE × total)`, picked by a hash of the
+ * id so the same ones doze every time. Pure.
+ */
+export function drowsyPick(dozers: readonly string[], total: number): Set<string> {
+  const n = Math.floor(DROWSY_SHARE * total + 1e-9);
+  return new Set([...dozers].sort((a, b) => idHash(a) - idHash(b) || (a < b ? -1 : 1)).slice(0, n));
+}
+/** Which golden the species wears with new art (`pearl` for the Golden Turtle), else undefined. */
+export const artGoldenKindOf = (id: string): 'gold' | 'deep' | 'rose' | 'pearl' | undefined => {
+  const art = chunk?.ART.get(id);
+  return art && chunk ? chunk.goldenKind(art.palette.body, art.golden, art.id) : undefined;
+};
+/** CRITIQUE-4: the species' framed-fill scale (`tileScale`, clamped; 1 without new art). */
+export const artTileScaleOf = (id: string): number => {
+  const art = chunk?.ART.get(id);
+  return art && chunk ? chunk.tileScaleOf(art) : 1;
+};
 /** The species dozes on this theme (its journal tile rests `drowsy` and may wake for a look). */
 export const dozesNow = (sp: Species, night: boolean): boolean => {
   const art = chunk?.ART.get(sp.id);

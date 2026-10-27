@@ -4,7 +4,7 @@
  * species without new art) the legacy procedural drawing is used.
  */
 import type { Species } from '../../meta/creatures.ts';
-import { DETAIL_FILL, LEAP_SCALE, TILE_FILL, type Expression, type SpeciesArt } from './kit.ts';
+import { DETAIL_FILL, LEAP_SCALE, TILE_FILL, tileScaleOf, type Expression, type SpeciesArt } from './kit.ts';
 import { SHARED } from './palette.ts';
 import { renderCreature } from './render.ts';
 
@@ -12,7 +12,8 @@ export { ART } from './species/index.ts';
 export { renderCreature, cacheStats, clearCache, prepare } from './render.ts';
 // for the in-browser checks (tests/e2e/art.spec.ts): Path2D vs the pure rasteriser, R12 limits
 export { silhouetteMask, IOU_MAX, IOU_MAX_SAME_CLASS, SIL_GRID } from './silhouette.ts';
-export { bodyClassOf } from './kit.ts';
+export { bodyClassOf, tileScaleOf } from './kit.ts';
+export { goldenKind } from './palette.ts';
 
 /** Options `drawCreature` accepts (a superset of the legacy ones). */
 export interface DrawOpts {
@@ -33,6 +34,11 @@ export interface DrawOpts {
   readonly flip?: boolean;
   readonly action?: { readonly kind: 'catch' | 'release'; readonly u: number };
   readonly signatureAt?: number;
+  /**
+   * Framed views: show the awake resting face even when the species would doze on this theme
+   * (CRITIQUE-4: the Night journal caps dozers per habitat page; a new catch wakes on its page).
+   */
+  readonly awake?: boolean;
 }
 
 const SWIMMERS: ReadonlySet<SpeciesArt['klass']> = new Set(['fish', 'shark', 'long', 'wing', 'horse']);
@@ -50,11 +56,12 @@ export function restingFace(
   sp: Species,
   night: boolean,
   view: 'tile' | 'detail' = 'detail',
+  forceAwake = false,
 ): Expression {
   const nocturnal = art.nocturnal ?? sp.habitat === 'night';
   const rest = art.restExpression ?? 'idle';
   const awake = view === 'tile' && CLOSED_EYES.has(rest) ? 'idle' : rest;
-  if (art.neverSleepy || night === nocturnal) return awake;
+  if (forceAwake || art.neverSleepy || night === nocturnal) return awake;
   return view === 'tile' ? 'drowsy' : 'sleepy';
 }
 const CLOSED_EYES: ReadonlySet<Expression> = new Set(['sleepy', 'proud', 'happy', 'blink']);
@@ -66,10 +73,11 @@ export function dozing(art: SpeciesArt, sp: Species, night: boolean): boolean {
 
 /** Long side of the body box in px for a `drawCreature` call. */
 export function spanFor(art: SpeciesArt, s: number, fit: DrawOpts['fit']): number {
+  // CRITIQUE-4: `tileScale` adjusts the framed views (tile, species page) only; the leap keeps R27
   return fit === 'tile'
-    ? s * TILE_FILL[art.size]
+    ? s * TILE_FILL[art.size] * tileScaleOf(art)
     : fit === 'detail'
-      ? s * DETAIL_FILL[art.size]
+      ? s * DETAIL_FILL[art.size] * tileScaleOf(art)
       : fit === 'leap'
         ? s * 0.84 * LEAP_SCALE[art.size]
         : fit === 'avatar'
@@ -138,7 +146,8 @@ function drawArt(
     facing,
     night,
     golden: o.golden,
-    expression: o.expression ?? (framed ? restingFace(art, sp, night, o.fit === 'detail' ? 'detail' : 'tile') : 'idle'),
+    expression:
+      o.expression ?? (framed ? restingFace(art, sp, night, o.fit === 'detail' ? 'detail' : 'tile', o.awake) : 'idle'),
     t: o.t,
     still: o.still,
     action: o.action,

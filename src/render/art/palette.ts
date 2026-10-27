@@ -92,14 +92,29 @@ export const ROSE_GOLD = { body: '#F2A65A', accent: '#FFE3C2', belly: '#FFD0A0',
  */
 export const GOLDEN_DEEP = { body: '#E9A93A', accent: '#FFF1C2', belly: '#F8CF7A', ink: '#7A4810' } as const;
 export const GOLDEN_YELLOW = { hue: 25, minC: 0.05 } as const;
-export type GoldenKind = 'gold' | 'deep' | 'rose';
-/** Which golden a species wears: its own `rose`, the deep metallic gold for yellow bases, else gold. */
-export function goldenKind(body: string, variant?: 'gold' | 'rose'): GoldenKind {
-  if (variant === 'rose') return 'rose';
+/**
+ * CRITIQUE-4: the gold legendary's golden must feel more precious than its base, not a lesser copper
+ * copy. Pearl / platinum shell, gold trim (skin, domes, pearls), the species' own jewels kept
+ * (`keepAccent`), an iridescent sheen and a glint.
+ */
+export const PEARL = { body: '#F4F1EA', accent: '#FFF6D8', belly: '#E9C46A', ink: '#6E5A36' } as const;
+export type GoldenKind = 'gold' | 'deep' | 'rose' | 'pearl';
+/** Kit-level golden overrides by species id (palette decisions that outrank the species file). */
+export const GOLDEN_BY_ID: Readonly<Record<string, GoldenKind>> = { goldturtle: 'pearl' };
+/**
+ * Which golden a species wears: a kit override by id, its own `rose`/`pearl`, the deep metallic gold
+ * for yellow bases, else gold.
+ */
+export function goldenKind(body: string, variant?: 'gold' | 'rose' | 'pearl', id?: string): GoldenKind {
+  const forced = id !== undefined ? GOLDEN_BY_ID[id] : undefined;
+  if (forced) return forced;
+  if (variant === 'rose' || variant === 'pearl') return variant;
   const [, C, H] = oklch(body);
   return C >= GOLDEN_YELLOW.minC && hueDelta(H, oklch(GOLDEN.body)[2]) <= GOLDEN_YELLOW.hue ? 'deep' : 'gold';
 }
-export const GOLDEN_PALETTES = { gold: GOLDEN, deep: GOLDEN_DEEP, rose: ROSE_GOLD } as const;
+export const GOLDEN_PALETTES = { gold: GOLDEN, deep: GOLDEN_DEEP, rose: ROSE_GOLD, pearl: PEARL } as const;
+/** Golden kinds that keep the species' own accent (jewels). */
+export const KEEPS_ACCENT: ReadonlySet<GoldenKind> = new Set(['pearl']);
 
 /** Alpha-blend `top` (at alpha) over `base`, in sRGB (what a canvas does). */
 export function blend(base: string, top: string, alpha: number): string {

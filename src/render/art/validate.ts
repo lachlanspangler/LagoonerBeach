@@ -15,6 +15,8 @@ import type { Species } from '../../meta/creatures.ts';
 import {
   defaultEye,
   eyeFloorUnits,
+  tileScaleOf,
+  TILE_SCALE,
   FRAME_BREAK,
   sizeClassFor,
   TILE_BLEED,
@@ -100,7 +102,7 @@ export function metrics(art: SpeciesArt): Metrics {
   const nightL = oklch(SHARED.nightTile)[0];
   const rimL = oklch(blend(SHARED.nightTile, SHARED.rim, rimAlpha(art.palette.body)))[0];
   const long = Math.max(box.w, box.h) || 1;
-  const ppu = (TILE_FILL[art.size] * TILE_PX) / long;
+  const ppu = (TILE_FILL[art.size] * tileScaleOf(art) * TILE_PX) / long;
   const cx = box.x + box.w / 2,
     cy = box.y + box.h / 2,
     half = TILE_PX / 2;
@@ -122,7 +124,7 @@ export function metrics(art: SpeciesArt): Metrics {
     nightDL: Math.max(L, rimL) - nightL,
     tilt: restTilt(art),
     eye: art.face.eye ?? defaultEye(art.klass, art.face),
-    eyeFloor: eyeFloorUnits(art.size, long, box.h),
+    eyeFloor: eyeFloorUnits(art.size, long, box.h), // authored against the class fill (tileScale aside)
     overhang,
   };
 }
@@ -262,6 +264,12 @@ export function validateArt(art: SpeciesArt, sp?: Species): Issue[] {
   if (['fish', 'shark', 'horse', 'long'].includes(art.klass) && m.tilt > LINT.tiltMax)
     warn('R5T', `body tilts ${Math.round(m.tilt)}° at rest (≤ ${LINT.tiltMax}°; signatures may tilt)`);
   // #4 frame-break (XL must break the 54 px art box by 2–4 px; nobody else may be clipped by the bleed)
+  if (art.tileScale !== undefined) {
+    if (!Number.isFinite(art.tileScale) || art.tileScale < TILE_SCALE[0] || art.tileScale > TILE_SCALE[1])
+      bad('R27S', `tileScale ${art.tileScale} outside ${TILE_SCALE[0]}–${TILE_SCALE[1]} (clamped)`);
+    if (art.size === 'XL' || art.size === 'XXL')
+      bad('R27S', `tileScale on ${art.size} (XL/XXL keep their frame rules)`);
+  }
   if (art.size === 'XL' && (m.overhang < FRAME_BREAK[0] - 0.25 || m.overhang > FRAME_BREAK[1] + 0.25))
     warn('R28', `XL frame-break ${r2(m.overhang)} px past the art box (needs ${FRAME_BREAK[0]}–${FRAME_BREAK[1]} px)`);
   if (art.size !== 'XXL' && m.overhang > TILE_BLEED)
@@ -328,7 +336,7 @@ export const CAST_LINT_AS_ERRORS = false;
  * else in the kit). Near-neutral bodies (OKLCH chroma < `neutralC`) have no meaningful hue: they sit
  * out the hue rules (but count in a habitat's total).
  */
-export const CAST = { dE: 6, window: 30, share: 0.4, legendHue: 15, neutralC: 0.05 } as const;
+export const CAST = { dE: 6, window: 30, share: 0.4, legendHue: 15, legendDE: 10, neutralC: 0.05 } as const;
 
 export interface CastEntry {
   readonly id: string;
@@ -347,7 +355,9 @@ export const castOf = (arts: Iterable<SpeciesArt>, species: (id: string) => Spec
  * The cast-level checks (CRITIQUE-3 must-do #3), per species:
  * - **C1** body colour identity: no two species share a body hex, none within ΔE00 < 6;
  * - **C2** habitat hue histogram: ≤ 40 % of a habitat's species inside any 30° hue window;
- * - **C3** legendaries own their hue: no non-legendary within 15° of a legendary's body hue.
+ * - **C3** legendaries own their hue: no non-legendary within 15° of a legendary's body hue that is
+ *   also close in colour (ΔE00 < 10) or shares its habitat (CRITIQUE-4: hue alone was unsatisfiable
+ *   for any blue legendary — a pale periwinkle doesn't steal a deep whale shark's identity).
  * Pure; every issue is a warning (strict: `CAST_LINT_AS_ERRORS` / ART_CAST_STRICT=1).
  */
 export function validateCast(cast: readonly CastEntry[]): Map<string, Issue[]> {
@@ -401,9 +411,13 @@ export function validateCast(cast: readonly CastEntry[]): Map<string, Issue[]> {
     for (const c of cast)
       if (!c.legendary && hued(c)) {
         const d = hueDelta(hue(L), hue(c));
-        if (d < CAST.legendHue) {
-          warn(c.id, 'C3', `hue ${deg(c)}° within ${Math.round(d)}° of legendary ${L.id} (${deg(L)}°)`);
-          warn(L.id, 'C3', `${c.id} (${deg(c)}°) sits within ${Math.round(d)}° of this legendary's hue`);
+        if (d >= CAST.legendHue) continue;
+        const dE = deltaE2000(lab.get(L.id)!, lab.get(c.id)!);
+        const same = c.habitat === L.habitat;
+        if (dE < CAST.legendDE || same) {
+          const why = same ? `same habitat, ΔE00 ${r2(dE)}` : `ΔE00 ${r2(dE)} < ${CAST.legendDE}`;
+          warn(c.id, 'C3', `hue ${deg(c)}° within ${Math.round(d)}° of legendary ${L.id} (${deg(L)}°; ${why})`);
+          warn(L.id, 'C3', `${c.id} (${deg(c)}°) sits within ${Math.round(d)}° of this legendary's hue (${why})`);
         }
       }
   return out;

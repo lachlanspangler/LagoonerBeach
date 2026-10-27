@@ -74,6 +74,7 @@ export default defineArt({
   id: 'butterfly',
   klass: 'fish',
   size: 'M',
+  tileScale: 0.95,
   feature:
     'deep upright disc, short tweezer snout, one dark band behind the eye, a ringed false eye on the rear dorsal',
   personality: ['dainty', 'tricky', 'sunny'],

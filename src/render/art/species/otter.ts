@@ -35,6 +35,7 @@ export default defineArt({
   id: 'otter',
   klass: 'chibi',
   size: 'L',
+  tileScale: 0.9,
   feature: 'floats on its back: big round head with small side ears up, feet up, paws on its chest with a shell',
   personality: ['cuddly', 'sleepy', 'loving'],
   palette: { body: '#A07448', accent: '#F3E6D2', belly: '#E6D2B8' },

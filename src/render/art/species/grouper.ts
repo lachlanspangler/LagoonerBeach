@@ -77,6 +77,7 @@ export default defineArt({
   id: 'grouper',
   klass: 'fish',
   size: 'L',
+  tileScale: 0.95,
   feature: 'an enormous helmet head on a thick trunk, small pouty lips, pale-blue spots, rounded fan tail',
   personality: ['unbothered', 'enormous', 'grumpy-sweet'],
   restExpression: 'drowsy',

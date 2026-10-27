@@ -33,7 +33,7 @@ const RULES: Record<string, string> = {
   R16M: `body too close to the real journal tile (mint) — CRITIQUE-1 "review on mint"`,
   C1: `cast: body hex shared with another species, or within CIEDE2000 ΔE ${CAST.dE} of one — CRITIQUE-3 #3`,
   C2: `cast: > ${CAST.share * 100} % of the habitat's species within one ${CAST.window}° OKLCH hue window (bodies with chroma < ${CAST.neutralC} ignored) — CRITIQUE-3 #3`,
-  C3: `cast: a non-legendary within ${CAST.legendHue}° of a legendary's body hue (legendaries own their hue) — CRITIQUE-3`,
+  C3: `cast: a non-legendary within ${CAST.legendHue}° of a legendary's body hue and either within CIEDE2000 ΔE ${CAST.legendDE} of it or in the same habitat (legendaries own their hue) — CRITIQUE-3/4`,
 };
 /** Cast lints have their own strict switch (they start as warnings while the palettes are redone). */
 const CAST_RULES = new Set(['C1', 'C2', 'C3']);

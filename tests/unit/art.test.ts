@@ -34,9 +34,11 @@ import {
   fromOklch,
   GOLDEN_DEEP,
   goldenKind,
+  PEARL,
   oklch,
 } from '../../src/render/art/palette.ts';
 import { blinking, pose, sample, signatureProgress } from '../../src/render/art/motion.ts';
+import { colorsFor } from '../../src/render/art/render.ts';
 
 const arts = [...ART.values()];
 const STRICT = LINT_AS_ERRORS || process.env.ART_LINT_STRICT === '1';
@@ -150,6 +152,17 @@ describe('golden remap (CRITIQUE-3 #4)', () => {
     for (const hex of ['#F2D43B', '#F2B93B', '#D9C27A']) expect(goldenKind(hex), hex).toBe('deep');
     for (const hex of ['#3D9BE9', '#C9503A', '#E9DCC4']) expect(goldenKind(hex), hex).toBe('gold'); // cream: no hue
     expect(goldenKind('#E8B23E', 'rose')).toBe('rose');
+    // CRITIQUE-4: the gold legendary's golden is pearl/platinum with gold trim, jewels kept
+    expect(goldenKind('#E8B23E', 'rose', 'goldturtle')).toBe('pearl');
+    expect(PEARL.body).toBe('#F4F1EA');
+    expect(PEARL.belly).toBe('#E9C46A');
+    const gt = colorsFor(ART.get('goldturtle')!, true);
+    expect([gt.body, gt.belly, gt.accent, gt.pearl]).toEqual([
+      '#F4F1EA',
+      '#E9C46A',
+      ART.get('goldturtle')!.palette.accent,
+      true,
+    ]);
     expect(GOLDEN_DEEP.body).toBe('#E9A93A');
   });
 });
@@ -190,11 +203,18 @@ describe('cast lints (CRITIQUE-3: colour identity across the cast)', () => {
     expect(rules(m, 'g')).toEqual([]); // chroma 0.017: no hue to speak of
     expect(validateCast(hab.map((x) => (x.id === 'b3' ? e('b3', '#3BC9A0') : x))).get('b1')).toEqual([]);
   });
-  it('C3: a non-legendary within 15° of a legendary hue is flagged (and the legendary)', () => {
-    const m = validateCast([e('L', '#714B99', 'legend', true), e('u', '#8A68AE', 'shallows'), e('f', '#3BC9A0')]);
+  it('C3: a non-legendary within 15° of a legendary hue AND (ΔE00 < 10 or same habitat) is flagged', () => {
+    const m = validateCast([e('L', '#714B99', 'legend', true), e('u', '#7D57A3', 'shallows'), e('f', '#3BC9A0')]);
     expect(rules(m, 'u')).toContain('C3');
     expect(rules(m, 'L')).toContain('C3');
     expect(rules(m, 'f')).toEqual([]);
+    // CRITIQUE-4: the same hue, but pale (ΔE00 ≥ 10) and elsewhere, keeps its own identity …
+    const pale = validateCast([e('L', '#714B99', 'legend', true), e('p', '#B9A2D6', 'shallows')]);
+    expect(rules(pale, 'p')).toEqual([]);
+    expect(rules(pale, 'L')).toEqual([]);
+    // … but not in the legendary's own habitat
+    const home = validateCast([e('L', '#714B99', 'legend', true), e('p', '#B9A2D6', 'legend')]);
+    expect(rules(home, 'p')).toContain('C3');
   });
   it('the cast has no cast-lint errors (warnings are listed in docs/art/LINT.md)', () => {
     const strict = CAST_LINT_AS_ERRORS || process.env.ART_CAST_STRICT === '1';

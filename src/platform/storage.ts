@@ -255,6 +255,20 @@ export function loadSeen(): Set<string> | null {
   if (!Array.isArray(raw)) return null;
   return new Set(raw.filter((x): x is string => typeof x === 'string').slice(0, 200));
 }
+const K_WOKE = 'atoll.v1.woke';
+/** Species whose page the player has opened (a new catch wakes up on its first page view); null = never stored. */
+export function loadWoke(): Set<string> | null {
+  const raw = safeParse(store()?.getItem(K_WOKE));
+  if (!Array.isArray(raw)) return null;
+  return new Set(raw.filter((x): x is string => typeof x === 'string').slice(0, 200));
+}
+export function saveWoke(ids: Iterable<string>): void {
+  try {
+    store()?.setItem(K_WOKE, JSON.stringify([...ids]));
+  } catch {
+    /* best-effort */
+  }
+}
 export function saveSeen(ids: Iterable<string>): void {
   try {
     store()?.setItem(K_SEEN, JSON.stringify([...ids]));

@@ -78,6 +78,7 @@ export default defineArt({
   id: 'giantclam',
   klass: 'object',
   size: 'L',
+  tileScale: 0.92,
   feature: 'a huge scalloped shell parted like lips around a teal mantle',
   personality: ['wise', 'sleepy', 'ancient'],
   palette: { body: '#10B5AC', accent: '#6A5AE0', belly: '#F3E3BC' },

@@ -140,9 +140,25 @@ html[data-theme='night'] .r-golden .rv-card {
   background: radial-gradient(closest-side, color-mix(in srgb, var(--tier) 22%, transparent), transparent 75%);
 }
 /* the stage canvas is bigger than the pool: big creatures break out of it (and the card top) */
-/* a legendary XL breaks the card top: the overline gives way (the dialog's name still says it) */
-.rv-break .rv-over {
-  display: none;
+/* CRITIQUE-4: every legendary card has the same shape: the art box first (an XL breaks the card
+   top from inside its stage canvas, the layout never moves), then the overline, which a big
+   creature can no longer cover */
+.reveal.r-legendary .rv-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.reveal.r-legendary .rv-pool {
+  order: -1;
+  flex: none;
+  margin-top: -36px; /* = the art box sits high, so an XL needs only a small shift to break the top */
+}
+.reveal.r-legendary .rv-over {
+  margin: 8px 0 6px; /* clear of a tall creature's lowest point (kraken arms, seadragon tail) */
+}
+.reveal.r-legendary .rv-lower,
+.reveal.r-legendary .rv-btns {
+  align-self: stretch;
 }
 .rv-pool canvas {
   position: absolute;
@@ -215,6 +231,11 @@ html[data-theme='night'] .r-golden .rv-card {
 .rv-name {
   font: 900 36px/1.05 var(--font-display);
   margin: 6px 0 2px;
+}
+/* long names stay on one line (a two-line name made the seadragon's card the tall one) */
+.rv-name.rv-long {
+  font-size: 29px;
+  line-height: calc(36px * 1.05); /* the same line box: every card keeps its height */
 }
 /* rarity as a chip: shell pips + the word (never hue alone) */
 .rv-rarity {

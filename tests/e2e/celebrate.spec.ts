@@ -308,15 +308,22 @@ test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page 
 });
 
 test('every modal reveal settles eyes-open on idle (scene tiers by the time the card settles)', async ({ page }) => {
+  test.setTimeout(180_000); // 13 frozen reveals
   await boot(page, 'seed=42');
   // [species, freeze at (ms)]: uncommon/rare once the beat is over; epic/legendary at the settle frame
   const cases: [string, number][] = [
     ['boxcrab', 3200],
     ['moray', 3400],
+    ['octopus', 1500],
     ['octopus', 1800],
-    ['kraken', 2500],
-    ['seadragon', 2500],
-    ['whaleshark', 2500],
+    // CRITIQUE-4: settled (and eyes-open) by 2.1 s, not still `happy`
+    ['kraken', 2100],
+    ['seadragon', 2100],
+    ['whaleshark', 2100],
+    ['goldturtle', 2100],
+    ['kraken', 2700],
+    ['seadragon', 2700],
+    ['whaleshark', 2700],
   ];
   for (const [id, t] of cases) {
     await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);
@@ -337,7 +344,7 @@ test('legendary backdrop: the rays never drop out around the settle (frozen fram
   await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
   await page.waitForFunction(() => (window as any).__atoll.revealState());
   const lum: number[] = [];
-  for (const t of [2300, 2400, 2450, 2500, 2510, 2600, 2800, 3200]) {
+  for (const t of [1900, 2000, 2050, 2100, 2110, 2200, 2400, 2800]) {
     lum.push(
       await page.evaluate((t) => {
         (window as any).__atoll.revealFreeze(t);

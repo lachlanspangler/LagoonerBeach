@@ -69,6 +69,7 @@ export default defineArt({
   id: 'limpet',
   klass: 'object',
   size: 'XS',
+  tileScale: 1.15,
   feature: 'a little ribbed volcano with an apex nub, on a skirt of foot',
   personality: ['clingy', 'stubborn', 'sweet'],
   // CRITIQUE-4: slate-buff #B8A88E dome. The umber ribs are the body's own ink at 0.49 (#7F6950 on

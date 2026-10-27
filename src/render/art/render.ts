@@ -13,13 +13,23 @@ import { boundsOf, flatten, unionBox, type Box } from './path.ts';
 import {
   defaultEye,
   eyeFloorUnits,
+  tileScaleOf,
   type Expression,
   type Group,
   type Part,
   type Role,
   type SpeciesArt,
 } from './kit.ts';
-import { deriveBelly, deriveInk, GOLDEN_PALETTES, goldenKind, oklch, rimAlpha, SHARED } from './palette.ts';
+import {
+  deriveBelly,
+  deriveInk,
+  GOLDEN_PALETTES,
+  goldenKind,
+  KEEPS_ACCENT,
+  oklch,
+  rimAlpha,
+  SHARED,
+} from './palette.ts';
 import { pose, seedOf, type Pose, type PoseOpts, type Xf } from './motion.ts';
 import { drawFace } from './face.ts';
 
@@ -102,7 +112,12 @@ export function prepare(art: SpeciesArt): Prepared {
   const long = Math.max(box.w, box.h) || 1;
   const f = art.face;
   const authored = f.eye ?? defaultEye(art.klass, f);
-  const eye = f.eyeFloor === false ? authored : Math.max(authored, eyeFloorUnits(art.size, long, box.h));
+  // CRITIQUE-4: a species drawn smaller than its class (tileScale < 1) still gets ≥ 4 px eyes; a
+  // bigger one keeps the eye it was authored with (the class floor is the authoring target)
+  const eye =
+    f.eyeFloor === false
+      ? authored
+      : Math.max(authored, eyeFloorUnits(art.size, long, box.h, Math.min(1, tileScaleOf(art))));
   const p: Prepared = {
     art,
     groups,
@@ -132,6 +147,8 @@ export interface Colors {
   readonly bodyL: number;
   /** Golden on a yellow base: the deep metallic gold, with a stronger sheen and a body glint. */
   readonly metal?: boolean;
+  /** Pearl golden (the gold legendary): an iridescent sheen and a glint. */
+  readonly pearl?: boolean;
 }
 const colorMemo = new Map<string, Colors>();
 export function colorsFor(art: SpeciesArt, golden = false): Colors {
@@ -141,16 +158,18 @@ export function colorsFor(art: SpeciesArt, golden = false): Colors {
   const pal = art.palette;
   let c: Colors;
   if (golden) {
-    const kind = goldenKind(pal.body, art.golden);
+    const kind = goldenKind(pal.body, art.golden, art.id);
     const G = GOLDEN_PALETTES[kind];
+    const accent = KEEPS_ACCENT.has(kind) ? (pal.accent ?? G.accent) : G.accent;
     c = {
       metal: kind === 'deep',
+      pearl: kind === 'pearl',
       body: G.body,
       belly: G.belly,
-      accent: G.accent,
+      accent,
       ink: G.ink,
       white: SHARED.white,
-      light: G.accent,
+      light: accent,
       bodyL: oklch(G.body)[0],
     };
   } else {
@@ -321,7 +340,13 @@ function buildLayer(p: Prepared, pg: PGroup, s: LayerSpec, mode: Mode, step: num
       if (s.golden) {
         const bb = p.box;
         const gr = g.createLinearGradient(bb.x, bb.y, bb.x + bb.w * 0.6, bb.y + bb.h * 0.7);
-        if (col.metal) {
+        if (col.pearl) {
+          // nacre: white, then a faint rose → aqua → lilac play of colour (iridescent, not paint)
+          gr.addColorStop(0, 'rgba(255,255,255,0.95)');
+          gr.addColorStop(0.35, 'rgba(255,214,226,0.55)');
+          gr.addColorStop(0.65, 'rgba(190,240,236,0.5)');
+          gr.addColorStop(1, 'rgba(214,200,255,0.25)');
+        } else if (col.metal) {
           // metallic: a hard bright band, then the warm falloff (reads as polished, not paint)
           gr.addColorStop(0, 'rgba(255,255,255,0.9)');
           gr.addColorStop(0.4, 'rgba(255,246,206,0.5)');
@@ -501,7 +526,15 @@ function goldenSparkles(g: G, p: Prepared, t: number | undefined): void {
     cy = b.y + b.h / 2;
   const R = p.long * 0.56;
   // deep (yellow-base) gold: a white glint sits on the body's upper shoulder, tiles included
-  if (colorsFor(p.art, true).metal) {
+  const gc = colorsFor(p.art, true);
+  if (gc.pearl) {
+    // pearl: a big white glint on the shell's crown plus a small rose-aqua one (tiles included)
+    const tw = t === undefined ? 1 : 0.7 + 0.3 * Math.sin(t * 3.2);
+    g.fillStyle = '#FFFFFF';
+    sparkle(g, b.x + b.w * 0.4, b.y + b.h * 0.18, p.long * 0.09 * tw);
+    g.fillStyle = t === undefined || Math.sin(t * 1.7) > 0 ? '#D9FFF8' : '#FFE1EC';
+    sparkle(g, b.x + b.w * 0.62, b.y + b.h * 0.34, p.long * 0.045 * (1.6 - tw));
+  } else if (gc.metal) {
     g.fillStyle = '#FFFFFF';
     const tw = t === undefined ? 1 : 0.75 + 0.25 * Math.sin(t * 4);
     sparkle(g, b.x + b.w * 0.34, b.y + b.h * 0.3, p.long * 0.075 * tw);

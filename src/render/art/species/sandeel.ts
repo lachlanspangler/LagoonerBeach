@@ -37,6 +37,7 @@ export default defineArt({
   id: 'sandeel',
   klass: 'long',
   size: 'M',
+  tileScale: 1.15,
   feature: 'a true needle with a slim head, a pointed lower jaw jutting past the snout and a forked tail',
   personality: ['zippy', 'shy', 'sandy'],
   // CRITIQUE-4: sage-silver #B8C9B0 (off the Lagoon tan trio), a darker sage back band, silver belly

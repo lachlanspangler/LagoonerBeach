@@ -6,11 +6,11 @@
 import './tiles.css';
 import './sheets.css';
 import type { Profile } from '../platform/storage.ts';
-import { saveSeen } from '../platform/storage.ts';
+import { loadWoke, saveSeen, saveWoke } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
 import { HABITATS, SPECIES, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
-import { dozesNow, drawCreature, hasNewArt } from '../render/creatures.ts';
+import { dozesNow, drawCreature, drowsyPick, hasNewArt } from '../render/creatures.ts';
 import { lookFor } from '../render/skins.ts';
 import { fmt } from '../render/theme.ts';
 import { buildReefList, type ReefListModel } from './reefList.ts';
@@ -177,6 +177,17 @@ export function showJournal(k: SheetKit, j: Journal): void {
     sec.innerHTML = `<h3 class="title-s">${h.name}</h3><span class="overline num">${got}/${list.length}</span><div class="track"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
     const grid = document.createElement('div');
     grid.className = 'j-grid';
+    // CRITIQUE-4: ≤ 30 % of the page dozes (the same ones every time), the rest are awake. Lazy:
+    // the art chunk (which knows who dozes) may land after the tiles are built.
+    let drowsy: Set<string> | null = null;
+    const dozes = (sp: Species): boolean => {
+      if (!hasNewArt(sp.id)) return false;
+      drowsy ??= drowsyPick(
+        list.filter((x) => dozesNow(x, night())).map((x) => x.id),
+        list.length,
+      );
+      return drowsy.has(sp.id);
+    };
     for (const sp of list) {
       const e = j.entries[sp.id];
       const isNew = !!e && !k.seenFor(j).has(sp.id);
@@ -193,10 +204,13 @@ export function showJournal(k: SheetKit, j: Journal): void {
       b.style.setProperty('--hab-ring', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
       const pool = document.createElement('span');
       pool.className = 'j-pool';
-      const thumb = creatureThumb(sp, 70, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0);
+      const thumb = creatureThumb(sp, 70, e ? undefined : `${ink}73`, (e?.golden ?? 0) > 0, {
+        awake: () => !dozes(sp),
+      });
+      thumb.dataset.face = e && hasNewArt(sp.id) ? (dozes(sp) ? 'dozing' : 'awake') : '';
       pool.append(thumb);
       b.append(pool);
-      if (e && hasNewArt(sp.id)) life.add(thumb, sp, (e.golden ?? 0) > 0);
+      if (e && hasNewArt(sp.id)) life.add(thumb, sp, dozes(sp));
       b.insertAdjacentHTML(
         'beforeend',
         `<span class="j-name">${e ? sp.name : '???'}</span>${pipsHtml(RARITY_RANK[sp.rarity])}${
@@ -212,6 +226,8 @@ export function showJournal(k: SheetKit, j: Journal): void {
   }
   k.show(card, true, 'journal');
   life.start(card);
+  // first run of the wake-up memory: what was already seen before this opening counts as woken
+  if (loadWoke() === null) saveWoke(k.seenFor(j));
   // looked at: every caught species is now seen (the dots clear next time)
   const seen = k.seenFor(j);
   for (const id of Object.keys(j.entries)) seen.add(id);
@@ -243,7 +259,16 @@ function showSpecies(k: SheetKit, sp: Species, j: Journal): void {
   art.style.setProperty('--frame', frame[sp.rarity]![0]);
   art.style.setProperty('--fw', frame[sp.rarity]![1]);
   const ink = night() ? '#6C8193A0' : '#968672A0';
-  art.append(creatureThumb(sp, 176, e ? undefined : ink, isGolden, { animate: true, shy: e?.count === 1 }));
+  // CRITIQUE-4: a new catch opens its eyes the first time its page is opened (then stays awake here)
+  const woke = loadWoke() ?? new Set<string>();
+  const wake = !!e && !woke.has(sp.id);
+  if (e && wake) {
+    woke.add(sp.id);
+    saveWoke(woke);
+  }
+  const thumb = creatureThumb(sp, 176, e ? undefined : ink, isGolden, { animate: true, shy: e?.count === 1, wake });
+  thumb.dataset.wake = wake ? '1' : '';
+  art.append(thumb);
   body.append(art);
   const info = document.createElement('div');
   if (e) {
@@ -292,8 +317,9 @@ export function wakeFace(u: number): 'blink' | 'idle' | 'drowsy' {
  */
 class JournalLife {
   private tiles: { c: HTMLCanvasElement; sp: Species; waker: boolean }[] = [];
-  add(c: HTMLCanvasElement, sp: Species, _golden: boolean): void {
-    this.tiles.push({ c, sp, waker: dozesNow(sp, night()) && Math.random() < WAKERS });
+  /** `dozing`: the tile is one of its page's capped dozers (only those may blink awake). */
+  add(c: HTMLCanvasElement, sp: Species, dozing: boolean): void {
+    this.tiles.push({ c, sp, waker: dozing && Math.random() < WAKERS });
   }
   start(root: HTMLElement): void {
     if (reduced() || !this.tiles.length) return;
