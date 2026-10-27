@@ -59,7 +59,6 @@ import { installPreloadRecovery } from '../platform/lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
 import type { LeaderboardUi } from '../ui/leaderboard.ts';
-import { dailyBoard } from '../meta/boards.ts';
 
 type Mode = 'classic' | 'daily' | 'puzzle';
 let PACK: (PuzzleDef & { tier?: string })[] | null = null;
@@ -573,7 +572,9 @@ function dailyTag(): string {
     dailyRank.asked = true;
     const want = dailyDate;
     void lbui()
-      .then((l) => l.client.view(dailyBoard(want)))
+      // = boards.ts dailyBoard(want); spelled out so the initial chunk doesn't pull in boards.ts
+      // (its name filter + word lists are leaderboard-only)
+      .then((l) => l.client.view(`daily:${want}` as const))
       .then(
         (v) => {
           if (dailyRank?.date !== want || !v.me) return;
