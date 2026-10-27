@@ -156,7 +156,7 @@ function endReefBoot(): void {
   reefBoot = false;
   state = startState();
   saveIfTicketed();
-  teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+  teaching = !profile.firstRunDone && mode !== 'puzzle' && state.moves === 0;
   syncScene();
 }
 /** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
@@ -166,7 +166,7 @@ function saveIfTicketed(): void {
   if (rec?.runToken) saveGame(state, rec);
 }
 saveIfTicketed();
-let teaching = !reefBoot && !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+let teaching = !reefBoot && !profile.firstRunDone && state.moves === 0; // Endless or a deep-linked Daily
 let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
 let lastDispatchAt = 0;
@@ -428,8 +428,10 @@ function updateMisfits(): void {
 
 // ------------------------------------------------------------------ teaching hint
 function updateHint(): void {
-  // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3)
-  scene.coach = teaching && mode === 'classic' && !state.over ? 'Close a ring of blocks' : null;
+  // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3). A fresh profile
+  // deep-linked into the Daily gets it too (the compact lesson: the line and the capture hint, never
+  // the teaching deal — everyone's Daily is the same tray)
+  scene.coach = teaching && mode !== 'puzzle' && !state.over ? 'Close a ring of blocks' : null;
   if (mode === 'puzzle') {
     scene.hint = null; // puzzle hints are on demand only
     return;
@@ -960,7 +962,7 @@ function switchMode(m: Mode): void {
   dailyDate = today();
   state = startState();
   saveIfTicketed();
-  teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+  teaching = !profile.firstRunDone && mode !== 'puzzle' && state.moves === 0;
   syncScene();
 }
 
@@ -1463,6 +1465,7 @@ function debugDeps(): DebugDeps {
         dirty = true;
       },
       celebrateWord: () => scene.celebrate.word?.text ?? null,
+      coach: () => scene.coach,
       celebrateBest: () => ({ bannerAt: scene.celebrate.bestAt, hud: scene.celebrate.bestShown }),
       hudBest: () => ({
         best: scene.best,

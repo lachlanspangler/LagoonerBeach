@@ -561,3 +561,10 @@ test('the first game ever reads as a first best, not "No room left · Best <the 
   await expect(page.locator('.res-head')).toHaveText('Your first best!');
   await expect(page.locator('.res-sub')).not.toContainText('Best');
 });
+
+test('a fresh profile deep-linked into the Daily still gets the first-run line', async ({ page }) => {
+  await boot(page, 'mode=daily');
+  expect(await page.evaluate(() => (window as any).__atoll.mode())).toBe('daily');
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.coach())).toBe('Close a ring of blocks');
+  // (the Daily's deal is untouched: the lesson is the line and the hint, never the teaching tray)
+});

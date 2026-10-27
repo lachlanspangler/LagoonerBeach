@@ -59,6 +59,8 @@ export interface DebugDeps {
     chapterMoment(chapter: number, name: string): void;
     /** The word on the board right now (if any). */
     celebrateWord(): string | null;
+    /** The first-run line in the strip (null when it isn't showing). */
+    coach(): string | null;
     /** NEW BEST: when a banner started (-1e9 = never) and whether the HUD line says it. */
     celebrateBest(): { bannerAt: number; hud: boolean };
     /** The best the HUD compares against (the record this run chases) and whether it says NEW BEST. */
