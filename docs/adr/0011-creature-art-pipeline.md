@@ -166,3 +166,38 @@ single drawings. Kit-side answers:
 - **Cold read**: `scripts/art-sheet.ts --cold [--golden]` → `artifacts/art/cold-read-{day,night}.png`
   (+ a key): every species' 54 px journal tile alone, by habitat, numbered, no names. A tile passes
   only if a cold reader names the species.
+
+## Amendment 3 (2026-10-27): tile scale, C3 relaxed, pearl golden, Night journal, reveal shape (after CRITIQUE-4)
+`docs/art/CRITIQUE-4.md` (38 A / 5 A− / 4 B+): the systemic notes, answered in the kit:
+- **`tileScale`** (`SpeciesArt.tileScale`, clamped to `TILE_SCALE` 0.85–1.3 by `tileScaleOf`): a
+  per-species factor on the size class's *framed* fill: journal tiles, the species page and the reveal
+  art box (`REVEAL_SCALE × tileScale`). Not the in-game leap (that size is gameplay scale, R27, and a
+  long seadragon already reads in motion). Validator **R27S** (error): outside the range, or set on
+  XL/XXL (they keep their frame-break/crop rules). The eye floor is still authored against the class
+  fill; the renderer only raises it for species drawn smaller (`min(1, tileScale)`). Set on 11
+  species: seadragon 1.25, sandeel/limpet 1.15, barracuda 1.12, wrasse 1.1, grouper/lionfish/boxfish/
+  butterfly 0.95, giantclam 0.92, otter 0.9.
+- **C3** now fires only when the non-legendary is within 15° of a legendary's hue **and** either within
+  ΔE00 < 10 of it (`CAST.legendDE`) or in its habitat; hue alone was unsatisfiable for any blue
+  legendary (a pale periwinkle doesn't take the deep whale shark's identity).
+- **Pearl golden**: `GOLDEN_BY_ID` (palette.ts) is a kit-level golden override by id; the Golden
+  Turtle wears `pearl` (`PEARL`: platinum shell `#F4F1EA`, gold trim `#E9C46A` on skin/domes/pearls,
+  its own gem accent kept via `KEEPS_ACCENT`), a nacre sheen (white → rose → aqua → lilac) and two
+  glints on tiles and in motion. The reveal's golden finish skips its cream wash for pearl and sweeps
+  an iridescent glint. `SpeciesArt.golden` also accepts `'pearl'`. The moray needed no
+  `golden: false` option: its rock is white/ink roles, which golden never remaps.
+- **Night journal**: per habitat page at most `floor(0.3 × tiles)` dozers (`drowsyPick` in
+  `render/creatures.ts`: FNV hash of the id, so the same ones doze every time and nothing flickers as
+  the journal fills); the rest draw their awake face (`DrawOpts.awake`, `restingFace(…, forceAwake)`).
+  Only the capped dozers may blink awake (JournalLife). A new catch opens its eyes the first time its
+  page is opened (dozing face 650 ms → blink → awake), tracked in `atoll.v1.woke` (seeded with the
+  seen set on first run, so existing catches don't count as new).
+- **Reveal**: every legendary card has one shape: the art box first (pulled up 36 px), then the
+  "New discovery" overline (no longer hidden or covered), then the rarity chip; names over 13
+  characters drop to 29 px on the same line box (the seadragon's two-line name made its card the
+  tall one). Every legendary breaks the card top by `REVEAL_BREAK_PX` from inside its stage canvas
+  (`lift`, capped at `REVEAL_LIFT_MAX` 28 px; the layout never moves, so all four cards measure the
+  same). Scene tiers end their beat as the creature lands in the pool and settle there: **epic 1.5 s,
+  legendary 2.1 s** (was 1.8/2.5; ADR 0012's "≤ 2.5 s" still holds): no more eyes-closed `happy`
+  frames at 2.1 s and no ~0.4 s wait on a dimmed Continue that read disabled; the signature is fitted
+  into the shorter beat. e2e: kraken/seadragon/whaleshark/goldturtle are settled on `idle` at 2.1 s.
