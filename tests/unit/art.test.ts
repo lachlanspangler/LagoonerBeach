@@ -27,7 +27,15 @@ import {
   sizeClassFor,
   EXPRESSIONS,
 } from '../../src/render/art/kit.ts';
-import { cielab, deltaE2000, deriveInk, fromOklch, oklch } from '../../src/render/art/palette.ts';
+import {
+  cielab,
+  deltaE2000,
+  deriveInk,
+  fromOklch,
+  GOLDEN_DEEP,
+  goldenKind,
+  oklch,
+} from '../../src/render/art/palette.ts';
 import { blinking, pose, sample, signatureProgress } from '../../src/render/art/motion.ts';
 
 const arts = [...ART.values()];
@@ -134,6 +142,15 @@ describe('palette (R16)', () => {
       expect(L).toBeGreaterThanOrEqual(0.19);
       expect(L).toBeLessThanOrEqual(0.33);
     }
+  });
+});
+
+describe('golden remap (CRITIQUE-3 #4)', () => {
+  it('yellow bases get the deep metallic gold; others gold; the turtle keeps rose', () => {
+    for (const hex of ['#F2D43B', '#F2B93B', '#D9C27A']) expect(goldenKind(hex), hex).toBe('deep');
+    for (const hex of ['#3D9BE9', '#C9503A', '#E9DCC4']) expect(goldenKind(hex), hex).toBe('gold'); // cream: no hue
+    expect(goldenKind('#E8B23E', 'rose')).toBe('rose');
+    expect(GOLDEN_DEEP.body).toBe('#E9A93A');
   });
 });
 
