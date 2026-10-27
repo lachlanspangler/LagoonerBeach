@@ -1,108 +1,103 @@
 /**
  * Blenny — the nosy neighbour of the shallows (fish class, profile view, level).
- * Silhouette (R10): a blunt, round-headed body that stays deep to the tail (peduncle ≥ 55 % of the
- * head height, so never a drumstick) with one small forked eyebrow cirrus over the eye, one long
- * lighter two-lobed dorsal crest (the blenny notch) from nape to tail, and a rounded olive fan tail.
+ * Silhouette (R10): a blunt, steep, round-headed body (head 31 u deep) with a flat belly, the big
+ * eye set high under one small forked eyebrow cirrus, one continuous low scalloped crest along 70 %
+ * of the back (CRITIQUE-4: 5 u, #B9C987, 4 scallops), a 4 u peduncle notch and a big olive fan tail.
+ * CRITIQUE-4 cold read was "frog/toad": the long pelvic leg is now a small chin nub, the tall
+ * dorsal sail is a low crest, and the pale pectoral is small, swept back 35° on the upper flank.
  * Personality: nosy, cheeky, peeky; rests with a one-sided smirk. Signature: ducks out of sight
  * below the tile edge, peeks back up, and waggles its eyebrows.
  */
 import { blob, capsule, circle, defineArt, ellipse, join, waveTrack, within } from '../kit.ts';
 
-// blunt round head at the front (+38); long and low (2.6 : 1), tapering gently to a deep tail
-// root (19 u vs a 31 u head = 61 %): never a drumstick, never a round clownfish
+// blunt round head at the front (+35), long and low, tapering to a deep tail root (12 u vs a 25 u
+// head) that steps in 4 u at the peduncle notch before the fan
 const body = blob(
   [
-    [38.1, 0.0],
-    [37.1, -8.0],
-    [33.2, -12.12],
-    [16.0, -15.48],
-    [2.0, -12.04],
-    [-13.0, -9.46],
-    [-26.0, -8.17],
-    [-30.0, 0.0],
-    [-26.0, 6.04],
-    [-13.0, 6.99],
-    [2.0, 8.58],
-    [16.0, 10.85],
-    [32.2, 10.85],
-    [37.1, 8.0],
+    [35.5, 0],
+    [35, -11.2],
+    [30.5, -19.9],
+    [21, -22.5],
+    [9, -20.5],
+    [-3, -12.5],
+    [-13, -10],
+    [-20, -7.5],
+    [-24, -6],
+    [-24, 6],
+    [-20, 7.5],
+    [-12, 9],
+    [0, 7.3],
+    [14, 9.0],
+    [27, 9.0],
+    [33.8, 5.6],
   ],
   1,
 );
-// the long dorsal fin: one lighter crest riding the whole back, nape to tail root, with the
-// blenny's little notch halfway; drawn behind the body so only its rayed top edge shows
+// CRITIQUE-4: one continuous low dorsal crest over 70 % of the back (x 18 → −22), 5 u above the
+// back line with 4 soft scallops, drawn behind the body so only the scalloped top shows
 const dorsal = blob(
   [
-    [25, -9],
-    [17, -21.2],
-    [8, -25.4],
-    [0, -17.4],
-    [-8, -24.4],
-    [-19, -22.0],
-    [-28, -17.6],
-    [-27, -5],
-    [0, -6],
-    [20, -6],
+    [22, -18.5],
+    [19, -26.7],
+    [14.5, -26.4],
+    [10, -23.2],
+    [5, -22.8],
+    [0, -17.0],
+    [-5, -17.0],
+    [-10, -13.2],
+    [-15, -14.4],
+    [-21, -9.0],
+    [-12, -6],
+    [8, -9],
   ],
   0.8,
 );
-const dorsalRays = join(
-  capsule(13, -11, 2.5, 13, -20.5, 2.5),
-  capsule(5, -10, 2.5, 4.5, -22, 2.5),
-  capsule(-9, -9, 2.5, -9.5, -21, 2.5),
-  capsule(-18, -8, 2.5, -19, -19.5, 2.5),
-);
-// a rounded fan tail in the darker olive, flaring from the deep peduncle
+// a rounded fan tail 1.3x, in the darker olive, flaring from the notched peduncle (±4.5 → ±18)
 const tail = blob(
   [
-    [-25, -6],
-    [-32, -8.8],
-    [-39.2, -14.2],
-    [-45.2, -9.8],
-    [-45.2, 4.5],
-    [-39.2, 14.2],
-    [-32, 8.8],
-    [-25, 6],
+    [-22, -4.5],
+    [-29, -7.5],
+    [-38, -16.5],
+    [-44.5, -13.5],
+    [-46.5, 0],
+    [-44.5, 13.5],
+    [-38, 16.5],
+    [-29, 7.5],
+    [-22, 4.5],
   ],
   0.9,
 );
-// the eyebrow cirri (CRITIQUE-3): one small Y rooted on the head right over the eye, two forks of
-// 4 × 6 u splayed ±30°, standing ≤ 18 % of the body height: eyebrows, never antlers or bunny ears
-const forkF = capsule(11.3, -22.5, 2, 14.3, -27.7, 1.7);
-const forkR = capsule(8.7, -22.5, 2, 5.7, -27.7, 1.7);
-// a flat pectoral swept back along the flank, well behind the eye (not a second mouth)
-const pectoral = ellipse(-11, 5.5, 6, 2.6, 12);
-// the pelvic perch, rotated 35° back and −30 % so it tucks along the belly (it hung like a leg)
-const pelvic = capsule(17, 10, 3.2, 8, 17, 2.8);
-// resting smirk: a one-sided 3 u upturn at the cheek end of the flat mouth (the kit has no smirk)
-const smirk = 'M29.2 8.8Q27.2 8.4 26.8 5.8';
-// darker olive spots (R18 spots, ≥ 6 u), placed by hand along the flank, clear of the eye
-const spots = join(
-  circle(-9, -3, 3.3),
-  circle(-19, 2.5, 3.1),
-  circle(-24, -4.5, 3.1),
-  circle(-28, 3.5, 3.1),
-  circle(-14, -7.5, 3.1),
-);
+// the eyebrow cirri: one small Y rooted on the crest's front over the eye, two forks of 4 × 6 u
+// splayed ±30°: eyebrows, never antlers or bunny ears
+const forkF = capsule(13.3, -25.0, 2, 17.8, -32.8, 1.7);
+const forkR = capsule(10.7, -25.0, 2, 6.2, -32.8, 1.7);
+// CRITIQUE-4: the pectoral 70 % size, rotated 35° back, rooted on the flank above the belly line
+const pectoral = ellipse(-3, 2, 5.2, 2.6, -35);
+// a small pelvic perch tucked along the belly (short: a long one hung like a frog's leg)
+const pelvic = capsule(17, 9.5, 3, 12.5, 13.5, 2.6);
+// resting smirk: a one-sided 3 u upturn at the cheek end of the wide flat lips (the kit has no smirk)
+const smirk = 'M27.4 1.4Q25.4 1 25 -1.6';
+// CRITIQUE-4: 4 darker olive spots of 6 u, placed by hand on the rear flank, clear of the eye
+const spots = join(circle(-7, -6, 3.2), circle(-12, 1.5, 3.2), circle(-18, -3.5, 3.1), circle(-21.5, 3, 3));
 
 export default defineArt({
   id: 'blenny',
   klass: 'fish',
   size: 'S',
-  feature: 'blunt round head with a small forked eyebrow cirrus and a long lighter dorsal band',
+  feature: 'blunt round head with a small forked eyebrow cirrus, a long low scalloped crest and a fan tail',
   personality: ['nosy', 'cheeky', 'peeky'],
   palette: { body: '#9AAE5E', accent: '#5F7436', belly: '#B9C987' },
   groups: [
     {
       id: 'tail',
-      pivot: [-28, 0],
+      pivot: [-23, 0],
       parts: [
         { d: tail, role: 'accent' },
         {
           d: join(
-            capsule(-30, -2, 2.4, -43, -8.5, 2.5),
-            capsule(-31, 0, 2.4, -45, 0, 2.5),
-            capsule(-30, 2, 2.4, -43, 8.5, 2.5),
+            capsule(-28, -2.5, 2.4, -42, -11, 2.5),
+            capsule(-29, 0, 2.4, -45, 0, 2.5),
+            capsule(-28, 2.5, 2.4, -42, 11, 2.5),
           ),
           role: 'belly',
           kind: 'pattern',
@@ -114,31 +109,30 @@ export default defineArt({
       id: 'body',
       parts: [
         { d: dorsal, role: 'belly' },
-        { d: dorsalRays, role: 'body', kind: 'pattern', alpha: 0.5 },
         { d: pelvic, role: 'body' },
         { d: body, role: 'body' },
-        { d: ellipse(14, 10.5, 26, 4.5), role: 'belly', kind: 'pattern' },
-        { d: spots, role: 'accent', kind: 'pattern', alpha: 0.8 },
+        { d: ellipse(12, 10, 26, 4.5), role: 'belly', kind: 'pattern' },
+        { d: spots, role: 'accent', kind: 'pattern' },
         { d: smirk, role: 'ink', kind: 'line', w: 3 },
       ],
     },
     {
       id: 'tufts',
-      pivot: [10, -22],
+      pivot: [12, -20.5],
       parts: [
         { d: forkF, role: 'body' },
         { d: forkR, role: 'body' },
       ],
     },
-    { id: 'finA', pivot: [-5, 4], parts: [{ d: pectoral, role: 'body' }] },
+    { id: 'finA', pivot: [1, -0.5], parts: [{ d: pectoral, role: 'belly' }] },
   ],
-  shine: ellipse(28, -8.5, 6, 2.4, -20),
+  shine: ellipse(25, -9, 6, 2.4, -15),
   face: {
-    eyes: [[12, -2]],
-    eye: 13,
-    zone: [-1, -34, 41, 56],
+    eyes: [[11, -8]],
+    eye: 14,
+    zone: [-3, -41, 41, 59],
     // cheeky: a flat mouth + the one-sided upturn line in the body group = the resting smirk
-    mouth: { at: [31.5, 8.4], w: 8, shape: 'flat' },
+    mouth: { at: [31.3, 1.4], w: 9, shape: 'flat' },
   },
   idle: {
     ambient: [
