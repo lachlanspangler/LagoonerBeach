@@ -362,7 +362,6 @@ function syncScene(): void {
   scene.particles.clear();
   const now = performance.now();
   scene.tray = state.tray.map((t, i) => ({ t, dealStart: now + i * 60, back: null }));
-  scene.hand = state.tray.flatMap((t) => (t ? [t.pieceId] : []));
   scene.score = state.score;
   scene.pendingScore = null;
   scene.shownScore = state.score;
@@ -1165,7 +1164,6 @@ let sealKey = '';
 
 const drag = new DragController(canvas, {
   layout: () => scene.layout,
-  trayCell: (p) => scene.trayCell(p),
   state: () => state,
   enabled: () => !ui.open && !reveal.blocking && !reefBoot,
   onPick: () => {

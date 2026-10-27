@@ -10,6 +10,7 @@ import { Rng } from '../core/rng.ts';
 import { decodeGame, encodeGame } from '../core/serialize.ts';
 import type { Profile } from '../platform/storage.ts';
 import type { Scene } from '../render/scene.ts';
+import { trayCellFor } from '../render/layout.ts';
 import { lookFor } from '../render/skins.ts';
 import { drawCreature, loadCreatureArt } from '../render/creatures.ts';
 import { SPECIES_BY_ID } from '../meta/creatures.ts';
@@ -106,7 +107,7 @@ export function installDebugApi(d: DebugDeps): void {
       const p = pieceById(d.state().tray[m.slot]!.pieceId);
       const [cx, cy] = p.cells[0]!;
       const [ox, oy] = d.scene.trayPieceOrigin(m.slot, p);
-      const tc = d.scene.trayCell(p);
+      const tc = trayCellFor(l, p);
       const down = { x: ox + (cx + 0.5) * tc, y: oy + (cy + 0.5) * tc };
       const up = { x: l.board.x + (m.x + cx + 0.5) * l.cell, y: l.board.y + (m.y + cy + 0.5) * l.cell + l.lift };
       return { move: m, down, up };

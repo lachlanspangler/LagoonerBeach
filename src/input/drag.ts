@@ -12,8 +12,6 @@ import { MOTION } from '../render/theme.ts';
 
 export interface DragHost {
   layout(): Layout;
-  /** Tray cell size of a piece (the scene's hand-wide size); default `trayCellFor`. */
-  trayCell?(p: Piece): number;
   state(): GameState;
   /** Whether input is accepted right now (e.g. not behind a menu). */
   enabled(): boolean;
@@ -106,7 +104,7 @@ export class DragController {
     const piece = pieceById(t.pieceId);
     // grab offset: where on the (tray-scale) piece the finger landed, clamped onto the piece
     const sl = l.slots[slot]!;
-    const tc = this.host.trayCell?.(piece) ?? trayCellFor(l, piece);
+    const tc = trayCellFor(l, piece);
     const ox = sl.cx - (piece.w * tc) / 2;
     const oy = sl.cy - (piece.h * tc) / 2;
     const gx = Math.max(0, Math.min(piece.w, (px - ox) / tc));
