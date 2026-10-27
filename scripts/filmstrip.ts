@@ -107,9 +107,11 @@ if (stage) {
     reveal,
     has('golden'),
   ] as const);
+  // the reveal waits for its lazy chunks: freezing before it exists would film a real-time run
+  await p.waitForFunction(() => (window as any).__atoll.revealState());
   await p.waitForTimeout(400); // CSS entrance
   for (const t of at) {
-    await p.evaluate((t) => (window as any).__atoll.revealFreeze(t), t);
+    if (!(await p.evaluate((t) => (window as any).__atoll.revealFreeze(t), t))) throw new Error(`no reveal at ${t}`);
     // CSS classes flip at thresholds; give transitions time to land
     await p.waitForTimeout(t > 0 ? 260 : 60);
     await shot(`t${String(t).padStart(4, '0')}`);

@@ -106,6 +106,12 @@ const BLINK_MS = 140;
 export function beatEnd(rank: number): number {
   return BEAT_END_MS + (rank >= 3 ? PROUD_MS : 0);
 }
+/** Epic/legendary: the proud beat's length before the card settles. */
+const SCENE_PROUD_MS = 350;
+/** Epic/legendary: the beat ends (eyes open) exactly when the card settles, ms after the pop. */
+export function sceneBeatEnd(rarity: Rarity): number {
+  return REVEAL_MS[rarity] - POP_MS[rarity];
+}
 
 export function formatSize(cm: number): string {
   return cm >= 100 ? `${(cm / 100).toFixed(cm >= 1000 ? 0 : 1)} m` : `${cm.toFixed(1)} cm`;
@@ -134,8 +140,14 @@ interface Active {
   stamped: boolean;
   /** The press that skipped the animation: its click must not land on the buttons it reveals. */
   swallow: boolean;
-  /** Last fx-canvas draw (ms): once settled the backdrop redraws at ~15 fps (or once, reduced motion). */
+  /**
+   * Reveal time (ms, the `t` drawn) of the last fx-canvas draw: once settled the backdrop redraws at
+   * ~15 fps (or once, reduced motion). Reveal time, not the wall clock: a frozen frame (`freeze`)
+   * always paints its own backdrop (CRITIQUE-3: a kraken frame at 2500 ms showed no rays).
+   */
   fxAt: number;
+  /** The pool creature's expression in the last frame (tests: every reveal ends on `idle`). */
+  expr?: string;
   /** Elements made inert while the dialog is up (restored on close), and where focus was. */
   inerted: Element[];
   returnTo: HTMLElement | null;
@@ -427,8 +439,9 @@ export class Reveal {
     cancelAnimationFrame(this.raf);
     const a = this.cur;
     if (!a) return;
-    this.draw(a, this.now() - a.start);
+    // schedule first: one bad frame must never stop the backdrop (it would sit on a stale canvas)
     this.raf = requestAnimationFrame(this.loop);
+    this.draw(a, this.now() - a.start);
   };
 
   /** Render one frame of the current reveal at elapsed time t (ms). Public for frozen-clock tests. */
@@ -445,8 +458,9 @@ export class Reveal {
     const popAt = rm ? 0 : POP_MS[rarity];
     // reduced motion: nothing animates, so the card is settled at once (never blocks the board)
     const settleAt = rm ? 0 : total;
+    let settledNow = false;
     if (!a.settled && t >= settleAt) {
-      a.settled = true;
+      a.settled = settledNow = true;
       a.el.classList.add('settled', 'info');
       // settled: the backdrop lets presses through; one outside the card closes the reveal
       addEventListener('pointerdown', this.outside, true);
@@ -467,10 +481,10 @@ export class Reveal {
     if (a.hero) this.drawHero(a, t, rm, popAt);
     // the backdrop: every frame while it moves; once settled ~15 fps (rays turn slowly), once if still
     if (a.fx) {
-      const now = this.now();
-      const due = !a.settled || (rm ? a.fxAt === -Infinity : now - a.fxAt >= 66 || now < a.fxAt);
+      // reduced motion: still, but repainted for the first 400 ms so the light centres on the laid-out card
+      const due = !a.settled || settledNow || a.fxAt === -Infinity || (rm ? a.fxAt < 400 : Math.abs(t - a.fxAt) >= 66);
       if (due) {
-        a.fxAt = now;
+        a.fxAt = t;
         this.drawFx(a, t, rm, popAt, total);
       }
     }
@@ -620,8 +634,9 @@ export class Reveal {
       if (u < 420) expr = 'surprised';
       const hopT = u - 380;
       if (hasNewArt(a.sp.id)) {
-        if (hopT > 0 && hopT < SIGNATURE_MS) sig = hopT / SIGNATURE_MS;
-        else if (hopT >= SIGNATURE_MS) dy = Math.sin((hopT - SIGNATURE_MS) / 380) * s * 0.02;
+        const sd = this.signatureMs(a);
+        if (hopT > 0 && hopT < sd) sig = hopT / sd;
+        else if (hopT >= sd) dy = Math.sin((hopT - sd) / 380) * s * 0.02;
       } else if (hopT > 0 && hopT < 560) {
         const ph = (hopT % 280) / 280;
         dy = -Math.sin(ph * Math.PI) * s * 0.14;
@@ -634,11 +649,14 @@ export class Reveal {
         ang = Math.sin((hopT - 560) / 520) * 0.05;
       }
       const rank = RARITY_RANK[a.sp.rarity];
-      if (rank >= 3 && u > BEAT_END_MS) expr = 'proud';
-      // the beat ends: eyes open, one blink, then the idle loop (never an eyes-closed last frame)
-      const end = beatEnd(rank);
+      // the beat ends: eyes open, one blink, then the idle loop (never an eyes-closed last frame).
+      // Scene tiers (epic/legendary) land late, so their beat ends when the card settles: the card
+      // waiting for Continue shows the creature eyes-open (CRITIQUE-3: the seadragon sat on `happy`).
+      const end = a.hero ? sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity) : beatEnd(rank);
+      if (rank >= 3 && u > Math.min(BEAT_END_MS, end - SCENE_PROUD_MS)) expr = 'proud';
       if (u >= end) expr = u - end >= BLINK_AT_MS && u - end < BLINK_AT_MS + BLINK_MS ? 'blink' : 'idle';
     }
+    if (a.modal) a.expr = expr;
     withFinish(g, a.item.golden, u, rm, cx, cy + dy, s * big, (gg) => {
       gg.save();
       gg.translate(cx, cy + dy);
@@ -854,11 +872,15 @@ export class Reveal {
     const out = spring(u, 420, 0.12);
     const sx = 0.5 + 0.5 * out;
     const sy = 0.5 + 0.5 * out + 0.14 * Math.max(0, 1 - u / 280);
+    // the signature starts on the hero canvas and carries on in the pool (one continuous move)
+    const sd = this.signatureMs(a);
+    const hopT = u - 380;
     const opts: DrawOpts = {
       golden: a.item.golden,
       expression: u < 420 ? 'surprised' : 'happy',
       t: u / 1000,
       night,
+      ...(hasNewArt(a.sp.id) && hopT > 0 && hopT < sd ? { signatureAt: hopT / sd } : {}),
     };
     withFinish(g, a.item.golden, u, rm, x, y, s * sx, (gg) => {
       gg.save();
@@ -903,20 +925,32 @@ export class Reveal {
     this.pump();
   }
 
+  /**
+   * How long the reveal's one signature move lasts (ms). Scene tiers fit it before the card settles,
+   * because a signature can carry its own face (the seadragon's is eyes-closed).
+   */
+  private signatureMs(a: Active): number {
+    if (!a.hero) return SIGNATURE_MS;
+    return Math.min(SIGNATURE_MS, sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity) - 380 - 40);
+  }
+
   /** Debug/test: freeze the current reveal at elapsed t (ms) and render that frame. */
   freeze(t: number): boolean {
     const a = this.cur;
     if (!a) return false;
     cancelAnimationFrame(this.raf);
     a.start = this.now() - t;
+    // a frozen frame is a full repaint: backdrop and hero canvas included
+    a.fxAt = -Infinity;
+    a.heroDone = false;
     this.draw(a, t);
     return true;
   }
 
   /** Debug/test: what's showing. */
-  current(): { id: string; modal: boolean; settled: boolean } | null {
+  current(): { id: string; modal: boolean; settled: boolean; expr?: string } | null {
     const a = this.cur;
-    return a ? { id: a.sp.id, modal: a.modal, settled: a.settled } : null;
+    return a ? { id: a.sp.id, modal: a.modal, settled: a.settled, expr: a.expr } : null;
   }
 
   /** Debug/test: close whatever is showing. */

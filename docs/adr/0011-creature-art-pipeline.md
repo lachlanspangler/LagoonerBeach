@@ -137,3 +137,32 @@ All 47 species landed (5 fleets); an independent art director graded them 11 A /
   errors vs warnings; `?cast` renders the whole cast as the journal shows it (`cast-{day,night}.png`).
 - Measured after the pass (47 species): art chunk **37.2 KB gz** (budget 60); **0.028 ms** mean per
   animated creature at 4× throttle, 6 leapers p95 0.7 ms; game draw p95 1.2 ms; Chromium + WebKit green.
+
+## Amendment 2 (2026-10-27): cast lints, golden remap, reveal settle, cold read (after CRITIQUE-3)
+`docs/art/CRITIQUE-3.md` (38 A / 9 B) found the remaining problems are about the cast as a whole, not
+single drawings. Kit-side answers:
+- **Cast lints** (`validateCast` in `validate.ts`, per species, listed in `docs/art/LINT.md`): **C1** no two
+  bodies share a hex or sit within **CIEDE2000** ΔE < 6 (CIELAB D65; ΔE00 rather than ΔE76 because ΔE76
+  overstates differences between saturated yellows/blues and understates near-neutral ones, exactly
+  the clusters the critique names); **C2** habitat hue histogram: ≤ 40 % of a habitat's species
+  (never less than 1) inside any 30° **OKLCH** hue window, near-neutral bodies (OKLCH C < 0.05) sit out;
+  **C3** legendaries own their hue: no non-legendary within 15° of a legendary's body hue. They start as
+  **warnings** with their own switch (`CAST_LINT_AS_ERRORS`, or `ART_CAST_STRICT=1`), separate from
+  `LINT_AS_ERRORS` (already on), because three artists are redoing palettes in parallel. At landing:
+  C1 30 species (4 shared hexes: boxfish/butterfly, boxcrab/lionfish, firefly/wrasse, parrot/giantclam;
+  the blue trio barracuda/stingray/dolphin at ΔE00 1.8–4.3; seahorse/golden turtle 2.2), C2 only
+  Legends (seadragon + golden turtle in one 30° gold window), C3 20 species around the gold, blue and
+  violet legendaries (whaleshark 253° sits in the blue-fish cluster; kraken 305° has the urchin at 1°).
+- **Golden remap** (`goldenKind` in `palette.ts`): a base within 25° of the golden hue (#F2C14E) with
+  real chroma (≥ 0.05) wears **`GOLDEN_DEEP`** (body `#E9A93A`, more orange) with a metallic sheen and
+  a white body glint on tiles and in motion; other bases keep `GOLDEN`, the turtle keeps `rose`.
+- **Reveal**: the settled card (scene tiers) shows the creature eyes-open: the beat (and the signature,
+  whose own face may be eyes-closed) is fitted to end at the settle (`sceneBeatEnd`), and the hero's
+  entrance plays the signature so it carries on in the pool. The backdrop's ~15 fps settled redraw is
+  gated on reveal time, not the wall clock, and a frozen frame always repaints the backdrop; the loop
+  schedules before drawing. The Continue/Share row shows (dimmed, inert) as soon as a scene card is
+  there, so its lower third is never blank. `filmstrip --reveal` waits for the reveal before freezing.
+  e2e: every modal reveal ends on `idle`; the legendary backdrop holds around the settle.
+- **Cold read**: `scripts/art-sheet.ts --cold [--golden]` → `artifacts/art/cold-read-{day,night}.png`
+  (+ a key): every species' 54 px journal tile alone, by habitat, numbered, no names. A tile passes
+  only if a cold reader names the species.

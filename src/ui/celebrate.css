@@ -277,6 +277,12 @@ html[data-theme='night'] .r-golden .rv-card {
     opacity 200ms ease,
     visibility 0s;
 }
+/* scene tiers (epic/legendary): once the card is there the buttons are too, dimmed and still
+   inert until it settles (a tap only skips), so the card's lower third is never blank (CRITIQUE-3) */
+.reveal.r-scene.info:not(.settled) .rv-btns {
+  opacity: 0.45;
+  visibility: visible;
+}
 .reveal.settled .rv-btns {
   opacity: 1;
   visibility: visible;
