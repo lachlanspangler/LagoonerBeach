@@ -65,9 +65,16 @@ export function buildReefList(
   // how deep you've been: the deepest reef cleared, in metres
   let frontier = 0;
   for (const id of solved) frontier = Math.max(frontier, Number(id.replace(/\D/g, '')) || 0);
-  head.innerHTML = `<div style="flex:1;min-width:0"><h2 class="title-m">Reefs</h2><div class="callout" data-testid="reef-depth">${solved.size} cleared${
-    frontier ? ` · <b class="num">Depth ${depthOf(frontier)} m</b>` : ''
-  }${deepest ? ` · chapter ${deepest}` : ''}${pure.size ? ` · ${pure.size} without hints` : ''}</div></div>`;
+  // each fact stays whole: a narrow phone wraps between them, never inside one ("1 / without hints")
+  const facts = [
+    `${solved.size} cleared`,
+    ...(frontier ? [`<b class="num">Depth ${depthOf(frontier)} m</b>`] : []),
+    ...(deepest ? [`chapter ${deepest}`] : []),
+    ...(pure.size ? [`${pure.size} without hints`] : []),
+  ];
+  head.innerHTML = `<div style="flex:1;min-width:0"><h2 class="title-m">Reefs</h2><div class="callout" data-testid="reef-depth">${facts
+    .map((f, i, a) => `<span style="white-space:nowrap">${f}${i < a.length - 1 ? ' ·' : ''}</span>`)
+    .join(' ')}</div></div>`;
   head.append(button('', 'round', icon('close'), 'Close', onClose));
   card.append(head);
 

@@ -184,7 +184,7 @@ export interface PuzzleResultOpts {
   segs?: readonly boolean[];
   /** This clear completed a chapter: "Chapter 2 complete · Ebbtide Bight". */
   chapterDone?: { chapter: number; name: string };
-  /** A small reward line: first clear (shell sticker), no hints (star), a new depth record. */
+  /** A small reward line: no hints (star) or with a hint (shell), a new depth record. */
   reward?: { first: boolean; pure: boolean; depth?: number };
 }
 
@@ -196,8 +196,9 @@ export function showPuzzleResult(k: Kit, o: PuzzleResultOpts): void {
     : '';
   const rw = o.reward;
   const bits: string[] = [];
-  if (rw?.pure) bits.push(`${icon('star', { filled: true, cls: 'rw-star' })}No hints`);
-  else if (rw?.first) bits.push(`${icon('shell', { filled: true, cls: 'rw-shell' })}Shell sticker`);
+  if (rw?.pure) bits.push(`${icon('star', { filled: true, cls: 'rw-star' })}No hints: gold star`);
+  // a clear that leaned on a hint gets the shell, and says what the star asks for
+  else if (rw?.first) bits.push(`${icon('shell', { filled: true, cls: 'rw-shell' })}Cleared with a hint`);
   if (rw?.depth) bits.push(`New depth <b class="num">${rw.depth} m</b>`);
   const reward = bits.length ? `<div class="reef-reward" data-testid="reef-reward">${bits.join('<i>·</i>')}</div>` : '';
   const chapterLine = o.chapterDone

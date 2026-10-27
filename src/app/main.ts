@@ -1374,6 +1374,7 @@ function debugDeps(): DebugDeps {
         dirty = true;
       },
       celebrateWord: () => scene.celebrate.word?.text ?? null,
+      celebrateBest: () => ({ bannerAt: scene.celebrate.bestAt, hud: scene.celebrate.bestShown }),
       revealState: () => reveal.current(),
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),

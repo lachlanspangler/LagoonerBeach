@@ -54,6 +54,8 @@ export interface DebugDeps {
     chapterMoment(chapter: number, name: string): void;
     /** The word on the board right now (if any). */
     celebrateWord(): string | null;
+    /** NEW BEST: when a banner started (-1e9 = never) and whether the HUD line says it. */
+    celebrateBest(): { bannerAt: number; hud: boolean };
     revealState(): { id: string; modal: boolean; settled: boolean; expr?: string } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;

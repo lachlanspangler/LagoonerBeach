@@ -113,6 +113,7 @@ export class Ui {
   private sr: HTMLElement;
   /** null until first used: an existing journal starts "seen" (no wall of dots after an update). */
   private seen: Set<string> | null = loadSeen();
+  private seenUnsaved = false;
   private journalCount = 0;
 
   constructor(private readonly h: UiHandlers) {
@@ -180,9 +181,15 @@ export class Ui {
   }
 
   private seenFor(j: Journal): Set<string> {
+    // never stored: everything already caught counts as seen (saves from before the dots). Written
+    // once there's something to remember, so a fresh (or just erased) beach stores nothing.
     if (!this.seen) {
       this.seen = new Set(Object.keys(j.entries));
+      this.seenUnsaved = true;
+    }
+    if (this.seenUnsaved && Object.keys(j.entries).length) {
       saveSeen(this.seen);
+      this.seenUnsaved = false;
     }
     return this.seen;
   }

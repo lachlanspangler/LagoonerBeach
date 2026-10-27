@@ -12,8 +12,30 @@
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon-180.png" />
     <title>Lagooner Beach</title>
-    <link rel="preload" href="./fonts/lagoon-ui.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="./fonts/lagoon-display-900.woff2" as="font" type="font/woff2" crossorigin />
+    <!--
+      The two first-frame fonts start loading here, before the stylesheet: the same @font-face rules
+      as style.css (so it's one request each) + a load. A <link rel=preload> can't do it for both
+      engines: WebKit only reuses it without `crossorigin`, Chromium only with it — the other one
+      fetched the font twice and warned "preloaded but not used".
+    -->
+    <style>
+      @font-face {
+        font-family: 'Lagoon UI';
+        src: url('/fonts/lagoon-ui.woff2') format('woff2');
+        font-weight: 200 1000;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Lagoon Display';
+        src: url('/fonts/lagoon-display-900.woff2') format('woff2');
+        font-weight: 900;
+        font-display: swap;
+      }
+    </style>
+    <script>
+      document.fonts?.load?.('800 16px "Lagoon UI"');
+      document.fonts?.load?.('900 16px "Lagoon Display"');
+    </script>
     <link rel="stylesheet" href="./src/ui/style.css" />
   </head>
   <body>

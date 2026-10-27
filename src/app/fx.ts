@@ -23,7 +23,7 @@ import {
   momentFor,
   PEAK_WORDS,
 } from '../render/moments.ts';
-import { placeStack, WORD_LIFE, WORD_SIZE, BEST_LIFE } from '../render/celebrate.ts';
+import { placeStack, WORD_LIFE, WORD_SIZE } from '../render/celebrate.ts';
 import type { Sfx } from '../audio/sfx.ts';
 import type { Haptics } from '../platform/haptics.ts';
 import type { LagoonCatch } from '../meta/catch.ts';
@@ -124,17 +124,20 @@ export class Fx {
     this.settleAt = 0;
   }
 
-  /** The mid-game moment you pass your best (once per game): gold banner under the score. */
+  /**
+   * The mid-game moment you pass your best (once per game): the HUD line turns NEW BEST, with its
+   * sound. No "NEW BEST!" banner: it drew in the slot under the score, which is the COMBO badge's
+   * alone (ADR 0012), and said what the HUD line already says (celebrate.bestAt stays unset).
+   */
   newBest(now: number): void {
-    // a word owns the moment; the banner lands as it fades (but never more than ~0.9 s late)
+    // a word owns the moment; the line turns as it fades (but never more than ~0.9 s late)
     const t = Math.max(now + 450, Math.min(this.wordEnd - 150, now + 1000));
     this.at(t, (t) => {
-      this.scene.celebrate.bestAt = t;
       this.scene.celebrate.bestShown = true;
       this.sfx.newBest();
       this.haptics.fire('medium', t);
     });
-    this.settleAt = Math.max(this.settleAt, t + BEST_LIFE * 0.5);
+    this.settleAt = Math.max(this.settleAt, t + 300); // the line turns and its chime plays
   }
 
   /**

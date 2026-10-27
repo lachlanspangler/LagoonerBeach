@@ -72,6 +72,10 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   expect(run.score).toBeGreaterThan(30);
   expect(run.over).toBe(false);
   expect(await page.evaluate(() => (window as any).__atoll.profile().best)).toBe(run.score);
+  // one channel for the record: the HUD line says NEW BEST; no banner in the COMBO badge's slot
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__atoll.celebrateBest()))
+    .toEqual({ bannerAt: -1e9, hud: true });
   // an app kill / reload mid-run: the best is kept, and the run still knows the record it beat
   await page.reload();
   await page.waitForFunction(() => (window as any).__atoll);
@@ -179,8 +183,20 @@ test('reef puzzle: playing the stored solution with real drags clears it', async
     await page.waitForTimeout(150);
   }
   await expect(page.getByTestId('puzzle-result')).toHaveText('Cleared');
+  // no hint used: the star line, which reads as the better clear
+  await expect(page.getByTestId('reef-reward')).toContainText('No hints');
   await page.locator('#next-reef').click();
-  expect(await page.evaluate(() => (window as any).__atoll.state().seed)).toBe(1);
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.state().seed)).toBe(1); // loads async
+  // the reefs header ("1 cleared · Depth … · 1 without hints") wraps between facts, never inside one
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'All reefs' }).click();
+  const facts = page.locator('[data-testid="reef-depth"] > span');
+  await expect(facts.last()).toContainText('1 without hints');
+  // lines per fact = distinct rect tops (a span holding a <b> reports two rects on one line)
+  const lines = await facts.evaluateAll((els) =>
+    els.map((e) => new Set([...e.getClientRects()].map((r) => Math.round(r.top))).size),
+  );
+  expect(lines.every((n) => n === 1)).toBe(true);
 });
 
 test('reef puzzle hint points at a winning move', async ({ page }) => {
@@ -349,4 +365,19 @@ test('settings: larger text toggles, erase all progress really erases', async ({
   const p = await page.evaluate(() => (window as any).__atoll.profile());
   expect(p.stats.games).toBe(0);
   expect(Object.keys((await page.evaluate(() => (window as any).__atoll.journal())).entries)).toHaveLength(0);
+  // nothing comes back on the fresh boot either (the journal's "seen" list was rewritten as [])
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => localStorage.getItem('atoll.v1.seen'))).toBeNull();
+});
+
+test('first-frame fonts: fetched once each, early, with no "preloaded but not used" warning', async ({ page }) => {
+  const warns: string[] = [];
+  const fonts: string[] = [];
+  page.on('console', (m) => /preload/i.test(m.text()) && warns.push(m.text()));
+  page.on('request', (r) => r.url().endsWith('.woff2') && fonts.push(new URL(r.url()).pathname));
+  await boot(page);
+  await page.waitForTimeout(3500); // WebKit warns a few seconds after load
+  expect(warns).toEqual([]);
+  expect(fonts.sort()).toEqual(['/fonts/lagoon-display-900.woff2', '/fonts/lagoon-ui.woff2']);
+  expect(await page.evaluate(() => document.fonts.check('900 16px "Lagoon Display"'))).toBe(true);
 });

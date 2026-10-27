@@ -25,7 +25,14 @@ type Win = Pick<Window, 'addEventListener' | 'sessionStorage'> & { location: Pic
  * The error still propagates, so callers' retry paths run if we don't reload.
  */
 export function installPreloadRecovery(w: Win = window, now: () => number = Date.now): void {
+  // a chunk aborted because the page is being left (reload, navigation) is not a stale deploy:
+  // reloading then would fight the navigation already under way
+  let leaving = false;
+  w.addEventListener('pagehide', () => (leaving = true));
+  w.addEventListener('beforeunload', () => (leaving = true));
+  w.addEventListener('pageshow', () => (leaving = false));
   w.addEventListener('vite:preloadError', () => {
+    if (leaving) return;
     try {
       const last = Number(w.sessionStorage.getItem(RELOAD_KEY) ?? 0);
       if (now() - last < RELOAD_GUARD_MS) return;

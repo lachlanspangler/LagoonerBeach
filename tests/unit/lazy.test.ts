@@ -15,16 +15,16 @@ describe('retryable lazy loads', () => {
 describe('vite:preloadError recovery', () => {
   function fakeWin() {
     const store = new Map<string, string>();
-    let handler: (() => void) | null = null;
+    const handlers = new Map<string, () => void>();
     const w = {
-      addEventListener: (_: string, h: () => void) => (handler = h),
+      addEventListener: (type: string, h: () => void) => void handlers.set(type, h),
       sessionStorage: {
         getItem: (k: string) => store.get(k) ?? null,
         setItem: (k: string, v: string) => void store.set(k, v),
       },
       location: { reload: vi.fn() },
     };
-    return { w, fire: () => handler?.() };
+    return { w, fire: (type = 'vite:preloadError') => handlers.get(type)?.() };
   }
   it('reloads once, then not again within the guard window, then again later', () => {
     const { w, fire } = fakeWin();
@@ -38,5 +38,16 @@ describe('vite:preloadError recovery', () => {
     t += 60_000;
     fire(); // a later deploy in the same session
     expect(w.location.reload).toHaveBeenCalledTimes(2);
+  });
+
+  it('never reloads while the page is being left (a navigation aborted the chunk)', () => {
+    const { w, fire } = fakeWin();
+    installPreloadRecovery(w as never, () => 1_000_000);
+    fire('pagehide');
+    fire();
+    expect(w.location.reload).not.toHaveBeenCalled();
+    fire('pageshow'); // back from the bfcache: a real stale deploy reloads again
+    fire();
+    expect(w.location.reload).toHaveBeenCalledTimes(1);
   });
 });
