@@ -184,7 +184,7 @@ test('a tap mid-reveal on where Continue will be only skips the animation (never
   expect(await page.evaluate(() => getComputedStyle(document.querySelector('.reveal .rv-btns')!).visibility)).toBe(
     'hidden',
   );
-  await page.waitForTimeout(Math.max(0, 250 - (Date.now() - t0)));
+  await page.waitForTimeout(Math.max(0, 400 - (Date.now() - t0))); // past the grace (from first paint)
   expect(await page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(false);
   await page.mouse.click(pt.x, pt.y);
   await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
@@ -193,6 +193,42 @@ test('a tap mid-reveal on where Continue will be only skips the animation (never
   // now Continue does close it
   await page.locator('.reveal .btn.primary').click();
   await expect(page.locator('.reveal')).toHaveCount(0);
+});
+
+test('the reveal grace runs from the first paint: a slow open never eats it', async ({ page }) => {
+  await boot(page, 'seed=42');
+  // open() is followed by a long task (a loaded phone building the card), then the first paint; a
+  // press right after that paint was aimed at the board: it must not skip (or close) the card
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        const root = document.getElementById('ui')!;
+        const mo = new MutationObserver(() => {
+          const el = root.querySelector('.reveal');
+          if (!el) return;
+          mo.disconnect();
+          const t = performance.now();
+          while (performance.now() - t < 400); // the slow build, before anything is painted
+          requestAnimationFrame(() =>
+            setTimeout(() => {
+              el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 20, clientY: 20 }));
+              el.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 20, clientY: 20 }));
+              done();
+            }, 0),
+          );
+        });
+        mo.observe(root, { childList: true, subtree: true });
+        (window as any).__atoll.revealSpecies('kraken');
+      }),
+  );
+  expect(await page.evaluate(() => (window as any).__atoll.revealState())).toMatchObject({
+    id: 'kraken',
+    settled: false,
+  });
+  // after the grace a tap skips as before
+  await page.waitForTimeout(300);
+  await page.mouse.click(20, 20);
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.settled)).toBe(true);
 });
 
 test('reveal a11y: the rest is inert, Tab stays in the dialog, focus returns; read once', async ({ page }) => {

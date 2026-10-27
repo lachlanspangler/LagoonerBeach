@@ -88,6 +88,11 @@ export class LazyReveal {
     return this.impl?.current() ?? null;
   }
 
+  /** A modal card opened less than the grace period before `t` (see Reveal.inGrace). */
+  inGrace(t: number): boolean {
+    return this.impl?.inGrace(t) ?? false;
+  }
+
   freeze(t: number): boolean {
     return this.impl?.freeze(t) ?? false;
   }

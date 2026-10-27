@@ -67,6 +67,9 @@ export interface RevealDeps {
   onStrip?: (ms: number) => void;
 }
 
+/** A press this soon after a modal card is first painted was aimed at the board: it's swallowed. */
+export const REVEAL_GRACE_MS = 250;
+
 /** How long the common pop stays settled before it leaves by itself (ms after REVEAL_MS). */
 export const POP_HOLD_MS = 600;
 
@@ -158,6 +161,11 @@ interface Active {
   stamped: boolean;
   /** The press that skipped the animation: its click must not land on the buttons it reveals. */
   swallow: boolean;
+  /**
+   * performance.now() of the first-paint frame (the grace window starts when the card is on screen,
+   * not when open() began building it); unset until then.
+   */
+  shownAt?: number;
   /**
    * Reveal time (ms, the `t` drawn) of the last fx-canvas draw: once settled the backdrop redraws at
    * ~15 fps (or once, reduced motion). Reveal time, not the wall clock: a frozen frame (`freeze`)
@@ -351,6 +359,7 @@ export class Reveal {
       // must not eat the animation), unless a skip/freeze already set it
       const c = this.cur;
       if (c && c.el === el && !c.clocked) c.start = this.now();
+      if (c && c.el === el) c.shownAt = performance.now();
     });
     this.cur = {
       item,
@@ -1008,6 +1017,15 @@ export class Reveal {
   current(): { id: string; modal: boolean; settled: boolean; expr?: string } | null {
     const a = this.cur;
     return a ? { id: a.sp.id, modal: a.modal, settled: a.settled, expr: a.expr } : null;
+  }
+
+  /**
+   * A modal card is younger than REVEAL_GRACE_MS (or not painted yet) at `t` (an event's timeStamp,
+   * performance.now() time base): a press then was aimed at the board, not at the card.
+   */
+  inGrace(t: number): boolean {
+    const a = this.cur;
+    return !!a && a.modal && (a.shownAt === undefined || t - a.shownAt < REVEAL_GRACE_MS);
   }
 
   /** Debug/test: close whatever is showing. */
