@@ -1,67 +1,81 @@
 /**
  * Blenny — the nosy neighbour of the shallows (fish class, profile view, level).
  * Silhouette (R10): a blunt, round-headed body that stays deep to the tail (peduncle ≥ 55 % of the
- * head height, so never a drumstick) with two branched eyebrow cirri splayed over the eye, one long
- * lighter dorsal band from nape to tail, and a rounded dark-olive fan tail.
- * Personality: nosy, cheeky, peeky; rests with a cat-mouth smirk. Signature: ducks out of sight
+ * head height, so never a drumstick) with one small forked eyebrow cirrus over the eye, one long
+ * lighter two-lobed dorsal crest (the blenny notch) from nape to tail, and a rounded olive fan tail.
+ * Personality: nosy, cheeky, peeky; rests with a one-sided smirk. Signature: ducks out of sight
  * below the tile edge, peeks back up, and waggles its eyebrows.
  */
-import { blob, capsule, circle, defineArt, ellipse, join, tube, waveTrack, within } from '../kit.ts';
+import { blob, capsule, circle, defineArt, ellipse, join, waveTrack, within } from '../kit.ts';
 
 // blunt round head at the front (+38); long and low (2.6 : 1), tapering gently to a deep tail
 // root (19 u vs a 31 u head = 61 %): never a drumstick, never a round clownfish
-const body = blob([
-  [38, 2],
-  [36, -9.5],
-  [29, -17],
-  [16, -18],
-  [2, -14],
-  [-13, -11],
-  [-26, -9.5],
-  [-30, 0],
-  [-26, 9.5],
-  [-13, 11],
-  [2, 13.5],
-  [16, 17],
-  [29, 16],
-  [36, 10],
-]);
-// the long, low dorsal: one lighter band riding the whole back, nape to tail root
-const dorsal = tube(
+const body = blob(
   [
-    [22, -13.5, 2.8],
-    [10, -17.5, 3.8],
-    [-4, -16.5, 4],
-    [-17, -14, 3.6],
-    [-28, -11, 3],
+    [38.1, 0.0],
+    [37.1, -8.0],
+    [33.2, -12.12],
+    [16.0, -15.48],
+    [2.0, -12.04],
+    [-13.0, -9.46],
+    [-26.0, -8.17],
+    [-30.0, 0.0],
+    [-26.0, 6.04],
+    [-13.0, 6.99],
+    [2.0, 8.58],
+    [16.0, 10.85],
+    [32.2, 10.85],
+    [37.1, 8.0],
   ],
-  0.9,
+  1,
+);
+// the long dorsal fin: one lighter crest riding the whole back, nape to tail root, with the
+// blenny's little notch halfway; drawn behind the body so only its rayed top edge shows
+const dorsal = blob(
+  [
+    [25, -9],
+    [17, -21.2],
+    [8, -25.4],
+    [0, -17.4],
+    [-8, -24.4],
+    [-19, -22.0],
+    [-28, -17.6],
+    [-27, -5],
+    [0, -6],
+    [20, -6],
+  ],
+  0.8,
+);
+const dorsalRays = join(
+  capsule(13, -11, 2.5, 13, -20.5, 2.5),
+  capsule(5, -10, 2.5, 4.5, -22, 2.5),
+  capsule(-9, -9, 2.5, -9.5, -21, 2.5),
+  capsule(-18, -8, 2.5, -19, -19.5, 2.5),
 );
 // a rounded fan tail in the darker olive, flaring from the deep peduncle
 const tail = blob(
   [
     [-25, -6],
-    [-32, -9.5],
-    [-40, -15],
-    [-45.5, -8],
-    [-45.5, 8],
-    [-40, 15],
-    [-32, 9.5],
+    [-32, -8.8],
+    [-39.2, -14.2],
+    [-45.2, -9.8],
+    [-45.2, 4.5],
+    [-39.2, 14.2],
+    [-32, 8.8],
     [-25, 6],
   ],
   0.9,
 );
-// the eyebrow cirri: two branched tufts straddling the eye, splayed ±25° (never bunny ears);
-// each is a stem with one side fork, so it reads as a little feathery antler at 54 px
-// (the front one stands taller: one raised eyebrow, the cheeky look)
-const tuftF = capsule(16, -13, 3.4, 26, -35, 2.9);
-const forkF = capsule(20.5, -23.5, 2.4, 27.5, -26.5, 2.3);
-const tuftR = capsule(5, -13.5, 3.4, -3.5, -32, 2.9);
-const forkR = capsule(1, -22.5, 2.4, -5.5, -25, 2.3);
+// the eyebrow cirri (CRITIQUE-3): one small Y rooted on the head right over the eye, two forks of
+// 4 × 6 u splayed ±30°, standing ≤ 18 % of the body height: eyebrows, never antlers or bunny ears
+const forkF = capsule(11.3, -22.5, 2, 14.3, -27.7, 1.7);
+const forkR = capsule(8.7, -22.5, 2, 5.7, -27.7, 1.7);
 // a flat pectoral swept back along the flank, well behind the eye (not a second mouth)
-const pectoral = ellipse(-10, 10, 8, 3.6, 22);
-// the perch: blennies sit propped on their stubby pelvic fins under the chin
-const pelvic = capsule(18, 13, 3.8, 11, 28, 3.2);
+const pectoral = ellipse(-11, 5.5, 6, 2.6, 12);
+// the pelvic perch, rotated 35° back and −30 % so it tucks along the belly (it hung like a leg)
+const pelvic = capsule(17, 10, 3.2, 8, 17, 2.8);
+// resting smirk: a one-sided 3 u upturn at the cheek end of the flat mouth (the kit has no smirk)
+const smirk = 'M29.2 8.8Q27.2 8.4 26.8 5.8';
 // darker olive spots (R18 spots, ≥ 6 u), placed by hand along the flank, clear of the eye
 const spots = join(
   circle(-9, -3, 3.3),
@@ -75,7 +89,7 @@ export default defineArt({
   id: 'blenny',
   klass: 'fish',
   size: 'S',
-  feature: 'blunt round head with two branched eyebrow tufts and a long lighter dorsal band',
+  feature: 'blunt round head with a small forked eyebrow cirrus and a long lighter dorsal band',
   personality: ['nosy', 'cheeky', 'peeky'],
   palette: { body: '#9AAE5E', accent: '#5F7436', belly: '#B9C987' },
   groups: [
@@ -99,32 +113,32 @@ export default defineArt({
     {
       id: 'body',
       parts: [
+        { d: dorsal, role: 'belly' },
+        { d: dorsalRays, role: 'body', kind: 'pattern', alpha: 0.5 },
         { d: pelvic, role: 'body' },
         { d: body, role: 'body' },
-        { d: dorsal, role: 'belly' },
-        { d: ellipse(14, 14, 26, 5), role: 'belly', kind: 'pattern' },
+        { d: ellipse(14, 10.5, 26, 4.5), role: 'belly', kind: 'pattern' },
         { d: spots, role: 'accent', kind: 'pattern', alpha: 0.8 },
+        { d: smirk, role: 'ink', kind: 'line', w: 3 },
       ],
     },
     {
       id: 'tufts',
-      pivot: [10, -19],
+      pivot: [10, -22],
       parts: [
-        { d: tuftF, role: 'body' },
         { d: forkF, role: 'body' },
-        { d: tuftR, role: 'body' },
         { d: forkR, role: 'body' },
       ],
     },
-    { id: 'finA', pivot: [-5, 6], parts: [{ d: pectoral, role: 'body' }] },
+    { id: 'finA', pivot: [-5, 4], parts: [{ d: pectoral, role: 'body' }] },
   ],
-  shine: ellipse(28, -11, 6, 2.6, -24),
+  shine: ellipse(28, -8.5, 6, 2.4, -20),
   face: {
-    eyes: [[10, 0]],
-    eye: 12.5,
-    zone: [-3, -31, 41, 53],
-    // cheeky: the cat-mouth smirk (the kit has no tilted smile)
-    mouth: { at: [32, 7], w: 8, shape: 'w' },
+    eyes: [[12, -2]],
+    eye: 13,
+    zone: [-1, -34, 41, 56],
+    // cheeky: a flat mouth + the one-sided upturn line in the body group = the resting smirk
+    mouth: { at: [31.5, 8.4], w: 8, shape: 'flat' },
   },
   idle: {
     ambient: [
