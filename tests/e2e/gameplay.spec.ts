@@ -218,7 +218,8 @@ test('a relaunch into Reefs shows no playable Endless board while the pack loads
   // the pack is slow: until it lands the board is empty and takes no input
   let held: (() => Promise<void>) | null = null;
   await page.route('**/assets/puzzles-*.js', (r) => void (held = () => r.continue()));
-  await page.goto('/?debug=1');
+  // WebKit holds the load event for the stalled chunk: don't wait for it
+  await page.goto('/?debug=1', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => (window as any).__atoll);
   await expect.poll(() => held !== null).toBe(true);
   const loading = await state(page);
@@ -231,7 +232,7 @@ test('a relaunch into Reefs shows no playable Endless board while the pack loads
   // the pack fails: the Endless game (as it was, not overwritten) and a retry
   await page.unroute('**/assets/puzzles-*.js');
   await page.route('**/assets/puzzles-*.js', (r) => r.abort());
-  await page.goto('/?debug=1');
+  await page.goto('/?debug=1', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => (window as any).__atoll);
   await expect(page.getByTestId('reef-error')).toBeVisible({ timeout: 15_000 });
   const back = await state(page);
