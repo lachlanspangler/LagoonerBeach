@@ -21,7 +21,7 @@ const WITH_LB = process.argv.includes('--with-leaderboard');
 const oi = process.argv.indexOf('--only');
 const ONLY = oi >= 0 ? process.argv[oi + 1]!.split(',') : [];
 const BASE = `${process.env.LB_URL ?? 'http://localhost:5317'}/?debug=1${WITH_LB ? '' : '&nolb=1'}`;
-const b = await chromium.launch();
+const b = await chromium.launch({ args: ['--mute-audio'] });
 
 async function open(theme: 'light' | 'dark', query = 'seed=42'): Promise<Page> {
   const p = await b.newPage({
@@ -106,6 +106,8 @@ interface Shot {
   size?: number;
   mascot?: { id: string; side: 'left' | 'right'; y: number; px: number; flip?: boolean; tilt?: number };
   query?: string;
+  /** Capture only this element down to the screen's bottom (a sheet), not the blurred game behind it. */
+  crop?: string;
   stage: (p: Page) => Promise<void>;
 }
 const shots: Shot[] = [
@@ -179,7 +181,9 @@ const shots: Shot[] = [
     theme: 'light',
     bg: 'sunset',
     size: 84,
-    mascot: { id: 'starfish', side: 'right', y: 700, px: 260, tilt: 14 },
+    mascot: { id: 'starfish', side: 'left', y: 2330, px: 300, tilt: -12 },
+    // the reefs map is the story: the blurred board behind the sheet was half the frame of nothing
+    crop: '.sheet',
     stage: async (p) => {
       await p.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
       await p.waitForTimeout(1200);
@@ -252,7 +256,12 @@ const todo = shots.filter((s) => !ONLY.length || ONLY.includes(s.name));
 for (const s of todo) {
   const p = await open(s.theme, s.query);
   await s.stage(p);
-  await p.screenshot({ path: `artifacts/store/raw/${s.name}.png` });
+  const box = s.crop ? await p.locator(s.crop).last().boundingBox() : null;
+  const top = box ? Math.max(0, Math.floor(box.y)) : 0;
+  await p.screenshot({
+    path: `artifacts/store/raw/${s.name}.png`,
+    ...(box ? { clip: { x: 0, y: top, width: W, height: H - top } } : {}),
+  });
   await p.close();
 }
 
@@ -302,7 +311,11 @@ const BG: Record<Bg, { bg: string; ink: string; accent: string; rim: string; sha
 };
 const comp = await b.newPage({ viewport: { width: 1290, height: 2796 }, deviceScaleFactor: 1 });
 for (const s of todo) {
-  const img = readFileSync(`artifacts/store/raw/${s.name}.png`).toString('base64');
+  const raw = readFileSync(`artifacts/store/raw/${s.name}.png`);
+  const img = raw.toString('base64');
+  // a cropped capture is shorter than the frame slot: the card hugs it, right under the caption
+  const fh = s.crop ? Math.round((raw.readUInt32BE(20) * 1060) / raw.readUInt32BE(16)) : 2300;
+  const ft = s.crop ? 640 : 580;
   const c = BG[s.bg];
   const caption = s.caption.replace(/\*([^*]+)\*/g, `<em style="font-style:normal;color:${c.accent}">$1</em>`);
   const m = s.mascot;
@@ -316,7 +329,7 @@ for (const s of todo) {
     <div style="height:560px;display:flex;align-items:center;justify-content:center;text-align:center;
       color:${c.ink};font:900 ${s.size ?? 112}px/1.04 'Lagoon Display',Georgia,serif;letter-spacing:-1px;padding:20px 70px 0;
       text-shadow:0 4px 0 rgba(0,0,0,${s.bg === 'sunset' ? '0.06' : '0.16'})"><div style="white-space:pre-line">${caption}</div></div>
-    <div style="position:absolute;left:115px;top:580px;width:1060px;height:2300px;border-radius:96px;overflow:hidden;
+    <div style="position:absolute;left:115px;top:${ft}px;width:1060px;height:${fh}px;border-radius:96px;overflow:hidden;
       box-shadow:${c.shadow},0 0 0 16px ${c.rim};z-index:2">
       <img src="data:image/png;base64,${img}" style="width:1060px;display:block"/></div>
     ${mascot}
