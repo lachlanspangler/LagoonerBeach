@@ -177,6 +177,12 @@ export class Scene {
     this.chips.push({ text, life, start });
   }
 
+  /** When the last queued chip leaves (now-ish if none). */
+  chipsEnd(): number {
+    const c = this.chips[this.chips.length - 1];
+    return c ? c.start + c.life : 0;
+  }
+
   clearChips(): void {
     this.chips = [];
     this.stripHold = -1e9;

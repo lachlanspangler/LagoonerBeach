@@ -185,6 +185,8 @@ function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
   const lagoons: LagoonCatch[] = [];
   const newIds = new Set<string>();
   const reveals: RevealItem[] = [];
+  // the very first catch ever is a full card that introduces the Beach Journal
+  const firstEver = Object.keys(journal.entries).length === 0;
   for (const e of r.events) {
     if (e.type !== 'captured') continue;
     const env = {
@@ -216,6 +218,7 @@ function catchFor(r: { state: GameState; events: readonly GameEvent[] }): {
     }
     lagoons.push(...lc);
   }
+  if (firstEver && reveals.length) reveals[0] = { ...reveals[0]!, intro: true };
   if (lagoons.length) saveJournal(journal);
   if (newIds.size) ui.markUnseen(journal);
   if (newIds.size)
@@ -527,7 +530,10 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
   }
   // discoveries wait for everything this move set off to settle — the capture, NEW BEST, a chapter
   // moment (checkPuzzle) — never over it, then queue one at a time (the result cards wait for them)
-  if (caught.reveals.length && !quiet) reveal.enqueue(caught.reveals, fx.settleAt + 80);
+  // the first-ever catch card waits for the first-run lesson chips ("That's a lagoon!" …) to finish
+  const intro = caught.reveals.some((x) => x.intro);
+  if (caught.reveals.length && !quiet)
+    reveal.enqueue(caught.reveals, Math.max(fx.settleAt + 80, intro ? scene.chipsEnd() + 120 : 0));
   if (mode !== 'puzzle' && state.over) finishGame(prevBest);
   saveProfile(profile);
   updateHint();
@@ -593,6 +599,8 @@ function finishGame(prevBest: number): void {
     reducedMotion: scene.reducedMotion,
   };
   const token = gameToken;
+  // finds still waiting fold into the results' "New in your journal" row (one modal card at most)
+  reveal.endGame();
   later(DEBUG && params.has('fast') ? 0 : 1400, () =>
     // a discovery still on screen finishes first; the results follow it
     reveal.whenIdle(() => {
@@ -760,6 +768,7 @@ function checkPuzzle(): void {
     const solvedSet = new Set(profile.puzzle.solved);
     const segs = Array.from({ length: reefMode!.CHAPTER_SIZE }, (_, k) => solvedSet.has(reefMode!.reefId(chFirst + k)));
     const token = gameToken;
+    reveal.endGame(); // pending commons fold into the card's "New in your journal" row
     // a discovery still on screen (the common pop included) finishes first; the card follows it
     later(1300 + hold, () =>
       reveal.whenIdle(
@@ -774,6 +783,7 @@ function checkPuzzle(): void {
   } else {
     const cleared = profile.puzzle.solved.length;
     const token = gameToken;
+    reveal.endGame();
     // "So close": a discovery made on the way still gets its reveal first (the card follows it)
     later(700, () =>
       reveal.whenIdle(
@@ -1100,11 +1110,14 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   playerName: () => profile.lb?.name || undefined,
   now: clock,
-  canOpen: () => scene.drag === null && !ui.open && performance.now() - boardActiveAt >= REVEAL_QUIET_MS,
+  // a modal card waits for a still board; the quick pop (it never takes input) only for no drag/menu
+  canOpen: (modal) =>
+    scene.drag === null && !ui.open && (!modal || performance.now() - boardActiveAt >= REVEAL_QUIET_MS),
   onStrip: (ms) => {
     scene.holdStrip(performance.now() + ms);
     dirty = true;
   },
+  onIntroDone: () => ui.pointAtJournal(),
 });
 
 scene.onSplash = (isNew) => sfx.splash(isNew); // a soft plop as it dives back in
@@ -1430,7 +1443,7 @@ function debugDeps(): DebugDeps {
       revealSpecies: (id, o) => {
         const r = SPECIES_BY_ID.get(id)?.size ?? [20, 30];
         const size = o?.size ?? Math.round(Math.sqrt(r[0] * r[1]) * 10) / 10;
-        reveal.enqueue([{ id, size, golden: o?.golden ?? false }], 0);
+        reveal.enqueue([{ id, size, golden: o?.golden ?? false, ...(o?.intro ? { intro: true } : {}) }], 0);
       },
       chapterMoment: (chapter, name) => {
         lastDispatchAt = clock();
@@ -1446,6 +1459,7 @@ function debugDeps(): DebugDeps {
       revealState: () => reveal.current(),
       revealFreeze: (t) => reveal.freeze(t),
       revealSkip: () => reveal.skip(),
+      revealEndGame: () => reveal.endGame(),
       haptics: () => haptics.log.slice(),
       shareCard: async (id) => {
         const { renderShareCard } = await import('../ui/share-card.ts');

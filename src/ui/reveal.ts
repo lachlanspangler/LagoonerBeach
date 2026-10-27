@@ -45,7 +45,30 @@ export interface RevealItem {
   readonly golden: boolean;
   /** First golden of an already-found species (gets the golden sparkle treatment). */
   readonly firstGolden?: boolean;
+  /**
+   * The very first catch ever: a full card (at least uncommon-style, whatever its rarity) that
+   * introduces the Beach Journal; when it closes, `onIntroDone` points at the journal button.
+   */
+  readonly intro?: boolean;
+  /** A merged backlog of common finds (fast play): the other species ids, shown as one "+N new" pop. */
+  readonly more?: readonly string[];
 }
+
+/** The tier a reveal is presented at (a first golden reads as rare; the first-ever catch ≥ uncommon). */
+export function tierOf(item: RevealItem, sp: Species): Rarity {
+  if (item.firstGolden) return 'rare';
+  if (item.intro && sp.rarity === 'common') return 'uncommon';
+  return sp.rarity;
+}
+
+/** A reveal that is the quick strip pop (not a modal card). */
+export function isPop(item: RevealItem): boolean {
+  const sp = SPECIES_BY_ID.get(item.id);
+  return !!sp && tierOf(item, sp) === 'common' && !item.golden;
+}
+
+/** How long a closing reveal takes to fade out (ms): the next one never starts before it's gone. */
+export const LEAVE_MS = 220;
 
 export interface RevealDeps {
   sfx: { reveal(rarity: string): void; bubblePop(): void; place(size: number): void };
@@ -60,11 +83,13 @@ export interface RevealDeps {
   /** Clock (tests can freeze it). */
   now?: () => number;
   /** False while the player is mid-drag or a menu is open: the reveal waits (never interrupts). */
-  canOpen?: () => boolean;
+  canOpen?: (modal: boolean) => boolean;
   /** The player's beach name for the share card, if they chose one. */
   playerName?: () => string | undefined;
   /** A common pop takes the strip between board and tray for `ms` (chips wait for it). */
   onStrip?: (ms: number) => void;
+  /** The first-ever catch card closed: point at the journal button. */
+  onIntroDone?: () => void;
 }
 
 /** A press this soon after a modal card is first painted was aimed at the board: it's swallowed. */
@@ -193,6 +218,8 @@ export class Reveal {
   private raf = 0;
   private idleFns: (() => void)[] = [];
   private timer: ReturnType<typeof setTimeout> | null = null;
+  /** The last reveal is fading out (nothing new opens until it's gone). */
+  private leaving: ReturnType<typeof setTimeout> | null = null;
   private readonly now: () => number;
 
   constructor(
@@ -211,7 +238,7 @@ export class Reveal {
   }
 
   get idle(): boolean {
-    return !this.cur && this.queue.length === 0;
+    return !this.cur && !this.leaving && this.queue.length === 0;
   }
 
   /** Run fn once nothing is queued or showing (e.g. the game-over card waits for discoveries). */
@@ -222,9 +249,9 @@ export class Reveal {
 
   /** Queue discoveries to start at `at` (performance.now() time, after the capture settles). */
   enqueue(items: readonly RevealItem[], at: number): void {
-    const sorted = [...items].sort(
-      (a, b) => RARITY_RANK[SPECIES_BY_ID.get(a.id)!.rarity] - RARITY_RANK[SPECIES_BY_ID.get(b.id)!.rarity],
-    );
+    // rarest last; the first-ever catch card (it introduces the journal) always first
+    const rank = (x: RevealItem) => (x.intro ? -1 : RARITY_RANK[SPECIES_BY_ID.get(x.id)!.rarity]);
+    const sorted = [...items].sort((a, b) => rank(a) - rank(b));
     for (const item of sorted) if (SPECIES_BY_ID.has(item.id)) this.queue.push({ item, at });
     this.pump();
   }
@@ -236,8 +263,16 @@ export class Reveal {
   }
 
   private pump(): void {
+    if (this.leaving) return;
     if (this.cur || !this.queue.length) return this.flushIdle();
-    const next = this.queue[0]!;
+    let next = this.queue[0]!;
+    // a card waiting for the player to pause never holds up the quick pops (they don't take input);
+    // the first-ever catch card does: it introduces the journal before any pop
+    if (!next.item.intro && !isPop(next.item) && this.d.canOpen && !this.d.canOpen(true)) {
+      const now = this.now();
+      const pop = this.queue.find((q) => isPop(q.item) && q.at <= now);
+      if (pop) next = pop;
+    }
     const wait = next.at - this.now();
     if (wait > 0) {
       if (this.timer) clearTimeout(this.timer);
@@ -247,7 +282,7 @@ export class Reveal {
       }, wait);
       return;
     }
-    if (this.d.canOpen && !this.d.canOpen()) {
+    if (this.d.canOpen && !this.d.canOpen(!isPop(next.item))) {
       if (this.timer) clearTimeout(this.timer);
       this.timer = setTimeout(() => {
         this.timer = null;
@@ -255,8 +290,39 @@ export class Reveal {
       }, 150);
       return;
     }
-    this.queue.shift();
-    this.open(next.item);
+    this.queue.splice(this.queue.indexOf(next), 1);
+    let item = next.item;
+    if (isPop(item)) {
+      // fast play: commons that piled up while something else showed leave as one "+N new" pop
+      const now = this.now();
+      const rest = this.queue.filter((q) => q.at <= now && isPop(q.item));
+      if (rest.length) {
+        this.queue = this.queue.filter((q) => !rest.includes(q));
+        item = { ...item, more: [...(item.more ?? []), ...rest.flatMap((q) => [q.item.id, ...(q.item.more ?? [])])] };
+      }
+    }
+    this.open(item);
+  }
+
+  /**
+   * The game ended: pending commons are dropped (the results card lists every find in its "New in
+   * your journal" row) and at most one modal card (the rarest) still plays before it.
+   */
+  endGame(): void {
+    const modals = this.queue.filter((q) => !isPop(q.item));
+    const rank = (q: { item: RevealItem }) => {
+      const sp = SPECIES_BY_ID.get(q.item.id)!;
+      return RARITY_RANK[tierOf(q.item, sp)] + (q.item.intro ? 10 : 0);
+    };
+    const keep = this.cur?.modal ? [] : modals.sort((a, b) => rank(b) - rank(a)).slice(0, 1);
+    this.queue = keep;
+    if (this.cur && !this.cur.modal) this.finish();
+    else this.pump();
+  }
+
+  /** Something is queued or showing that the player hasn't seen yet. */
+  get pending(): number {
+    return this.queue.length + (this.cur ? 1 : 0);
   }
 
   private flushIdle(): void {
@@ -268,7 +334,7 @@ export class Reveal {
 
   private open(item: RevealItem): void {
     const sp = SPECIES_BY_ID.get(item.id)!;
-    const rarity: Rarity = item.firstGolden ? 'rare' : sp.rarity;
+    const rarity: Rarity = tierOf(item, sp);
     const modal = rarity !== 'common' || item.golden;
     const el = document.createElement('div');
     const stage = document.createElement('canvas');
@@ -279,31 +345,39 @@ export class Reveal {
     if (!modal) {
       el.className = 'reveal-pop';
       el.setAttribute('aria-hidden', 'true'); // announced once, by the live region
-      el.innerHTML = `<div class="rp-text"><div class="rp-over">New in your journal</div><div class="rp-name">${sp.name}</div></div>`;
+      const n = 1 + (item.more?.length ?? 0);
+      el.innerHTML = `<div class="rp-text"><div class="rp-over">New in your journal</div><div class="rp-name">${n > 1 ? `+${n} new` : sp.name}</div></div>`;
       stage.className = 'rp-stage';
       el.prepend(stage);
       this.sizeCanvas(stage, 48, 48);
-      this.d.onStrip?.(REVEAL_MS[rarity] + POP_HOLD_MS + 200);
+      // the strip is the pop's until it has faded out (chips and the reef progress line wait)
+      this.d.onStrip?.(REVEAL_MS[rarity] + POP_HOLD_MS + LEAVE_MS + 200);
     } else {
       const scene = !this.d.reducedMotion() && CHROME_MS[rarity] !== undefined;
       el.className = `reveal r-${rarity}${item.golden ? ' r-golden' : ''}${scene ? ' r-scene' : ''}`;
       el.setAttribute('role', 'dialog');
       el.setAttribute('aria-modal', 'true');
       // announced once: the dialog's name is the whole sentence (no live-region repeat)
-      el.setAttribute('aria-label', `New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`);
+      el.setAttribute(
+        'aria-label',
+        item.intro
+          ? `Your first catch: ${sp.name}, ${sp.rarity}. Lagoons catch beach creatures; they live in your Beach Journal.`
+          : `New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`,
+      );
       fx = document.createElement('canvas');
       fx.className = 'rv-fx';
       const card = document.createElement('div');
       card.className = 'rv-card';
       card.style.setProperty('--tier', pipColor);
       card.style.setProperty('--hab', HABITAT_TINT[sp.habitat][this.d.night() ? 1 : 0]);
-      card.innerHTML = `<div class="rv-over">${item.firstGolden ? 'Golden find' : 'New discovery'}</div>
+      el.classList.toggle('r-intro', !!item.intro);
+      card.innerHTML = `<div class="rv-over">${item.firstGolden ? 'Golden find' : item.intro ? 'Your first catch!' : 'New discovery'}</div>
         <div class="rv-pool"></div>
         <div class="rv-rarity"><canvas class="rv-pips"></canvas><span>${item.golden ? 'Golden · ' : ''}${cap(sp.rarity)}</span></div>
         <div class="rv-lower"><div class="rv-ph" aria-hidden="true"><i class="n"></i><i class="j"></i></div>
         <div class="rv-info">
           <div class="rv-name${sp.name.length > 13 ? ' rv-long' : ''}">${sp.name}</div>
-          <div class="rv-journal"><span class="rv-stamp" aria-hidden="true">No.<b>${no}</b></span><span>Added to your Beach Journal</span></div>
+          <div class="rv-journal"><span class="rv-stamp" aria-hidden="true">No.<b>${no}</b></span><span>${item.intro ? 'Lagoons catch beach creatures — they live in your Beach Journal' : 'Added to your Beach Journal'}</span></div>
         </div></div>
         <div class="rv-btns"></div>`;
       card.querySelector('.rv-pool')!.append(stage);
@@ -394,12 +468,15 @@ export class Reveal {
       el.focus({ preventScroll: true });
     }
     // one announcement: the modal's dialog name is read on focus; the quick pop uses the live region
-    if (!modal) this.d.announce(`New discovery: ${sp.name}, ${sp.rarity}. Added to your Beach Journal.`);
+    if (!modal) {
+      const names = [sp.name, ...(item.more ?? []).map((id) => SPECIES_BY_ID.get(id)?.name ?? id)];
+      this.d.announce(`New discovery: ${names.join(', ')}. Added to your Beach Journal.`);
+    }
     // sound and touch: the chime when the pearl pops (commons at once)
     const pop = this.d.reducedMotion() ? 0 : POP_MS[rarity];
     setTimeout(() => {
       if (this.cur?.item !== item) return;
-      this.d.sfx.reveal(item.firstGolden ? 'rare' : sp.rarity);
+      this.d.sfx.reveal(tierOf(item, sp));
       this.d.haptics.fire(RARITY_RANK[sp.rarity] >= 4 ? 'heavy' : 'medium');
     }, pop);
     this.loop();
@@ -482,7 +559,7 @@ export class Reveal {
 
   /** Skip the animation: draw the settled card now. */
   private skipToSettled(a: Active): void {
-    const rarity: Rarity = a.item.firstGolden ? 'rare' : a.sp.rarity;
+    const rarity: Rarity = tierOf(a.item, a.sp);
     a.clocked = true;
     a.start = Math.min(a.start, this.now() - REVEAL_MS[rarity]);
     this.draw(a, this.now() - a.start);
@@ -540,7 +617,7 @@ export class Reveal {
   /** Render one frame of the current reveal at elapsed time t (ms). Public for frozen-clock tests. */
   draw(a: Active, t: number): void {
     const rm = this.d.reducedMotion();
-    const rarity: Rarity = a.item.firstGolden ? 'rare' : a.sp.rarity;
+    const rarity: Rarity = tierOf(a.item, a.sp);
     const total = REVEAL_MS[rarity];
     if (!a.modal) {
       this.drawStage(a, t, 48, 48, rm, 0);
@@ -747,9 +824,7 @@ export class Reveal {
       // waiting for Continue shows the creature eyes-open (CRITIQUE-3: the seadragon sat on `happy`).
       // Art critique round 5: every reveal is eyes-open `idle` by 2.1 s (a rare golden seahorse
       // was still on its closed-eyed proud beat): the pool beat ends by IDLE_BY_MS at the latest
-      const end = a.hero
-        ? sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity)
-        : Math.min(beatEnd(rank), IDLE_BY_MS - popAt);
+      const end = a.hero ? sceneBeatEnd(tierOf(a.item, a.sp)) : Math.min(beatEnd(rank), IDLE_BY_MS - popAt);
       if (rank >= 3 && u > Math.min(BEAT_END_MS, end - SCENE_PROUD_MS)) expr = 'proud';
       if (u >= end) expr = u - end >= BLINK_AT_MS && u - end < BLINK_AT_MS + BLINK_MS ? 'blink' : 'idle';
     }
@@ -981,7 +1056,7 @@ export class Reveal {
     const sd = this.signatureMs(a);
     const hopT = u - 380;
     // the same beat as the pool (drawPool): surprised → happy → proud → eyes open as it lands
-    const beat = sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity);
+    const beat = sceneBeatEnd(tierOf(a.item, a.sp));
     const opts: DrawOpts = {
       golden: a.item.golden,
       expression: u < 420 ? 'surprised' : u >= beat ? 'idle' : u > beat - SCENE_PROUD_MS ? 'proud' : 'happy',
@@ -1036,9 +1111,19 @@ export class Reveal {
     }
     a.el.classList.remove('show');
     a.el.classList.add('leaving');
-    if (immediate) a.el.remove();
-    else setTimeout(() => a.el.remove(), 200);
-    this.pump();
+    if (a.item.intro) this.d.onIntroDone?.();
+    if (immediate) {
+      a.el.remove();
+      this.pump();
+      return;
+    }
+    if (!a.modal) this.d.onStrip?.(LEAVE_MS + 40);
+    // never two at once: the next reveal waits until this one has fully faded out
+    this.leaving = setTimeout(() => {
+      this.leaving = null;
+      a.el.remove();
+      this.pump();
+    }, LEAVE_MS);
   }
 
   /**
@@ -1047,7 +1132,7 @@ export class Reveal {
    */
   private signatureMs(a: Active): number {
     if (!a.hero) return SIGNATURE_MS;
-    return Math.min(SIGNATURE_MS, sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity) - 380 - 40);
+    return Math.min(SIGNATURE_MS, sceneBeatEnd(tierOf(a.item, a.sp)) - 380 - 40);
   }
 
   /** Debug/test: freeze the current reveal at elapsed t (ms) and render that frame. */

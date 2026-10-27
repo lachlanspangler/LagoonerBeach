@@ -245,6 +245,36 @@ export class Ui {
     return this.seen;
   }
 
+  /**
+   * After the first-ever catch card: a gentle glow on the journal button and a small bobbing arrow
+   * under it ("Your journal") for a few seconds, or until it's pressed. No creature flies there.
+   */
+  pointAtJournal(): void {
+    if (this.mode === 'puzzle') return; // the side button is the hint in reefs
+    const b = this.sideBtn;
+    this.root.querySelector('.journal-guide')?.remove();
+    b.classList.add('guide');
+    const tip = document.createElement('div');
+    tip.className = 'journal-guide';
+    tip.setAttribute('aria-hidden', 'true');
+    tip.innerHTML = '<i></i><span>Your journal</span>';
+    const r = b.getBoundingClientRect();
+    const root = this.root.getBoundingClientRect();
+    tip.style.top = `${r.bottom - root.top + 8}px`;
+    // right-aligned under the button (never off the screen edge), the arrow under its centre
+    tip.style.right = `${root.right - r.right}px`;
+    tip.style.setProperty('--arrow-x', `${r.width / 2 - 7}px`);
+    this.root.append(tip);
+    const done = (): void => {
+      b.classList.remove('guide');
+      tip.classList.add('leaving');
+      setTimeout(() => tip.remove(), 260);
+      b.removeEventListener('click', done);
+    };
+    b.addEventListener('click', done);
+    setTimeout(done, 4800);
+  }
+
   /** The creatures' destination on screen (they swim into the journal). */
   journalButton(): HTMLButtonElement {
     return this.mode === 'puzzle' ? this.menuBtn : this.sideBtn;
