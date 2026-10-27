@@ -17,5 +17,7 @@ export const REVEAL_BOOST: Readonly<Record<string, number>> = { seadragon: 1.2 }
  * at REVEAL_SCALE_MAX (an L with a big tileScale would be ~1.5, past the legendary XL kraken).
  */
 export function revealScaleOf(cls: keyof typeof REVEAL_SCALE, tileScale: number, id = ''): number {
-  return Math.min(REVEAL_SCALE_MAX, REVEAL_SCALE[cls] * tileScale * (REVEAL_BOOST[id] ?? 1));
+  // an XL/XXL's tileScale (≤ 1) only fits its framed views; the reveal stage has room for it
+  const t = cls === 'XL' || cls === 'XXL' ? Math.max(1, tileScale) : tileScale;
+  return Math.min(REVEAL_SCALE_MAX, REVEAL_SCALE[cls] * t * (REVEAL_BOOST[id] ?? 1));
 }

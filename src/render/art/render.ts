@@ -13,7 +13,7 @@ import { boundsOf, flatten, unionBox, type Box } from './path.ts';
 import {
   defaultEye,
   eyeFloorUnits,
-  tileScaleOf,
+  tileViewScale,
   type Expression,
   type Group,
   type Part,
@@ -117,7 +117,7 @@ export function prepare(art: SpeciesArt): Prepared {
   const eye =
     f.eyeFloor === false
       ? authored
-      : Math.max(authored, eyeFloorUnits(art.size, long, box.h, Math.min(1, tileScaleOf(art))));
+      : Math.max(authored, eyeFloorUnits(art.size, long, box.h, Math.min(1, tileViewScale(art))));
   const p: Prepared = {
     art,
     groups,

@@ -101,3 +101,22 @@ test('every species draws in every expression, theme and mode', async ({ page })
   expect(res.stats.bytes).toBeLessThanOrEqual(res.stats.cap);
   expect(errors).toEqual([]);
 });
+
+test('species pages: the art fits its 200 px panel with a 6 % margin; deliberate frame breaks stay <= 8 %', async ({
+  page,
+}) => {
+  await boot(page);
+  // the detail canvas is 176 px in a 200 px panel: fitting the canvas is the 6 % margin (12 px)
+  const BREAKERS = ['stingray', 'whaleshark', 'kraken', 'dolphin'];
+  const fits = await page.evaluate(async () => {
+    const a = (window as any).__atoll;
+    const out: Record<string, number> = {};
+    for (const id of a.speciesIds() as string[]) {
+      const f = await a.artFit(id, 'detail', 176);
+      if (f) out[id] = f.over;
+    }
+    return out;
+  });
+  expect(Object.keys(fits).length).toBeGreaterThan(40);
+  for (const [id, over] of Object.entries(fits)) expect(over, id).toBeLessThanOrEqual(BREAKERS.includes(id) ? 0.08 : 0);
+});

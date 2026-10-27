@@ -233,6 +233,13 @@ export function tileScaleOf(art: Pick<SpeciesArt, 'tileScale'>): number {
   const v = art.tileScale ?? 1;
   return Number.isFinite(v) ? Math.min(TILE_SCALE[1], Math.max(TILE_SCALE[0], v)) : 1;
 }
+/**
+ * The scale the journal *tile* uses. Art critique round 5: an XL/XXL's tileScale (≤ 1) shrinks only
+ * its detail page (which it overflowed); its tile keeps the class fill and the R28 frame-break.
+ */
+export function tileViewScale(art: Pick<SpeciesArt, 'tileScale' | 'size'>): number {
+  return art.size === 'XL' || art.size === 'XXL' ? Math.max(1, tileScaleOf(art)) : tileScaleOf(art);
+}
 /** R28: XL frame-break past the art box, in CSS px at TILE_PX. */
 export const FRAME_BREAK: readonly [number, number] = [2, 4];
 
