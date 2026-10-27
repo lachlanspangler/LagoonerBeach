@@ -920,16 +920,18 @@ export class Scene {
         g.ellipse(sp.x, sp.y, sp.r * (0.4 + u * 1.3), sp.r * (0.16 + u * 0.5), 0, 0, Math.PI * 2);
         g.stroke();
       }
-      // a crown of water drops thrown up by the dive (deterministic angles; gravity pulls them back)
-      if (k < 0.7) {
-        const kk = k / 0.7;
+      // a short crown of water drops thrown up by the dive (deterministic angles): each falls back
+      // to the water line and is gone there — they used to rain on down and settle in the empty
+      // tray like dust
+      if (k < 0.6) {
+        const kk = k / 0.6;
         g.fillStyle = p.water;
-        g.globalAlpha = 1 - kk;
+        g.globalAlpha = 1 - kk * kk;
         for (let i = 0; i < 7; i++) {
           const a = -Math.PI / 2 + (i - 3) * 0.38;
-          const v = sp.r * (2.4 + (i % 3) * 0.5);
+          const v = sp.r * (1.5 + (i % 3) * 0.35);
           const dx = Math.cos(a) * v * kk;
-          const dy = Math.sin(a) * v * kk + sp.r * 5.5 * kk * kk;
+          const dy = Math.sin(a) * v * 4 * kk * (1 - kk);
           g.beginPath();
           g.arc(sp.x + dx, sp.y + dy, Math.max(1.5, sp.r * 0.13 * (1 - kk * 0.5)), 0, Math.PI * 2);
           g.fill();
