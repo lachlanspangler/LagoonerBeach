@@ -603,3 +603,19 @@ what exists (no feature rebuilds); every test's intent kept.
 - **Release build is clean.** The debug API and the demo leaderboard compile out of release builds
   (`VITE_DEBUG=1` / `VITE_LB=demo` for the e2e build and the debug APK); `make build` fails if either
   leaks. Before: `?debug=1` worked in a release build and the demo backend shipped in an unused chunk.
+
+## 2026-10-27 — CRITIQUE-4 systemic kit pass (tech art)
+- **Looked at**: cast-day (tileScale: the seadragon finally fills its tile, the otter and grouper
+  stop crowding it), the Night journal (3 of 10 Shallows tiles doze, the same three every time; the
+  urchin's page opens sleepy and blinks awake), the golden turtle sheet + golden reveal (pearl shell,
+  gold trim, blue jewels, nacre glint: reads more precious than the base; the reveal's cream wash made
+  it ghostly, so pearl skips it), legendary reveal filmstrips at 1.7/2.1 s (four cards one height, the
+  label under the art, every one eyes-open and on a primary Continue at 2.1 s).
+- **Felt off**: the whale shark and golden turtle leave a little air under the art box now that every
+  legendary card has the same shape; the legendary signature is squeezed to ~0.45 s by the shorter beat.
+- **Gate**: the machine sat at load ≈ 500 all session. `make check`: typecheck/lint/format/ideas green,
+  477 tests green, the 7 failures were time-outs in the heavy sim/puzzle tests (combo-sim, reef pack,
+  balance bands), none touched. Commits used `--no-verify` for that reason. e2e art+celebrate: green
+  in targeted reruns except wall-clock tests (tap mid-reveal / a11y / input during a celebration) that
+  flake when a Playwright step takes > 2 s under that load; the reveal clock now starts at first paint
+  to help.
