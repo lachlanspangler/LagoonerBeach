@@ -1,8 +1,9 @@
 /**
  * Cleaner wrasse — the reef's tidy little spa attendant (fish class, profile view, level).
  * Silhouette (R10): a slim, even cigar with a rounded fan tail (no fork, no tall fins): between the
- * barracuda's needle and the minnow's forked torpedo. Bluestreak colours: a pale front half, a blue
- * back half, and one bold navy stripe that starts behind the eye and widens into the tail.
+ * barracuda's needle and the minnow's forked torpedo. Bluestreak colours: a cream front half, an
+ * electric blue-violet back half, and one near-black stripe that starts behind the eye (clear of the
+ * face, R18E) and widens to 10 u into the tail.
  * Personality: helpful, busy, tidy. Signature: a little "scrub" wiggle with a bubble sparkle.
  */
 import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
@@ -41,26 +42,26 @@ const tail = blob(
 const pectoral = ellipse(-4, 7, 5, 2.6, 26);
 // the pale front half over the blue body (pattern, follows the outline)
 const front = blob([
-  [2, -18],
+  [8, -18],
   [46, -18],
   [46, 18],
-  [2, 18],
-  [8, 0],
+  [-8, 18],
+  [1, 0],
 ]);
 // one bold ink stripe: starts 3 u behind the eye at 4 u, arcs gently with the body's midline and
 // widens to 10 u at the tail root, then fans on into the tail (never a strip of tape)
 const stripe = tube([
-  [6, 0.6, 2],
-  [-5, -0.2, 2.8],
-  [-16, -0.6, 3.8],
-  [-27, 0, 5],
+  [-2, 0.4, 2],
+  [-8, 0, 2.4],
+  [-18, -0.4, 3.2],
+  [-27, 0, 4],
 ]);
 const tailStripe = tube([
-  [-27, 0, 5],
-  [-36, 0, 6],
-  [-46, 0, 7.5],
+  [-27, 0, 4],
+  [-36, 0, 4.6],
+  [-46, 0, 5],
 ]);
-const bubbles = join(circle(45, -16, 3.6), circle(39, -25, 2.6), circle(46, -31, 2));
+const bubbles = join(circle(45, -14, 3.2), circle(40, -22, 2.2));
 
 export default defineArt({
   id: 'wrasse',
@@ -68,7 +69,7 @@ export default defineArt({
   size: 'S',
   feature: 'slim even cigar with a round tail; pale front, blue back, one bold stripe widening to the tail',
   personality: ['helpful', 'busy', 'tidy'],
-  palette: { body: '#3D9BE9', accent: '#23528F', belly: '#BFE6F7' },
+  palette: { body: '#7464DA', accent: '#1E2740', belly: '#F3EED8' },
   groups: [
     {
       id: 'tail',
@@ -100,8 +101,8 @@ export default defineArt({
     eyes: [[14, 0]],
     eye: 10.6,
     zone: [4, -27, 38, 46],
-    // helpful: the wide, contented spa-attendant smile (CRITIQUE-2 resting mouths)
-    mouth: { at: [34.5, 6], w: 8, shape: 'smile' },
+    // helpful: the spa attendant's contented little cat-smile (CRITIQUE-3: its own resting mouth)
+    mouth: { at: [34.5, 6], w: 8, shape: 'w' },
     sweet: true,
   },
   idle: {
