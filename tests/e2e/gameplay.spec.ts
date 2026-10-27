@@ -554,3 +554,10 @@ test('chapter complete: the moment holds the board clear of pops, then the card 
   await expect(page.getByTestId('chapter-done')).toContainText('Chapter 2 complete');
   await expect(page.getByTestId('chapter-next')).toHaveText(/^Next: Chapter 3 · .+ · 41–60 m$/);
 });
+
+test('the first game ever reads as a first best, not "No room left · Best <the same score>"', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.showResults({ score: 3995, prevBest: 0 }));
+  await expect(page.locator('.res-head')).toHaveText('Your first best!');
+  await expect(page.locator('.res-sub')).not.toContainText('Best');
+});

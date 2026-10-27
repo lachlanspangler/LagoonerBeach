@@ -251,13 +251,15 @@ export interface GameOverOpts {
 export function showGameOver(k: Kit, o: GameOverOpts): HTMLElement {
   const card = document.createElement('div');
   card.className = 'card results stagger';
+  // the very first game sets the first best: say so, not "No room left · 3,995 · Best 3,995"
+  const firstBest = o.mode !== 'daily' && !o.newBest && (o.prevBest ?? 0) === 0 && o.score > 0 && o.score >= o.best;
   const hero = resultsHero({
     score: o.score,
     best: o.best,
     prevBest: o.prevBest ?? 0,
     newBest: o.newBest,
     reducedMotion: o.reducedMotion ?? false,
-    nearMiss: nearMiss(o.score, o.best),
+    nearMiss: firstBest ? '' : nearMiss(o.score, o.best),
     onRecord: () => k.h.onRecord?.(),
     onSettled: () => k.h.onResultsSettled?.({ score: o.score, newBest: o.newBest, mode: o.mode }, card),
   });
@@ -268,7 +270,7 @@ export function showGameOver(k: Kit, o: GameOverOpts): HTMLElement {
     [o.dailyStreak, 'Streak'],
   ].filter(([v]) => (v as number) > 0);
   card.innerHTML = `<div class="overline">${o.mode === 'daily' ? 'Daily · complete' : 'Endless'}</div>
-    <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
+    <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : firstBest ? 'Your first best!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
     <div class="hero-slot"></div>
     ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
     ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
