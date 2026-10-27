@@ -123,3 +123,19 @@ test('game over: pending commons fold into the results, at most one modal card s
   expect(shown.length).toBeLessThanOrEqual(2);
   expect(await page.evaluate(() => (window as any).__atoll.revealState())).toBeNull();
 });
+
+test('results "New in your journal": the rarity pips fit inside their thumbnails', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() =>
+    (window as any).__atoll.showResults({ score: 900, prevBest: 2000, newIds: ['periwinkle', 'moray', 'kraken'] }),
+  );
+  await expect(page.locator('.jstrip-row .j-tile')).toHaveCount(3, { timeout: 5000 });
+  const fits = await page.evaluate(() =>
+    [...document.querySelectorAll('.jstrip-row .j-tile')].map((t) => {
+      const a = t.getBoundingClientRect();
+      const p = t.querySelector('.pips')!.getBoundingClientRect();
+      return p.left >= a.left + 2 && p.right <= a.right - 2;
+    }),
+  );
+  expect(fits).toEqual([true, true, true]);
+});

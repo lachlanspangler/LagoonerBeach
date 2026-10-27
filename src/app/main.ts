@@ -1484,8 +1484,8 @@ function debugDeps(): DebugDeps {
           lagoon: 12,
           mode: 'classic',
           dailyStreak: 0,
-          unlocked: [],
-          caught: { count: 9, newIds: [] },
+          unlocked: o.unlocked ?? [],
+          caught: { count: 9, newIds: o.newIds ?? [] },
           reducedMotion: scene.reducedMotion,
           // review shots: the record card with its "Post your score" button (opens nothing)
           ...(o.lb ? { leaderboard: { label: 'Post your score', open: () => undefined } } : {}),

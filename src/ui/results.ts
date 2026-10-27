@@ -328,7 +328,7 @@ function journalStrip(ids: readonly string[], open?: () => void): HTMLElement {
     t.className = `j-tile got r-${sp.rarity}`;
     t.style.cssText = `--hab:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};--hab-ring:${HABITAT_UI[sp.habitat][night() ? 1 : 0]};min-height:0;width:64px;padding:4px 2px 5px;gap:2px`;
     t.append(creatureThumb(sp, 44));
-    t.insertAdjacentHTML('beforeend', pipsHtml(RARITY_RANK[sp.rarity]));
+    t.insertAdjacentHTML('beforeend', pipsHtml(RARITY_RANK[sp.rarity], 'sm')); // 9 px: fits the 64 px tile
     row.append(t);
   }
   if (ids.length > 4) row.insertAdjacentHTML('beforeend', `<span class="more num">+${ids.length - 3}</span>`);
