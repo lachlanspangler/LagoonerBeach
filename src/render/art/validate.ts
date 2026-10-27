@@ -336,7 +336,7 @@ export const CAST_LINT_AS_ERRORS = false;
  * else in the kit). Near-neutral bodies (OKLCH chroma < `neutralC`) have no meaningful hue: they sit
  * out the hue rules (but count in a habitat's total).
  */
-export const CAST = { dE: 6, window: 30, share: 0.4, legendHue: 15, neutralC: 0.05 } as const;
+export const CAST = { dE: 6, window: 30, share: 0.4, legendHue: 15, legendDE: 10, neutralC: 0.05 } as const;
 
 export interface CastEntry {
   readonly id: string;
@@ -355,7 +355,9 @@ export const castOf = (arts: Iterable<SpeciesArt>, species: (id: string) => Spec
  * The cast-level checks (CRITIQUE-3 must-do #3), per species:
  * - **C1** body colour identity: no two species share a body hex, none within ΔE00 < 6;
  * - **C2** habitat hue histogram: ≤ 40 % of a habitat's species inside any 30° hue window;
- * - **C3** legendaries own their hue: no non-legendary within 15° of a legendary's body hue.
+ * - **C3** legendaries own their hue: no non-legendary within 15° of a legendary's body hue that is
+ *   also close in colour (ΔE00 < 10) or shares its habitat (CRITIQUE-4: hue alone was unsatisfiable
+ *   for any blue legendary — a pale periwinkle doesn't steal a deep whale shark's identity).
  * Pure; every issue is a warning (strict: `CAST_LINT_AS_ERRORS` / ART_CAST_STRICT=1).
  */
 export function validateCast(cast: readonly CastEntry[]): Map<string, Issue[]> {
@@ -409,9 +411,13 @@ export function validateCast(cast: readonly CastEntry[]): Map<string, Issue[]> {
     for (const c of cast)
       if (!c.legendary && hued(c)) {
         const d = hueDelta(hue(L), hue(c));
-        if (d < CAST.legendHue) {
-          warn(c.id, 'C3', `hue ${deg(c)}° within ${Math.round(d)}° of legendary ${L.id} (${deg(L)}°)`);
-          warn(L.id, 'C3', `${c.id} (${deg(c)}°) sits within ${Math.round(d)}° of this legendary's hue`);
+        if (d >= CAST.legendHue) continue;
+        const dE = deltaE2000(lab.get(L.id)!, lab.get(c.id)!);
+        const same = c.habitat === L.habitat;
+        if (dE < CAST.legendDE || same) {
+          const why = same ? `same habitat, ΔE00 ${r2(dE)}` : `ΔE00 ${r2(dE)} < ${CAST.legendDE}`;
+          warn(c.id, 'C3', `hue ${deg(c)}° within ${Math.round(d)}° of legendary ${L.id} (${deg(L)}°; ${why})`);
+          warn(L.id, 'C3', `${c.id} (${deg(c)}°) sits within ${Math.round(d)}° of this legendary's hue (${why})`);
         }
       }
   return out;

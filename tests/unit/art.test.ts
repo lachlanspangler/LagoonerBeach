@@ -190,11 +190,18 @@ describe('cast lints (CRITIQUE-3: colour identity across the cast)', () => {
     expect(rules(m, 'g')).toEqual([]); // chroma 0.017: no hue to speak of
     expect(validateCast(hab.map((x) => (x.id === 'b3' ? e('b3', '#3BC9A0') : x))).get('b1')).toEqual([]);
   });
-  it('C3: a non-legendary within 15° of a legendary hue is flagged (and the legendary)', () => {
-    const m = validateCast([e('L', '#714B99', 'legend', true), e('u', '#8A68AE', 'shallows'), e('f', '#3BC9A0')]);
+  it('C3: a non-legendary within 15° of a legendary hue AND (ΔE00 < 10 or same habitat) is flagged', () => {
+    const m = validateCast([e('L', '#714B99', 'legend', true), e('u', '#7D57A3', 'shallows'), e('f', '#3BC9A0')]);
     expect(rules(m, 'u')).toContain('C3');
     expect(rules(m, 'L')).toContain('C3');
     expect(rules(m, 'f')).toEqual([]);
+    // CRITIQUE-4: the same hue, but pale (ΔE00 ≥ 10) and elsewhere, keeps its own identity …
+    const pale = validateCast([e('L', '#714B99', 'legend', true), e('p', '#B9A2D6', 'shallows')]);
+    expect(rules(pale, 'p')).toEqual([]);
+    expect(rules(pale, 'L')).toEqual([]);
+    // … but not in the legendary's own habitat
+    const home = validateCast([e('L', '#714B99', 'legend', true), e('p', '#B9A2D6', 'legend')]);
+    expect(rules(home, 'p')).toContain('C3');
   });
   it('the cast has no cast-lint errors (warnings are listed in docs/art/LINT.md)', () => {
     const strict = CAST_LINT_AS_ERRORS || process.env.ART_CAST_STRICT === '1';

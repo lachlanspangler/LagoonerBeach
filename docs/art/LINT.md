@@ -6,7 +6,7 @@ CRITIQUE-1 rules are **warnings** for now: `make check` passes, and they become 
 `docs/art/CRITIQUE-1.md` and `docs/art/FLEET_BRIEF.md` §4. The CRITIQUE-3 cast lints (C1–C3) have
 their own switch, `CAST_LINT_AS_ERRORS` (or `ART_CAST_STRICT=1`).
 
-47 species · 25 with warnings · clean: barracuda, blenny, boxcrab, clownfish, cockle, combjelly, cuttle, giantclam, grouper, hammerhead, lanternfish, lionfish, manta, minnow, moonjelly, octopus, otter, parrot, seasparkle, shrimp, sunfish, wrasse
+47 species · 22 with warnings · clean: barracuda, blenny, boxcrab, clownfish, cockle, combjelly, cuttle, flounder, giantclam, grouper, hammerhead, kraken, lanternfish, limpet, lionfish, manta, minnow, moonjelly, octopus, otter, parrot, seasparkle, shrimp, sunfish, wrasse
 
 ## By rule
 
@@ -22,33 +22,33 @@ their own switch, `CAST_LINT_AS_ERRORS` (or `ART_CAST_STRICT=1`).
 | R16M | body too close to the real journal tile (mint) — CRITIQUE-1 "review on mint" | — |
 | C1 | cast: body hex shared with another species, or within CIEDE2000 ΔE 6 of one — CRITIQUE-3 #3 | periwinkle, hermit, sanddollar, sandeel, moray, gardeneel, seahorse, boxfish, starfish, stingray, damsel, puffer, turtle, nautilus, dolphin, urchin, angler, butterfly, whaleshark, goldturtle |
 | C2 | cast: > 40 % of the habitat's species within one 30° OKLCH hue window (bodies with chroma < 0.05 ignored) — CRITIQUE-3 #3 | seadragon, goldturtle |
-| C3 | cast: a non-legendary within 15° of a legendary's body hue (legendaries own their hue) — CRITIQUE-3 | periwinkle, limpet, sandeel, gardeneel, seahorse, boxfish, flounder, stingray, damsel, puffer, nautilus, dolphin, urchin, firefly, angler, butterfly, whaleshark, seadragon, goldturtle, kraken |
+| C3 | cast: a non-legendary within 15° of a legendary's body hue and either within CIEDE2000 ΔE 10 of it or in the same habitat (legendaries own their hue) — CRITIQUE-3/4 | periwinkle, seahorse, stingray, damsel, puffer, firefly, whaleshark, goldturtle |
 
 ## By species
 
 | species | size | eye u (floor) | tilt | XL break px | warnings |
 |---|---|---|---|---|---|
 | minnow | S | 10.6 (10.3) | 2° |  | ✓ |
-| periwinkle | XS | 12.4 (12.1) | 18° |  | **C1** body ΔE00 2.95 from whaleshark (#5A84B5) < 6<br>**C3** hue 261° within 8° of legendary whaleshark (253°) |
+| periwinkle | XS | 12.4 (12.1) | 18° |  | **C1** body ΔE00 2.95 from whaleshark (#5A84B5) < 6<br>**C3** hue 261° within 8° of legendary whaleshark (253°; ΔE00 2.95 < 10) |
 | hermit | XS | 12.0 (11.9) | 0° |  | **C1** body ΔE00 5.17 from starfish (#F2795B) < 6 |
-| limpet | XS | 13.0 (12.3) | 3° |  | **C3** hue 99° within 10° of legendary seadragon (89°) |
+| limpet | XS | 13.0 (12.3) | 3° |  | ✓ |
 | sanddollar | S | 13.6 (9.9) | 0° |  | **C1** body ΔE00 5.98 from nautilus (#E9D0A9) < 6 |
 | shrimp | XS | 11.2 (10.9) | 4° |  | ✓ |
 | blenny | S | 13.0 (10.4) | 10° |  | ✓ |
 | cockle | XS | 13.0 (12.4) | 0° |  | ✓ |
-| sandeel | M | 9.4 (8.9) | 1° |  | **C1** body ΔE00 3.99 from gardeneel (#EED595) < 6<br>**C1** body ΔE00 2.82 from puffer (#D9C27A) < 6<br>**C3** hue 89° within 6° of legendary goldturtle (83°)<br>**C3** hue 89° within 0° of legendary seadragon (89°) |
+| sandeel | M | 9.4 (8.9) | 1° |  | **C1** body ΔE00 3.99 from gardeneel (#EED595) < 6<br>**C1** body ΔE00 2.82 from puffer (#D9C27A) < 6 |
 | moray | L | 10.5 (7.6) | 21° |  | **C1** body ΔE00 5.96 from turtle (#6B9A58) < 6 |
-| gardeneel | M | 10.6 (8.8) | 8° |  | **C1** body ΔE00 5.14 from puffer (#D9C27A) < 6<br>**C1** body ΔE00 3.99 from sandeel (#DCC58A) < 6<br>**C3** hue 89° within 6° of legendary goldturtle (83°)<br>**C3** hue 89° within 0° of legendary seadragon (89°) |
-| seahorse | S | 10.4 (10.3) | 7° |  | **C1** body ΔE00 2.21 from goldturtle (#E8B23E) < 6<br>**C3** hue 83° within 0° of legendary goldturtle (83°)<br>**C3** hue 83° within 6° of legendary seadragon (89°) |
+| gardeneel | M | 10.6 (8.8) | 8° |  | **C1** body ΔE00 5.14 from puffer (#D9C27A) < 6<br>**C1** body ΔE00 3.99 from sandeel (#DCC58A) < 6 |
+| seahorse | S | 10.4 (10.3) | 7° |  | **C1** body ΔE00 2.21 from goldturtle (#E8B23E) < 6<br>**C3** hue 83° within 0° of legendary goldturtle (83°; ΔE00 2.21 < 10) |
 | boxcrab | S | 11.0 (10.2) | 0° |  | ✓ |
-| boxfish | M | 12.3 (8.4) | 0° |  | **C1** body ΔE00 5.69 from butterfly (#FFEC4A) < 6<br>**C3** hue 97° within 15° of legendary goldturtle (83°)<br>**C3** hue 97° within 8° of legendary seadragon (89°) |
+| boxfish | M | 12.3 (8.4) | 0° |  | **C1** body ΔE00 5.69 from butterfly (#FFEC4A) < 6 |
 | starfish | M | 11.0 (8.5) | 0° |  | **C1** body ΔE00 5.17 from hermit (#E0784E) < 6 |
 | cuttle | M | 13.0 (8.8) | 0° |  | ✓ |
-| flounder | M | 9.6 (8.7) | 0° |  | **C3** hue 69° within 14° of legendary goldturtle (83°) |
-| stingray | L | 7.8 (7.0) | 0° |  | **C1** body ΔE00 4.28 from dolphin (#74A6D2) < 6<br>**C3** hue 257° within 4° of legendary whaleshark (253°) |
+| flounder | M | 9.6 (8.7) | 0° |  | ✓ |
+| stingray | L | 7.8 (7.0) | 0° |  | **C1** body ΔE00 4.28 from dolphin (#74A6D2) < 6<br>**C3** hue 257° within 4° of legendary whaleshark (253°; ΔE00 9.53 < 10) |
 | clownfish | S | 10.5 (10.4) | 0° |  | ✓ |
-| damsel | S | 10.4 (9.1) | 2° |  | **C1** body ΔE00 5.78 from whaleshark (#5A84B5) < 6<br>**C3** hue 264° within 11° of legendary whaleshark (253°) |
-| puffer | M | 13.0 (8.8) | 0° |  | **C1** body ΔE00 5.14 from gardeneel (#EED595) < 6<br>**C1** body ΔE00 2.82 from sandeel (#DCC58A) < 6<br>**C3** hue 92° within 10° of legendary goldturtle (83°)<br>**C3** hue 92° within 3° of legendary seadragon (89°) |
+| damsel | S | 10.4 (9.1) | 2° |  | **C1** body ΔE00 5.78 from whaleshark (#5A84B5) < 6<br>**C3** hue 264° within 11° of legendary whaleshark (253°; ΔE00 5.78 < 10) |
+| puffer | M | 13.0 (8.8) | 0° |  | **C1** body ΔE00 5.14 from gardeneel (#EED595) < 6<br>**C1** body ΔE00 2.82 from sandeel (#DCC58A) < 6<br>**C3** hue 92° within 10° of legendary goldturtle (83°; ΔE00 9.94 < 10) |
 | parrot | M | 9.6 (8.8) | 0° |  | ✓ |
 | grouper | L | 11.0 (7.6) | 0° |  | ✓ |
 | octopus | L | 11.6 (7.6) | 0° |  | ✓ |
@@ -56,22 +56,22 @@ their own switch, `CAST_LINT_AS_ERRORS` (or `ART_CAST_STRICT=1`).
 | turtle | L | 7.8 (7.6) | 4° |  | **C1** body ΔE00 5.96 from moray (#668A42) < 6 |
 | barracuda | L | 8.2 (7.5) | 2° |  | ✓ |
 | hammerhead | XL | 8.4 (6.5) | 5° | 2.8 | ✓ |
-| nautilus | M | 12.0 (8.8) | 0° |  | **C1** body ΔE00 5.98 from sanddollar (#E9DCC4) < 6<br>**C3** hue 79° within 4° of legendary goldturtle (83°)<br>**C3** hue 79° within 10° of legendary seadragon (89°) |
-| dolphin | XL | 8.0 (6.3) | 4° | 3.7 | **C1** body ΔE00 4.28 from stingray (#7C9FD0) < 6<br>**C3** hue 246° within 7° of legendary whaleshark (253°) |
-| urchin | S | 10.0 (9.7) | 0° |  | **C1** body ΔE00 5.24 from angler (#8E6E9F) < 6<br>**C3** hue 306° within 1° of legendary kraken (305°) |
+| nautilus | M | 12.0 (8.8) | 0° |  | **C1** body ΔE00 5.98 from sanddollar (#E9DCC4) < 6 |
+| dolphin | XL | 8.0 (6.3) | 4° | 3.7 | **C1** body ΔE00 4.28 from stingray (#7C9FD0) < 6 |
+| urchin | S | 10.0 (9.7) | 0° |  | **C1** body ΔE00 5.24 from angler (#8E6E9F) < 6 |
 | lanternfish | S | 18.0 (10.1) | 4° |  | ✓ |
 | moonjelly | M | 9.4 (8.9) | 0° |  | ✓ |
 | combjelly | S | 11.2 (10.3) | 0° |  | ✓ |
-| firefly | S | 10.4 (10.3) | 0° |  | **C3** hue 247° within 6° of legendary whaleshark (253°) |
-| angler | L | 11.5 (7.3) | 0° |  | **C1** body ΔE00 5.24 from urchin (#8A68AE) < 6<br>**C3** hue 314° within 9° of legendary kraken (305°) |
+| firefly | S | 10.4 (10.3) | 0° |  | **C3** hue 247° within 6° of legendary whaleshark (253°; ΔE00 9.74 < 10) |
+| angler | L | 11.5 (7.3) | 0° |  | **C1** body ΔE00 5.24 from urchin (#8A68AE) < 6 |
 | seasparkle | XS | 14.4 (11.5) | 0° |  | ✓ |
-| butterfly | M | 11.0 (8.3) | 0° |  | **C1** body ΔE00 5.69 from boxfish (#F2D43B) < 6<br>**C3** hue 102° within 13° of legendary seadragon (89°) |
+| butterfly | M | 11.0 (8.3) | 0° |  | **C1** body ΔE00 5.69 from boxfish (#F2D43B) < 6 |
 | wrasse | S | 10.6 (10.4) | 1° |  | ✓ |
 | lionfish | M | 9.9 (8.7) | 2° |  | ✓ |
 | giantclam | L | 9.6 (7.5) | 0° |  | ✓ |
 | sunfish | XL | 9.4 (7.2) | 2° | 3.5 | ✓ |
 | otter | L | 7.6 (7.4) | 12° |  | ✓ |
-| whaleshark | XXL | 7.0 (4.9) | 6° |  | **C1** body ΔE00 5.78 from damsel (#4A78E0) < 6<br>**C1** body ΔE00 2.95 from periwinkle (#6584BA) < 6<br>**C3** damsel (264°) sits within 11° of this legendary's hue<br>**C3** dolphin (246°) sits within 7° of this legendary's hue<br>**C3** firefly (247°) sits within 6° of this legendary's hue<br>**C3** periwinkle (261°) sits within 8° of this legendary's hue<br>**C3** stingray (257°) sits within 4° of this legendary's hue |
-| seadragon | M | 10.0 (8.5) | 19° |  | **C2** legend: 2/4 species in 83–113° (goldturtle, seadragon; ≤ 1 allowed)<br>**C3** boxfish (97°) sits within 8° of this legendary's hue<br>**C3** butterfly (102°) sits within 13° of this legendary's hue<br>**C3** gardeneel (89°) sits within 0° of this legendary's hue<br>**C3** limpet (99°) sits within 10° of this legendary's hue<br>**C3** nautilus (79°) sits within 10° of this legendary's hue<br>**C3** puffer (92°) sits within 3° of this legendary's hue<br>**C3** sandeel (89°) sits within 0° of this legendary's hue<br>**C3** seahorse (83°) sits within 6° of this legendary's hue |
-| goldturtle | L | 7.4 (7.4) | 0° |  | **C1** body ΔE00 2.21 from seahorse (#F2B93B) < 6<br>**C2** legend: 2/4 species in 83–113° (goldturtle, seadragon; ≤ 1 allowed)<br>**C3** boxfish (97°) sits within 15° of this legendary's hue<br>**C3** flounder (69°) sits within 14° of this legendary's hue<br>**C3** gardeneel (89°) sits within 6° of this legendary's hue<br>**C3** nautilus (79°) sits within 4° of this legendary's hue<br>**C3** puffer (92°) sits within 10° of this legendary's hue<br>**C3** sandeel (89°) sits within 6° of this legendary's hue<br>**C3** seahorse (83°) sits within 0° of this legendary's hue |
-| kraken | XL | 11.2 (7.5) | 0° | 3.2 | **C3** angler (314°) sits within 9° of this legendary's hue<br>**C3** urchin (306°) sits within 1° of this legendary's hue |
+| whaleshark | XXL | 7.0 (4.9) | 6° |  | **C1** body ΔE00 5.78 from damsel (#4A78E0) < 6<br>**C1** body ΔE00 2.95 from periwinkle (#6584BA) < 6<br>**C3** damsel (264°) sits within 11° of this legendary's hue (ΔE00 5.78 < 10)<br>**C3** firefly (247°) sits within 6° of this legendary's hue (ΔE00 9.74 < 10)<br>**C3** periwinkle (261°) sits within 8° of this legendary's hue (ΔE00 2.95 < 10)<br>**C3** stingray (257°) sits within 4° of this legendary's hue (ΔE00 9.53 < 10) |
+| seadragon | M | 10.0 (8.5) | 19° |  | **C2** legend: 2/4 species in 83–113° (goldturtle, seadragon; ≤ 1 allowed) |
+| goldturtle | L | 7.4 (7.4) | 0° |  | **C1** body ΔE00 2.21 from seahorse (#F2B93B) < 6<br>**C2** legend: 2/4 species in 83–113° (goldturtle, seadragon; ≤ 1 allowed)<br>**C3** puffer (92°) sits within 10° of this legendary's hue (ΔE00 9.94 < 10)<br>**C3** seahorse (83°) sits within 0° of this legendary's hue (ΔE00 2.21 < 10) |
+| kraken | XL | 11.2 (7.5) | 0° | 3.2 | ✓ |
