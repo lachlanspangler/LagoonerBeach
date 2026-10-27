@@ -102,11 +102,8 @@ const STAGE = 300;
 /** Stage offset: the pool's creature centre (POOL_W/2, POOL_H·0.55) is the stage centre. */
 const STAGE_X = STAGE / 2 - POOL_W / 2;
 const STAGE_Y = STAGE / 2 - POOL_H * 0.55;
-/**
- * CRITIQUE-2 NEW 5: the present is scaled by the creature's size class (an S seahorse no longer looks
- * as big as the legendary XL kraken, which breaks the card top). XS stays clearly readable.
- */
-export const REVEAL_SCALE = { XS: 0.8, S: 0.9, M: 1, L: 1.15, XL: 1.3, XXL: 1.3 } as const;
+export { REVEAL_SCALE, REVEAL_SCALE_MAX, revealScaleOf } from './revealScale.ts';
+import { revealScaleOf } from './revealScale.ts';
 /** How far a legendary breaks the card top (CSS px). */
 export const REVEAL_BREAK_PX = 10;
 /** The most a legendary is drawn off its pool's centre to break the card top by REVEAL_BREAK_PX (CSS px). */
@@ -415,7 +412,7 @@ export class Reveal {
     const c = document.createElement('canvas');
     c.width = c.height = STAGE;
     const g = c.getContext('2d', { willReadFrequently: true })!;
-    const s = Math.min(POOL_W, POOL_H) * 0.84 * REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id);
+    const s = Math.min(POOL_W, POOL_H) * 0.84 * revealScaleOf(cls, artTileScaleOf(a.sp.id));
     drawCreature(g, a.sp, STAGE / 2, STAGE / 2, s, 0, { expression: 'idle', night: this.d.night() });
     const d = g.getImageData(0, 0, STAGE, STAGE).data;
     let top = -1;
@@ -566,7 +563,7 @@ export class Reveal {
     const s = Math.min(w, h) * (a.modal ? 0.84 : 0.7);
     // the creature (not the pearl) is scaled by its size class in the modal card
     const cls = artSizeOf(a.sp.id);
-    const big = a.modal && cls ? REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id) : 1;
+    const big = a.modal && cls ? revealScaleOf(cls, artTileScaleOf(a.sp.id)) : 1;
     const tier = a.item.golden ? '#F2C14E' : RARITY_COLOR[a.sp.rarity];
     const night = this.d.night();
     type Expr = NonNullable<DrawOpts['expression']>;
@@ -896,7 +893,7 @@ export class Reveal {
     }
     const u = t - popAt;
     const cls = artSizeOf(a.sp.id);
-    const big = cls ? REVEAL_SCALE[cls] * artTileScaleOf(a.sp.id) : 1;
+    const big = cls ? revealScaleOf(cls, artTileScaleOf(a.sp.id)) : 1;
     const bigS = Math.min(W * 0.78, H * 0.4, 400);
     // into the pool once the chrome slides in
     const h = easeInOut(Math.min(1, Math.max(0, (t - a.chromeAt) / HANDOFF_MS)));

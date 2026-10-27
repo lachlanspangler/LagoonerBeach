@@ -67,7 +67,7 @@ test.describe('baselines', () => {
     await ctx.close();
   });
 
-  for (const id of ['boxcrab', 'kraken'])
+  for (const id of ['boxcrab', 'kraken', 'seadragon'])
     test(`discovery reveal: ${id}`, async ({ browser }) => {
       const ctx = await browser.newContext(rmContext);
       const page = await ctx.newPage();
