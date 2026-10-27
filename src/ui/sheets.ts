@@ -165,7 +165,8 @@ export function showJournal(k: SheetKit, j: Journal): void {
   sub.textContent =
     [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught\u00a0&\u00a0released` : '']
       .filter(Boolean)
-      .join(' · ') || 'Close a loop to catch your first creature';
+      // one fact per line: joined with " · " the wrap stranded "released" (or a dangling dot)
+      .join('\n') || 'Close a loop to catch your first creature';
   head.querySelector('.title-m')!.append(sub);
   const ink = night() ? '#6C8193' : '#968672'; // ink.3; silhouettes at 45%
   const life = new JournalLife();

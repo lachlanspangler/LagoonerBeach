@@ -142,6 +142,7 @@
 .j-sub {
   margin: 2px 0 0;
   text-wrap: balance;
+  white-space: pre-line;
 }
 .j-sec {
   display: grid;
