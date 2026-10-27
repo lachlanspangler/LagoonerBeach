@@ -281,6 +281,24 @@ test('reduced motion: a press in the reveal grace is swallowed whatever it hits,
   await expect(page.locator('.reveal')).toHaveCount(0);
 });
 
+test('scene-tier buttons shown before the card settles are aria-disabled until it does', async ({ page }) => {
+  await boot(page, 'seed=42');
+  await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
+  const cont = page.locator('.reveal .btn.primary');
+  await expect(page.locator('.reveal')).toHaveCount(1);
+  // the card is in (chrome at 1750 ms, info at +200) but not settled (2100 ms): dimmed, visible, inert
+  await page.evaluate(() => (window as any).__atoll.revealFreeze(2000));
+  await expect(page.locator('.reveal.info:not(.settled)')).toHaveCount(1);
+  expect(await cont.evaluate((b) => getComputedStyle(b).visibility)).toBe('visible');
+  await expect(cont).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.reveal .btn.ghost')).toHaveAttribute('aria-disabled', 'true');
+  await page.waitForTimeout(300); // past the grace
+  await page.mouse.click(20, 20);
+  await expect(page.locator('.reveal.settled')).toHaveCount(1);
+  await expect(cont).not.toHaveAttribute('aria-disabled');
+  await expect(page.locator('.reveal .btn.ghost')).not.toHaveAttribute('aria-disabled');
+});
+
 test('reveal a11y: the rest is inert, Tab stays in the dialog, focus returns; read once', async ({ page }) => {
   await boot(page, 'seed=42');
   const menu = page.locator('#menu-btn');

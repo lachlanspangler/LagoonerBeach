@@ -310,6 +310,8 @@ export class Reveal {
       const cont = button('Continue', 'btn primary', () => this.cur?.settled && this.finish());
       const share = button('Share', 'btn ghost', () => this.cur?.settled && void this.share(sp, item));
       btns.append(cont, share);
+      // epic/legendary show them (dimmed) before they act: say so to assistive tech until settled
+      for (const b of [cont, share]) b.setAttribute('aria-disabled', 'true');
       el.append(fx, card);
       if (scene) {
         hero = document.createElement('canvas');
@@ -507,6 +509,7 @@ export class Reveal {
     if (!a.settled && t >= settleAt) {
       a.settled = settledNow = true;
       a.el.classList.add('settled', 'info');
+      for (const b of a.el.querySelectorAll('.rv-btns .btn')) b.removeAttribute('aria-disabled');
       // settled: the backdrop lets presses through; one outside the card closes the reveal
       addEventListener('pointerdown', this.outside, true);
       // keyboard users land on Continue now that it can be pressed
