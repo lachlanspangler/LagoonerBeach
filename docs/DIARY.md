@@ -619,3 +619,29 @@ what exists (no feature rebuilds); every test's intent kept.
   in targeted reruns except wall-clock tests (tap mid-reveal / a11y / input during a celebration) that
   flake when a Playwright step takes > 2 s under that load; the reveal clock now starts at first paint
   to help.
+
+## 2026-10-27 (session 4, cont.) — Art rounds 4–5, playtest, reviews, a quiet green
+- **Art round 4 → 5:** critic r4 = 38 A / 5 A− / 4 B+ (cold read 43/47); after redraws (limpet,
+  blenny, cuttle, seadragon), colour fixes and kit work (per-species `tileScale`, C3 lint only within
+  ΔE00 10 or same habitat, pearl golden for the gold legendary, Night journal dozes ≤ 30%/page,
+  legendary reveal cards share one shape and settle eyes-open at 2.1 s), **r5 = 39 A / 8 A−, cold
+  read 45/47 — the cast is at A−/A.** Decided to stop species redraws there: the eight A− notes are
+  small and each redraw risks a new silhouette collision; they're listed in CRITIQUE-5 as optional.
+  The legendary reveal is now 2.1 s (was 2.5 s) so it ends eyes-open with an active Continue.
+- **Playtest (28 full games, real drags, Chromium + WebKit):** no must-fixes. Fixed: a reveal could
+  open between two fast moves and eat the next drag (now waits for a 600 ms pause; a press in its
+  first 250 ms after first paint never skips it); boards open on your row and the rival's; a beaten
+  best is saved at once (NEW BEST was lost when abandoning); New game mid-run asks once, inline;
+  relaunch returns to the last mode/reef; nits (one NEW BEST channel, reef reward wording, wraps,
+  erase leftovers, font double-fetch). Not changed: a search bot never dies (superhuman; changing the
+  dealer would alter every daily and need a RULES_VERSION bump) — logged for real-data tuning.
+- **Final code review:** fixed a real regression (Endless↔Daily mid-run lost the record the run
+  chased — one run-best slot per mode now), confirm bypasses and double-tap, reveal grace timing under
+  load and in reduced motion, a preload-recovery switch-off, the debug APK leaving a debug bundle in
+  dist/ (now dist-debug + release re-copied), Reefs relaunch showing a playable Endless board, a11y.
+- **Green on a quiet machine:** `make e2e` = 150 functional + 8 perf, 0 failures. Perf budgets now run
+  as their own project, alone and serially, after the functional suites (make e2e + CI): they measure
+  our draw cost, which needs an idle CPU — not a looser budget. Unit hang guard 30 → 120 s (heavy
+  sims under a loaded machine; not a perf budget).
+- Interruptions this session: API timeouts and a laptop shutdown. Commit-per-item meant each cost
+  minutes; WIP was salvaged from worktrees by diff/patch every time.
