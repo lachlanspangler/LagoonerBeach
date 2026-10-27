@@ -17,7 +17,7 @@ import { N } from '../core/grid.ts';
 import { fitsAnywhere } from '../core/rules.ts';
 
 import { Sfx } from '../audio/sfx.ts';
-import { Music } from '../audio/music.ts';
+import { LazyMusic } from '../audio/lazyMusic.ts';
 import { DragController } from '../input/drag.ts';
 import { Haptics } from '../platform/haptics.ts';
 import {
@@ -105,7 +105,7 @@ const scene = new Scene(canvas, ctx);
 const sfx = new Sfx();
 const haptics = new Haptics();
 const fx = new Fx(scene, sfx, haptics);
-const music = new Music(() => sfx.graph());
+const music = new LazyMusic(() => sfx.graph());
 /** Start music after the first gesture has unlocked audio (browsers require it). */
 function wakeAudio(): void {
   if (document.hidden) return; // e.g. a theme change while backgrounded must not resume audio
@@ -1193,6 +1193,7 @@ idle(() => {
   setTimeout(() => reveal.prefetch(), 2500);
   setTimeout(() => ui.prefetchSheets(), 1800);
   setTimeout(() => ui.prefetchResults(), 2200);
+  if (profile.settings.music) setTimeout(() => music.prefetch(), 2600);
   // lazy chunks that used to be in the initial bundle: fetched at idle so nothing waits on them
   setTimeout(() => void import('./reefMode.ts').catch(() => undefined), 3000);
   scene.warmSprites();
