@@ -90,25 +90,41 @@ test('real touch drag (CDP touch events) places a piece', async ({ page, browser
 });
 
 /** One real drag, no retry: it must count. */
-async function fastDrag(page: Page): Promise<void> {
-  const before = (await state(page)).moves;
-  const plan = await page.evaluate(() => (window as any).__atoll.plan('greedy'));
-  await page.mouse.move(plan.down.x, plan.down.y);
-  await page.mouse.down();
-  await page.mouse.move(plan.up.x, plan.up.y, { steps: 4 });
-  await page.mouse.up();
-  await expect.poll(async () => (await state(page)).moves, { timeout: 2000 }).toBe(before + 1);
-}
-
 test('a discovery due between quick moves waits until the player pauses (no drag is eaten)', async ({ page }) => {
   await boot(page, 'seed=606');
-  for (let i = 0; i < 9; i++) {
-    await fastDrag(page);
-    // a discovery is due right after this move; the next drag follows 40 ms later
-    if (i % 3 === 0) await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
-    await page.waitForTimeout(40);
-    if ((await state(page)).over) break;
-  }
+  // the drags run inside the page so the gaps really are 40 ms: Playwright's own round trips can
+  // exceed the 600 ms pause on a loaded machine — and then opening the card would be correct
+  const r = await page.evaluate(async () => {
+    const a = (window as any).__atoll;
+    const canvas = document.querySelector('canvas')!;
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    const ev = (type: string, x: number, y: number) =>
+      canvas.dispatchEvent(
+        new PointerEvent(type, { clientX: x, clientY: y, bubbles: true, isPrimary: true, pointerId: 1, buttons: 1 }),
+      );
+    const start = a.state().moves;
+    let done = 0;
+    for (let i = 0; i < 9 && !a.state().over; i++) {
+      const plan = a.plan('greedy');
+      if (!plan) break;
+      ev('pointerdown', plan.down.x, plan.down.y);
+      for (let k = 1; k <= 4; k++)
+        ev(
+          'pointermove',
+          plan.down.x + ((plan.up.x - plan.down.x) * k) / 4,
+          plan.down.y + ((plan.up.y - plan.down.y) * k) / 4,
+        );
+      ev('pointerup', plan.up.x, plan.up.y);
+      done++;
+      // a discovery is due right after this move; the next drag follows 40 ms later
+      if (i % 3 === 0) a.revealSpecies('kraken');
+      await sleep(40);
+      if (a.revealState()) return { eaten: true, done, moves: a.state().moves - start };
+    }
+    return { eaten: false, done, moves: a.state().moves - start };
+  });
+  expect(r.eaten).toBe(false);
+  expect(r.moves).toBe(r.done); // every drag landed
   // once the player pauses, it opens
   await expect
     .poll(() => page.evaluate(() => (window as any).__atoll.revealState()?.id), { timeout: 5000 })
