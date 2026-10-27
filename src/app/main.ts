@@ -102,6 +102,8 @@ const canvas = document.getElementById('game') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true })!;
 const scene = new Scene(canvas, ctx);
 const sfx = new Sfx();
+// automated runs (Playwright = webdriver; CDP probes pass ?mute) never make a sound; ?sound=1 opts in
+sfx.muteOutput = (navigator.webdriver === true || params.has('mute')) && !params.has('sound');
 const haptics = new Haptics();
 const fx = new Fx(scene, sfx, haptics);
 const music = new LazyMusic(() => sfx.graph());

@@ -11,6 +11,8 @@ export class Sfx {
   enabled = true;
   /** Master gain; tuned with the offline audio QA (tests/e2e/audio.spec.ts → artifacts/audio-levels.json). */
   volume = 2.1;
+  /** Live output silenced (automated runs: nothing audible; offline QA renders are unaffected). */
+  muteOutput = false;
 
   /**
    * Create the (suspended) context ahead of time — construction costs ~100+ ms on some devices, too
@@ -35,7 +37,9 @@ export class Sfx {
     this.master = this.ctx.createGain();
     this.master.gain.value = this.volume;
     const comp = this.ctx.createDynamicsCompressor();
-    this.master.connect(comp).connect(this.ctx.destination);
+    const sink = this.ctx.createGain();
+    sink.gain.value = this.muteOutput ? 0 : 1;
+    this.master.connect(comp).connect(sink).connect(this.ctx.destination);
     const len = Math.floor(this.ctx.sampleRate * 0.4);
     this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this.noise.getChannelData(0);

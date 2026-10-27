@@ -41,7 +41,7 @@ const shot = async (name: string) => {
   writeFileSync(`artifacts/shots/android-${name}.png`, execFileSync(ADB, ['exec-out', 'screencap', '-p']));
 };
 await send('Page.enable');
-await ev(`location.href = 'https://localhost/?debug=1&seed=7'`);
+await ev(`location.href = 'https://localhost/?debug=1&mute=1&seed=7'`);
 await sleep(3500);
 const report: Record<string, unknown> = {};
 report.hooks = await ev(`typeof window.__atoll`);

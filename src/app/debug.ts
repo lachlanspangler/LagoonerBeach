@@ -159,6 +159,8 @@ export function installDebugApi(d: DebugDeps): void {
       d.scene.sprites.setLook(lookFor(id));
       d.setState(d.state());
     },
+    /** Automated runs are silent (live output muted; offline QA renders still measure). */
+    audioMuted: () => d.sfx.muteOutput,
     /** Audio QA: peak/RMS of every sound effect rendered offline. */
     async audioLevels() {
       const out: Record<string, { peak: number; rms: number }> = {};

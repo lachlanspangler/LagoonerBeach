@@ -42,3 +42,12 @@ test('sound effects: no clipping, audible, balanced', async ({ page }) => {
     expect(lv[m]!.peak, m).toBeLessThan(lv.capture!.peak * 0.6);
   }
 });
+
+test('automated runs make no sound: live output muted unless ?sound=1', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await page.waitForFunction(() => (window as any).__atoll);
+  expect(await page.evaluate(() => (window as any).__atoll.audioMuted())).toBe(true);
+  await page.goto('/?debug=1&sound=1');
+  await page.waitForFunction(() => (window as any).__atoll);
+  expect(await page.evaluate(() => (window as any).__atoll.audioMuted())).toBe(false);
+});
