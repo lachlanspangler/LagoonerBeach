@@ -1481,7 +1481,11 @@ function debugDeps(): DebugDeps {
         fx.chapterComplete(lastDispatchAt, chapter, name);
         dirty = true;
       },
-      celebrateWord: () => scene.celebrate.word?.text ?? null,
+      // only a word still alive (the object lingers after its last, fully faded frame until a redraw)
+      celebrateWord: () => {
+        const w = scene.celebrate.word;
+        return w && clock() < w.start + w.life ? w.text : null;
+      },
       coach: () => scene.coach,
       celebrateBest: () => ({ bannerAt: scene.celebrate.bestAt, hud: scene.celebrate.bestShown }),
       hudBest: () => ({
