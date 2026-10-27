@@ -132,6 +132,8 @@ export interface HudStack {
 
 /** Cap height of Nunito heavy, as a fraction of the font size (digits and caps). */
 export const CAP = 0.72;
+/** How far the score's thousands comma hangs below the baseline, per px of score size. */
+const COMMA = 0.12;
 /** Half the visual height of the outlined ×20 badge per px of badge size. */
 const BADGE_HALF = 0.5;
 /** Biggest COMBO step's size in cells (moments.ts ×20). */
@@ -156,7 +158,8 @@ export function hudStack(l: Layout, textScale: number): HudStack {
   let lab = Math.round(Math.min(12 * k, big * 0.25) * Math.min(1.2, textScale));
   const badgeY = Math.min(l.hud.y + drop + l.hud.h * 0.9, l.board.y - pad - badgeHalf);
   const bestY = Math.min(l.hud.y + drop + l.hud.h * 0.5 + lab * 1.8, badgeY - badgeHalf - 3);
-  const scoreY = Math.min(l.hud.y + drop + l.hud.h * 0.5, bestY - lab * CAP - 4);
+  // the gap clears the thousands comma, which hangs below the digits' baseline
+  const scoreY = Math.min(l.hud.y + drop + l.hud.h * 0.5, bestY - lab * CAP - big * COMMA - 2);
   // the score gives up size before it climbs out of the top of the HUD
   if (scoreY - big * CAP < top) {
     big = Math.max(18, Math.floor((scoreY - top) / CAP));
