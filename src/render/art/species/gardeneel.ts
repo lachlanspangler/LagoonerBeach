@@ -24,7 +24,9 @@ export default defineArt({
   size: 'M',
   feature: 'a thin upright stalk rising out of a wide sand mound, hooked into a round head on top',
   personality: ['swaying', 'social', 'timid'],
-  palette: { body: '#EED595', accent: '#4A3E33', belly: '#CDB78A' },
+  // CRITIQUE-4: the spotted garden eel's cream #F3EEE2 (off the Lagoon tan trio) with dark spots,
+  // on its tan sand mound
+  palette: { body: '#F3EEE2', accent: '#4A3E33', belly: '#CDB78A' },
   groups: [
     {
       id: 'body',
@@ -32,7 +34,19 @@ export default defineArt({
       parts: [
         { d: stalk, role: 'body' },
         { d: head, role: 'body' },
-        { d: join(circle(-7.5, -3, 3.6), circle(-6.5, 19, 3.6)), role: 'accent', kind: 'pattern' },
+        // six hand-placed dark spots (6 u) down the stalk and on the back of the head, clear of the eye
+        {
+          d: join(
+            circle(-12.5, -26, 3),
+            circle(-7.5, -6, 3.1),
+            circle(-2.5, 3, 3),
+            circle(-7.5, 11.5, 3),
+            circle(-2.5, 19.5, 3),
+            circle(-7, 27, 3),
+          ),
+          role: 'accent',
+          kind: 'pattern',
+        },
       ],
     },
     {
@@ -55,6 +69,9 @@ export default defineArt({
   },
   deviations: {
     R7: 'the body box is set by the burrow mound; the profile eye sits in the head at the top of the stalk',
+    R16: 'spotted-garden-eel cream #F3EEE2 (CRITIQUE-4), L 0.95 like the butterfly lemon; the dark spots and ink outline carry it',
+    R16S: 'cream identity (chroma 0.02); the outline, dark spots and tan mound keep it off the sand',
+    R16M: 'pale on the mint tile by nature (like the sand dollar); outline + dark spots keep it readable (checked on the mint sheet)',
   },
   ground: true,
   leap: { hide: ['mound'] },
