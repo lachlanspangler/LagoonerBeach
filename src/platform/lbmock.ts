@@ -290,15 +290,24 @@ export class MockBackend implements LeaderboardBackend {
       const j = rng.int(i + 1);
       [pool[i], pool[j]] = [pool[j]!, pool[i]!];
     }
+    // avatars: a shuffled deck of every species (its own stream, so the scores stay as they were);
+    // 24 random picks put the same crab on rank after rank
+    const arng = new Rng(hashSeed(`lb-demo-av:${board}`));
+    const deck = SPECIES.map((sp) => sp.id);
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = arng.int(i + 1);
+      [deck[i], deck[j]] = [deck[j]!, deck[i]!];
+    }
     for (let i = 0; i < n; i++) {
       const u = rng.next();
       const score = Math.floor(s.lo * (s.hi / s.lo) ** (u ** 1.7));
+      rng.int(Math.min(24, SPECIES.length)); // the old avatar draw: keeps every score as it was
       this.table.put(
         board,
         {
           id: `demo:${i}`,
           name: pool[i % pool.length]!,
-          avatar: SPECIES[rng.int(Math.min(24, SPECIES.length))]!.id,
+          avatar: deck[i % deck.length]!,
           score,
           moves: 18 + Math.floor(score / 48) + rng.int(12),
           at: day - 86_400_000 + rng.int(3_600_000),

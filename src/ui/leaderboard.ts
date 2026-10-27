@@ -547,6 +547,10 @@ export class LeaderboardUi {
     list.className = 'lb-list';
     list.setAttribute('role', 'list');
     list.setAttribute('aria-label', 'Rankings');
+    // scrolled: rows passing under the card above the list fade out too (they used to slide under
+    // the pinned "Next up" card sliced and unmasked)
+    const edge = () => list.classList.toggle('scrolled', list.scrollTop > 1);
+    list.addEventListener('scroll', edge, { passive: true });
     // "you" when you're not on the board yet: pinned under the list, outside the scroller (a sticky
     // row inside it let the rows behind show around it)
     const pin = document.createElement('div');
@@ -782,8 +786,12 @@ export class LeaderboardUi {
       const pinned = o.boards?.[t];
       if (pinned && t !== 'all' && periodLabel(pinned) !== (t === 'daily' ? 'today' : 'this week'))
         bits.push(`Showing the board this game counts on: ${periodLabel(pinned).replace(/^(on|in) /, '')}.`);
-      bits.push(`${num(v.total)} player${v.total === 1 ? '' : 's'}`);
       foot.textContent = bits.join(' ');
+      // the count is its own fact on its own line (it ran into the demo note's last sentence)
+      const count = document.createElement('div');
+      count.className = 'lb-count';
+      count.textContent = `${num(v.total)} player${v.total === 1 ? '' : 's'}`;
+      foot.append(count);
       if (this.client.name) foot.append(this.renameBtn(() => this.showBoards(current, o)));
     };
 

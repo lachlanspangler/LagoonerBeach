@@ -200,6 +200,14 @@ html[data-theme='night'] .lb-tab[aria-selected='true'] {
   gap: 4px;
   padding: 2px 0 12px;
 }
+.lb-foot .lb-count {
+  margin-top: 2px;
+  font-weight: 800;
+}
+.lb-list.scrolled {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26px, #000 calc(100% - 18px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 26px, #000 calc(100% - 18px), transparent);
+}
 .lb-row {
   display: grid;
   grid-template-columns: 44px 36px minmax(0, 1fr) auto;
