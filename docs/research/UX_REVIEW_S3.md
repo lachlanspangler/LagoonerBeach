@@ -96,3 +96,33 @@ moves.
 - **Should 8:** theme segments captioned Auto / Day / Night; font licences behind "Credits".
 - **Nice:** Daily HUD "DAILY · OCT 26 · #11 TODAY" (rank once posted, boards on); the board→hand
   gap trimmed (1.9 → 1.6 cells of slack; layout tests unchanged).
+
+## Final review fixes (layout) — 2026-10-27
+
+From the final UX review (screens in `/tmp/lbux/`, `artifacts/ux/ux-final*/`). Verified by looking:
+`scripts/screens.ts` Day + Night at 390×844, 375×667 and 820×1180 (two rounds), `lb-shots` at
+375×667, store frame 4.
+
+- **Must 1 — Larger text / HUD stack:** `hudStack()` (render/layout.ts) lays the score, best line and
+  COMBO slot out bottom-up: the badge (reserved at its ×20 size) keeps ≥ 4 px off the board, the
+  best line clears the badge, the score clears the best line (with room for its hanging comma) and
+  gives up size only if the three can't fit. At 375×667 + Larger text + ×20 nothing touches.
+  Layout test: every size × text scale 1 / 1.25 (`tests/unit/layout.test.ts`).
+- **Must 4 — chapter-complete moment:** the subtitle fits ≤ 88% of the screen; the moment holds
+  ~2 s (life 1500 → 2000 ms); queued discovery pops wait for it (`chapterQuietUntil` in the
+  reveal's `canOpen`) and so does the reef-of-the-day chip (`chapterHold`). The reef card adds
+  "Next: Chapter 3 · Pelican Reach · 41–60 m" with a chevron that sinks twice (none under reduced
+  motion). e2e: no pop opens while "Chapter 2" is up; the card's next-chapter line.
+- **Should 4:** the first-run line steps back (alpha → 0.12) while the demo ghost and hand pass it.
+- **Should 5:** name slots cap the letter at 0.62× the slot width (container units); the row keeps
+  8 px off the sheet edges. e2e at 375×667 with WMWMWMW.
+- **Should 6:** once scrolled, leaderboard rows fade out under the card above the list (top mask).
+- **Should 9:** store frame 4 captures only the reefs sheet (`crop: '.sheet'`), right under the
+  caption; the starfish sits in the sea below.
+- **Nits:** first game "Your first best!" (no "Best <same score>"); demo board player count on its
+  own line, demo avatars dealt from a shuffled deck of all species (scores unchanged); journal
+  subtitle one fact per line; giants "3 game boards end to end"; iPad: the HUD scales with the board
+  (×1.45 at 820 wide) and sits just above it, the round buttons move to the board's edges; one tray
+  cell size per dealt hand (`scene.trayCell`, bounded by `trayCellFor`'s per-piece fit); the dive's
+  drop crown is short and falls back to the water line; no COMBO badge in Reefs; a fresh profile
+  deep-linked to `?mode=daily` gets the first-run line + capture hint (never the teaching deal).
