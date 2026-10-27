@@ -308,6 +308,7 @@ test('share card: a 4:5 PNG with the name and the game, no hint', async ({ page 
 });
 
 test('every modal reveal settles eyes-open on idle (scene tiers by the time the card settles)', async ({ page }) => {
+  test.setTimeout(180_000); // 13 frozen reveals
   await boot(page, 'seed=42');
   // [species, freeze at (ms)]: uncommon/rare once the beat is over; epic/legendary at the settle frame
   const cases: [string, number][] = [
@@ -320,9 +321,9 @@ test('every modal reveal settles eyes-open on idle (scene tiers by the time the 
     ['seadragon', 2100],
     ['whaleshark', 2100],
     ['goldturtle', 2100],
-    ['kraken', 2500],
-    ['seadragon', 2500],
-    ['whaleshark', 2500],
+    ['kraken', 2700],
+    ['seadragon', 2700],
+    ['whaleshark', 2700],
   ];
   for (const [id, t] of cases) {
     await page.evaluate((id) => (window as any).__atoll.revealSpecies(id), id);

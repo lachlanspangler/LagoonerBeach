@@ -142,6 +142,8 @@ interface Active {
   item: RevealItem;
   sp: Species;
   start: number;
+  /** The clock was set explicitly (skip/freeze): the first-paint restart leaves it alone. */
+  clocked?: boolean;
   /** Modal card vs the quick common pop. */
   modal: boolean;
   el: HTMLElement;
@@ -343,7 +345,13 @@ export class Reveal {
       this.sizeCanvas(fx, innerWidth, innerHeight, 1);
       addEventListener('resize', this.resize);
     }
-    requestAnimationFrame(() => el.classList.add('show'));
+    requestAnimationFrame(() => {
+      el.classList.add('show');
+      // the clock starts when the reveal is first on screen (a slow first paint, e.g. under load,
+      // must not eat the animation), unless a skip/freeze already set it
+      const c = this.cur;
+      if (c && c.el === el && !c.clocked) c.start = this.now();
+    });
     this.cur = {
       item,
       sp,
@@ -418,6 +426,7 @@ export class Reveal {
   /** Skip the animation: draw the settled card now. */
   private skipToSettled(a: Active): void {
     const rarity: Rarity = a.item.firstGolden ? 'rare' : a.sp.rarity;
+    a.clocked = true;
     a.start = Math.min(a.start, this.now() - REVEAL_MS[rarity]);
     this.draw(a, this.now() - a.start);
   }
@@ -986,6 +995,7 @@ export class Reveal {
     const a = this.cur;
     if (!a) return false;
     cancelAnimationFrame(this.raf);
+    a.clocked = true;
     a.start = this.now() - t;
     // a frozen frame is a full repaint: backdrop and hero canvas included
     a.fxAt = -Infinity;
