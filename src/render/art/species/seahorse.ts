@@ -61,7 +61,7 @@ export default defineArt({
   size: 'S',
   feature: 'an S of big round head, forward chest and a tail curled into a spiral, with a coronet bump',
   personality: ['gentle', 'devoted', 'proud'],
-  palette: { body: '#F2B93B', accent: '#D9662A' },
+  palette: { body: '#F29A3B', accent: '#CF5826' },
   groups: [
     {
       id: 'finA',
