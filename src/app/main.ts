@@ -126,7 +126,7 @@ const classicSeed = (): number =>
   (!params.has('seed') && profile.firstRunDone ? runLog.ticketSeed() : null) ?? freshSeed();
 
 // ?mode= / ?seed= pick the mode; otherwise a relaunch opens the one last played (Reefs: once the
-// pack is in, below — the classic game shows until then)
+// pack is in, below — until then a neutral, empty board that takes no input)
 const bootMode: Mode = params.has('mode')
   ? params.get('mode') === 'daily'
     ? 'daily'
@@ -138,14 +138,31 @@ const bootMode: Mode = params.has('mode')
     : (profile.lastMode ?? 'classic');
 let mode: Mode = bootMode === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
-let state: GameState = startState();
+/**
+ * Relaunching into Reefs: the pack (and maybe the reef) is still loading. The board shows empty and
+ * takes no input — not a playable Endless deal (which would spend a spare ticket and could be
+ * saved over the player's Endless game). If the pack fails, the Endless game is the fallback.
+ */
+let reefBoot = bootMode === 'puzzle';
+const neutralState = (): GameState => ({ ...newGame(0), tray: [null, null, null] });
+let state: GameState = reefBoot ? neutralState() : startState();
+/** The reef pack didn't come: show the Endless game after all (the reef error offers a retry). */
+function endReefBoot(): void {
+  if (!reefBoot) return;
+  reefBoot = false;
+  state = startState();
+  saveIfTicketed();
+  teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+  syncScene();
+}
 /** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
 function saveIfTicketed(): void {
+  if (reefBoot) return;
   const rec = mode === 'classic' && state.moves === 0 ? runLog.get('classic', state) : null;
   if (rec?.runToken) saveGame(state, rec);
 }
 saveIfTicketed();
-let teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+let teaching = !reefBoot && !profile.firstRunDone && mode === 'classic' && state.moves === 0;
 let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
 let lastDispatchAt = 0;
@@ -354,7 +371,7 @@ function syncScene(): void {
     // (one slot per mode: a trip to the other mode mid-run must not forget it)
     const rb = mode === 'puzzle' ? undefined : profile.runBest?.[mode];
     runStartBest = state.moves > 0 && rb?.key === key ? Math.min(rb.best, storedBest()) : storedBest();
-    if (mode !== 'puzzle') profile.runBest = { ...profile.runBest, [mode]: { key, best: runStartBest } };
+    if (mode !== 'puzzle' && !reefBoot) profile.runBest = { ...profile.runBest, [mode]: { key, best: runStartBest } };
     gameCatch = { count: 0, newIds: [] };
     bigLagoon = null;
     puzzleMoves = [];
@@ -522,7 +539,7 @@ function commit(m: Move, from: { x: number; y: number } | null, quiet = false): 
 }
 
 function persist(): void {
-  if (mode === 'puzzle') return; // puzzles are short; progress is the solved list
+  if (mode === 'puzzle' || reefBoot) return; // puzzles are short; progress is the solved list
   if (mode === 'daily') saveDaily(dailyDate, state, runLog.get('daily'));
   else saveGame(state, runLog.get('classic', state));
 }
@@ -903,6 +920,7 @@ function switchMode(m: Mode): void {
         // (never "Charting…" forever, and the player's place is kept)
         () => {
           if (wantedMode !== 'puzzle') return;
+          endReefBoot();
           const i = profile.puzzle.index;
           if (!Number.isInteger(i) || i < 0 || i >= MAX_REEF) {
             profile.puzzle.index = 0; // not a reef at all: start from the first one
@@ -916,6 +934,7 @@ function switchMode(m: Mode): void {
   ui.close();
   persist();
   mode = m;
+  reefBoot = false;
   profile.lastMode = m;
   saveProfile(profile);
   startToken++; // a fresh-ticket start still in flight is for a game the player has left
@@ -1101,7 +1120,7 @@ let sealKey = '';
 const drag = new DragController(canvas, {
   layout: () => scene.layout,
   state: () => state,
-  enabled: () => !ui.open && !reveal.blocking,
+  enabled: () => !ui.open && !reveal.blocking && !reefBoot,
   onPick: () => {
     // fast play: the previous move's word leaves quickly (it won't describe the next board)
     scene.celebrate.hurry(clock());

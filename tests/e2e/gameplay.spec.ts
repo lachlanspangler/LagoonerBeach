@@ -207,6 +207,39 @@ test('a relaunch opens the mode last played (and the reef you were on)', async (
   expect(errors).toEqual([]);
 });
 
+test('a relaunch into Reefs shows no playable Endless board while the pack loads; Endless is the fallback', async ({
+  page,
+}) => {
+  const errors = await boot(page, '');
+  await page.evaluate(() => (window as any).__atoll.autoplay('greedy', 2));
+  const endless = await state(page);
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  // the pack is slow: until it lands the board is empty and takes no input
+  let held: (() => Promise<void>) | null = null;
+  await page.route('**/assets/puzzles-*.js', (r) => void (held = () => r.continue()));
+  await page.goto('/?debug=1');
+  await page.waitForFunction(() => (window as any).__atoll);
+  await expect.poll(() => held !== null).toBe(true);
+  const loading = await state(page);
+  expect(loading.tray).toEqual([null, null, null]);
+  expect(loading.moves).toBe(0);
+  await page.mouse.click(200, 600);
+  expect((await state(page)).moves).toBe(0);
+  await held!();
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  // the pack fails: the Endless game (as it was, not overwritten) and a retry
+  await page.unroute('**/assets/puzzles-*.js');
+  await page.route('**/assets/puzzles-*.js', (r) => r.abort());
+  await page.goto('/?debug=1');
+  await page.waitForFunction(() => (window as any).__atoll);
+  await expect(page.getByTestId('reef-error')).toBeVisible({ timeout: 15_000 });
+  const back = await state(page);
+  expect(back.moves).toBe(endless.moves);
+  expect(back.board).toEqual(endless.board);
+  expect(errors.filter((e) => !/puzzles|Failed to fetch|dynamically imported|net::/i.test(e))).toEqual([]);
+});
+
 test('game over shows the card; play again starts fresh', async ({ page }) => {
   await boot(page, 'seed=3&fast=1');
   await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));
