@@ -13,7 +13,14 @@
  * Reduced motion: no rays/tide motion, no hops — the same information.
  */
 import { SPECIES, SPECIES_BY_ID, type Rarity, type Species } from '../meta/creatures.ts';
-import { artSizeOf, artTileScaleOf, drawCreature, hasNewArt, type DrawOpts } from '../render/creatures.ts';
+import {
+  artGoldenKindOf,
+  artSizeOf,
+  artTileScaleOf,
+  drawCreature,
+  hasNewArt,
+  type DrawOpts,
+} from '../render/creatures.ts';
 import { spring } from '../render/celebrate.ts';
 import './tiles.css';
 import './celebrate.css';
@@ -68,8 +75,10 @@ export const REVEAL_MS: Record<Rarity, number> = {
   common: 800,
   uncommon: 900,
   rare: 1150,
-  epic: 1800,
-  legendary: 2500,
+  // CRITIQUE-4: scene tiers settle as the creature lands in its pool (chrome + handoff + 30 ms);
+  // they waited ~0.4 s more on a dimmed Continue that read disabled (were 1800 / 2500)
+  epic: 1500,
+  legendary: 2100,
 };
 /** The species' signature move, played once in the reveal (new art). */
 const SIGNATURE_MS = 950;
@@ -95,8 +104,10 @@ const STAGE_Y = STAGE / 2 - POOL_H * 0.55;
  * as big as the legendary XL kraken, which breaks the card top). XS stays clearly readable.
  */
 export const REVEAL_SCALE = { XS: 0.8, S: 0.9, M: 1, L: 1.15, XL: 1.3, XXL: 1.3 } as const;
-/** How far a legendary XL breaks the card top (CSS px). */
+/** How far a legendary breaks the card top (CSS px). */
 export const REVEAL_BREAK_PX = 10;
+/** The most a legendary is drawn off its pool's centre to break the card top by REVEAL_BREAK_PX (CSS px). */
+export const REVEAL_LIFT_MAX = 28;
 /** After the happy/proud beat the creature settles on its eyes-open idle face, with one blink. */
 const BEAT_END_MS = 1500;
 const PROUD_MS = 650;
@@ -108,9 +119,14 @@ export function beatEnd(rank: number): number {
 }
 /** Epic/legendary: the proud beat's length before the card settles. */
 const SCENE_PROUD_MS = 350;
-/** Epic/legendary: the beat ends (eyes open) exactly when the card settles, ms after the pop. */
+/**
+ * Epic/legendary: the beat ends (eyes open) when the creature lands in its pool, ms after the pop.
+ * CRITIQUE-4: ending it at the settle left kraken/seadragon/whaleshark eyes-closed `happy` in the
+ * card for most of its landing (2.1 s); now the card arrives with the creature already awake.
+ */
 export function sceneBeatEnd(rarity: Rarity): number {
-  return REVEAL_MS[rarity] - POP_MS[rarity];
+  const chrome = CHROME_MS[rarity];
+  return chrome === undefined ? REVEAL_MS[rarity] - POP_MS[rarity] : chrome + HANDOFF_MS - POP_MS[rarity];
 }
 
 export function formatSize(cm: number): string {
@@ -148,6 +164,8 @@ interface Active {
   fxAt: number;
   /** The pool creature's expression in the last frame (tests: every reveal ends on `idle`). */
   expr?: string;
+  /** CSS px the pool creature is drawn above the pool centre (a legendary breaking the card top). */
+  lift?: number;
   /** Elements made inert while the dialog is up (restored on close), and where focus was. */
   inerted: Element[];
   returnTo: HTMLElement | null;
@@ -268,7 +286,7 @@ export class Reveal {
         <div class="rv-rarity"><canvas class="rv-pips"></canvas><span>${item.golden ? 'Golden · ' : ''}${cap(sp.rarity)}</span></div>
         <div class="rv-lower"><div class="rv-ph" aria-hidden="true"><i class="n"></i><i class="j"></i></div>
         <div class="rv-info">
-          <div class="rv-name">${sp.name}</div>
+          <div class="rv-name${sp.name.length > 13 ? ' rv-long' : ''}">${sp.name}</div>
           <div class="rv-journal"><span class="rv-stamp" aria-hidden="true">No.<b>${no}</b></span><span>Added to your Beach Journal</span></div>
         </div></div>
         <div class="rv-btns"></div>`;
@@ -362,12 +380,15 @@ export class Reveal {
   }
 
   /**
-   * CRITIQUE-2 NEW 5: a legendary XL breaks the card top by ~10 px. Measures the creature's resting
-   * top once (a scratch render) and pulls the pool up under the card top (the overline gives way).
+   * CRITIQUE-2 NEW 5: a legendary breaks the card top by ~10 px. Measures the creature's resting
+   * top once (a scratch render) and draws the creature that much higher in its stage canvas.
+   * CRITIQUE-4: the layout never moves (it used to pull the pool up and hide the "New discovery"
+   * overline, so XL legendary cards were shorter and lost their label): every legendary card has
+   * the same art box (pulled up 36 px in CSS) and height; the shift is capped at `REVEAL_LIFT_MAX`.
    */
   private frameBreak(a: Active): void {
     const cls = artSizeOf(a.sp.id);
-    if (a.sp.rarity !== 'legendary' || (cls !== 'XL' && cls !== 'XXL')) return;
+    if (a.sp.rarity !== 'legendary' || !cls) return;
     const pool = a.stage.parentElement;
     const card = pool?.parentElement;
     if (!pool || !card) return;
@@ -381,11 +402,17 @@ export class Reveal {
     let top = -1;
     for (let i = 3; i < d.length && top < 0; i += 4) if (d[i]! > 40) top = Math.floor(i / 4 / STAGE);
     if (top < 0) return;
-    // the creature's top sits (STAGE/2 - top) above the pool's centre line (POOL_H·0.55); move the
-    // pool so that lands REVEAL_BREAK_PX above the card's top edge (offsetTop ignores the entrance scale)
+    // the creature's top sits (STAGE/2 - top) above the pool's centre line (POOL_H·0.55), i.e. at
+    // `natural` px below the card's top edge (offsetTop ignores the entrance scale). Every legendary
+    // is drawn so it breaks the edge by REVEAL_BREAK_PX (CRITIQUE-4: one shape for the tier; the
+    // seadragon used to sit low in a taller card)
     const topInPool = POOL_H * 0.55 - (STAGE / 2 - top);
-    const lift = pool.offsetTop + topInPool + REVEAL_BREAK_PX;
-    if (lift > 0) pool.style.marginTop = `${2 - lift}px`;
+    const natural = pool.offsetTop + topInPool;
+    const want = natural + REVEAL_BREAK_PX;
+    const lift = Math.max(-REVEAL_LIFT_MAX, Math.min(REVEAL_LIFT_MAX, want));
+    if (Math.abs(lift) < 0.5) return;
+    a.lift = lift;
+    a.stage.style.top = `${-STAGE_Y - lift}px`;
   }
 
   /** Skip the animation: draw the settled card now. */
@@ -657,14 +684,23 @@ export class Reveal {
       if (u >= end) expr = u - end >= BLINK_AT_MS && u - end < BLINK_AT_MS + BLINK_MS ? 'blink' : 'idle';
     }
     if (a.modal) a.expr = expr;
-    withFinish(g, a.item.golden, u, rm, cx, cy + dy, s * big, (gg) => {
-      gg.save();
-      gg.translate(cx, cy + dy);
-      gg.rotate(ang);
-      gg.scale(sx * big, sy * big);
-      drawCreature(gg, a.sp, 0, 0, s, 0, opts(expr, u, sig));
-      gg.restore();
-    });
+    withFinish(
+      g,
+      a.item.golden && (artGoldenKindOf(a.sp.id) === 'pearl' ? 'pearl' : true),
+      u,
+      rm,
+      cx,
+      cy + dy,
+      s * big,
+      (gg) => {
+        gg.save();
+        gg.translate(cx, cy + dy);
+        gg.rotate(ang);
+        gg.scale(sx * big, sy * big);
+        drawCreature(gg, a.sp, 0, 0, s, 0, opts(expr, u, sig));
+        gg.restore();
+      },
+    );
     if (a.item.golden && !rm) sparkles(g, cx, cy, s * 0.62, 5, u / 1000);
   }
 
@@ -845,7 +881,7 @@ export class Reveal {
     const h = easeInOut(Math.min(1, Math.max(0, (t - a.chromeAt) / HANDOFF_MS)));
     const pool = (a.stage.parentElement ?? a.stage).getBoundingClientRect();
     const tx = pool.left + pool.width / 2;
-    const ty = pool.top + pool.height * 0.55;
+    const ty = pool.top + pool.height * 0.55 - (a.lift ?? 0);
     const ts = Math.min(POOL_W, POOL_H) * 0.84 * big;
     const x = cx + (tx - cx) * h;
     const y = cy + (ty - cy) * h;
@@ -875,20 +911,31 @@ export class Reveal {
     // the signature starts on the hero canvas and carries on in the pool (one continuous move)
     const sd = this.signatureMs(a);
     const hopT = u - 380;
+    // the same beat as the pool (drawPool): surprised → happy → proud → eyes open as it lands
+    const beat = sceneBeatEnd(a.item.firstGolden ? 'rare' : a.sp.rarity);
     const opts: DrawOpts = {
       golden: a.item.golden,
-      expression: u < 420 ? 'surprised' : 'happy',
+      expression: u < 420 ? 'surprised' : u >= beat ? 'idle' : u > beat - SCENE_PROUD_MS ? 'proud' : 'happy',
       t: u / 1000,
       night,
       ...(hasNewArt(a.sp.id) && hopT > 0 && hopT < sd ? { signatureAt: hopT / sd } : {}),
     };
-    withFinish(g, a.item.golden, u, rm, x, y, s * sx, (gg) => {
-      gg.save();
-      gg.translate(x, y);
-      gg.scale(sx, sy);
-      drawCreature(gg, a.sp, 0, 0, s, 0, opts);
-      gg.restore();
-    });
+    withFinish(
+      g,
+      a.item.golden && (artGoldenKindOf(a.sp.id) === 'pearl' ? 'pearl' : true),
+      u,
+      rm,
+      x,
+      y,
+      s * sx,
+      (gg) => {
+        gg.save();
+        gg.translate(x, y);
+        gg.scale(sx, sy);
+        drawCreature(gg, a.sp, 0, 0, s, 0, opts);
+        gg.restore();
+      },
+    );
   }
 
   private async share(sp: Species, item: RevealItem): Promise<void> {
@@ -999,7 +1046,8 @@ let scratch: HTMLCanvasElement | null = null;
  */
 function withFinish(
   g: CanvasRenderingContext2D,
-  golden: boolean,
+  /** `pearl`: the gold legendary's own golden (CRITIQUE-4): no cream wash, an iridescent glint. */
+  golden: boolean | 'pearl',
   tMs: number,
   rm: boolean,
   x: number,
@@ -1021,19 +1069,28 @@ function withFinish(
   sg.setTransform(g.getTransform());
   draw(sg);
   sg.globalCompositeOperation = 'source-atop';
-  const wash = sg.createLinearGradient(0, y - s * 0.5, 0, y + s * 0.5);
-  wash.addColorStop(0, 'rgba(255,248,205,0.42)');
-  wash.addColorStop(0.55, 'rgba(255,214,110,0.22)');
-  wash.addColorStop(1, 'rgba(255,160,60,0.16)');
-  sg.fillStyle = wash;
-  sg.fillRect(x - s, y - s, s * 2, s * 2);
+  const pearl = golden === 'pearl';
+  // pearl keeps its outline crisp on the cream card: the kit already gives it nacre and glints
+  if (!pearl) {
+    const wash = sg.createLinearGradient(0, y - s * 0.5, 0, y + s * 0.5);
+    wash.addColorStop(0, 'rgba(255,248,205,0.42)');
+    wash.addColorStop(0.55, 'rgba(255,214,110,0.22)');
+    wash.addColorStop(1, 'rgba(255,160,60,0.16)');
+    sg.fillStyle = wash;
+    sg.fillRect(x - s, y - s, s * 2, s * 2);
+  }
   if (!rm) {
     // one glint every 1.6 s, diagonally across the body
     const p = ((tMs % 1600) / 1600) * 2.2 - 0.6;
     const gx = x - s * 0.6 + s * 1.2 * p;
     const gl = sg.createLinearGradient(gx - s * 0.14, y - s * 0.5, gx + s * 0.14, y - s * 0.3);
     gl.addColorStop(0, 'rgba(255,255,255,0)');
-    gl.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+    if (pearl) {
+      // a play of colour, not a white bar: rose → white → aqua
+      gl.addColorStop(0.3, 'rgba(255,190,214,0.45)');
+      gl.addColorStop(0.5, 'rgba(255,255,255,0.7)');
+      gl.addColorStop(0.7, 'rgba(170,240,232,0.45)');
+    } else gl.addColorStop(0.5, 'rgba(255,255,255,0.8)');
     gl.addColorStop(1, 'rgba(255,255,255,0)');
     sg.fillStyle = gl;
     sg.fillRect(x - s, y - s, s * 2, s * 2);

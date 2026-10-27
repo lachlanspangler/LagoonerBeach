@@ -313,7 +313,13 @@ test('every modal reveal settles eyes-open on idle (scene tiers by the time the 
   const cases: [string, number][] = [
     ['boxcrab', 3200],
     ['moray', 3400],
+    ['octopus', 1500],
     ['octopus', 1800],
+    // CRITIQUE-4: settled (and eyes-open) by 2.1 s, not still `happy`
+    ['kraken', 2100],
+    ['seadragon', 2100],
+    ['whaleshark', 2100],
+    ['goldturtle', 2100],
     ['kraken', 2500],
     ['seadragon', 2500],
     ['whaleshark', 2500],
@@ -337,7 +343,7 @@ test('legendary backdrop: the rays never drop out around the settle (frozen fram
   await page.evaluate(() => (window as any).__atoll.revealSpecies('kraken'));
   await page.waitForFunction(() => (window as any).__atoll.revealState());
   const lum: number[] = [];
-  for (const t of [2300, 2400, 2450, 2500, 2510, 2600, 2800, 3200]) {
+  for (const t of [1900, 2000, 2050, 2100, 2110, 2200, 2400, 2800]) {
     lum.push(
       await page.evaluate((t) => {
         (window as any).__atoll.revealFreeze(t);

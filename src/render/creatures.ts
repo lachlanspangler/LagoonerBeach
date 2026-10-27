@@ -53,6 +53,11 @@ export function drowsyPick(dozers: readonly string[], total: number): Set<string
   const n = Math.floor(DROWSY_SHARE * total + 1e-9);
   return new Set([...dozers].sort((a, b) => idHash(a) - idHash(b) || (a < b ? -1 : 1)).slice(0, n));
 }
+/** Which golden the species wears with new art (`pearl` for the Golden Turtle), else undefined. */
+export const artGoldenKindOf = (id: string): 'gold' | 'deep' | 'rose' | 'pearl' | undefined => {
+  const art = chunk?.ART.get(id);
+  return art && chunk ? chunk.goldenKind(art.palette.body, art.golden, art.id) : undefined;
+};
 /** CRITIQUE-4: the species' framed-fill scale (`tileScale`, clamped; 1 without new art). */
 export const artTileScaleOf = (id: string): number => {
   const art = chunk?.ART.get(id);

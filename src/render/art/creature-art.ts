@@ -13,6 +13,7 @@ export { renderCreature, cacheStats, clearCache, prepare } from './render.ts';
 // for the in-browser checks (tests/e2e/art.spec.ts): Path2D vs the pure rasteriser, R12 limits
 export { silhouetteMask, IOU_MAX, IOU_MAX_SAME_CLASS, SIL_GRID } from './silhouette.ts';
 export { bodyClassOf, tileScaleOf } from './kit.ts';
+export { goldenKind } from './palette.ts';
 
 /** Options `drawCreature` accepts (a superset of the legacy ones). */
 export interface DrawOpts {
