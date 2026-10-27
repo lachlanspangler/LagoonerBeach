@@ -149,3 +149,53 @@ Lessons for the kit and fleet:
 5. **Fill colours.** Fronds and fins can't be translucent or lighter at the tips. The seadragon's
    leaves use the `belly` role as a third authored colour (leaf green), so the accent stays free for
    the stripes.
+
+## Round 5 (CRITIQUE-4)
+Exemplars checked: whaleshark, octopus, clownfish. Sheets in `docs/media/art/<id>.jpg`.
+
+### seadragon (legendary, B+ → redo)
+- R1: laid the dragon level (a gently arched trunk drifting right) to kill the upright "kiwi on legs":
+  head + a 1.0 × head-length tube snout (5 u, 3 u flared mouth), emerald `#3FAE6A`, eight three-pronged
+  fronds. Read as a spiky hedgehog: the prongs were spines, the fronds overlapped into a hedge, the
+  bands were zebra, the box was 87 u.
+- R2: seven stalked leaves (crest, neck, back, belly, three on the tail), all sweeping back so none
+  hangs straight down like a leg; two body bands + one tail band; tail fronds `extra`; box 82 u. Read as
+  a seadragon, but the round paddles still made a gecko's feet.
+- R3: leaves got two rounded side lobes and a round tip (lettuce, not paddles), dark veins (ink 65 %
+  ≈ `#2F6B45`), the tail flattened, bands 4 u (R18W). R4: softer lobe notches, a pink blush (the
+  default blush on emerald mixed to a grey eye-bag), tail shortened so the box is 79 u (fuller tile).
+- Eye 12 u, `neverSleepy` (a legendary is never found asleep; detail views open-eyed on both themes).
+  Signature: the current reaches each leaf group in turn (crest, belly, back, tail; ±15°, staggered
+  0.08 s), then a royal bow, `proud`, a wink. Golden: gold with cream leaves, reads.
+- Cold read: "a leafy sea dragon / pipefish wearing leaves" — no longer a bird. Still small in the
+  tile at M fill; the 1.25 tile scale (other agent) is what it needs. Grade: A− (A with the scale).
+- **Reveal (filmstrip, no reveal code edited):** at 1.7 s and 2.1 s it is still eyes-closed `happy`
+  (catch hook face) → the reveal must settle to `idle` (open eyes) by 1.7 s. The card art box is
+  square, so a horizontal legendary renders small on the card (≈ 40 % of its width): it needs a
+  wider art box like the kraken's, or the 1.25 scale applied there too. The Continue button still
+  looks disabled (muted blue-grey) on the card.
+
+### seahorse (A−)
+- Tangerine `#F29A3B`, stripes `#CF5826`: the critique's `#D9622B` is ΔL 0.13 (R16A error < 0.15), so
+  nudged 0.02 darker. Golden (gold + cream stripes) now clearly differs from the base and the
+  goldturtle. 2 rounds. Grade: A.
+
+### urchin (A−)
+- Berry `#B0589A` (off the kraken), pale pink face patch `#E3A6CF`, spine bases `#F2BEDF`. Reads on
+  both themes (Night ΔL 0.32). Grade: A.
+
+### moray (A−)
+- 4 u light lip (white line, 85 %) around the hole: the opening reads as a burrow at 24 px.
+- **Kit option needed:** the golden rock can't stay grey `#8E8A80`. The rock is `white` under an ink
+  wash, and golden swaps the ink to golden brown, so it goes tan. It needs a part colour exempt from
+  the golden remap (e.g. `Part.fixed: '#8E8A80'` or `Group.golden: false`). Grade: A− until then.
+
+### barracuda (A−)
+- White belly band `#EEF2F5` along 70 % (drawn over the bars, which now stop above it), black-tipped
+  tail lobes (derived ink at 88 % ≈ `#2B3440`), eye 10 u (zone 42 u keeps 24 %). Grade: A.
+
+### wrasse (A−)
+- Snout tapers over the front 15 %; the caudal is a true round fan 1.2 × (the root moved forward 2 u
+  so the box stays 84 u); body 1 u plumper; eye + stripe start back 2 u (eye position, R18E).
+- The first fan had pointed lobe tips: the e2e Path2D/rasteriser area parity at 24 px went to 0.089
+  (limit 0.08). Rounded fan → 0.053. Grade: A.

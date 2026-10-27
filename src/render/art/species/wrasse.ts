@@ -1,6 +1,6 @@
 /**
  * Cleaner wrasse — the reef's tidy little spa attendant (fish class, profile view, level).
- * Silhouette (R10): a slim, even cigar with a rounded fan tail (no fork, no tall fins): between the
+ * Silhouette (R10): a slim cigar with a tapered snout and a big rounded fan tail (no fork, no tall fins): between the
  * barracuda's needle and the minnow's forked torpedo. Bluestreak colours: a cream front half, an
  * electric blue-violet back half, and one near-black stripe that starts behind the eye (clear of the
  * face, R18E) and widens to 10 u into the tail.
@@ -8,36 +8,39 @@
  */
 import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
 
-// even cigar: rounded nose at +40, tail root at −27
+// slim cigar whose snout tapers over the front 15 % to a rounded point at +38 (CRITIQUE-4); tail
+// root at −26
 const body = blob([
-  [40, 1],
-  [35, -6],
-  [24, -12],
-  [8, -14],
-  [-8, -11],
-  [-20, -6],
-  [-28, -3.5],
-  [-28, 3.5],
-  [-20, 6],
-  [-8, 11],
-  [8, 14],
-  [24, 12.5],
-  [35, 7.5],
+  [38, 1.5],
+  [33, -4],
+  [26, -10],
+  [13, -15],
+  [-8, -12],
+  [-18, -6.8],
+  [-26, -3.5],
+  [-26, 3.5],
+  [-18, 6.8],
+  [-8, 12],
+  [13, 15],
+  [26, 11],
+  [33, 6],
 ]);
-// rounded fan tail
+// a big round fan tail (1.2 × CRITIQUE-3's)
 const tail = blob(
   [
-    [-26, -3],
-    [-33, -9],
-    [-40, -14],
-    [-43.5, -7],
-    [-44, 0],
-    [-43.5, 7],
-    [-40, 14],
-    [-33, 9],
-    [-26, 3],
+    [-24, -3.6],
+    [-30, -9.5],
+    [-36, -15],
+    [-41.5, -13.5],
+    [-45, -7],
+    [-46, 0],
+    [-45, 7],
+    [-41.5, 13.5],
+    [-36, 15],
+    [-30, 9.5],
+    [-24, 3.6],
   ],
-  0.95,
+  0.9,
 );
 const pectoral = ellipse(-4, 7, 5, 2.6, 26);
 // the pale front half over the blue body (pattern, follows the outline)
@@ -51,30 +54,31 @@ const front = blob([
 // one bold ink stripe: starts 3 u behind the eye at 4 u, arcs gently with the body's midline and
 // widens to 10 u at the tail root, then fans on into the tail (never a strip of tape)
 const stripe = tube([
-  [-2, 0.4, 2],
-  [-8, 0, 2.4],
-  [-18, -0.4, 3.2],
-  [-27, 0, 4],
+  [-4, 0.4, 2],
+  [-9, 0, 2.4],
+  [-17, -0.4, 3.2],
+  [-25, 0, 4],
 ]);
 const tailStripe = tube([
-  [-27, 0, 4],
-  [-36, 0, 4.6],
-  [-46, 0, 5],
+  [-25, 0, 4],
+  [-35, 0, 4.8],
+  [-47, 0, 5.4],
 ]);
-const bubbles = join(circle(45, -14, 3.2), circle(40, -22, 2.2));
+const bubbles = join(circle(43, -12, 3.2), circle(38, -20, 2.2));
 
 export default defineArt({
   id: 'wrasse',
   klass: 'fish',
   size: 'S',
   tileScale: 1.1,
-  feature: 'slim even cigar with a round tail; pale front, blue back, one bold stripe widening to the tail',
+  feature:
+    'slim cigar with a tapered snout and a big round tail; pale front, blue back, one bold stripe widening to the tail',
   personality: ['helpful', 'busy', 'tidy'],
   palette: { body: '#7464DA', accent: '#1E2740', belly: '#F3EED8' },
   groups: [
     {
       id: 'tail',
-      pivot: [-27, 0],
+      pivot: [-24, 0],
       parts: [
         { d: tail, role: 'body' },
         { d: tailStripe, role: 'accent', kind: 'pattern' },
@@ -97,13 +101,13 @@ export default defineArt({
       parts: [{ d: bubbles, role: 'white', alpha: 0.85 }],
     },
   ],
-  shine: ellipse(24, -8, 8, 2.6, -10),
+  shine: ellipse(21, -8, 7, 2.4, -14),
   face: {
-    eyes: [[14, 0]],
+    eyes: [[12, 0]],
     eye: 10.6,
-    zone: [4, -27, 38, 46],
+    zone: [2, -27, 38, 46],
     // helpful: the spa attendant's contented little cat-smile (CRITIQUE-3: its own resting mouth)
-    mouth: { at: [34.5, 6], w: 8, shape: 'w' },
+    mouth: { at: [32, 4], w: 7, shape: 'w' },
     sweet: true,
   },
   idle: {

@@ -2,8 +2,8 @@
  * Sea Urchin — OBJECT class (front-facing, the whole ball is the face), size S.
  * Silhouette: a round ball with 12 long radiating spines, every one with a fat rounded tip (R3:
  * nothing sharp, even here). R10: the spine halo, ~2× life length.
- * Dark identity: the purple is lifted to L 0.58 (the guide's lightening rule; the validator's body
- * floor is 0.55) with a pale lavender face patch so the eyes read on both themes.
+ * Palette (CRITIQUE-4): berry #B0589A (L 0.59; off the kraken's purple) with a pale pink face
+ * patch so the eyes read on both themes, and blush-pink spine bases.
  * Personality: prickly, shy, huggable. Signature: the spines ripple in a wave around the ring
  * (three interleaved spine sets swell one after another), then a shy happy face.
  * Groups (back to front): spinesA, spinesB, spinesC (every third spine each), body.
@@ -49,7 +49,7 @@ export default defineArt({
   size: 'S',
   feature: 'a halo of 12 long spines with round tips',
   personality: ['prickly', 'shy', 'huggable'],
-  palette: { body: '#8A68AE', accent: '#C8ACE9', belly: '#B9A0D6' },
+  palette: { body: '#B0589A', accent: '#F2BEDF', belly: '#E3A6CF' },
   groups: [
     spineGroup(0),
     spineGroup(1),

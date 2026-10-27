@@ -61,6 +61,8 @@ export default defineArt({
         { d: ellipse(-37, -1.5, 5, 2.4, -25), role: 'white', kind: 'pattern', alpha: 0.45 },
         { d: ellipse(-24, 21, 16, 4), role: 'ink', kind: 'pattern', alpha: 0.2 },
         { d: hole, role: 'ink', kind: 'pattern', alpha: 0.92 },
+        // a 4 u light lip around the opening: the hole survives at 24 px (CRITIQUE-4: a sock)
+        { d: ellipse(-25, 8.5, 14, 10.5, -6), role: 'white', kind: 'line', w: 4, alpha: 0.85 },
       ],
     },
     {
