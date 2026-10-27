@@ -53,6 +53,7 @@ import type { ReefSource } from './reefSource.ts';
 import type * as ReefMode from './reefMode.ts';
 import type { ChapterCompleteDetail } from './reefProgress.ts';
 import { MAX_REEF } from '../core/reefConst.ts';
+import type { PuzzleResultOpts } from '../ui/results.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { showRetry } from '../ui/retry.ts';
@@ -81,7 +82,9 @@ async function loadPack(): Promise<NonNullable<typeof PACK>> {
     m.reefEvents.addEventListener('chapterComplete', (e) => {
       const d = (e as CustomEvent<ChapterCompleteDetail>).detail;
       const now = clock();
-      chapterHold = Math.max(0, fx.chapterComplete(now, d.chapter, d.name) - now - 1300 + 250);
+      const end = fx.chapterComplete(now, d.chapter, d.name);
+      chapterQuietUntil = end;
+      chapterHold = Math.max(0, end - now - 1300 + 250);
       ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
     });
   }
@@ -734,20 +737,27 @@ function checkPuzzle(): void {
   const p = reefAt(i);
   if (st === 'playing' || !p) return;
   if (st === 'solved') {
+    const first = !profile.puzzle.solved.includes(p.id);
+    // the deepest reef cleared before this one (the reefs list's "Depth N m")
+    const deepestBefore = Math.max(0, ...profile.puzzle.solved.map((id) => Number(id.replace(/\D/g, '')) || 0));
+    let chapterDone: PuzzleResultOpts['chapterDone'];
+    if (first) {
+      profile.puzzle.solved.push(p.id);
+      const cd = reefMode!.noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      if (cd) {
+        const nc = cd.chapter + 1;
+        const size = reefMode!.CHAPTER_SIZE;
+        const next = { chapter: nc, name: reefMode!.chapterName(nc), from: (nc - 1) * size + 1, to: nc * size };
+        chapterDone = { chapter: cd.chapter, name: cd.name, ...(nc * size <= MAX_REEF ? { next } : {}) };
+      }
+    }
     const d = today();
     if (i === dailyReefIndex(d) && !(profile.puzzle.dailyDone ?? []).includes(d)) {
       profile.puzzle.dailyDone = [...(profile.puzzle.dailyDone ?? []), d];
       profile.daily = recordDaily(profile.daily, dayIndex(d));
-      later(900, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
-    }
-    const first = !profile.puzzle.solved.includes(p.id);
-    // the deepest reef cleared before this one (the reefs list's "Depth N m")
-    const deepestBefore = Math.max(0, ...profile.puzzle.solved.map((id) => Number(id.replace(/\D/g, '')) || 0));
-    let chapterDone: { chapter: number; name: string } | undefined;
-    if (first) {
-      profile.puzzle.solved.push(p.id);
-      const cd = reefMode!.noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
-      if (cd) chapterDone = { chapter: cd.chapter, name: cd.name };
+      // a chapter moment owns the screen first (chapterHold): the chip waits for it
+      const wait = chapterHold ? 1300 + chapterHold - 250 : 900;
+      later(wait, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
     }
     profile.puzzle.pure ??= [];
     const hinted = profile.puzzle.hinted?.includes(p.id) ?? false;
@@ -955,6 +965,8 @@ function switchMode(m: Mode): void {
 
 /** Extra delay for the reef result card while a chapter moment plays (set by the listener in loadPack). */
 let chapterHold = 0;
+/** Until then a chapter moment owns the screen (reveal pops and strip chips wait). */
+let chapterQuietUntil = 0;
 
 // ------------------------------------------------------------------ UI
 /** An Endless or Daily run with moves on it: starting that mode over asks first (inline, on its card). */
@@ -1106,7 +1118,12 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   playerName: () => profile.lb?.name || undefined,
   now: clock,
-  canOpen: () => scene.drag === null && !ui.open && performance.now() - boardActiveAt >= REVEAL_QUIET_MS,
+  canOpen: () =>
+    scene.drag === null &&
+    !ui.open &&
+    performance.now() - boardActiveAt >= REVEAL_QUIET_MS &&
+    // a chapter moment holds the clean board: discoveries still queued wait for it to end
+    clock() >= chapterQuietUntil,
   onStrip: (ms) => {
     scene.holdStrip(performance.now() + ms);
     dirty = true;
