@@ -579,3 +579,27 @@ what exists (no feature rebuilds); every test's intent kept.
   filesystem to package.json without installing into the shared node_modules → `npm install`.
 - Merging art round 3 from three parallel batches produced one new cross-batch collision (blenny vs
   flounder 0.713 > 0.70) — handed to the fish finisher.
+
+## 2026-10-27 (session 4) — Finishing: recovery, perf root cause, clean release
+- **Recovery.** The last session was cut off by API timeouts (twice) mid wrap-up. Four art round-4
+  agents had committed most items; their committed work was merged then. This session: the three
+  WIP branches were tested on a scratch branch. Kept: the seadragon redraw (spiky forked fronds,
+  long tube snout — reads as a seadragon, not a duck in a bush) and the reveal fixes (ray dropout,
+  tighter legendary card, ADR 0011 Amendment 2). Dropped: a boxcrab tweak that created a new
+  silhouette collision (boxcrab vs seasparkle). All worktrees and branches removed; only `main`.
+- **Cockle** opened wider (two constants) — the owner's "fix anything red" covered it; the
+  cockle/nautilus silhouette pair now passes in both browsers.
+- **Silence.** Automated runs never make a sound: under webdriver (or `?mute`) the live graph ends in
+  a zero-gain sink; offline audio QA still measures; `?sound=1` opts back in (e2e guard).
+- **Perf root cause, not a looser budget.** "Biggest celebration" missed its 8 ms p95 even on a quiet
+  machine. `scripts/perf-probe.ts` (cold vs warm run + CPU-profile diff) showed the cost was all
+  *first-use* work on jackpot frames: (1) canvas text drawn at a new font size every frame (the
+  score punch and the "+N" creature coins) re-rasterised glyphs → fixed size + transform; (2) peak
+  words built mid-burst because the per-move prewarm waited for an idle callback that arrives late
+  under load, and the font-load handler cleared the text cache after the boot prewarm → peak words
+  prewarmed at boot and rewarmed after fonts, per-move prewarm as immediate small tasks;
+  (3) the first creation of each WebAudio node type (engine start-up, ~15 ms throttled) → a silent
+  primer at idle. Cold frames went 10–28 ms → mostly < 3 ms; the warm path was already fine.
+- **Release build is clean.** The debug API and the demo leaderboard compile out of release builds
+  (`VITE_DEBUG=1` / `VITE_LB=demo` for the e2e build and the debug APK); `make build` fails if either
+  leaks. Before: `?debug=1` worked in a release build and the demo backend shipped in an unused chunk.
