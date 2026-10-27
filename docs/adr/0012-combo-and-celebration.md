@@ -190,6 +190,10 @@ timing and placement; "Nice Lagoon!" keeps its size and treatment (it only moves
   only its points do. At most 3 creatures fly at once (`MAX_FLYING`, counting earlier waves/moves
   still in the air; new species get the seats); the rest become one gold "+N" coin chip. Creatures
   swim to the journal on an arc that hugs the right edge, so they never cross the badge slot.
+  *Superseded 2026-10-27 (owner feedback: creatures flying into the journal felt wrong):* they now
+  leap out of the lagoon on one ballistic arc (rising ≥ 1.7 cells) and dive back into the water just
+  past the board's side — or below it when the board fills the width — with water rings, a crown of
+  drops and a soft plop (`Sfx.splash`). Only a brand-new species pulses the journal button.
 - **Reveal tiers** — common (toast) → uncommon (card, soft tier-tinted vignette) → rare (card +
   rays) → epic/legendary (a *scene*). Epic/legendary: a coin in the tier colour (gold legendary,
   purple epic) with the silhouette pulses while the light builds (legendary 1.2 s, epic 0.7 s), it

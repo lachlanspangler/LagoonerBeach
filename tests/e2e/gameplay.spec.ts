@@ -238,7 +238,12 @@ test('a relaunch into Reefs shows no playable Endless board while the pack loads
   const back = await state(page);
   expect(back.moves).toBe(endless.moves);
   expect(back.board).toEqual(endless.board);
-  expect(errors.filter((e) => !/puzzles|Failed to fetch|dynamically imported|net::/i.test(e))).toEqual([]);
+  // the aborted chunk is expected to fail (Chromium and WebKit word it differently)
+  expect(
+    errors.filter(
+      (e) => !/puzzles|Failed to fetch|dynamically imported|Importing a module script failed|net::/i.test(e),
+    ),
+  ).toEqual([]);
 });
 
 test('game over shows the card; play again starts fresh', async ({ page }) => {

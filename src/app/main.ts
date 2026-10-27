@@ -1107,6 +1107,7 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   },
 });
 
+scene.onSplash = (isNew) => sfx.splash(isNew); // a soft plop as it dives back in
 scene.onCollect = () => {
   const b = ui.journalButton();
   b.classList.remove('collect');

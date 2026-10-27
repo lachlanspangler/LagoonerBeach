@@ -303,6 +303,12 @@ export class Sfx {
     this.hiss(at + 0.3, 0.5, 5200, 2, 0.05);
   }
 
+  /** A creature dives back into the water beside the board: a soft plop + spray (quiet: often 3 at once). */
+  splash(big = false, at = 0): void {
+    this.tone(big ? 300 : 380, at, 0.07, 'sine', big ? 0.07 : 0.045, big ? 140 : 180);
+    this.hiss(at + 0.01, big ? 0.16 : 0.11, 2600, 1.8, big ? 0.05 : 0.03);
+  }
+
   /** A bubble-pearl pops open (discovery reveal). */
   bubblePop(at = 0): void {
     this.tone(520, at, 0.09, 'sine', 0.18, 1400);

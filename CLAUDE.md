@@ -113,8 +113,9 @@ backend act offline; `?nolb` hides boards on a demo build (release look, used by
 - Capture feedback is one channel (ADR 0012): at most one word (tier ladder in `render/moments.ts`,
   none for pinches) + one `+N`, stacked *above* the lagoon; one COMBO ×N badge under the score
   (that slot is the badge's alone); chips and the common-discovery pop queue one at a time in the
-  strip between board and tray; discoveries reveal after the move settles; creatures swim to the
-  journal button (board ends clean). Big moments get big, normal moves stay calm.
+  strip between board and tray; discoveries reveal after the move settles; creatures leap out of their
+  lagoon and splash back into the water beside the board (board ends clean; a new species pulses the
+  journal button once). Big moments get big, normal moves stay calm.
 - UI tokens live twice by design: CSS variables in `src/ui/style.css` and the TS mirror in
   `src/render/theme.ts` (canvas). `tests/unit/contrast.test.ts` fails if they drift or if any text
   pair drops under WCAG AA. Water cyan is material, never small text on light.

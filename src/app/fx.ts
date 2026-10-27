@@ -11,7 +11,7 @@ import { pieceById } from '../core/pieces.ts';
 import { xOf, yOf } from '../core/grid.ts';
 import { Kind } from '../render/particles.ts';
 import { BURST_LIFT } from '../render/burst.ts';
-import { FISH_LIFE, type Scene } from '../render/scene.ts';
+import { FISH_GRAVITY, FISH_LIFE, type Scene } from '../render/scene.ts';
 import { MOTION, fmt } from '../render/theme.ts';
 import {
   chimeLayers,
@@ -470,7 +470,33 @@ export class Fx {
     return this.settleAt;
   }
 
-  /** The catch: each creature leaps out of this wave's water and dives back to the sea. */
+  /**
+   * Where a creature leaving (x0, y0) toward `dir` dives back in: just past the board's side if there
+   * is water there to see, else just below the board, and an arc that rises ≥ `rise` cells first.
+   */
+  private arcTo(x0: number, y0: number, dir: number, rise: number): { vx: number; vy: number; flight: number } {
+    const l = this.scene.layout;
+    const b = l.board;
+    const c = l.cell;
+    const margin = Math.min(b.x, l.w - (b.x + b.w));
+    let x1: number;
+    let y1: number;
+    if (margin >= c * 0.7) {
+      x1 = dir > 0 ? b.x + b.w + margin * 0.55 : b.x - margin * 0.55;
+      y1 = Math.min(b.y + b.h - c * 0.5, Math.max(b.y + c, y0 + c * 0.6));
+    } else {
+      y1 = b.y + b.h + c * 0.55;
+      x1 = Math.min(b.x + b.w - c * 0.5, Math.max(b.x + c * 0.5, x0 + dir * c * 2.5));
+    }
+    const g = c * FISH_GRAVITY;
+    const dy = y1 - y0;
+    const r = Math.max(rise * c, -dy + c * 0.5);
+    const vy0 = -Math.sqrt(2 * g * r);
+    const flight = Math.min(1.1, Math.max(0.55, (-vy0 + Math.sqrt(vy0 * vy0 + 2 * g * dy)) / g));
+    return { vx: (x1 - x0) / flight, vy: (dy - 0.5 * g * flight * flight) / flight, flight };
+  }
+
+  /** The catch: each creature leaps out of this wave's water and dives back in beside the board. */
   private leap(opts: DispatchOpts, k: number, t0: number): void {
     const sc = this.scene;
     const l = sc.layout;
@@ -481,7 +507,7 @@ export class Fx {
       .flatMap((c) => c.catches.map((x) => ({ x, cells: c.cells })));
     const announced = new Set<string>();
     // at most MAX_FLYING creatures in the air at once (counting earlier waves/moves still flying);
-    // the rest merge into one small "+N" coin chip that swims to the journal behind them
+    // the rest merge into one small "+N" coin chip that leaps and splashes in behind them
     const flying = sc.fish.filter((x) => !x.arrived && x.start + FISH_LIFE * 1000 > t0).length;
     const room = Math.max(0, MAX_FLYING - flying);
     // new species always get a seat first
@@ -494,8 +520,7 @@ export class Fx {
       sc.fish.push({
         x: lx,
         y: ly,
-        vx: l.cell * 1.4,
-        vy: -l.cell * 10,
+        ...this.arcTo(lx, ly, 1, 1.8),
         start: t0 + 90 + Math.min(room, MAX_FLYING) * 110,
         size: l.cell * 0.5,
         hue: '#F2C14E',
@@ -514,8 +539,7 @@ export class Fx {
       sc.fish.push({
         x: lx,
         y: ly,
-        vx: dir * l.cell * (isNew ? 1.2 : 1.6 + sc.rand() * 1.2),
-        vy: -l.cell * (isNew ? 13 : 10 + sc.rand() * 2),
+        ...this.arcTo(lx, ly, dir, isNew ? 2.6 : 1.7 + sc.rand() * 0.5),
         start: t0 + 90 + f * 110,
         size: l.cell * (isNew ? 0.62 : 0.5),
         hue: '#FF8A3D',

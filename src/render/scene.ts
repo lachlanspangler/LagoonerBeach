@@ -6,7 +6,7 @@ import { CELLS, N, xOf, yOf } from '../core/grid.ts';
 import { pieceById, type Piece } from '../core/pieces.ts';
 import type { TrayPiece } from '../core/dealer.ts';
 import { computeLayout, trayCellFor, type Insets, type Layout } from './layout.ts';
-import { Particles } from './particles.ts';
+import { Kind, Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, fmt, type Palette } from './theme.ts';
 import { Burst } from './burst.ts';
@@ -79,6 +79,8 @@ export interface Fish {
   arrived?: boolean;
   /** "+N" coin chip standing in for N more creatures (at most ~3 creatures fly at once). */
   chip?: number;
+  /** Seconds from the lagoon to touchdown in the water beside the board. */
+  flight?: number;
 }
 interface TraySlot {
   t: TrayPiece | null;
@@ -98,7 +100,11 @@ interface Placing {
 }
 
 /** Seconds a leaping creature stays on screen. */
-export const FISH_LIFE = 0.95;
+/** Longest leap: flight (≤ 1.1 s) + nothing after (the splash is its own effect). */
+export const FISH_LIFE = 1.15;
+/** Leap gravity in cells/s² and the default flight time (fx.leap solves the arc with these). */
+export const FISH_GRAVITY = 34;
+export const FISH_FLIGHT = 0.8;
 
 export const FONT = FONT_STACK;
 /** Display voice (callouts, names, titles). Never for numbers: its digits are proportional. */
@@ -274,6 +280,9 @@ export class Scene {
   /** Where caught creatures swim off to (the menu button, where the journal lives). */
   journalTarget: { x: number; y: number } | null = null;
   onCollect: (() => void) | null = null;
+  /** A creature dove back into the water (sound hook). */
+  onSplash: ((isNew: boolean) => void) | null = null;
+  splashes: { x: number; y: number; start: number; r: number }[] = [];
 
   /** Where the held piece was last drawn (release flight starts here, so nothing jumps). */
   lastDragDraw: { x: number; y: number } | null = null;
@@ -421,6 +430,7 @@ export class Scene {
     this.drawTray(now);
     this.drawDrag();
     this.drawFish(now);
+    this.drawSplashes(now);
     this.particles.draw(g, this.sprites.look.colors, p.foam);
     this.celebrate.drawBoard(g, now, l, p, this.reducedMotion);
     this.drawTexts(now);
@@ -853,50 +863,83 @@ export class Scene {
   }
 
   /** Ballistic little fish leaping out of a lagoon (visual only). */
+  /** Two water rings where a creature dove back in (outside the board clip, so beside it too). */
+  private drawSplashes(now: number): void {
+    if (!this.splashes.length) return;
+    const g = this.g;
+    const p = this.palette;
+    this.splashes = this.splashes.filter((sp) => now - sp.start < 620);
+    g.save();
+    g.lineWidth = 2;
+    for (const sp of this.splashes) {
+      const k = (now - sp.start) / 620;
+      for (const [d, w] of [
+        [0, 1],
+        [0.18, 0.7],
+      ] as const) {
+        const u = Math.max(0, (k - d) / (1 - d));
+        if (u <= 0) continue;
+        g.globalAlpha = (1 - u) * 0.9 * w;
+        g.strokeStyle = p.water;
+        g.beginPath();
+        g.ellipse(sp.x, sp.y, sp.r * (0.4 + u * 1.3), sp.r * (0.16 + u * 0.5), 0, 0, Math.PI * 2);
+        g.stroke();
+      }
+      // a crown of water drops thrown up by the dive (deterministic angles; gravity pulls them back)
+      if (k < 0.7) {
+        const kk = k / 0.7;
+        g.fillStyle = p.water;
+        g.globalAlpha = 1 - kk;
+        for (let i = 0; i < 7; i++) {
+          const a = -Math.PI / 2 + (i - 3) * 0.38;
+          const v = sp.r * (2.4 + (i % 3) * 0.5);
+          const dx = Math.cos(a) * v * kk;
+          const dy = Math.sin(a) * v * kk + sp.r * 5.5 * kk * kk;
+          g.beginPath();
+          g.arc(sp.x + dx, sp.y + dy, Math.max(1.5, sp.r * 0.13 * (1 - kk * 0.5)), 0, Math.PI * 2);
+          g.fill();
+        }
+      }
+    }
+    g.restore();
+  }
+
   private drawFish(now: number): void {
     const g = this.g;
     for (const f of this.fish) {
       const t = (now - f.start) / 1000;
-      const swims = !!(f.species || f.chip);
-      if (t > FISH_LIFE && !f.arrived && this.journalTarget && swims) {
-        f.arrived = true;
-        this.onCollect?.();
-      }
       if (t < 0 || t > FISH_LIFE) continue;
-      const grav = this.layout.cell * 34;
-      // phase 1: a leap out of the water; phase 2: swim off to the journal (menu button) and shrink
-      const T1 = 0.3;
-      const tgt = this.journalTarget;
-      let x: number;
-      let y: number;
-      let ang: number;
-      let scale = 1;
-      let fade = 1;
-      const lx = (tt: number) => f.x + f.vx * tt;
-      const ly = (tt: number) => f.y + f.vy * tt + 0.5 * grav * tt * tt;
-      if (t < T1 || !tgt || !swims) {
-        x = lx(t);
-        y = ly(t);
-        ang = Math.atan2(f.vy + grav * t, f.vx);
-        if (!tgt || !swims) fade = t > FISH_LIFE - 0.25 ? (FISH_LIFE - t) / 0.25 : 1;
-      } else {
-        const u = easeInOutSine(Math.min(1, (t - T1) / (FISH_LIFE - T1)));
-        const ax = lx(T1);
-        const ay = ly(T1);
-        // an arc that hugs the screen's right edge and rises into the button: it never crosses the
-        // COMBO badge (centred under the score) on its way up
-        const cx1 = Math.max(ax, tgt.x) + this.layout.cell * 0.4;
-        const cy1 = ay - this.layout.cell * 0.5;
-        x = (1 - u) * (1 - u) * ax + 2 * (1 - u) * u * cx1 + u * u * tgt.x;
-        y = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy1 + u * u * tgt.y;
-        ang = Math.atan2(tgt.y - y, tgt.x - x);
-        scale = 1 - 0.7 * u;
-        fade = u > 0.85 ? (1 - u) / 0.15 : 1;
-        if (u >= 1 && !f.arrived) {
-          f.arrived = true;
-          this.onCollect?.();
-        }
+      // one ballistic arc out of the lagoon and a dive back into the water beside the board
+      // (fx.leap solves vx/vy so the arc lands at (tx, ty) after `flight` seconds), then a splash
+      const grav = this.layout.cell * FISH_GRAVITY;
+      const T = f.flight ?? FISH_FLIGHT;
+      const tt = Math.min(t, T);
+      const x = f.x + f.vx * tt;
+      const y = f.y + f.vy * tt + 0.5 * grav * tt * tt;
+      const ang = Math.atan2(f.vy + grav * tt, f.vx);
+      // entering the water: shrink and fade over the last 0.12 s of the arc, gone at touchdown
+      const dive = Math.max(0, (t - (T - 0.12)) / 0.12);
+      const scale = 1 - 0.45 * Math.min(1, dive);
+      const fade = t >= T ? 0 : 1 - 0.6 * Math.min(1, dive);
+      if (t >= T && !f.arrived) {
+        f.arrived = true;
+        this.splashes.push({ x, y, start: now, r: f.size * (f.isNew ? 1.5 : 1.15) });
+        this.particles.burst(
+          f.isNew ? 6 : 3,
+          x,
+          y,
+          Kind.Foam,
+          0,
+          this.layout.cell * 1.4,
+          f.size * 0.26,
+          520,
+          this.rand,
+        );
+        this.onSplash?.(!!f.isNew);
+        if (f.isNew) this.onCollect?.(); // a brand-new species: the journal button glows once
       }
+      if (fade <= 0) continue;
+      const T1 = T * 0.5; // the rising half of the arc (catch pose / surprised face)
       if (f.chip) {
         // a small gold coin with "+N"
         const r = f.size * 0.62 * Math.max(0.5, scale);
