@@ -7,20 +7,22 @@ async function checkTargets(page: Page, where: string) {
   await page.waitForFunction(() =>
     document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity),
   );
-  const bad = await page.evaluate(() => {
-    const out: string[] = [];
-    for (const el of document.querySelectorAll<HTMLElement>(
-      'button, [role="button"], [role="switch"], [role="radio"], [role="tab"], [role="textbox"]',
-    )) {
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || getComputedStyle(el).visibility === 'hidden') continue;
-      const name = el.getAttribute('aria-label') || el.textContent?.trim();
-      if (r.width < 44 || r.height < 44) out.push(`${name} ${Math.round(r.width)}×${Math.round(r.height)}`);
-      if (!name) out.push(`unnamed control ${el.className}`);
-    }
-    return out;
-  });
-  expect(bad, where).toEqual([]);
+  const measure = () =>
+    page.evaluate(() => {
+      const out: string[] = [];
+      for (const el of document.querySelectorAll<HTMLElement>(
+        'button, [role="button"], [role="switch"], [role="radio"], [role="tab"], [role="textbox"]',
+      )) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || getComputedStyle(el).visibility === 'hidden') continue;
+        const name = el.getAttribute('aria-label') || el.textContent?.trim();
+        if (r.width < 44 || r.height < 44) out.push(`${name} ${Math.round(r.width)}×${Math.round(r.height)}`);
+        if (!name) out.push(`unnamed control ${el.className}`);
+      }
+      return out;
+    });
+  // a sheet's spring can still be settling a frame after its animations end: poll until stable
+  await expect.poll(measure, { message: where, timeout: 3000 }).toEqual([]);
 }
 
 test('touch targets and names on every screen', async ({ page }) => {
