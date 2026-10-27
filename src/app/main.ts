@@ -96,7 +96,10 @@ const params = new URLSearchParams(location.search);
 /** Debug/test only: a frozen clock renders one exact frame of any moment (pixel baselines). */
 let frozen: number | null = null;
 const clock = (): number => frozen ?? performance.now();
-const DEBUG = params.has('debug') || navigator.webdriver === true;
+// Debug hooks (window.__atoll) exist only in dev and in builds made with VITE_DEBUG=1 (Playwright's
+// e2e build, the debug APK); a release build compiles them out entirely — ?debug=1 does nothing there.
+const DEBUG_BUILD = import.meta.env.DEV || import.meta.env.VITE_DEBUG === '1';
+const DEBUG = DEBUG_BUILD && (params.has('debug') || navigator.webdriver === true);
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true })!;

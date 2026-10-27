@@ -43,4 +43,16 @@ for (const [name, size, budget] of rows) {
     `${pass ? '✓' : '✗'} ${name.padEnd(15)} ${(size / 1024).toFixed(1).padStart(6)} KB gz  (budget ${(budget / 1024).toFixed(0)} KB)`,
   );
 }
+// a release build (dist/) ships no debug API and no demo leaderboard (ADR 0010; debug-only builds use
+// VITE_DEBUG=1 / VITE_LB=demo and other output dirs)
+const allJs = readdirSync('dist/assets').filter((f) => f.endsWith('.js'));
+const leaks = [
+  ['debug hooks', 'stageCombo'],
+  ['demo leaderboard', 'atoll.v1.lbmock'],
+].filter(([, marker]) => allJs.some((f) => readFileSync(`dist/assets/${f}`, 'utf8').includes(marker!)));
+for (const [what] of leaks) {
+  console.log(`✗ release build contains ${what}`);
+  ok = false;
+}
+if (!leaks.length) console.log('✓ release build: no debug hooks, no demo leaderboard');
 if (!ok) process.exit(1);

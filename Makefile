@@ -38,7 +38,8 @@ ios-sim: build     ## build web, sync, build+launch on an iPhone simulator, scre
 	npx cap sync ios
 	./scripts/ios-sim.sh
 
-android-emu: build  ## build debug APK, run on a headless Android emulator, screenshot
+android-emu:  ## debug APK (web build with debug hooks + demo boards) on a headless Android emulator, screenshot
+	npx tsc -p . && VITE_DEBUG=1 VITE_LB=demo npx vite build --logLevel warn
 	./scripts/android-emu.sh
 
 android-release: build  ## signed release AAB + APK (needs android/keystore.properties; unsigned otherwise)

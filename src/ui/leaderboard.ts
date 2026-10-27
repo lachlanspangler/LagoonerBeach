@@ -144,7 +144,14 @@ export class LeaderboardUi {
   private refresh: (() => void) | null = null;
 
   constructor(private readonly d: LbUiDeps) {
-    const backend = d.url ? new HttpBackend(d.url) : new MockBackend({ offline: () => !!d.offline });
+    // VITE_LB is replaced at build time, so a release build drops the demo backend entirely
+    const backend = d.url
+      ? new HttpBackend(d.url)
+      : import.meta.env.VITE_LB === 'demo'
+        ? new MockBackend({ offline: () => !!d.offline })
+        : (() => {
+            throw new Error('leaderboards need VITE_LB_URL (or VITE_LB=demo in dev/tests)');
+          })();
     this.client = new LeaderboardClient({
       backend,
       lb: () => (d.profile.lb ??= {}),

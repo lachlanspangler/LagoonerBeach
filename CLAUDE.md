@@ -95,7 +95,7 @@ persistence. The renderer animates events; the logical state is already final.
   `tests/e2e`), look at the screenshot, and write what felt good/bad in the diary.
 
 ## Debug hooks
-`window.__atoll` (only with `?debug=1` or in tests): `state()`, `autoplay(bot, moves)`,
+`window.__atoll` (only in dev or a `VITE_DEBUG=1` build — Playwright's e2e build and `make android-emu` — with `?debug=1` or under webdriver; release builds compile it out and `make build` fails if it leaks): `state()`, `autoplay(bot, moves)`,
 `plan(bot)` → pointer path for a bot's next move (used by e2e to drive real drags),
 `pathFor(move)`, `setup(board64, trayIds)` to stage a board, `switchMode`, `loadPuzzle(i)`,
 `puzzleSolution()`, `debugSkin(id)`, `drawTimes()`, `audioLevels()`. Celebrations (ADR 0012):
@@ -126,4 +126,6 @@ backend act offline; `?nolb` hides boards on a demo build (release look, used by
 - iOS WKWebView settles safe-area insets after first layout → the persistent probe in main.ts.
 - Headless Chromium under CPU throttling composites in software: judge perf by our draw cost.
 - Pixel baselines render with reduced motion (hints and plankton animate).
+- Automated runs are silent: under webdriver (or `?mute`) live audio goes through a zero-gain sink; `?sound=1` opts in.
+- Never change a canvas font size per frame (score punch, coins): draw at one size and scale by transform.
 - Tray pieces use `trayCellFor()` (per-piece fit); never `layout.trayCell` directly.

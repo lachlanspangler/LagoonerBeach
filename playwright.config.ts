@@ -41,7 +41,7 @@ export default defineConfig({
   webServer: {
     // its own build with the on-device demo leaderboards (VITE_LB=demo): `npm run build` is a
     // release build, which hides leaderboards until a real server URL is configured (ADR 0010)
-    command: `VITE_LB=demo npx vite build --outDir dist-e2e --emptyOutDir --logLevel warn && npx vite preview --outDir dist-e2e --port ${PORT} --strictPort`,
+    command: `VITE_LB=demo VITE_DEBUG=1 npx vite build --outDir dist-e2e --emptyOutDir --logLevel warn && npx vite preview --outDir dist-e2e --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
