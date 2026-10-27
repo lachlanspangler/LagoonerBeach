@@ -10,10 +10,10 @@
  */
 import { blob, capsule, circle, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
-const S = 0.8;
+const S = 0.785; // stays inside 84 u with the wider opening
 const TX = 8;
 const F = (d: string) => xform(d, { sx: S, sy: S, tx: TX });
-const OPEN = -38; // the back valve, tipped open on the hinge
+const OPEN = -48; // the back valve, tipped open on the hinge (wider: clears the nautilus silhouette)
 
 // four rib lobes along the top arc (the rib ends), convex flanks, a soft heart point at the hinge
 const shell = blob([
