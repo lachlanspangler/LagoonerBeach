@@ -163,9 +163,10 @@ export function showJournal(k: SheetKit, j: Journal): void {
   const sub = document.createElement('p');
   sub.className = 'callout j-sub';
   sub.textContent =
-    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught & released` : '']
+    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught\u00a0&\u00a0released` : '']
       .filter(Boolean)
-      .join(' · ') || 'Close a loop to catch your first creature';
+      // one fact per line: joined with " · " the wrap stranded "released" (or a dangling dot)
+      .join('\n') || 'Close a loop to catch your first creature';
   head.querySelector('.title-m')!.append(sub);
   const ink = night() ? '#6C8193' : '#968672'; // ink.3; silhouettes at 45%
   const life = new JournalLife();
@@ -367,14 +368,15 @@ class JournalLife {
   }
 }
 
-/** Species page size line: "about N pebbles" (1 pebble ≈ 4 cm) or boards for the giants. */
+/** Species page size line: "about N pebbles" (1 pebble ≈ 4 cm) or game boards for the giants. */
 function pebbleLine(cm: number): string {
   const p = cm / PEBBLE_CM;
   if (p < 1) return 'smaller than a pebble';
   if (p < 1.5) return 'about a pebble';
   if (p < 8) return `about ${Math.round(p)} pebbles`;
   const boards = p / 8;
-  return boards < 1.5 ? 'about one board' : `${Math.round(boards)} boards long`;
+  // "96 cm · 3 boards long" read oddly: say what's being compared (the game's 8-pebble board)
+  return boards < 1.5 ? 'about one game board' : `${Math.round(boards)} game boards end to end`;
 }
 
 /** A pebble and the creature's silhouette side by side, at true relative scale (capped). */

@@ -129,4 +129,4 @@ backend act offline; `?nolb` hides boards on a demo build (release look, used by
 - Pixel baselines render with reduced motion (hints and plankton animate).
 - Automated runs are silent: under webdriver (or `?mute`) live audio goes through a zero-gain sink; `?sound=1` opts in.
 - Never change a canvas font size per frame (score punch, coins): draw at one size and scale by transform.
-- Tray pieces use `trayCellFor()` (per-piece fit); never `layout.trayCell` directly.
+- Tray pieces use `scene.trayCell(p)` (one size per dealt hand, built on `trayCellFor()`'s per-piece fit); never `layout.trayCell` directly.

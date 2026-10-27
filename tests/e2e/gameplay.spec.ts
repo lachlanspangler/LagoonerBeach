@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { boot, dragMove, state, untilShown } from './helpers.ts';
+import { boot, dragMove, settleReveal, state, untilShown } from './helpers.ts';
 
 test('boots cleanly and draws the board', async ({ page }) => {
   const errors = await boot(page);
@@ -513,4 +513,60 @@ test('first-frame fonts: fetched once each, early, with no "preloaded but not us
   await page.evaluate(() => document.fonts.dispatchEvent(new Event('loadingdone')));
   await page.waitForTimeout(100);
   expect(await page.evaluate(() => (window as any).__atoll.fontsRuns())).toBe(runs);
+});
+
+test('chapter complete: the moment holds the board clear of pops, then the card points to the next chapter', async ({
+  page,
+}) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const a = (window as any).__atoll;
+    const pr = a.profile();
+    pr.firstRunDone = true;
+    pr.lesson2Done = true;
+    pr.puzzle.solved = Array.from({ length: 39 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`);
+    a.switchMode('puzzle');
+  });
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.mode())).toBe('puzzle');
+  await page.evaluate(() => (window as any).__atoll.loadPuzzle(39));
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.state().seed)).toBe(39);
+  const solution = await page.evaluate(() => (window as any).__atoll.puzzleSolution());
+  for (const m of solution)
+    await page.evaluate((mv) => (window as any).__atoll.commitMove({ slot: mv.piece, x: mv.x, y: mv.y }), m);
+  // while "Chapter 2" is up, no discovery pop opens (a queued one waits for the moment to end)
+  await page.waitForFunction(() => (window as any).__atoll.celebrateWord() === 'Chapter 2');
+  const opened = await page.evaluate(async () => {
+    const a = (window as any).__atoll;
+    const first = a.revealState()?.id ?? null;
+    const seen = new Set<string>();
+    const t0 = performance.now();
+    while (a.celebrateWord() === 'Chapter 2' && performance.now() - t0 < 4000) {
+      const id = a.revealState()?.id;
+      if (id && id !== first) seen.add(id);
+      await new Promise((r) => setTimeout(r, 60));
+    }
+    return { seen: [...seen], held: performance.now() - t0 };
+  });
+  expect(opened.seen).toEqual([]);
+  expect(opened.held).toBeGreaterThan(1500);
+  for (let i = 0; i < 10 && !(await page.getByTestId('chapter-next').isVisible()); i++) {
+    await settleReveal(page);
+    await page.waitForTimeout(400);
+  }
+  await expect(page.getByTestId('chapter-done')).toContainText('Chapter 2 complete');
+  await expect(page.getByTestId('chapter-next')).toHaveText(/^Next: Chapter 3 · .+ · 41–60 m$/);
+});
+
+test('the first game ever reads as a first best, not "No room left · Best <the same score>"', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.showResults({ score: 3995, prevBest: 0 }));
+  await expect(page.locator('.res-head')).toHaveText('Your first best!');
+  await expect(page.locator('.res-sub')).not.toContainText('Best');
+});
+
+test('a fresh profile deep-linked into the Daily still gets the first-run line', async ({ page }) => {
+  await boot(page, 'mode=daily');
+  expect(await page.evaluate(() => (window as any).__atoll.mode())).toBe('daily');
+  await expect.poll(() => page.evaluate(() => (window as any).__atoll.coach())).toBe('Close a ring of blocks');
+  // (the Daily's deal is untouched: the lesson is the line and the hint, never the teaching tray)
 });

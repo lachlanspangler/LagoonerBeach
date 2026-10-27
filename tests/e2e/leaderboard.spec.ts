@@ -54,6 +54,31 @@ test('daily: name entry strips invalid keys live, posts, and shows you with the 
   expect(errors).toEqual([]);
 });
 
+test('name entry on a small phone: wide letters keep air in their slots, the row clears the sheet edges', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await boot(page, 'mode=daily&fast=1');
+  await finishDaily(page);
+  await page.locator('#lb-open').click();
+  await expect(page.getByTestId('lb-slots')).toBeVisible();
+  await page.keyboard.type('WMWMWMW');
+  await expect(slots(page)).toHaveAttribute('aria-valuetext', 'WMWMWMW');
+  const m = await page.evaluate(() => {
+    const row = document.querySelector('[data-testid="lb-slots"]')!.getBoundingClientRect();
+    const sheet = document.querySelector('[data-testid="lb-name-entry"]')!.getBoundingClientRect();
+    const fits = [...document.querySelectorAll('.lb-slot')].map((s) => {
+      const r = document.createRange();
+      r.selectNodeContents(s);
+      return r.getBoundingClientRect().width / s.getBoundingClientRect().width;
+    });
+    return { left: row.left - sheet.left, right: sheet.right - row.right, worst: Math.max(...fits) };
+  });
+  expect(m.worst).toBeLessThanOrEqual(0.8);
+  expect(m.left).toBeGreaterThanOrEqual(8);
+  expect(m.right).toBeGreaterThanOrEqual(8);
+});
+
 test('blocked and reserved names are refused before posting', async ({ page }) => {
   await boot(page, 'mode=daily&fast=1');
   await finishDaily(page);

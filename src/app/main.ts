@@ -35,6 +35,7 @@ import {
   type Profile,
 } from '../platform/storage.ts';
 import { Scene } from '../render/scene.ts';
+import { CAP, hudStack } from '../render/layout.ts';
 import { DAY, NIGHT, fmt } from '../render/theme.ts';
 import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
@@ -52,6 +53,7 @@ import type { ReefSource } from './reefSource.ts';
 import type * as ReefMode from './reefMode.ts';
 import type { ChapterCompleteDetail } from './reefProgress.ts';
 import { MAX_REEF } from '../core/reefConst.ts';
+import type { PuzzleResultOpts } from '../ui/results.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { showRetry } from '../ui/retry.ts';
@@ -80,7 +82,9 @@ async function loadPack(): Promise<NonNullable<typeof PACK>> {
     m.reefEvents.addEventListener('chapterComplete', (e) => {
       const d = (e as CustomEvent<ChapterCompleteDetail>).detail;
       const now = clock();
-      chapterHold = Math.max(0, fx.chapterComplete(now, d.chapter, d.name) - now - 1300 + 250);
+      const end = fx.chapterComplete(now, d.chapter, d.name);
+      chapterQuietUntil = end;
+      chapterHold = Math.max(0, end - now - 1300 + 250);
       ui.announce(`Chapter ${d.chapter}, ${d.name}, complete`);
     });
   }
@@ -152,7 +156,7 @@ function endReefBoot(): void {
   reefBoot = false;
   state = startState();
   saveIfTicketed();
-  teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+  teaching = !profile.firstRunDone && mode !== 'puzzle' && state.moves === 0;
   syncScene();
 }
 /** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
@@ -162,7 +166,7 @@ function saveIfTicketed(): void {
   if (rec?.runToken) saveGame(state, rec);
 }
 saveIfTicketed();
-let teaching = !reefBoot && !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+let teaching = !reefBoot && !profile.firstRunDone && state.moves === 0; // Endless or a deep-linked Daily
 let overShown = false;
 /** When the latest move was dispatched (debug freeze offsets are relative to it). */
 let lastDispatchAt = 0;
@@ -312,6 +316,11 @@ function resize(): void {
   const root = document.documentElement.style;
   root.setProperty('--board-top', `${l.board.y}px`);
   root.setProperty('--board-bottom', `${l.board.y + l.board.h}px`);
+  // tablets: the round HUD buttons flank the score at the board's edges, not in the far corners
+  const hs = hudStack(l, 1);
+  const tablet = hs.k > 1 || Math.min(w, h) >= 600;
+  root.setProperty('--hud-btn-top', tablet ? `${Math.round(hs.scoreY - (hs.big * CAP) / 2 - 24)}px` : '');
+  root.setProperty('--hud-btn-x', tablet ? `${Math.round(l.board.x)}px` : '');
   // the common-discovery pop (≈56 px tall) centers in the strip, never over the board's last row
   root.setProperty('--strip-y', `${Math.max(scene.stripY(), l.board.y + l.board.h + 38)}px`);
   idle(() => scene.warmSprites());
@@ -353,6 +362,7 @@ function syncScene(): void {
   scene.particles.clear();
   const now = performance.now();
   scene.tray = state.tray.map((t, i) => ({ t, dealStart: now + i * 60, back: null }));
+  scene.hand = state.tray.flatMap((t) => (t ? [t.pieceId] : []));
   scene.score = state.score;
   scene.pendingScore = null;
   scene.shownScore = state.score;
@@ -422,8 +432,10 @@ function updateMisfits(): void {
 
 // ------------------------------------------------------------------ teaching hint
 function updateHint(): void {
-  // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3)
-  scene.coach = teaching && mode === 'classic' && !state.over ? 'Close a ring of blocks' : null;
+  // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3). A fresh profile
+  // deep-linked into the Daily gets it too (the compact lesson: the line and the capture hint, never
+  // the teaching deal — everyone's Daily is the same tray)
+  scene.coach = teaching && mode !== 'puzzle' && !state.over ? 'Close a ring of blocks' : null;
   if (mode === 'puzzle') {
     scene.hint = null; // puzzle hints are on demand only
     return;
@@ -736,20 +748,27 @@ function checkPuzzle(): void {
   const p = reefAt(i);
   if (st === 'playing' || !p) return;
   if (st === 'solved') {
+    const first = !profile.puzzle.solved.includes(p.id);
+    // the deepest reef cleared before this one (the reefs list's "Depth N m")
+    const deepestBefore = Math.max(0, ...profile.puzzle.solved.map((id) => Number(id.replace(/\D/g, '')) || 0));
+    let chapterDone: PuzzleResultOpts['chapterDone'];
+    if (first) {
+      profile.puzzle.solved.push(p.id);
+      const cd = reefMode!.noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
+      if (cd) {
+        const nc = cd.chapter + 1;
+        const size = reefMode!.CHAPTER_SIZE;
+        const next = { chapter: nc, name: reefMode!.chapterName(nc), from: (nc - 1) * size + 1, to: nc * size };
+        chapterDone = { chapter: cd.chapter, name: cd.name, ...(nc * size <= MAX_REEF ? { next } : {}) };
+      }
+    }
     const d = today();
     if (i === dailyReefIndex(d) && !(profile.puzzle.dailyDone ?? []).includes(d)) {
       profile.puzzle.dailyDone = [...(profile.puzzle.dailyDone ?? []), d];
       profile.daily = recordDaily(profile.daily, dayIndex(d));
-      later(900, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
-    }
-    const first = !profile.puzzle.solved.includes(p.id);
-    // the deepest reef cleared before this one (the reefs list's "Depth N m")
-    const deepestBefore = Math.max(0, ...profile.puzzle.solved.map((id) => Number(id.replace(/\D/g, '')) || 0));
-    let chapterDone: { chapter: number; name: string } | undefined;
-    if (first) {
-      profile.puzzle.solved.push(p.id);
-      const cd = reefMode!.noteFirstClear(i + 1, profile.puzzle.solved); // 'chapterComplete' if this finished a chapter
-      if (cd) chapterDone = { chapter: cd.chapter, name: cd.name };
+      // a chapter moment owns the screen first (chapterHold): the chip waits for it
+      const wait = chapterHold ? 1300 + chapterHold - 250 : 900;
+      later(wait, () => scene.toast(`Reef of the day ✓ · Streak ${profile.daily.current}`, performance.now(), 1800));
     }
     profile.puzzle.pure ??= [];
     const hinted = profile.puzzle.hinted?.includes(p.id) ?? false;
@@ -953,12 +972,14 @@ function switchMode(m: Mode): void {
   dailyDate = today();
   state = startState();
   saveIfTicketed();
-  teaching = !profile.firstRunDone && mode === 'classic' && state.moves === 0;
+  teaching = !profile.firstRunDone && mode !== 'puzzle' && state.moves === 0;
   syncScene();
 }
 
 /** Extra delay for the reef result card while a chapter moment plays (set by the listener in loadPack). */
 let chapterHold = 0;
+/** Until then a chapter moment owns the screen (reveal pops and strip chips wait). */
+let chapterQuietUntil = 0;
 
 // ------------------------------------------------------------------ UI
 /** An Endless or Daily run with moves on it: starting that mode over asks first (inline, on its card). */
@@ -1117,9 +1138,13 @@ const reveal = new LazyReveal(document.getElementById('ui')!, {
   date: () => today(),
   playerName: () => profile.lb?.name || undefined,
   now: clock,
-  // a modal card waits for a still board; the quick pop (it never takes input) only for no drag/menu
+  // a modal card waits for a still board; the quick pop (it never takes input) only for no drag/menu;
+  // a chapter moment holds the clean board: discoveries still queued wait for it to end
   canOpen: (modal) =>
-    scene.drag === null && !ui.open && (!modal || performance.now() - boardActiveAt >= REVEAL_QUIET_MS),
+    scene.drag === null &&
+    !ui.open &&
+    (!modal || performance.now() - boardActiveAt >= REVEAL_QUIET_MS) &&
+    clock() >= chapterQuietUntil,
   onStrip: (ms) => {
     scene.holdStrip(performance.now() + ms);
     dirty = true;
@@ -1140,6 +1165,7 @@ let sealKey = '';
 
 const drag = new DragController(canvas, {
   layout: () => scene.layout,
+  trayCell: (p) => scene.trayCell(p),
   state: () => state,
   enabled: () => !ui.open && !reveal.blocking && !reefBoot,
   onPick: () => {
@@ -1458,6 +1484,7 @@ function debugDeps(): DebugDeps {
         dirty = true;
       },
       celebrateWord: () => scene.celebrate.word?.text ?? null,
+      coach: () => scene.coach,
       celebrateBest: () => ({ bannerAt: scene.celebrate.bestAt, hud: scene.celebrate.bestShown }),
       hudBest: () => ({
         best: scene.best,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PIECES } from '../../src/core/pieces.ts';
-import { computeLayout, trayCellFor } from '../../src/render/layout.ts';
+import { CAP, computeLayout, hudStack, trayCellFor } from '../../src/render/layout.ts';
 
 const SIZES = [
   [320, 568],
@@ -66,4 +66,20 @@ describe('layout', () => {
     expect(l.board.x + l.board.w).toBeLessThanOrEqual(852 - 59);
     expect(l.tray.y + l.tray.h).toBeLessThanOrEqual(393 - 21 + 1);
   });
+  it.each(SIZES.flatMap(([w, h]) => [1, 1.25].map((ts) => [w!, h!, ts] as const)))(
+    '%ix%i text ×%s: score, best line and a ×20 COMBO badge stack without overlap, clear of the board',
+    (w, h, ts) => {
+      const l = computeLayout(w, h, { top: 6, right: 0, bottom: 0, left: 0 });
+      const s = hudStack(l, ts);
+      const score = [s.scoreY - s.big * CAP, s.scoreY + s.big * 0.12]; // the comma hangs below
+      const best = [s.bestY - s.lab * CAP, s.bestY];
+      const badge = [s.badgeY - s.badgeHalf, s.badgeY + s.badgeHalf];
+      expect(score[0]!).toBeGreaterThanOrEqual(l.hud.y);
+      expect(best[0]! - score[1]!, 'score → best').toBeGreaterThanOrEqual(1.5);
+      expect(badge[0]! - best[1]!, 'best → badge').toBeGreaterThanOrEqual(2);
+      expect(l.board.y - badge[1]!, 'badge → board').toBeGreaterThanOrEqual(4);
+      // the score stays the hero: never smaller than ~2.5× the best line
+      expect(s.big).toBeGreaterThanOrEqual(s.lab * 2.4);
+    },
+  );
 });

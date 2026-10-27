@@ -1,7 +1,7 @@
 /**
  * Every screen of the game, one PNG each (aesthetic review, before/after sets):
- *   LB_URL=http://localhost:5317 npx tsx scripts/screens.ts <label> [--only name,name] [--night]
- * → artifacts/ux/<label>/<name>.png (390×844 @2×). `--night` adds a Night copy of each screen.
+ *   LB_URL=http://localhost:5317 npx tsx scripts/screens.ts <label> [--only name,name] [--night] [--w 375 --h 667]
+ * → artifacts/ux/<label>/<name>.png (390×844 @2× by default). `--night` adds a Night copy of each screen.
  * Staged with the debug hooks (lived-in profile, frozen clocks for moments), so runs are comparable.
  */
 import { chromium, type Page } from '@playwright/test';
@@ -17,7 +17,7 @@ const nightToo = process.argv.includes('--night');
 const base = process.env.LB_URL ?? 'http://localhost:5317';
 const dir = `artifacts/ux/${label}`;
 mkdirSync(dir, { recursive: true });
-const b = await chromium.launch();
+const b = await chromium.launch({ args: ['--mute-audio'] });
 const errors: string[] = [];
 
 const LIVED = ['minnow', 'periwinkle', 'hermit', 'limpet', 'sanddollar', 'shrimp', 'cockle', 'sandeel', 'moray'];
@@ -30,7 +30,7 @@ const BOARD = ['........', '.5...5..', '.5...5.2', '.5...5.2', '.55555..', '....
 
 async function open(night: boolean, query = 'seed=42', fresh = false): Promise<Page> {
   const ctx = await b.newContext({
-    viewport: { width: 390, height: 844 },
+    viewport: { width: +arg('w', '390'), height: +arg('h', '844') },
     deviceScaleFactor: 2,
     hasTouch: false,
     colorScheme: night ? 'dark' : 'light',

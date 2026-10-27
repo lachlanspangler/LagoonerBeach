@@ -205,7 +205,7 @@ export interface PuzzleResultOpts {
   /** Chapter segments (20; true = cleared). */
   segs?: readonly boolean[];
   /** This clear completed a chapter: "Chapter 2 complete · Ebbtide Bight". */
-  chapterDone?: { chapter: number; name: string };
+  chapterDone?: { chapter: number; name: string; next?: { chapter: number; name: string; from: number; to: number } };
   /** A small reward line: no hints (star) or with a hint (shell), a new depth record. */
   reward?: { first: boolean; pure: boolean; depth?: number };
 }
@@ -223,8 +223,13 @@ export function showPuzzleResult(k: Kit, o: PuzzleResultOpts): void {
   else if (rw?.first) bits.push(`${icon('shell', { filled: true, cls: 'rw-shell' })}Cleared with a hint`);
   if (rw?.depth) bits.push(`New depth <b class="num">${rw.depth} m</b>`);
   const reward = bits.length ? `<div class="reef-reward" data-testid="reef-reward">${bits.join('<i>·</i>')}</div>` : '';
+  const nx = o.chapterDone?.next;
+  // what's below: the next chapter and its depth band, the marker sinking toward it once
+  const nextLine = nx
+    ? `<div class="chapter-next" data-testid="chapter-next"><span class="sink" aria-hidden="true">${icon('chevronDown')}</span>Next: Chapter ${nx.chapter} · ${nx.name} · <span class="num">${nx.from}–${nx.to} m</span></div>`
+    : '';
   const chapterLine = o.chapterDone
-    ? `<div class="chapter-done" data-testid="chapter-done">Chapter ${o.chapterDone.chapter} complete · ${o.chapterDone.name}</div>`
+    ? `<div class="chapter-done" data-testid="chapter-done">Chapter ${o.chapterDone.chapter} complete · ${o.chapterDone.name}</div>${nextLine}`
     : '';
   card.innerHTML = o.solved
     ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2>${reward}<div class="chapter-progress">${chapterLine || `<div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`}${segs}</div>`
@@ -269,13 +274,15 @@ export interface GameOverOpts {
 export function showGameOver(k: Kit, o: GameOverOpts): HTMLElement {
   const card = document.createElement('div');
   card.className = 'card results stagger';
+  // the very first game sets the first best: say so, not "No room left · 3,995 · Best 3,995"
+  const firstBest = o.mode !== 'daily' && !o.newBest && (o.prevBest ?? 0) === 0 && o.score > 0 && o.score >= o.best;
   const hero = resultsHero({
     score: o.score,
     best: o.best,
     prevBest: o.prevBest ?? 0,
     newBest: o.newBest,
     reducedMotion: o.reducedMotion ?? false,
-    nearMiss: nearMiss(o.score, o.best),
+    nearMiss: firstBest ? '' : nearMiss(o.score, o.best),
     onRecord: () => k.h.onRecord?.(),
     onSettled: () => k.h.onResultsSettled?.({ score: o.score, newBest: o.newBest, mode: o.mode }, card),
   });
@@ -286,7 +293,7 @@ export function showGameOver(k: Kit, o: GameOverOpts): HTMLElement {
     [o.dailyStreak, 'Streak'],
   ].filter(([v]) => (v as number) > 0);
   card.innerHTML = `<div class="overline">${o.mode === 'daily' ? 'Daily · complete' : 'Endless'}</div>
-    <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
+    <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : firstBest ? 'Your first best!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
     <div class="hero-slot"></div>
     ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
 `;

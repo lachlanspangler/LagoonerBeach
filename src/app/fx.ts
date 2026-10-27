@@ -150,7 +150,8 @@ export class Fx {
     const l = sc.layout;
     const cel = sc.celebrate;
     const t = Math.max(now + 650, this.wordEnd + 60);
-    const life = 1500;
+    // ~2 s on the clean board: pops, chips and the reef card wait for it (main.ts chapterHold)
+    const life = 2000;
     this.at(t, (t) => {
       const b = l.board;
       const ts = sc.textScale;
@@ -162,11 +163,17 @@ export class Fx {
         l,
         ts,
       );
+      const sub = `Complete · ${name}`; // "Chapter 2!" read like *starting* chapter 2 (UX review)
+      // ≥ 30 px where it fits (stroked display type needs the size, UI_DESIGN §7.1), but never wider
+      // than 88% of the screen: a long chapter name ran to within 4 px of both edges at 390 wide
+      let size = l.cell * 0.68 * ts;
+      const spr = cel.sprites.get(sub, size, 'water', sc.palette.name === 'night');
+      size *= Math.min(1, (l.w * 0.88) / spr.w);
       cel.showNumber({
-        text: `Complete · ${name}`, // "Chapter 2!" read like *starting* chapter 2 (UX review)
+        text: sub,
         x: b.x + b.w / 2,
         y: b.y + b.h * 0.42 + l.cell * 1.05 * ts,
-        size: l.cell * 0.68 * ts, // ≥ 30 px: stroked display type needs the size (UI_DESIGN §7.1)
+        size,
         start: t + 120,
         life: life - 120,
         style: 'water',
@@ -453,6 +460,7 @@ export class Fx {
         case 'dealt': {
           const base = now + flight + 140;
           e.tray.forEach((t, i) => (sc.tray[i] = { t, dealStart: base + i * MOTION.dealStagger, back: null }));
+          sc.hand = e.tray.flatMap((t) => (t ? [t.pieceId] : []));
           this.at(base, () => this.sfx.deal());
           break;
         }

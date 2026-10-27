@@ -5,7 +5,7 @@
 import { CELLS, N, xOf, yOf } from '../core/grid.ts';
 import { pieceById, type Piece } from '../core/pieces.ts';
 import type { TrayPiece } from '../core/dealer.ts';
-import { computeLayout, trayCellFor, type Insets, type Layout } from './layout.ts';
+import { computeLayout, hudStack, trayCellFor, type Insets, type Layout } from './layout.ts';
 import { Kind, Particles } from './particles.ts';
 import { SpriteCache } from './sprites.ts';
 import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, fmt, type Palette } from './theme.ts';
@@ -248,7 +248,17 @@ export class Scene {
     g.fillStyle = this.palette.text;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillText(text, l.w / 2, this.stripY(), l.w - 24);
+    // the demo ghost and its hand glide up through the strip: the line steps back while they pass
+    const cy = this.stripY();
+    const pose = this.demoPose(now);
+    if (pose) {
+      const top = pose.y - l.cell * 0.2;
+      const bottom = pose.y + pose.p.h * pose.cell + l.cell * 1.3; // the hand hangs below the piece
+      const gap = Math.max(top - (cy + size), cy - size - bottom, 0);
+      g.globalAlpha = lerp(1, 0.12, pose.fade * (1 - clamp01(gap / (l.cell * 0.8))));
+    }
+    g.fillText(text, l.w / 2, cy, l.w - 24);
+    g.globalAlpha = 1;
   }
 
   /** Vertical center of the strip between the board and the tray's pieces. */
@@ -357,9 +367,23 @@ export class Scene {
   }
 
   /** Top-left CSS px of a tray piece at rest in its slot. */
+  /** The hand as dealt (piece ids): its pieces share one tray cell size (`trayCell`). */
+  hand: readonly string[] = [];
+
+  /**
+   * Cell size of a piece in the tray: one size for the whole hand, the largest every piece of it
+   * fits at (a 5-long piece used to sit visibly smaller than its neighbours). Stable until the next
+   * deal, so placing the long piece doesn't make the others jump.
+   */
+  trayCell(p: Piece): number {
+    let c = trayCellFor(this.layout, p);
+    for (const id of this.hand) c = Math.min(c, trayCellFor(this.layout, pieceById(id)));
+    return c;
+  }
+
   trayPieceOrigin(slot: number, p: Piece): [number, number] {
     const s = this.layout.slots[slot]!;
-    const c = trayCellFor(this.layout, p);
+    const c = this.trayCell(p);
     return [s.cx - (p.w * c) / 2, s.cy - (p.h * c) / 2];
   }
 
@@ -762,7 +786,7 @@ export class Scene {
         x = lerp(slot.back.x, ox, e);
         y = lerp(slot.back.y, oy, e);
         if (bt >= 1) slot.back = null;
-        const cell = lerp(l.cell, trayCellFor(l, p), e);
+        const cell = lerp(l.cell, this.trayCell(p), e);
         this.drawPieceAt(p, slot.t.color, x, y, cell);
         return;
       }
@@ -780,7 +804,7 @@ export class Scene {
         this.g.stroke();
         y -= l.cell * 0.15;
       }
-      this.drawPieceAt(p, slot.t.color, x, y, trayCellFor(l, p), a * (dimmed ? 0.45 : 1));
+      this.drawPieceAt(p, slot.t.color, x, y, this.trayCell(p), a * (dimmed ? 0.45 : 1));
     });
   }
 
@@ -791,7 +815,7 @@ export class Scene {
     if (!slot?.t) return;
     const l = this.layout;
     const p = pieceById(slot.t.pieceId);
-    const cell = lerp(trayCellFor(l, p), l.cell, easeOutCubic(d.grow));
+    const cell = lerp(this.trayCell(p), l.cell, easeOutCubic(d.grow));
     // magnet: once it has a legal spot, the held piece leans ~20% toward it so snapping feels sticky
     const sn = this.preview && d.grow >= 1 ? this.preview : null;
     const dx0 = sn ? lerp(d.x, l.board.x + sn.ax * l.cell, 0.2) : d.x;
@@ -816,6 +840,28 @@ export class Scene {
       g.drawImage(lit?.(dx, dy) ? bright : normal, dx0 + dx * cell, dy0 + dy * cell, cell, cell);
   }
 
+  /** Where the first-run demo ghost is now (null when it isn't showing). */
+  private demoPose(now: number) {
+    const h = this.hint;
+    const d = h?.demo;
+    const t = d ? this.tray[d.slot]?.t : null;
+    if (!h || !d || !t || this.drag || this.reducedMotion) return null;
+    const k = (now - h.start) / 1000;
+    const p = pieceById(t.pieceId);
+    const l = this.layout;
+    const cyc = (k % 2.2) / 2.2;
+    if (cyc > 0.86) return null;
+    const travel = easeInOutSine(clamp01((cyc - 0.12) / 0.5));
+    const [ox, oy] = this.trayPieceOrigin(d.slot, p);
+    const tx = l.board.x + d.ax * l.cell;
+    const ty = l.board.y + d.ay * l.cell;
+    const cell = lerp(this.trayCell(p), l.cell, travel);
+    const x = lerp(ox, tx, travel);
+    const y = lerp(oy, ty, travel);
+    const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
+    return { p, x, y, cell, fade, travel, color: t.color };
+  }
+
   private drawHint(now: number): void {
     const h = this.hint;
     // out of the way while the player is holding a piece
@@ -838,22 +884,11 @@ export class Scene {
     g.setLineDash([]);
     g.globalAlpha = 1;
     // demo: a ghost of the piece glides from the tray to the spot, with a fingertip
-    const d = h.demo;
-    const t = d ? this.tray[d.slot]?.t : null;
-    if (!d || !t || this.drag || this.reducedMotion) return;
-    const p = pieceById(t.pieceId);
+    const pose = this.demoPose(now);
+    if (!pose) return;
+    const { p, x, y, cell, fade, travel, color } = pose;
     const l = this.layout;
-    const cyc = (k % 2.2) / 2.2;
-    if (cyc > 0.86) return;
-    const travel = easeInOutSine(clamp01((cyc - 0.12) / 0.5));
-    const [ox, oy] = this.trayPieceOrigin(d.slot, p);
-    const tx = l.board.x + d.ax * l.cell;
-    const ty = l.board.y + d.ay * l.cell;
-    const cell = lerp(trayCellFor(l, p), l.cell, travel);
-    const x = lerp(ox, tx, travel);
-    const y = lerp(oy, ty, travel);
-    const fade = cyc < 0.12 ? cyc / 0.12 : cyc > 0.74 ? 1 - (cyc - 0.74) / 0.12 : 1;
-    this.drawPieceAt(p, t.color, x, y, cell, 0.5 * fade);
+    this.drawPieceAt(p, color, x, y, cell, 0.5 * fade);
     // a pointing hand (the Tidemark "tap" glyph), its fingertip on the first cell, as if holding it
     const [fx, fy] = p.cells[0]!;
     drawTap(
@@ -891,16 +926,18 @@ export class Scene {
         g.ellipse(sp.x, sp.y, sp.r * (0.4 + u * 1.3), sp.r * (0.16 + u * 0.5), 0, 0, Math.PI * 2);
         g.stroke();
       }
-      // a crown of water drops thrown up by the dive (deterministic angles; gravity pulls them back)
-      if (k < 0.7) {
-        const kk = k / 0.7;
+      // a short crown of water drops thrown up by the dive (deterministic angles): each falls back
+      // to the water line and is gone there — they used to rain on down and settle in the empty
+      // tray like dust
+      if (k < 0.6) {
+        const kk = k / 0.6;
         g.fillStyle = p.water;
-        g.globalAlpha = 1 - kk;
+        g.globalAlpha = 1 - kk * kk;
         for (let i = 0; i < 7; i++) {
           const a = -Math.PI / 2 + (i - 3) * 0.38;
-          const v = sp.r * (2.4 + (i % 3) * 0.5);
+          const v = sp.r * (1.5 + (i % 3) * 0.35);
           const dx = Math.cos(a) * v * kk;
-          const dy = Math.sin(a) * v * kk + sp.r * 5.5 * kk * kk;
+          const dy = Math.sin(a) * v * 4 * kk * (1 - kk);
           g.beginPath();
           g.arc(sp.x + dx, sp.y + dy, Math.max(1.5, sp.r * 0.13 * (1 - kk * 0.5)), 0, Math.PI * 2);
           g.fill();
@@ -1077,26 +1114,26 @@ export class Scene {
     const night = p.name === 'night';
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    const ts = Math.min(1.15, this.textScale);
-    // score.hud: Nunito 900, 52 px on a 390-pt phone (tabular digits: the count-up never jitters)
-    const big = Math.round(Math.min(52, l.hud.h * 0.5, l.cell * 1.2) * ts);
-    const lab = Math.round(Math.min(12, big * 0.25) * Math.min(1.2, this.textScale));
+    // score.hud: Nunito 900, 52 px on a 390-pt phone (tabular digits: the count-up never jitters);
+    // the stack is laid out bottom-up so Larger text never runs the best line into the badge
+    const hs = hudStack(l, this.textScale);
+    const { big, lab } = hs;
     const room = l.w - 2 * 70; // clear of the 44 px corner buttons
     if (this.hudLabel) {
       const hl = this.hudLabel;
       // "Reef 28" in the display face, the tier (and the reef's mark) as a quiet chip under it
-      const title = Math.round(Math.min(34, big * 0.7));
+      const title = Math.round(Math.min(34 * hs.k, big * 0.7));
       g.font = `900 ${title}px ${DISPLAY_FONT}`;
       g.fillStyle = p.text;
-      g.fillText(hl.big, cx, l.hud.y + l.hud.h * 0.44, room);
+      g.fillText(hl.big, cx, hs.scoreY - l.hud.h * 0.06, room);
       if (hl.sub) {
         const dotC: Record<string, string> = { calm: p.success, tricky: p.water, deep: '#3D6FD0', abyss: '#7A55B0' };
-        const fs = Math.round(Math.min(13, big * 0.27) * Math.min(1.2, this.textScale));
+        const fs = Math.round(Math.min(13 * hs.k, big * 0.27) * Math.min(1.2, this.textScale));
         g.font = `800 ${fs}px ${FONT}`;
         const tw = Math.min(room, g.measureText(hl.sub).width);
         const pw = tw + fs * 2.6;
         const ph = Math.round(fs * 2.1);
-        const py = l.hud.y + l.hud.h * 0.71;
+        const py = Math.min(hs.scoreY + l.hud.h * 0.21, l.board.y - fs * 1.3);
         g.fillStyle = p.name === 'night' ? '#1B3150' : p.surfaceSunk; // raised at night (sunk vanished)
         g.beginPath();
         g.roundRect(cx - pw / 2, py - ph / 2, pw, ph, ph / 2);
@@ -1110,7 +1147,8 @@ export class Scene {
         g.fillText(hl.sub, cx + fs * 0.45, py + 1, room);
         g.textBaseline = 'alphabetic';
       }
-      this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false);
+      // Reefs have no score: no COMBO badge either
+      this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, true, hs.badgeY);
       return;
     }
     g.fillStyle = p.text;
@@ -1119,7 +1157,7 @@ export class Scene {
     const punch = pk >= 0 && pk < 1 && !this.reducedMotion ? 1 + this.scorePunch.amp * (1 - spring01(pk)) : 1;
     // a peak's points land in gold for a beat
     if (this.scorePunch.gold && pk >= 0 && pk < 1.6) g.fillStyle = night ? p.gold : p.goldInk;
-    const base = l.hud.y + l.hud.h * 0.5;
+    const base = hs.scoreY;
     // one font size, scaled by transform: a per-frame font size re-rasterises every glyph (perf)
     g.font = `900 ${Math.round(big)}px ${FONT}`;
     const ls = g as CanvasRenderingContext2D & { letterSpacing?: string };
@@ -1137,10 +1175,9 @@ export class Scene {
     const beat = (this.score > this.best && this.best > 0) || this.celebrate.bestShown;
     const tag = this.modeTag ? `${this.modeTag} · ` : '';
     const text = beat ? `${tag}NEW BEST` : this.best > 0 ? `${tag}BEST ${fmt(this.best)}` : this.modeTag;
-    if (text)
-      this.label(text.toUpperCase(), cx, base + lab * 1.8, lab, beat ? (night ? p.gold : p.goldInk) : p.textDim, room);
+    if (text) this.label(text.toUpperCase(), cx, hs.bestY, lab, beat ? (night ? p.gold : p.goldInk) : p.textDim, room);
     // chips live in the strip: the COMBO badge always keeps its slot under the score
-    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false);
+    this.celebrate.drawHud(g, now, l, p, this.reducedMotion, this.textScale, false, hs.badgeY);
   }
 
   private gc(now: number): void {

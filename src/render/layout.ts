@@ -114,3 +114,56 @@ export function trayCellFor(l: Layout, p: { w: number; h: number }): number {
   const s = l.slots[0]!;
   return Math.min(l.trayCell, (s.w * 0.9) / p.w, (s.h * 0.86) / p.h);
 }
+
+/** The HUD stack: score, best line, COMBO slot (all CSS px; y values are text baselines / centers). */
+export interface HudStack {
+  /** Score font px and baseline. */
+  readonly big: number;
+  readonly scoreY: number;
+  /** Best-line font px and baseline. */
+  readonly lab: number;
+  readonly bestY: number;
+  /** COMBO badge center, and the half-height reserved for the biggest (×20) badge. */
+  readonly badgeY: number;
+  readonly badgeHalf: number;
+  /** Tablet scale of the stack (1 on phones). */
+  readonly k: number;
+}
+
+/** Cap height of Nunito heavy, as a fraction of the font size (digits and caps). */
+export const CAP = 0.72;
+/** How far the score's thousands comma hangs below the baseline, per px of score size. */
+const COMMA = 0.12;
+/** Half the visual height of the outlined ×20 badge per px of badge size. */
+const BADGE_HALF = 0.5;
+/** Biggest COMBO step's size in cells (moments.ts ×20). */
+const BADGE_MAX = 0.68;
+
+/**
+ * Lays the HUD stack out from the bottom up so it never overlaps itself or the board, whatever the
+ * text scale (Larger text) and however tall the badge grows: the badge keeps clear of the board's
+ * top edge, the best line clear of the badge, and the score shrinks only if the three can't fit.
+ * Tablets scale the stack with the board and sit it just above the board instead of in a far corner.
+ */
+export function hudStack(l: Layout, textScale: number): HudStack {
+  const ts = Math.min(1.15, textScale);
+  const tablet = Math.min(l.w, l.h) >= 600;
+  const k = tablet ? Math.min(1.45, Math.max(1, l.cell / 46)) : 1;
+  const pad = 4;
+  const badgeHalf = l.cell * BADGE_MAX * ts * BADGE_HALF;
+  // tablets: the stack hugs the board (the spare height above it is centering slack, not HUD)
+  const drop = tablet ? Math.max(0, l.board.y - (l.hud.y + l.hud.h) - l.cell * 0.4) : 0;
+  const top = l.hud.y + 2 + drop;
+  let big = Math.round(Math.min(52 * k, l.hud.h * 0.5 * k, l.cell * 1.2) * ts);
+  let lab = Math.round(Math.min(12 * k, big * 0.25) * Math.min(1.2, textScale));
+  const badgeY = Math.min(l.hud.y + drop + l.hud.h * 0.9, l.board.y - pad - badgeHalf);
+  const bestY = Math.min(l.hud.y + drop + l.hud.h * 0.5 + lab * 1.8, badgeY - badgeHalf - 3);
+  // the gap clears the thousands comma, which hangs below the digits' baseline
+  const scoreY = Math.min(l.hud.y + drop + l.hud.h * 0.5, bestY - lab * CAP - big * COMMA - 2);
+  // the score gives up size before it climbs out of the top of the HUD
+  if (scoreY - big * CAP < top) {
+    big = Math.max(18, Math.floor((scoreY - top) / CAP));
+    lab = Math.min(lab, Math.floor(big / 2.4)); // the score stays the hero (smaller lab only adds room)
+  }
+  return { big, scoreY, lab, bestY, badgeY, badgeHalf, k };
+}
