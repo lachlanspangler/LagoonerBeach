@@ -51,6 +51,8 @@ export interface Profile {
    * itself is saved the moment a run beats it; this keeps "NEW BEST" true for that run after a reload.
    */
   runBest?: { key: string; best: number };
+  /** The mode last played: a relaunch opens it (Reefs on `puzzle.index`). Older saves: Endless. */
+  lastMode?: 'classic' | 'daily' | 'puzzle';
 }
 
 /** Leaderboard bits of the profile. Both are created only when the player first posts a score. */
@@ -155,6 +157,7 @@ export function loadProfile(): Profile {
         : [],
     },
     lb: sanitizeLbProfile(o.lb),
+    ...(o.lastMode === 'classic' || o.lastMode === 'daily' || o.lastMode === 'puzzle' ? { lastMode: o.lastMode } : {}),
     ...(o.runBest && typeof o.runBest.key === 'string' && num(o.runBest.best, -1) >= 0
       ? { runBest: { key: o.runBest.key.slice(0, 64), best: num(o.runBest.best, 0) } }
       : {}),

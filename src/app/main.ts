@@ -125,7 +125,18 @@ const runLog = new RunLog();
 const classicSeed = (): number =>
   (!params.has('seed') && profile.firstRunDone ? runLog.ticketSeed() : null) ?? freshSeed();
 
-let mode: Mode = params.get('mode') === 'daily' ? 'daily' : 'classic';
+// ?mode= / ?seed= pick the mode; otherwise a relaunch opens the one last played (Reefs: once the
+// pack is in, below — the classic game shows until then)
+const bootMode: Mode = params.has('mode')
+  ? params.get('mode') === 'daily'
+    ? 'daily'
+    : params.get('mode') === 'puzzle'
+      ? 'puzzle'
+      : 'classic'
+  : params.has('seed')
+    ? 'classic'
+    : (profile.lastMode ?? 'classic');
+let mode: Mode = bootMode === 'daily' ? 'daily' : 'classic';
 let dailyDate = today();
 let state: GameState = startState();
 /** A new game on a server ticket is saved at once, so a reload before the first move keeps it ranked. */
@@ -904,6 +915,8 @@ function switchMode(m: Mode): void {
   ui.close();
   persist();
   mode = m;
+  profile.lastMode = m;
+  saveProfile(profile);
   startToken++; // a fresh-ticket start still in flight is for a game the player has left
   startWaiting = false;
 
@@ -1245,6 +1258,7 @@ idle(() => {
 resize();
 applyTheme();
 syncScene();
+if (bootMode === 'puzzle') switchMode('puzzle');
 requestAnimationFrame(frame);
 // bundled fonts arrive after first paint (font-display: swap): redraw once they're in
 const fontsIn = () => {

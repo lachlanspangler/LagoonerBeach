@@ -52,6 +52,18 @@ describe('profile migration', () => {
     expect(p.settings.sound).toBe(false);
     expect(p.daily.current).toBe(3);
     expect(p.lb).toEqual({});
+    expect(p.lastMode).toBeUndefined(); // boots into Endless, as before
+    expect(p.puzzle.index).toBe(4);
+  });
+  it('the last mode round-trips; anything else is dropped', () => {
+    const p = loadProfile();
+    for (const m of ['daily', 'puzzle', 'classic'] as const) {
+      p.lastMode = m;
+      saveProfile(p);
+      expect(loadProfile().lastMode).toBe(m);
+    }
+    ls.setItem('atoll.v1.profile', JSON.stringify({ ...p, lastMode: 'arcade' }));
+    expect(loadProfile().lastMode).toBeUndefined();
   });
   it('leaderboard fields round-trip and are sanitized', () => {
     const p = loadProfile();

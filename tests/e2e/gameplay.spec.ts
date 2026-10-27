@@ -96,6 +96,29 @@ test('a beaten best is saved at once; New game mid-run asks once, inline, and ke
   await expect.poll(async () => (await state(page)).seed).not.toBe(seed);
 });
 
+test('a relaunch opens the mode last played (and the reef you were on)', async ({ page }) => {
+  const errors = await boot(page, '');
+  const mode = () => page.evaluate(() => (window as any).__atoll.mode());
+  const relaunch = async () => {
+    await page.goto('/?debug=1');
+    await page.waitForFunction(() => (window as any).__atoll);
+  };
+  await page.evaluate(() => (window as any).__atoll.switchMode('daily'));
+  await relaunch();
+  expect(await mode()).toBe('daily');
+  await page.evaluate(() => (window as any).__atoll.switchMode('puzzle'));
+  await expect.poll(mode).toBe('puzzle');
+  await page.evaluate(() => (window as any).__atoll.loadPuzzle(4));
+  await expect.poll(async () => (await state(page)).seed).toBe(4);
+  await relaunch();
+  await expect.poll(mode).toBe('puzzle');
+  await expect.poll(async () => (await state(page)).seed).toBe(4);
+  await page.evaluate(() => (window as any).__atoll.switchMode('classic'));
+  await relaunch();
+  expect(await mode()).toBe('classic');
+  expect(errors).toEqual([]);
+});
+
 test('game over shows the card; play again starts fresh', async ({ page }) => {
   await boot(page, 'seed=3&fast=1');
   await page.evaluate(() => (window as any).__atoll.autoplay('random', 500));
