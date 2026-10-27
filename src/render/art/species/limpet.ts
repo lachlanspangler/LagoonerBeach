@@ -2,54 +2,68 @@
  * Limpet — OBJECT class (side view), size XS.
  * Silhouette: a low, wide rounded cone (a little volcano) with a soft apex, sitting on a skirt of
  * foot that peeks out at the base (R10: the low cone, exaggerated flat and wide).
- * CRITIQUE-3 (watermelon slice / mini turtle shell → limpet): a true little volcano with a rounded
- * apex nub, four umber ribs down the back slope and one at the front edge, two algae dabs, on a buff
- * shell; the front flank is left plain for the face (eyes 13 u at 55 % of the cone height).
+ * CRITIQUE-4 (cold read "generic cone/tent": ribs on one half only): a slate-buff dome 0.55 × its
+ * width with the apex nub 10 % forward, five umber ribs fanned evenly from the apex (−60…+60°; the
+ * middle one stops above the face), two green algae dabs, sitting inside a wide brim of foot (the
+ * brim also keeps it clear of the cockle's heart).
  * Resting mouth: a stubborn little pout.
  * Personality: clingy, stubborn, sweet. Signature: hunkers down (squash, holding on tight with
  * squeezed eyes), then a tiny scoot sideways and a happy face.
  * Groups (back to front): skirt (the foot), body (the cone; the face rides on it).
  */
-import { blob, circle, defineArt, ellipse, join, tube } from '../kit.ts';
+import { blob, defineArt, ellipse, join, tube, xform } from '../kit.ts';
 
-// CRITIQUE-3: a true little volcano (not a dome): a rounded apex set 6 % back, straight-ish flanks
-const cone = blob([
-  [-38, 15],
-  [-31, 2],
-  [-22, -9],
-  [-12, -16.5],
-  [-3, -19],
-  [7, -16],
-  [17, -8],
-  [28, 2],
-  [38, 15],
-  [20, 18.5],
-  [0, 19.5],
-  [-20, 18.5],
-]);
-// the foot skirt flares past the cone like a hat brim (clinging tight)
+// CRITIQUE-4: a low dome (height 0.55 x width: 41 / 74), straight-ish flanks so it reads as a
+// little volcano, not a bell with the apex nub 10 % forward of centre
+const APEX: [number, number] = [7, -24];
+const SH = (d: string) => xform(d, { sx: 0.93, sy: 0.93, oy: 17 }); // the dome sits inside a wide brim
+const dome = SH(
+  blob([
+    [-37, 17],
+    [-33, 6],
+    [-23, -6.5],
+    [-12, -17],
+    [-2, -22.5],
+    [7, -24],
+    [15, -22],
+    [23, -14],
+    [31.5, 0],
+    [37, 17],
+    [18, 19.5],
+    [0, 20],
+    [-18, 19.5],
+  ]),
+);
+// the apex nub: a little knob, 10 % forward, that just breaks the silhouette
+const nub = SH(ellipse(APEX[0], APEX[1] - 1, 4.4, 3.4));
+// the foot skirt flares past the dome like a hat brim (clinging tight)
 const skirt = blob([
-  [-40.5, 18],
-  [-32, 14],
+  [-40, 18.5],
+  [-33, 14],
   [0, 14],
-  [32, 14],
-  [40.5, 18],
-  [37, 23],
-  [0, 24.5],
-  [-37, 23],
+  [33, 14],
+  [40, 18.5],
+  [37.5, 23],
+  [0, 23.5],
+  [-37.5, 23],
 ]);
-// radial ribs (4-5 u, tapering up) fanning from the apex: four down the back slope, one on the
-// front edge; the front flank between them stays plain for the face
-const APEX: [number, number] = [-3, -19];
-const rib = (x: number, y: number) =>
-  tube([
-    [APEX[0] + (x - APEX[0]) * 0.18, APEX[1] + (y - APEX[1]) * 0.18, 1.6],
-    [APEX[0] + (x - APEX[0]) * 0.6, APEX[1] + (y - APEX[1]) * 0.6, 2.2],
-    [x, y, 2.6],
-  ]);
-const ribs = join(rib(-40, 15), rib(-33, 19), rib(-25, 21.5), rib(-16, 23), rib(42, 16));
-// two algae dabs on the back slope (a limpet wears its garden)
-const algae = join(ellipse(-24, 0, 4.2, 3.2, -35), ellipse(-13, -12, 3.6, 3, -30));
+// CRITIQUE-4: 5 ribs fanned evenly from the apex (meridians at -60, -30, 0, +30, +60 degrees round
+// the dome, so they meet the rim at sin(lon) of the half-width), bowed a little with the dome. The
+// critique's 2 u tips are under the R18W 4 u floor: 4 u at the apex out to 4.8 u. The three middle
+// ribs stop above the eyes (a bar through the face reads as a nose); the outer two run to the rim.
+const rib = (lon: number, f: number) => {
+  const s = Math.sin((lon * Math.PI) / 180);
+  const bx = APEX[0] + s * (lon >= 0 ? 30 : 44); // the dome is wider behind the apex than in front
+  const at = (t: number, r: number): [number, number, number] => [
+    APEX[0] + (bx - APEX[0]) * t + s * 5 * Math.sin(Math.PI * t),
+    APEX[1] + (19 - APEX[1]) * t,
+    r,
+  ];
+  return tube([at(0.04, 2.3), at(f * 0.5, 2.45), at(f, 2.6)]);
+};
+const ribs = SH(join(rib(-60, 1), rib(-30, 1), rib(0, 0.4), rib(30, 1), rib(60, 1)));
+// two 6 u algae dabs on the back slope, between the ribs (a limpet wears its garden)
+const algae = SH(join(ellipse(-18.5, 7, 4.6, 3.6, -25), ellipse(-14.5, -12, 3.8, 3.2, -35)));
 
 export default defineArt({
   id: 'limpet',
@@ -57,10 +71,13 @@ export default defineArt({
   size: 'XS',
   feature: 'a little ribbed volcano with an apex nub, on a skirt of foot',
   personality: ['clingy', 'stubborn', 'sweet'],
-  // CRITIQUE-3 asked slate-buff #B8A88E: C 0.04 fails R16S (and sits ΔE 5 from the flounder), so
-  // the nearest buff that passes and keeps ΔE >= 6 from every body is #BDB276. Umber ribs as asked;
-  // the belly role carries the sea-green algae dabs (the foot is the body hex under a pale wash).
-  palette: { body: '#BDB276', accent: '#7E6450', belly: '#8DB069' },
+  // CRITIQUE-4: slate-buff #B8A88E dome. The umber ribs are the body's own ink at 0.49 (#7F6950 on
+  // the dome, ΔE ~1 from the asked #7E6450): golden then darkens to a deep gold (#BF8E31, after the
+  // asked #B07A1E) instead of the golden accent's cream. Belly role = the sea-green algae dabs.
+  palette: { body: '#B8A88E', belly: '#8DB069' },
+  deviations: {
+    R16S: 'CRITIQUE-4 slate-buff #B8A88E (chroma 0.04): the ink outline, umber ribs and green dabs keep it off sand and mint',
+  },
   groups: [
     {
       id: 'skirt',
@@ -72,23 +89,23 @@ export default defineArt({
     {
       id: 'body',
       parts: [
-        { d: cone, role: 'body' },
-        { d: ribs, role: 'accent', kind: 'pattern' },
-        { d: circle(APEX[0], APEX[1] - 0.5, 3.4), role: 'accent', kind: 'pattern' },
+        { d: dome, role: 'body' },
+        { d: nub, role: 'body' },
+        { d: ribs, role: 'ink', kind: 'pattern', alpha: 0.49 },
         { d: algae, role: 'belly', kind: 'pattern' },
       ],
     },
   ],
-  shine: ellipse(-16, -9, 7, 2.6, -48),
+  shine: ellipse(-6, -15, 6.5, 2.6, -30),
   ground: true,
   face: {
     eyes: [
-      [4, 1.5],
-      [22.5, 2.5],
+      [-2.6, 5.4],
+      [15.1, 5.4],
     ],
     eye: 13,
-    zone: [-8, -21, 42, 40],
-    mouth: { at: [14, 9.5], w: 5, shape: 'pout' },
+    zone: [-10, -19, 42, 40],
+    mouth: { at: [6.3, 12], w: 5, shape: 'pout' },
     front: true,
     sweet: true,
   },
