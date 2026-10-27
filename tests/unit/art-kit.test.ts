@@ -11,6 +11,8 @@ import { blushStyle, mouthFor, NIGHT_BLUSH } from '../../src/render/art/face.ts'
 import { restTilt } from '../../src/render/art/silhouette.ts';
 import { eyeFloorUnits, TILE_FILL, TILE_SCALE, tileScaleOf, xform } from '../../src/render/art/kit.ts';
 import { pose } from '../../src/render/art/motion.ts';
+import { drowsyPick, DROWSY_SHARE } from '../../src/render/creatures.ts';
+import { HABITATS, SPECIES } from '../../src/meta/creatures.ts';
 
 const fish = ART.get('clownfish')!;
 const sp = (id: string) => SPECIES_BY_ID.get(id)!;
@@ -68,6 +70,21 @@ describe('CRITIQUE-1 kit rules', () => {
     const u = eyeFloorUnits('S', 84, 60);
     expect(u * ((TILE_FILL.S * 54) / 84)).toBeCloseTo(4, 5);
     expect(eyeFloorUnits('XL', 84, 84)).toBeGreaterThanOrEqual(0.09 * 84);
+  });
+  it('Night journal (CRITIQUE-4): ≤ 30 % of a habitat page dozes, the same ones every time; awake wins', () => {
+    expect(DROWSY_SHARE).toBe(0.3);
+    for (const h of HABITATS) {
+      const ids = SPECIES.filter((x) => x.habitat === h.id).map((x) => x.id);
+      const pick = drowsyPick(ids, ids.length);
+      expect(pick.size).toBeLessThanOrEqual(Math.floor(0.3 * ids.length));
+      expect([...drowsyPick([...ids].reverse(), ids.length)].sort()).toEqual([...pick].sort());
+      for (const id of pick) expect(ids).toContain(id);
+    }
+    expect(drowsyPick(['a', 'b', 'c'], 10).size).toBe(3);
+    expect(drowsyPick(['a', 'b', 'c', 'd'], 10).size).toBe(3);
+    expect(restingFace(fish, sp('clownfish'), true, 'tile')).toBe('drowsy');
+    expect(restingFace(fish, sp('clownfish'), true, 'tile', true)).toBe('idle');
+    expect(restingFace(fish, sp('clownfish'), true, 'detail', true)).toBe('idle');
   });
   it('tileScale (CRITIQUE-4): clamped to 0.85–1.3, scales tile + detail only, out of range is an error', () => {
     expect(TILE_SCALE).toEqual([0.85, 1.3]);

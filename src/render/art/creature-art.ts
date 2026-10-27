@@ -33,6 +33,11 @@ export interface DrawOpts {
   readonly flip?: boolean;
   readonly action?: { readonly kind: 'catch' | 'release'; readonly u: number };
   readonly signatureAt?: number;
+  /**
+   * Framed views: show the awake resting face even when the species would doze on this theme
+   * (CRITIQUE-4: the Night journal caps dozers per habitat page; a new catch wakes on its page).
+   */
+  readonly awake?: boolean;
 }
 
 const SWIMMERS: ReadonlySet<SpeciesArt['klass']> = new Set(['fish', 'shark', 'long', 'wing', 'horse']);
@@ -50,11 +55,12 @@ export function restingFace(
   sp: Species,
   night: boolean,
   view: 'tile' | 'detail' = 'detail',
+  forceAwake = false,
 ): Expression {
   const nocturnal = art.nocturnal ?? sp.habitat === 'night';
   const rest = art.restExpression ?? 'idle';
   const awake = view === 'tile' && CLOSED_EYES.has(rest) ? 'idle' : rest;
-  if (art.neverSleepy || night === nocturnal) return awake;
+  if (forceAwake || art.neverSleepy || night === nocturnal) return awake;
   return view === 'tile' ? 'drowsy' : 'sleepy';
 }
 const CLOSED_EYES: ReadonlySet<Expression> = new Set(['sleepy', 'proud', 'happy', 'blink']);
@@ -139,7 +145,8 @@ function drawArt(
     facing,
     night,
     golden: o.golden,
-    expression: o.expression ?? (framed ? restingFace(art, sp, night, o.fit === 'detail' ? 'detail' : 'tile') : 'idle'),
+    expression:
+      o.expression ?? (framed ? restingFace(art, sp, night, o.fit === 'detail' ? 'detail' : 'tile', o.awake) : 'idle'),
     t: o.t,
     still: o.still,
     action: o.action,

@@ -544,6 +544,9 @@ function dragToDismiss(sheet: HTMLElement, dismiss: () => void): void {
  * species' size class (ADR 0011, R27); the species page (`animate`) runs the idle loop at ≤ 30 fps
  * while it's on screen (blinks only under reduced motion). Redraws once the art chunk arrives.
  */
+/** Species page wake-up (CRITIQUE-4): the dozing face holds this long, then one blink, then awake. */
+const WAKE_OPEN_MS = 650;
+const WAKE_BLINK_MS = 140;
 export type ThumbRedraw = (t?: number, sig?: number, expression?: NonNullable<DrawOpts['expression']>) => void;
 
 export function creatureThumb(
@@ -551,7 +554,15 @@ export function creatureThumb(
   px: number,
   silhouette?: string,
   golden = false,
-  o: { animate?: boolean; shy?: boolean; avatar?: boolean } = {},
+  o: {
+    animate?: boolean;
+    shy?: boolean;
+    avatar?: boolean;
+    /** Awake even if the species dozes on this theme (journal: the per-page dozing cap). */
+    awake?: () => boolean;
+    /** Species page, first view of a new catch: dozing face → blink → awake, and stays awake. */
+    wake?: boolean;
+  } = {},
 ): HTMLCanvasElement {
   const c = document.createElement('canvas');
   const dpr = Math.min(3, window.devicePixelRatio || 1);
@@ -568,11 +579,22 @@ export function creatureThumb(
   const g = c.getContext('2d')!;
   g.scale(dpr, dpr);
   const nite = night();
-  const expression = o.shy && !silhouette ? 'shy' : undefined;
+  const shyFace = o.shy && !silhouette ? 'shy' : undefined;
+  // CRITIQUE-4: a new catch opens its eyes on its first page view (the clock starts at first draw)
+  let wakeT0 = -1;
+  const face = (t: number | undefined, still: boolean): Pick<DrawOpts, 'expression' | 'awake'> => {
+    if (!o.wake || still || !o.animate) return { expression: shyFace, awake: o.wake || (o.awake?.() ?? false) };
+    const now = t === undefined ? 0 : t * 1000;
+    if (wakeT0 < 0 && t !== undefined) wakeT0 = now;
+    const dt = wakeT0 < 0 ? 0 : now - wakeT0;
+    if (dt < WAKE_OPEN_MS) return { expression: undefined, awake: false };
+    if (dt < WAKE_OPEN_MS + WAKE_BLINK_MS) return { expression: 'blink', awake: true };
+    return { expression: shyFace, awake: true };
+  };
   const draw = (t?: number) => {
     g.clearRect(0, 0, W, W);
     const still = document.documentElement.dataset.motion === 'reduced';
-    drawCreature(g, sp, W / 2, W / 2, px, 0, { silhouette, golden, night: nite, fit, t, still, expression });
+    drawCreature(g, sp, W / 2, W / 2, px, 0, { silhouette, golden, night: nite, fit, t, still, ...face(t, still) });
   };
   draw();
   const animate = () => {
@@ -606,6 +628,7 @@ export function creatureThumb(
       night: nite,
       fit,
       t,
+      awake: o.awake?.() ?? false,
       ...(sig !== undefined ? { signatureAt: sig } : {}),
       ...(expression ? { expression } : {}),
     });
