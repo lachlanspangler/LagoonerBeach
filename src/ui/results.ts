@@ -89,7 +89,8 @@ export function resultsHero(o: HeroOpts): { el: HTMLElement; start: () => void }
 
 /**
  * Confetti from both edges of the card (~2 s): gold and coral flecks and foam rings fired up and
- * inward from the left and right sides, fluttering down past the score. A fixed overlay canvas
+ * inward from the left and right sides, fluttering down beside the score (never over the headline,
+ * the record numerals or the ribbon: they're clipped out and the flecks pass behind them). A fixed overlay canvas
  * (the card scrolls and would clip it); ≤ 64 particles; gone when the card is.
  */
 export const CONFETTI_MS = 2100;
@@ -140,6 +141,18 @@ function confetti(card: HTMLElement): void {
     const t = (performance.now() - t0) / 1000;
     g.clearRect(0, 0, W, H);
     if (t > life || !card.isConnected) return c.remove();
+    // the record numerals and headline stay clean: nothing is drawn over them (it passes behind).
+    // Their text boxes (they're full-width blocks; the hero may have been passed before it was
+    // attached, so look from its card) are cut out of the frame after the flecks are drawn.
+    const cr = c.getBoundingClientRect();
+    const host = card.closest('.card') ?? card;
+    const keep: DOMRect[] = [];
+    for (const el of host.querySelectorAll('.res-head, .res-score, .res-sub')) {
+      const rg = document.createRange();
+      rg.selectNodeContents(el);
+      const b = rg.getBoundingClientRect();
+      if (b.width) keep.push(b);
+    }
     for (const p of parts) {
       const u = t - p.delay;
       if (u <= 0) continue;
@@ -149,7 +162,7 @@ function confetti(card: HTMLElement): void {
       const y = p.y + (p.vy / 1.6) * drag + 0.5 * 420 * u * u * 0.55;
       g.globalAlpha = u > life - 0.6 - p.delay ? Math.max(0, (life - p.delay - u) / 0.6) : 1;
       if (p.foam) {
-        g.strokeStyle = '#FFFFFF';
+        g.strokeStyle = '#4FB7D3'; // sea-blue foam rings (white vanished on the cream card)
         g.lineWidth = 1.6;
         g.beginPath();
         g.arc(x, y, p.r * 1.3, 0, Math.PI * 2);
@@ -165,6 +178,13 @@ function confetti(card: HTMLElement): void {
       }
     }
     g.globalAlpha = 1;
+    g.globalCompositeOperation = 'destination-out';
+    for (const b of keep) {
+      g.beginPath();
+      g.roundRect(b.left - cr.left - 14, b.top - cr.top - 8, b.width + 28, b.height + 16, 14);
+      g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);

@@ -152,3 +152,45 @@ test('results: an unlocked style is a "New style" with its colours and a Try it 
   await u.getByRole('button', { name: 'Try the Glyph (high contrast) style' }).click();
   await expect(u.locator('.btn.try')).toHaveText('On');
 });
+
+test('NEW HIGH SCORE confetti never lands on the headline, the record numerals or the ribbon', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.showResults({ score: 4200, prevBest: 2000 }));
+  await page.waitForSelector('canvas.res-confetti', { timeout: 5000 });
+  const r = await page.evaluate(
+    () =>
+      new Promise<{ frames: number; inside: number; outside: number }>((resolve) => {
+        let frames = 0;
+        let inside = 0;
+        let outside = 0;
+        const t0 = performance.now();
+        const tick = () => {
+          const c = document.querySelector('canvas.res-confetti') as HTMLCanvasElement | null;
+          if (!c || performance.now() - t0 > 1500) return resolve({ frames, inside, outside });
+          frames++;
+          const g = c.getContext('2d')!;
+          const cr = c.getBoundingClientRect();
+          const k = c.width / cr.width;
+          const d = g.getImageData(0, 0, c.width, c.height).data;
+          const boxes = [...document.querySelectorAll('.res-head, .res-score, .res-sub')].map((el) => {
+            const rg = document.createRange();
+            rg.selectNodeContents(el);
+            return rg.getBoundingClientRect();
+          });
+          for (let y = 0; y < c.height; y += 3)
+            for (let x = 0; x < c.width; x += 3) {
+              if (d[(y * c.width + x) * 4 + 3]! < 8) continue;
+              const px = cr.left + x / k;
+              const py = cr.top + y / k;
+              if (boxes.some((b) => px >= b.left && px <= b.right && py >= b.top && py <= b.bottom)) inside++;
+              else outside++;
+            }
+          requestAnimationFrame(tick);
+        };
+        tick();
+      }),
+  );
+  expect(r.frames).toBeGreaterThan(5);
+  expect(r.outside).toBeGreaterThan(0); // there is confetti...
+  expect(r.inside).toBe(0); // ...but none over the record
+});
