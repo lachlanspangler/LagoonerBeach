@@ -157,6 +157,11 @@
   height: 4px;
   margin-top: 8px;
 }
+/* art critique round 5: a complete habitat is full from the first frame (mid fill-in it read as
+   stopping ~40 px short of the end) */
+.j-sec .track.full i {
+  animation: none;
+}
 .j-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

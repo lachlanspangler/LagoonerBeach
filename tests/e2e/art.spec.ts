@@ -120,3 +120,27 @@ test('species pages: the art fits its 200 px panel with a 6 % margin; deliberate
   expect(Object.keys(fits).length).toBeGreaterThan(40);
   for (const [id, over] of Object.entries(fits)) expect(over, id).toBeLessThanOrEqual(BREAKERS.includes(id) ? 0.08 : 0);
 });
+
+test('a complete habitat bar is full to the end from the first frame', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const a = (window as any).__atoll;
+    a.profile().firstRunDone = true;
+    a.stageJournal(a.speciesIds());
+  });
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page
+    .getByRole('button', { name: /Beach Journal/ })
+    .first()
+    .click();
+  await expect(page.locator('.j-sec .track').first()).toBeVisible();
+  // straight away (the fill-in animation would still be running), every full bar reaches its end
+  const short = await page.evaluate(() =>
+    [...document.querySelectorAll('.j-sec .track')].map((t) => {
+      const i = t.querySelector('i')!.getBoundingClientRect();
+      return t.getBoundingClientRect().right - i.right;
+    }),
+  );
+  expect(short.length).toBeGreaterThan(3);
+  for (const d of short) expect(d).toBeLessThan(1);
+});
