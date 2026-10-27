@@ -54,7 +54,7 @@ export interface DebugDeps {
     chapterMoment(chapter: number, name: string): void;
     /** The word on the board right now (if any). */
     celebrateWord(): string | null;
-    revealState(): { id: string; modal: boolean; settled: boolean } | null;
+    revealState(): { id: string; modal: boolean; settled: boolean; expr?: string } | null;
     revealFreeze(t: number): boolean;
     revealSkip(): void;
     haptics(): { k: string; t: number }[];
