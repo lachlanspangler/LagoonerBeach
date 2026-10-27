@@ -38,6 +38,8 @@ export interface UiHandlers {
   onToggle(key: 'sound' | 'music' | 'haptics' | 'reducedMotion' | 'largeText'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
+  /** The results' "Try it" on a new style: switch to it now. */
+  onTrySkin?(id: string): void;
   onSettings(): void;
   onJournal(): void;
   /** Absent = leaderboards switched off for this build (no menu entry). */

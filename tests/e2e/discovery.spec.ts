@@ -139,3 +139,16 @@ test('results "New in your journal": the rarity pips fit inside their thumbnails
   );
   expect(fits).toEqual([true, true, true]);
 });
+
+test('results: an unlocked style is a "New style" with its colours and a Try it button (never "pebbles")', async ({
+  page,
+}) => {
+  await boot(page);
+  await page.evaluate(() => (window as any).__atoll.showResults({ score: 900, prevBest: 2000, unlocked: ['glyph'] }));
+  const u = page.getByTestId('unlock');
+  await expect(u).toContainText('New style: Glyph');
+  await expect(u).not.toContainText(/pebble/i);
+  await expect(u.locator('.swatches i')).toHaveCount(6);
+  await u.getByRole('button', { name: 'Try the Glyph (high contrast) style' }).click();
+  await expect(u.locator('.btn.try')).toHaveText('On');
+});

@@ -15,6 +15,8 @@ import { fmt } from '../render/theme.ts';
 import { icon } from './icons.ts';
 import { creatureThumb, type SheetKit } from './overlay.ts';
 import { HABITAT_UI, RARITY_RANK, pipsHtml } from './rarity.ts';
+import { SKINS } from '../meta/unlocks.ts';
+import { lookFor } from '../render/skins.ts';
 
 const CROWN = icon('crown', { filled: true });
 const night = (): boolean => document.documentElement.dataset.theme === 'night';
@@ -232,6 +234,7 @@ export interface GameOverOpts {
   lagoon: number;
   mode: Mode;
   dailyStreak: number;
+  /** Style ids unlocked by this game (at most one; meta/unlocks.ts nextUnlocks). */
   unlocked: string[];
   shape?: { cells: readonly number[]; ring: readonly number[] } | null;
   caught?: { count: number; newIds: string[] };
@@ -266,8 +269,9 @@ export function showGameOver(k: Kit, o: GameOverOpts): HTMLElement {
     <h2 class="res-head${o.newBest ? ' record' : ''}">${o.newBest ? 'New high score!' : o.mode === 'daily' ? 'Daily done' : 'No room left'}</h2>
     <div class="hero-slot"></div>
     ${stats.length ? `<div class="inline-stats">${stats.map(([v, l]) => `<div><b class="num">${fmt(v as number)}</b><span>${l}</span></div>`).join('')}</div>` : ''}
-    ${o.unlocked.length ? `<div class="chip gold unlock" data-testid="unlock">${icon('style')}New pebbles: ${o.unlocked.join(', ')}</div>` : ''}`;
+`;
   card.querySelector('.hero-slot')!.replaceWith(hero.el);
+  if (o.unlocked.length) card.append(styleStrip(o.unlocked, k));
   if (o.caught?.newIds.length) card.append(journalStrip(o.caught.newIds, () => k.h.onJournal()));
   // on a record, posting it is the point: the leaderboard button leads as the one primary
   const lbFirst = !!o.leaderboard && o.newBest;
@@ -338,5 +342,37 @@ function journalStrip(ids: readonly string[], open?: () => void): HTMLElement {
       e.stopPropagation();
       open();
     });
+  return wrap;
+}
+
+/** "New style": its colours as swatches, its name, and a Try it button that switches to it now. */
+function styleStrip(ids: readonly string[], k: Kit): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'chip gold unlock';
+  wrap.dataset.testid = 'unlock';
+  for (const id of ids) {
+    const def = SKINS.find((x) => x.id === id);
+    if (!def) continue;
+    const sw = lookFor(id)
+      .colors.slice(1, 7)
+      .map((c) => `<i style="background:${c}"></i>`)
+      .join('');
+    const row = document.createElement('div');
+    row.className = 'unlock-row';
+    row.innerHTML = `${icon('style')}<span class="unlock-text">New style: <b>${def.name}</b></span><span class="swatches" aria-hidden="true">${sw}</span>`;
+    const tryIt = document.createElement('button');
+    tryIt.type = 'button';
+    tryIt.className = 'btn ghost try';
+    tryIt.textContent = 'Try it';
+    tryIt.setAttribute('aria-label', `Try the ${def.name} style`);
+    tryIt.addEventListener('click', () => {
+      k.h.onTrySkin?.(id);
+      tryIt.textContent = 'On';
+      tryIt.disabled = true;
+      k.announce(`Style: ${def.name}`);
+    });
+    row.append(tryIt);
+    wrap.append(row);
+  }
   return wrap;
 }

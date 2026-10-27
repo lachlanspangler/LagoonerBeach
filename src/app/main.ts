@@ -38,7 +38,7 @@ import { Scene } from '../render/scene.ts';
 import { DAY, NIGHT, fmt } from '../render/theme.ts';
 import { Fx } from './fx.ts';
 import { Ui } from '../ui/overlay.ts';
-import { SKINS, unlockedIds, type ProgressSnapshot } from '../meta/unlocks.ts';
+import { alwaysUnlocked, nextUnlocks, type ProgressSnapshot } from '../meta/unlocks.ts';
 import { lookFor } from '../render/skins.ts';
 import { shareText, type LagoonShape } from '../meta/share.ts';
 
@@ -266,7 +266,8 @@ function applyTheme(): void {
   document.documentElement.dataset.motion = rm ? 'reduced' : 'full'; // creature idles (ADR 0011)
   scene.particles.budget = rm ? 0.3 : 1;
   // always-on styles (e.g. Glyph) and anything earned so far — not only after a game ends
-  for (const id of unlockedIds(snapshot())) if (!profile.unlocked.includes(id)) profile.unlocked.push(id);
+  // (earned ones arrive at a game's end, one at a time: refreshUnlocks)
+  for (const id of alwaysUnlocked()) if (!profile.unlocked.includes(id)) profile.unlocked.push(id);
   if (!profile.unlocked.includes(profile.settings.skin)) profile.settings.skin = 'pebble';
   scene.sprites.setLook(lookFor(profile.settings.skin));
   idle(() => scene.warmSprites());
@@ -562,12 +563,11 @@ function snapshot(): ProgressSnapshot {
   };
 }
 
-/** Recompute unlocks; returns display names of skins unlocked just now. */
+/** Recompute unlocks (at most one new style per game); returns the style id unlocked just now. */
 function refreshUnlocks(): string[] {
-  const ids = unlockedIds(snapshot());
-  const fresh = ids.filter((id) => !profile.unlocked.includes(id));
-  profile.unlocked = ids;
-  return fresh.map((id) => SKINS.find((k) => k.id === id)!.name);
+  const r = nextUnlocks(profile.unlocked, snapshot());
+  profile.unlocked = r.ids;
+  return r.fresh ? [r.fresh] : [];
 }
 
 function finishGame(prevBest: number): void {
@@ -1027,6 +1027,13 @@ const ui = new Ui({
     saveProfile(profile);
     applyTheme();
     ui.showSettings(profile);
+  },
+  onTrySkin: (id) => {
+    if (!profile.unlocked.includes(id)) return;
+    profile.settings.skin = id;
+    saveProfile(profile);
+    applyTheme();
+    syncScene();
   },
   onSkin: () => {
     const ids = profile.unlocked;
