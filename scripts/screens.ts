@@ -217,6 +217,32 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
       .click();
     await p.waitForTimeout(800);
   },
+  // the gated habitats (Night, Reef) and Legends: the header lines, the nudges, badges
+  'journal-lower': async (p) => {
+    await p.getByRole('button', { name: 'Menu' }).click();
+    await p
+      .getByRole('button', { name: /Beach Journal/ })
+      .first()
+      .click();
+    await p.waitForTimeout(500);
+    await p.locator('.j-sec[data-habitat="night"]').evaluate((e) => e.scrollIntoView({ block: 'start' }));
+    await p.waitForTimeout(400);
+  },
+  // every habitat complete: ticks and the per-habitat golden line
+  'journal-complete': async (p) => {
+    await p.evaluate(() => {
+      const a = (window as any).__atoll;
+      a.stageJournal(a.speciesIds());
+    });
+    await p.getByRole('button', { name: 'Menu' }).click();
+    await p
+      .getByRole('button', { name: /Beach Journal/ })
+      .first()
+      .click();
+    await p.waitForTimeout(500);
+    await p.locator('.j-sec[data-habitat="deep"]').evaluate((e) => e.scrollIntoView({ block: 'start' }));
+    await p.waitForTimeout(400);
+  },
   species: async (p) => {
     await p.getByRole('button', { name: 'Menu' }).click();
     await p

@@ -9,9 +9,11 @@ import type { Profile } from '../platform/storage.ts';
 import { loadWoke, saveSeen, saveWoke } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
 import { CHARITIES, hostOf } from '../meta/charities.ts';
-import { HABITATS, SPECIES, type Species } from '../meta/creatures.ts';
-import { found, type Journal } from '../meta/journal.ts';
-import { hintFor } from '../meta/reqText.ts';
+import { GOLDEN_ODDS } from '../meta/catch.ts';
+import { HABITATS, SPECIES, type Habitat, type Rarity, type Species } from '../meta/creatures.ts';
+import type { Journal } from '../meta/journal.ts';
+import { journalProgress, type JournalProgress } from '../meta/journalProgress.ts';
+import { BADGE_LABEL, HABITAT_REQ, badgesFor, gateOpen, habitatLine, hintFor, type Badge } from '../meta/reqText.ts';
 import { dozesNow, drawCreature, drowsyPick, hasNewArt } from '../render/creatures.ts';
 import { lookFor } from '../render/skins.ts';
 import { fmt } from '../render/theme.ts';
@@ -219,12 +221,56 @@ export function showAbout(k: SheetKit, j: Journal, back?: { label: string; fn: (
 }
 
 // ─────────────────────────────────────────────────────────────────────────── journal
+const BADGE_ICON: Record<Badge, IconName> = {
+  day: 'sun',
+  night: 'moon',
+  daily: 'calendar',
+  reef: 'reef',
+  endless: 'endless',
+};
+const RARITY_WORD: Record<Rarity, string> = {
+  common: 'Common',
+  uncommon: 'Uncommon',
+  rare: 'Rare',
+  epic: 'Epic',
+  legendary: 'Legendary',
+};
+
+/** Rarity tiers (found per tier, with the tiles' pips) and golden variants, above the habitats. */
+function journalSummary(p: JournalProgress): HTMLElement {
+  const box = document.createElement('section');
+  box.className = 'j-sum';
+  box.setAttribute('aria-label', 'Found by rarity');
+  const tiers = p.rarities
+    .map(
+      (r) =>
+        `<li class="r-${r.rarity}${r.complete ? ' done' : ''}">${pipsHtml(RARITY_RANK[r.rarity], 'sm')}<span class="num" aria-hidden="true">${r.got}<small>/${r.total}</small>${r.complete ? icon('check', { cls: 'tick' }) : ''}</span><span class="sr-only">${RARITY_WORD[r.rarity]}: ${r.got} of ${r.total} found${r.complete ? ', complete' : ''}</span></li>`,
+    )
+    .join('');
+  box.innerHTML = `<h3 class="overline j-sum-h" aria-hidden="true">By rarity</h3><ul class="j-tiers">${tiers}</ul><p class="j-gold">${icon('sparkle', { filled: true, cls: 'spark' })}<span><b>Golden <span class="num">${p.golden}/${p.total}</span></b> · 1 in ${GOLDEN_ODDS} catches of a creature you’ve already found</span></p>`;
+  return box;
+}
+
+/** The inline nudge when a habitat's gate is shut right now: the only call to action in the journal. */
+function gateNudge(k: SheetKit, h: Habitat): HTMLButtonElement | null {
+  const gate = HABITAT_REQ[h].gate;
+  if (!gate || gateOpen(gate, { night: night(), mode: k.mode() })) return null;
+  // switch for real (and show where it lives, so it's one tap back); Reefs open on the current reef
+  if (gate.theme === 'night')
+    return k.button('', 'j-go', `Switch to Night${icon('chevronRight')}`, 'Switch to the Night theme', () =>
+      k.h.onTheme('night'),
+    );
+  if (gate.mode?.includes('puzzle'))
+    return k.button('', 'j-go', `Play Reefs${icon('chevronRight')}`, 'Play Reef puzzles', () => k.h.onPuzzles());
+  return null;
+}
+
 /** The Beach Journal: every creature by habitat; found ones framed by rarity, unknowns as silhouettes. */
 export function showJournal(k: SheetKit, j: Journal): void {
   const { card, head, body } = k.sheet('Beach Journal', { full: true, kind: 'journal' });
   card.classList.add('journal');
-  const n = found(j);
-  const golden = Object.values(j.entries).reduce((a, e) => a + (e.golden ? 1 : 0), 0);
+  const prog = journalProgress(j);
+  const n = prog.got;
   const C = 2 * Math.PI * 27;
   const ring = document.createElement('div');
   ring.className = 'j-ring';
@@ -234,20 +280,34 @@ export function showJournal(k: SheetKit, j: Journal): void {
   head.insertBefore(ring, head.firstChild);
   const sub = document.createElement('p');
   sub.className = 'callout j-sub';
-  sub.textContent =
-    [golden ? `${golden} golden` : '', j.total ? `${fmt(j.total)} caught\u00a0&\u00a0released` : '']
-      .filter(Boolean)
-      // one fact per line: joined with " · " the wrap stranded "released" (or a dangling dot)
-      .join('\n') || 'Close a loop to catch your first creature';
+  // golden has its own line in the summary now
+  sub.textContent = j.total
+    ? `${fmt(j.total)} caught\u00a0&\u00a0released`
+    : 'Close a loop to catch your first creature';
   head.querySelector('.title-m')!.append(sub);
+  body.append(journalSummary(prog));
   const ink = night() ? '#6C8193' : '#968672'; // ink.3; silhouettes at 45%
   const life = new JournalLife();
-  for (const h of HABITATS) {
-    const list = SPECIES.filter((sp) => sp.habitat === h.id);
-    const got = list.filter((sp) => j.entries[sp.id]).length;
-    const sec = document.createElement('div');
-    sec.className = 'j-sec';
-    sec.innerHTML = `<h3 class="title-s">${h.name}</h3><span class="overline num">${got}/${list.length}</span><div class="track${got === list.length ? ' full' : ''}"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
+  for (const hp of prog.habitats) {
+    const h = hp.id;
+    const list = hp.species;
+    const got = hp.got;
+    const sec = document.createElement('section');
+    sec.className = `j-sec${hp.complete ? ' done' : ''}`;
+    sec.dataset.habitat = h;
+    const status = `${got} of ${list.length} found${hp.complete ? ', complete' : ''}`;
+    sec.innerHTML = `<h3 class="title-s">${hp.name}<span class="sr-only">, ${status}</span></h3><span class="j-count overline num" aria-hidden="true">${got}/${list.length}${
+      hp.complete ? `<span class="j-tick" title="Complete">${icon('check')}</span>` : ''
+    }</span><div class="j-reqrow"><p class="j-req">${habitatLine(h)}</p></div><div class="track${hp.complete ? ' full' : ''}"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
+    // beside the requirement: the gate nudge while there's something left to find, golden once complete
+    const row = sec.querySelector('.j-reqrow')!;
+    const nudge = hp.complete ? null : gateNudge(k, h);
+    if (nudge) row.append(nudge);
+    if (hp.complete)
+      row.insertAdjacentHTML(
+        'beforeend',
+        `<span class="j-hgold">${icon('sparkle', { filled: true, cls: 'spark' })}Golden ${hp.golden}/${hp.total}</span>`,
+      );
     const grid = document.createElement('div');
     grid.className = 'j-grid';
     // CRITIQUE-4: ≤ 30 % of the page dozes (the same ones every time), the rest are awake. Lazy:
@@ -264,13 +324,15 @@ export function showJournal(k: SheetKit, j: Journal): void {
     for (const sp of list) {
       const e = j.entries[sp.id];
       const isNew = !!e && !k.seenFor(j).has(sp.id);
+      const badges = badgesFor(sp);
+      const when = badges.map((b) => `, ${BADGE_LABEL[b]}`).join('');
       const b = k.button(
         '',
         `j-tile r-${sp.rarity}${e ? ' got' : ' locked'}${(e?.golden ?? 0) > 0 ? ' golden' : ''}`,
         '',
         e
-          ? `${sp.name}, ${sp.rarity}, caught ${e.count}${isNew ? ', new' : ''}`
-          : `Unknown ${sp.rarity} creature. Hint: ${hintFor(sp)}`,
+          ? `${sp.name}, ${sp.rarity}, caught ${e.count}${when}${isNew ? ', new' : ''}`
+          : `Unknown ${sp.rarity} creature${when}. How to find it: ${hintFor(sp)}`,
         () => showSpecies(k, sp, j),
       );
       b.style.setProperty('--hab', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
@@ -291,11 +353,16 @@ export function showJournal(k: SheetKit, j: Journal): void {
           sp.rarity === 'epic' || sp.rarity === 'legendary' ? `<span class="j-rar">${sp.rarity}</span>` : ''
         }${
           (e?.golden ?? 0) > 0 ? icon('sparkle', { filled: true, cls: 'spark' }) : ''
-        }${isNew ? '<span class="new" aria-hidden="true"></span>' : ''}`,
+        }${isNew ? '<span class="new" aria-hidden="true"></span>' : ''}${
+          badges.length
+            ? `<span class="j-badges" aria-hidden="true">${badges.map((x) => `<i class="j-badge b-${x}">${icon(BADGE_ICON[x], { filled: true })}</i>`).join('')}</span>`
+            : ''
+        }`,
       );
       grid.append(b);
     }
-    body.append(sec, grid);
+    sec.append(grid);
+    body.append(sec);
   }
   k.show(card, true, 'journal');
   life.start(card);
@@ -354,11 +421,22 @@ function showSpecies(k: SheetKit, sp: Species, j: Journal): void {
     info.querySelector('.sp-scale')!.append(sizeScale(sp, e.best));
   } else {
     info.innerHTML = `<h3 class="sp-name">???</h3>
-      <div class="sp-rarity">${pipsHtml(RARITY_RANK[sp.rarity], 'lg')}<span class="overline">${sp.rarity}</span></div>
-      <p class="sp-flavor">Hint: ${hintFor(sp)}</p>`;
+      <div class="sp-rarity">${pipsHtml(RARITY_RANK[sp.rarity], 'lg')}<span class="overline">${sp.rarity}</span></div>`;
   }
-  body.append(info);
+  body.append(info, howToFind(sp, !e));
   k.show(card, true, 'species');
+}
+
+/** "How to find it": the requirement, generated from the rules (the same words as the tile's label). */
+function howToFind(sp: Species, locked: boolean): HTMLElement {
+  const box = document.createElement('section');
+  box.className = `sp-how${locked ? ' locked' : ''}`;
+  box.setAttribute('aria-label', 'How to find it');
+  const badges = badgesFor(sp)
+    .map((x) => `<span class="sp-badge">${icon(BADGE_ICON[x], { filled: true })}${BADGE_LABEL[x]}</span>`)
+    .join('');
+  box.innerHTML = `<h4 class="overline">How to find it</h4><p>${hintFor(sp)}</p>${badges ? `<div class="sp-badges">${badges}</div>` : ''}`;
+  return box;
 }
 
 /** Reefs by chapter, shipped and endless (src/ui/reefList.ts); tap one to play it. */

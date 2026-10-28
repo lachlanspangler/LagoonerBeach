@@ -144,6 +144,91 @@
   text-wrap: balance;
   white-space: pre-line;
 }
+/* summary: found per rarity tier (the tiles' pips) and golden variants */
+.j-sum {
+  margin: var(--s2) 0 0;
+  padding: var(--s3) var(--s3) var(--s2);
+  border-radius: var(--r-lg);
+  background: var(--surface-sunk);
+}
+.j-tiers {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.j-tiers li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.j-tiers .r-uncommon {
+  --frame: #53c08c;
+}
+.j-tiers .r-rare {
+  --frame: #3d9be9;
+}
+.j-tiers .r-epic {
+  --frame: #8e5bd8;
+}
+.j-tiers .r-legendary {
+  --frame: #f2b93b;
+}
+.j-tiers .r-common .pips {
+  color: var(--ink-3);
+}
+.j-sum-h {
+  margin: 0 0 var(--s2);
+  text-align: center;
+}
+.j-tiers .num {
+  display: inline-flex;
+  align-items: center;
+  font: 800 calc(14px * var(--fs))/1.2 var(--font);
+  color: var(--ink);
+}
+.j-tiers .num small {
+  font-size: 0.8em;
+  color: var(--ink-2);
+}
+.j-tiers .tick {
+  margin-left: 2px;
+}
+.j-tiers .tick,
+.j-tick .ic {
+  width: calc(14px * var(--fs));
+  height: calc(14px * var(--fs));
+  color: var(--success);
+  stroke-width: 3;
+}
+.j-gold {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: var(--s3) 0 0;
+  padding-top: var(--s2);
+  border-top: 1px solid var(--lip-2);
+  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  font: 650 calc(13px * var(--fs))/1.35 var(--font);
+  color: var(--ink-2);
+}
+.j-gold b {
+  color: var(--ink);
+  font-weight: 800;
+}
+.j-gold .spark,
+.j-hgold .spark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  color: var(--gold);
+}
+
+/* habitat header: name, found/total (+ tick), the requirement, the bar, the nudge or golden */
 .j-sec {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -151,13 +236,81 @@
   gap: 0 var(--s3);
   margin: var(--s6) 2px var(--s3);
 }
-.j-sec:first-child {
-  margin-top: var(--s2);
+.j-sum + .j-sec {
+  margin-top: var(--s5);
+}
+.j-sec > h3 {
+  margin: 0;
+}
+.j-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.j-tick {
+  display: inline-grid;
+  place-items: center;
+  width: calc(20px * var(--fs));
+  height: calc(20px * var(--fs));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--success) 16%, var(--surface));
+}
+.j-sec.done .j-count {
+  color: var(--success);
+}
+.j-reqrow {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px var(--s3);
+  margin-top: 2px;
+}
+.j-req {
+  flex: 1 1 12em;
+  margin: 0;
+  font: 650 calc(13px * var(--fs))/1.35 var(--font);
+  color: var(--ink-2);
+  text-wrap: pretty;
 }
 .j-sec .track {
   grid-column: 1 / -1;
   height: 4px;
   margin-top: 8px;
+}
+.j-sec > .j-grid {
+  grid-column: 1 / -1;
+  margin-top: var(--s3);
+}
+/* the gate nudge: a text button with a full 44 px target that reads as a quiet link (the negative
+   margins keep the row as tall as its text) */
+.j-go {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin: -12px -8px -12px 0;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--accent);
+  font: 800 calc(14px * var(--fs))/1.2 var(--font);
+  cursor: pointer;
+}
+.j-go .ic {
+  width: 16px;
+  height: 16px;
+}
+.j-hgold {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 calc(13px * var(--fs))/1.3 var(--font);
+  color: var(--ink-2);
 }
 /* art critique round 5: a complete habitat is full from the first frame (mid fill-in it read as
    stopping ~40 px short of the end) */
@@ -169,6 +322,34 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--s2);
 }
+/* tile condition badges: ☀ Day / ☾ Night / Daily / Reef, when a species needs more than its habitat */
+.j-badges {
+  position: absolute;
+  top: 48px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.j-badge {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--lip-2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent);
+  color: var(--ink-2);
+}
+.j-badge .ic {
+  width: 12px;
+  height: 12px;
+}
+.j-badge.b-day {
+  color: var(--gold-ink);
+}
+
 /* ═══ Species page ═══ */
 .sp-art {
   position: relative;
@@ -221,6 +402,40 @@
 }
 .sp-size canvas {
   flex: none;
+}
+.sp-how {
+  margin: var(--s4) 0 0;
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-lg);
+  background: var(--surface-sunk);
+  text-align: center;
+}
+.sp-how h4 {
+  margin: 0 0 4px;
+}
+.sp-how p {
+  margin: 0;
+  font: 700 calc(15px * var(--fs))/1.4 var(--font);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.sp-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 calc(12px * var(--fs))/1.3 var(--font);
+  color: var(--ink-2);
+}
+.sp-badge .ic {
+  width: 14px;
+  height: 14px;
 }
 .sp-first {
   margin-top: var(--s3);

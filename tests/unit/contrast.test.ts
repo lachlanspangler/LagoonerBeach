@@ -42,6 +42,9 @@ function pairs(p: Palette): [string, string, string, number][] {
     ['gold.ink / gold.tint (NEW HIGH SCORE ribbon, best chip)', p.goldInk, goldTint, 4.5],
     ['gold.ink / bg (HUD NEW BEST)', p.goldInk, p.bg, 4.5],
     ['danger / surface (erase, errors)', p.danger, p.surface, 4.5],
+    // the journal: a complete habitat's count and tick, the ☀ day-only tile badge (a graphic)
+    ['success / surface (journal: complete count)', p.success, p.surface, 4.5],
+    ['gold.ink / surface (journal: ☀ day badge)', p.goldInk, p.surface, 3],
     // non-text: focus rings, switch tracks, segment fills are the accent; 3:1 against what they sit on
     ['accent / surface.sunk (switch on, focus ring)', p.accent, p.surfaceSunk, 3],
     ['hint outline (accent) / board cell', p.name === 'night' ? p.waterHi : p.accent, p.cell, 3],
