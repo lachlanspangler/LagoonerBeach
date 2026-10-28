@@ -790,3 +790,26 @@ gets overloaded); commit per item, never push. Baseline: 512 unit / 165 e2e / 8 
     wildlife", PMMC copy says marine mammals (its card's dolphin now fits), brighter Night tiles.
   - Baselines re-made deliberately for the materials: start light/dark, midgame, Atoll ×5 (each
     read by eye; only block surfaces differ).
+- **Critic rounds 3–5:** a stricter fresh reviewer (round 3: 0 A / 10 A− / 5 B+ / 2 B, "candy"
+  materials, a hand-off that ghosted the board over the title) → fixes (Play full-strength from frame
+  0, a 370 ms hand-off that never shows both above ~30 %, frosted glass with no shine, angular
+  porphyry crystals, cross-bedded sandstone, knobbly coralline, one name on About, tablet sizing) →
+  round 4: 11 A / 4 A− → five small fixes (no focus ring after a tap, HUD fades in with the board,
+  water under the shoreline on small phones, porphyry crystals of mixed size along one axis, a
+  two-line sign-off) → **round 5: 16 A / 0 A−**. Record: `docs/art/CRITIQUE-S6.md`.
+- **Perf, without loosening:** the block warm-up measured 64–74 ms against its 40 ms budget (the
+  branch never met it here; three variants × normal + lit + tray = 48 sprites). Profiling showed ~80 %
+  is rasterizing the recorded drawing, so the fix was fewer sprites and fewer passes: two variants,
+  tray stones scaled from the board's (never lit), Night's moonlit edge as one fill behind the
+  stone, batched sandstone partings, the brain coral crest line only on big tiles → ~37/38 ms.
+  A follow-up bug the full gate caught: tray stones depended on build order (scaled vs drawn), which
+  made a baseline flaky; they now always derive from the board-size stone.
+- **Devices:** the iOS 27 simulator stopped the app at launch (no UIScene lifecycle; the new runtime
+  enforces it) → SceneDelegate + scene manifest. The title's atoll slid under the pills on the
+  simulator because WKWebView settles safe-area insets after first layout → a ResizeObserver on the
+  title. Both scripts now use their own device (`Lagooner iPhone` simulator, `emulator-5594`), and
+  never touch another project's; both shut down afterwards. Android: title on a fresh launch, Play →
+  the first-run board.
+- **End state:** main only, everything committed, make check + make e2e (205 + 10 perf) green,
+  initial JS 62.9 KB, CSS 6,045/6,144 B. Needs from the owner: sign-off on the About wording and the
+  five charities, plus the standing store items (STATUS).

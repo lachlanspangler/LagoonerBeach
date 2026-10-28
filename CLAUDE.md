@@ -102,7 +102,8 @@ persistence. The renderer animates events; the logical state is already final.
 `freezeNow()`/`freeze(ms)` render an exact frame after a move, `commitMove(m)`, `stageCombo(n, dry)`,
 `stageRecord(best)`, `revealSpecies(id)`, `revealFreeze(t)`, `chapterMoment(n, name)`, `showResults(o)`. Endless reefs: `loadPuzzle(360)` opens
 reef 361 (async, from the worker), `reefStats()`, `reefReady(i)`, `prefetchReefs(i, n)`.
-Leaderboards (ADR 0010): `VITE_LB_URL=…` → real server; `VITE_LB=demo` → on-device demo boards (dev/test
+Title screen (ADR 0015): automated runs skip it; `?title` forces it, `?titlerules` applies the real
+skip rules (deep links, a return within 10 min, the setting), `?notitle` skips it. Leaderboards (ADR 0010): `VITE_LB_URL=…` → real server; `VITE_LB=demo` → on-device demo boards (dev/test
 only: on in `vite` dev via `.env.development` and in the `dist-e2e/` build Playwright makes); neither
 (a plain release build) or `VITE_LB=off` → no leaderboards anywhere. `?lboffline=1` makes the demo
 backend act offline; `?nolb` hides boards on a demo build (release look, used by store shots).
@@ -116,6 +117,10 @@ backend act offline; `?nolb` hides boards on a demo build (release look, used by
   strip between board and tray; discoveries reveal after the move settles; creatures leap out of their
   lagoon and splash back into the water beside the board (board ends clean; a new species pulses the
   journal button once). Big moments get big, normal moves stay calm.
+- The title screen is decided before first paint by the inline script in `index.html`; keep it and
+  `shouldShowTitle` (src/ui/title.ts) in step — `tests/unit/title.test.ts` runs the script. It never
+  shows for deep links. The About page's charities live in `src/meta/charities.ts` and must match the
+  evidence table in `docs/research/CHARITIES.md` (unit-tested); the game takes no funding (ADR 0016).
 - UI tokens live twice by design: CSS variables in `src/ui/style.css` and the TS mirror in
   `src/render/theme.ts` (canvas). `tests/unit/contrast.test.ts` fails if they drift or if any text
   pair drops under WCAG AA. Water cyan is material, never small text on light.

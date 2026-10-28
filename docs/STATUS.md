@@ -1,78 +1,79 @@
 # Status
 
-## Final state (v1.0.0 release candidate) — 2026-10-27
-**Lagooner Beach**: *Close a loop. Water fills it, the ring pops.* Every lagoon catches a beach
-creature for your Beach Journal. Everything is committed on `main` (no other branches, no worktrees).
-Nothing is pushed.
+## Final state (v1.0.0 release candidate, polish pass) — 2026-10-28
+**Lagooner Beach**: *Close a loop. Water fills it, the ring pops.* Sessions 5–6 added a title screen, coral & rock
+blocks, journal requirements, and an About page with a no-funding pledge. Everything is committed on `main`:
+there are no other branches and no worktrees. Nothing is pushed.
 
-**Green:**
-- `make check`: 512 unit, property and server tests.
-- `make e2e`: 165 functional tests on Chromium and WebKit, then 8 perf budgets run alone and serially. Zero failures, with no budgets loosened.
-- Release build: initial JS 55 KB gz (budget 64). `make build` fails if debug hooks or demo boards leak into a release.
+**Green (2026-10-28, this machine):**
+- `make check`: unit, property and server tests, lint, format and ledger sync.
+- `make e2e`: 205 functional tests on Chromium and WebKit, then the 10 perf budgets run alone and serially. That includes the new block warm-up budget (≈37/38 ms against 40 ms at dpr 3 under a 4× CPU throttle). No budget was loosened.
+- Release build: initial JS 62.9 KB gz (budget 64), CSS 6.0 KB (budget 6, 6,045 of 6,144 B). Debug hooks and demo boards don't leak (`npm run size`).
+- iOS Simulator (iOS 27, Release, this project's own "Lagooner iPhone" simulator): the title renders. This run found and fixed a ship blocker: the app had no UIScene lifecycle, and iOS 27 stops such apps at launch.
+- Android emulator (`emulator-5594`, debug APK, the real WebView): title on a fresh launch, then Play onto the first-run board.
+- Shots: `docs/media/after/s5/ios-simulator-title.jpg`, `android-emulator-*.jpg`.
 
-**What's final:**
-- **Game:**
-  - Endless: every dealt tray can be placed.
-  - Daily: a shared seed, a streak, and a spoiler-free share card.
-  - Reefs: 360 hand-checked reefs, then reef N > 360 generated from N forever and solver-verified, with chapters, names and a depth meter.
-  - The one rule only: closed loops pop. No line clears.
-- **Creatures:** 47 species in a cohesive style.
-  - The independent art critic's final round: **39 A / 8 A−**, with 45/47 named correctly on a cold read at 54 px.
-  - Each species has its own size class and tile scale, a signature move and 8 expressions. Yellow species get a deeper gold golden variant; the gold legendary's golden is pearl.
-  - Caught creatures leap out of the lagoon and **splash back into the water beside the board** (your call). Only a brand-new species pulses the journal.
-- **Celebrations:** COMBO ×N (our streak), a one-word praise ladder, ring burst, peak moments with a gold sweep, shake and score roll, a chapter moment, and NEW BEST / NEW HIGH SCORE. Normal moves stay calm.
-- **Discovery:**
-  - Reveals scale with rarity: common pop → uncommon card → epic or legendary scene. Golden variants get a foil card.
-  - The first catch ever is a full card that introduces the journal.
-  - A reveal never interrupts a fast player.
-  - Share card with a footer.
-- **Leaderboards:**
-  - Name entry: 7 letters, A–Z only.
-  - Boards: Daily, This week and All-time, showing your rank and the next player to pass.
-  - A Cloudflare Worker re-checks every score by replaying its move log.
-  - **Release builds hide leaderboards until a server URL is set.** Demo boards exist only in dev and tests.
-- **Polish:** design tokens, Fraunces + Nunito (SIL OFL), a custom icon set, Day/Night themes, Larger text, reduced motion, ≥ 44 px targets and WCAG AA contrast (both tested), and audio muted in every automated run.
-- **Verified on:** Chromium and WebKit e2e, the iOS Simulator (release build) and the Android emulator (debug APK driven through its real WebView).
+**What's new (all your session-5 asks):**
+- **Title screen** (ADR 0013, ADR 0015).
+  - "Lagooner Beach" in a 2 KB Fraunces display cut, with one big Play button. When a run is in progress it reads Continue and names the mode, e.g. "Endless · 3,150".
+  - A quiet About pill and a Settings pill.
+  - Behind it, a living atoll drawn with the board's own blocks.
+  - Day/Night, reduced motion, Larger text and tablet layouts.
+  - Tapping Play plays a synthesized chime and starts the music. The hand-off to the board takes about 370 ms.
+  - Never in the way: it's skipped for deep links such as a shared Daily, for a return within 10 minutes, when Settings › "Open straight into the game" is on, and in automated runs.
+- **Coral & rock blocks** (ADR 0014). Six materials, one per colour, all procedural, with no new assets:
+  - brain coral
+  - golden sandstone
+  - sea glass
+  - blue coral
+  - wet porphyry
+  - pink coralline crust
 
-**Before / after:**
-- `docs/media/before/` → `docs/media/after/`:
-  - `final-vs-before-play-start.jpg`, `final-vs-before-results-record.jpg`, `final-vs-before-journal.jpg`;
-  - every screen, Day and Night (`screen-*`);
-  - creatures before → after for all 47 (`creatures-compare-day.jpg`, `-night.jpg`) and the whole cast (`creatures-cast-*.jpg`);
-  - store frames (`store-*`);
-  - devices (`ios-simulator.jpg`, `android-emulator.jpg`).
-- Clips: `docs/media/video/*.mp4` (COMBO lagoon, cascade, biggest moment, Spotless, discoveries, NEW HIGH SCORE, Daily → name → leaderboard).
-- Store PNGs at full size: `npx tsx scripts/store-shots.ts` → `artifacts/store/`. Native icons and splashes: `scripts/native-assets.ts`.
-
-**Unmerged branches:** none. Everything is on `main`.
+  They stay readable from 22 px, Day and Night. Colourblind separation is tested on the rendered sprites, and there's a non-text 3:1 boundary against the cell (tested). Pops, ring bursts and celebrations were re-checked on the new blocks. The old look is still available as the "Smooth Stones" style.
+- **Journal.** Every habitat shows its requirement next to its name, plus found/total and a tick when complete. The requirement is generated from the same rule data the game catches with, and property tests prove the two can't drift. There's also a rarity and golden summary (1 in 64, from the game's own constant), spoiler-free hints, and Switch to Night / Play Reefs nudges.
+- **About** (ADR 0016).
+  - A short note signed "Lachlan Spangler · grew up in Laguna Beach · advocates for marine wildlife protection".
+  - It says plainly "I will not take any funding." and then "But you can donate to these charities and funds to help coastal wildlife:".
+  - Five verified 501(c)(3)s, each beside a creature from the game: Pacific Marine Mammal Center, Laguna Ocean Foundation, Surfrider Foundation, Monterey Bay Aquarium and Ocean Conservancy. The evidence (EIN, IRS record and the official donate page) is in `docs/research/CHARITIES.md`.
+  - Links open the charity's own page in the system browser, untracked and with no referrer.
+  - ADR 0008's Supporter Pack is rejected. The store listing and privacy policy now say "no purchases".
+- **Design critic:** five rounds by fresh reviewers. The last two came out at 11 A / 4 A−, then **16 A / 0 A−**. The record is in `docs/art/CRITIQUE-S6.md`.
+- **Code review:** a fresh reviewer went over everything since the last push and found 11 issues. All the real ones are fixed: inert HUD behind the title, the welcome toast, OS theme flips, no board draws under the title, memory, focus, and test gaps.
+- **Before/after media:** `docs/media/S5_MEDIA.md` (intro, board, every block type, journal, About). The launch → title → play clips are `docs/media/video/launch-title-play{,-night}.mp4`.
 
 ## What I need from you
-1. **Name and trademark check** for "Lagooner Beach".
-2. **Bundle id:** replace `com.example.atoll` in `capacitor.config.ts` before the first store upload.
-3. **Accounts and signing:**
+1. **Sign-off on the About page:** the wording and the five charities. It's all in `src/ui/sheets.ts` (`showAbout`) and `src/meta/charities.ts`; to read it, open the game → About. Two choices I made that you may want to change:
+   - The lead line is "I spent my childhood turning over rocks in the tide pools.", and the note ends with "I made this game to stand up for them."
+   - Monterey Bay Aquarium (sea otters) replaced The Marine Mammal Center, so no two cards are the same cause.
+2. **Name and trademark check** for "Lagooner Beach".
+3. **Bundle id:** replace `com.example.atoll` in `capacitor.config.ts` before the first store upload.
+4. **Accounts and signing:**
    - Apple Developer (team id; signing in Xcode).
    - Play Console.
    - An Android upload keystore in `android/keystore.properties` (format in `android/app/build.gradle`).
-4. **Leaderboard backend (optional for launch):** a Cloudflare account on Workers Paid ($5/mo), then follow `docs/server/DEPLOY.md` (D1, one secret, deploy, build with `VITE_LB_URL=…`). Before boards go public, add server-side name moderation (ADR 0010 note) and update the store privacy forms (`docs/store/LISTING.md`). Without it, the game ships with no leaderboards and "Data Not Collected".
-5. **Privacy:** host `public/privacy.html` and add a contact email.
-6. **Share link:** replace the `SHARE_URL = 'lagooner.beach'` placeholder in `src/ui/share-card.ts` with your real store/landing link.
-7. **A real phone:** 10–20 minutes on a mid-range iPhone and Android. Check drag feel, haptics, sound levels (including the new splash plop), reveal pacing and Larger text.
-8. **Monetization:** go or no-go on ADR 0008's cosmetic Supporter Pack. It isn't built.
+5. **Leaderboard backend (optional for launch):** see `docs/server/DEPLOY.md`. Without it the game ships with no leaderboards and "Data Not Collected".
+6. **Privacy:** host `public/privacy.html` and add a contact email.
+7. **Share link:** replace the `SHARE_URL = 'lagooner.beach'` placeholder in `src/ui/share-card.ts`.
+8. **A real phone:** 10–20 minutes on an iPhone (iOS 27 especially, after the scene fix) and an Android phone. Check:
+   - the title → Play hand-off;
+   - the new blocks at arm's length;
+   - the Play chime level;
+   - drag feel and Larger text.
 
 ## How to ship
 1. Set the bundle id, version and signing (above).
 2. `make check && make e2e`. Both must be green.
-3. Web build: `npm run build`. For leaderboards add `VITE_LB_URL=https://…`; without it they're hidden.
-4. iOS: `npx cap sync ios`, open `ios/App/App.xcworkspace`, Archive, upload.
+3. Web: `npm run build` (add `VITE_LB_URL=https://…` for leaderboards).
+4. iOS: `npx cap sync ios`, open `ios/App/App.xcworkspace`, Archive, upload. `make ios-sim` checks a Release build on the simulator.
 5. Android: `make android-release` (signed AAB), then upload to Play.
-6. Store listing copy and screenshots are in `docs/store/LISTING.md` and `artifacts/store/`; privacy is in `docs/store/PRIVACY.md`.
+6. Store copy is in `docs/store/LISTING.md`, privacy in `docs/store/PRIVACY.md`, screenshots via `npx tsx scripts/store-shots.ts`.
 
 ## What I'd do next
-- After launch, tune `DEFAULT_RAMP`, catch odds and the endless reef curve from real play (`make tune`, `scripts/catch-sim.ts`, `scripts/reef-curve.ts`).
-  - A search bot never runs out of moves, so expert Endless runs can be very long.
-  - Changing the dealer changes every daily and needs a `RULES_VERSION` bump.
-- Optional art: lift the eight A− species to A (notes in `docs/art/CRITIQUE-5.md`).
-- A cell-cursor mode so screen readers can play; localization.
+- **Re-shoot the store screenshots** with the title and the new blocks (`scripts/store-shots.ts`). The ones in `artifacts/store/` predate session 5.
+- **The eligible-chances counter** for undiscovered species (I-201) needs a journal save-format change, so it's left for after launch.
+- **Larger text is 1.12× in sheets.** The critic suggested 1.25×; that needs a layout pass, because every sheet is tested to fit at 375×667.
+- **CSS is 99 bytes under its 6 KB budget.** The next UI change needs to trim before it adds.
+- **After launch,** tune catch odds and the endless curve from real play (`scripts/catch-sim.ts`, `scripts/reef-curve.ts`).
 
 ## What works
 | Area | State | Evidence |
@@ -93,6 +94,10 @@ Nothing is pushed.
 | Creature art (47, ADR 0011) | ✅ | style-guide lint as errors, silhouette IoU, Path2D parity (Chromium + WebKit), draw budget |
 | Celebrations + reveals (ADR 0012) | ✅ | moment ladder unit tests, no-flash, input-during-celebration, pixel baselines |
 | Leaderboards (ADR 0010) | ✅ client + Worker (tests) · ⏳ no live server | names/filter, mock, replay verification, server handler tests |
+| Title screen (ADR 0013/0015) | ✅ | pre-paint rule = `shouldShowTitle` (the inline script runs in a unit test), e2e Chromium + WebKit: skip rules, Continue, keyboard, inert HUD, theme flip, About from the title |
+| Reef blocks (ADR 0014) | ✅ | rendered-colour CVD/greyscale e2e, non-text 3:1 unit test, warm-up perf budget, pixel baselines |
+| Journal requirements | ✅ | rule-as-data equivalence over 190k contexts, gate property tests, generated hints, e2e |
+| About + charities (ADR 0016) | ✅ | charities ↔ CHARITIES.md unit test, links e2e (no referrer, nothing added), Night card AA |
 | Perf | ✅ (quiet machine) | draw p95 ≈ 1–3 ms, latency ≤ 1 frame, soak flat heap; initial JS 55.9 KB gz |
 
 ## Previous milestones
