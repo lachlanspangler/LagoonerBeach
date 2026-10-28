@@ -13,6 +13,12 @@ import type { SpriteCache } from '../render/sprites.ts';
 /** The ring of blocks: X = a block (the digit picks its colour), . = sea, o = lagoon water. */
 const RING = ['..1223..', '.15oo64.', '34oooo51', '6ooooo2.', '.21oo33.', '..6545..'];
 
+/** Sky and sea stops; the wordmark, tagline and pills sit on them (tests/unit/contrast.test.ts). */
+export const TITLE_COLORS = {
+  day: { sky: ['#fbf6ee', '#f3e7d5'], sea: ['#7fd3e6', '#4fb5d3', '#3a98bd'] },
+  night: { sky: ['#08111b', '#0e2032'], sea: ['#123a52', '#0d2c42', '#0a2233'] },
+} as const;
+
 export class TitleScene {
   private el = document.getElementById('title')!;
   private cv = document.getElementById('title-bg') as HTMLCanvasElement;
@@ -106,8 +112,9 @@ export class TitleScene {
     const night = p.name === 'night';
     const { w, h, shore } = this;
     const sky = g.createLinearGradient(0, 0, 0, shore);
-    sky.addColorStop(0, night ? '#08111b' : '#fbf6ee');
-    sky.addColorStop(1, night ? '#0e2032' : '#f3e7d5');
+    const k = TITLE_COLORS[night ? 'night' : 'day'];
+    sky.addColorStop(0, k.sky[0]);
+    sky.addColorStop(1, k.sky[1]);
     g.fillStyle = sky;
     g.fillRect(0, 0, w, shore + 40);
     if (night) {
@@ -161,9 +168,9 @@ export class TitleScene {
     g.fillStyle = wet;
     this.shoreline(g, shore - 7, 6);
     const sea = g.createLinearGradient(0, shore, 0, h);
-    sea.addColorStop(0, night ? '#123a52' : '#7fd3e6');
-    sea.addColorStop(0.55, night ? '#0d2c42' : '#4fb5d3');
-    sea.addColorStop(1, night ? '#0a2233' : '#3a98bd');
+    sea.addColorStop(0, k.sea[0]);
+    sea.addColorStop(0.55, k.sea[1]);
+    sea.addColorStop(1, k.sea[2]);
     g.fillStyle = sea;
     this.shoreline(g, shore, 5);
     // foam on the shoreline

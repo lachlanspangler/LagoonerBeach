@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { contrast } from '../../src/render/color.ts';
 import { CSS_VARS, DAY, NIGHT, type Palette } from '../../src/render/theme.ts';
+import { TITLE_COLORS } from '../../src/ui/titleScene.ts';
 
 /** Flatten an rgba() over a hex background to a hex (what the eye sees). */
 function over(fg: string, bg: string): string {
@@ -54,6 +55,24 @@ describe('text contrast (tokens)', () => {
       it(`${p.name}: ${label} ≥ ${min}`, () => {
         expect(contrast(over(fg, bg), bg)).toBeGreaterThanOrEqual(min);
       });
+
+  // the title screen (ADR 0015): wordmark and tagline on the sky, the pills over the sea
+  it('title: wordmark, tagline and pills stay AA on every stop of the scene', () => {
+    const css = readFileSync('src/ui/style.css', 'utf8');
+    const pill = (sel: string) => new RegExp(`${sel} \\{[^}]*?background: (rgba\\([^)]+\\))`).exec(css)![1]!;
+    const pills = { day: pill('\\.t-pill'), night: pill("html\\[data-theme='night'\\] \\.t-pill") };
+    for (const p of [DAY, NIGHT]) {
+      const k = TITLE_COLORS[p.name === 'night' ? 'night' : 'day'];
+      for (const sky of k.sky) {
+        expect(contrast(p.text, sky), `${p.name} wordmark on ${sky}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(p.textDim, sky), `${p.name} tagline on ${sky}`).toBeGreaterThanOrEqual(4.5);
+      }
+      for (const sea of [...k.sea, ...k.sky]) {
+        const bg = over(pills[p.name === 'night' ? 'night' : 'day'], sea);
+        expect(contrast(p.text, bg), `${p.name} pill over ${sea}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
 
   it('water cyan is never small text on light (it is material): 1.9:1 by day', () => {
     expect(contrast(DAY.water, DAY.surface)).toBeLessThan(3);
