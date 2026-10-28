@@ -75,8 +75,13 @@ The game is suitable for all ages. Leaderboards are optional; names are 7 letter
 there is no chat, messaging or friend system, and the player id is random and used only to run the
 boards.
 
+## Links to charities
+The About page links to coastal-wildlife charities. They open the charity's own website in your
+browser, with no referrer and nothing added to the address; we don't record taps and never handle
+donations.
+
 ## Changes
-If this changes (for example, optional purchases), this policy will be updated **before** that
+If this ever changes, this policy will be updated **before** that
 version ships, and anything involving data will be opt-in.
 
 ## Contact

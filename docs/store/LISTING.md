@@ -48,7 +48,9 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
   • Made for every eye: a high-contrast style with shapes on every color, reduced motion,
     tap-to-place, haptics and sounds you can switch off.
   • Daily, weekly and all-time leaderboards with a 7-letter beach name. Optional.
-  • No ads. No accounts. No tracking. Plays offline.
+  • No ads. No purchases. No accounts. No tracking. Plays offline.
+  • Made by someone who grew up in Laguna Beach's tide pools. The game takes no funding; its
+    About page points you to coastal-wildlife charities instead.
 
 - **What's new (first release):** Welcome to the beach.
 
