@@ -666,3 +666,39 @@ what exists (no feature rebuilds); every test's intent kept.
   via the real WebView) re-verified. Simulators, emulator, servers and browsers shut down.
 - **End state:** main only, everything committed, make check + make e2e green. Left for the owner:
   accounts, bundle id, name check, backend (optional), privacy URL/email, share link, a real phone.
+
+## 2026-10-27 (session 5) — Polish pass: title screen, About + no funding, journal requirements, coral & rock
+Owner's brief: five features, nothing dropped; walk-away mode; up to 2 parallel agents (the laptop
+gets overloaded); commit per item, never push. Baseline: 512 unit / 165 e2e / 8 perf, initial JS
+58.4 KB gz (STATUS said 55; it was measured before the art kit grew the shared chunk).
+- **Research first** (two agents, then me): INTRO_SCREEN, TITLE_TYPE (21 OFL fonts measured, 3
+  mocked), CORAL_ROCK_BLOCKS, JOURNAL_REQUIREMENTS, CHARITIES. 54 new ideas in the ledger, incl. the
+  rejected (tip jar, Supporter Pack, logo splash, odds in the journal, charity logos).
+- **Charities, verified three ways:** the site's own 501(c)(3)/EIN statement, IRS data via ProPublica
+  (PMMC's legal name is its founding one, "Friends of the Sea Lion", EIN matches the site), and a
+  `curl -L` of the official donate URL. Picked five; Monterey Bay Aquarium verified but left out
+  (ticket/membership-led giving). Apple 3.2.2(iv) quoted: free app, funds only outside the app — we
+  collect nothing at all. ADR 0008's Supporter Pack + ads option marked rejected; listing/privacy say
+  no purchases. Why: the owner's "I will not take any funding" must not be contradicted anywhere.
+- **About ("Why the ocean"):** a lead line in Fraunces, two short lines tying the tide pools to the
+  game's hermit crabs, sea stars and octopuses, the pledge in a tinted panel, five cards each beside a
+  creature that lives where the charity works (a silhouette until caught: no spoilers), signature.
+  Links are plain anchors (`_blank`, `noopener noreferrer`, `referrerpolicy=no-referrer`): Capacitor
+  hands any off-app URL to the system browser on both platforms (read its WebViewDelegationHandler and
+  Bridge.launchIntent rather than adding @capacitor/browser — no new plugin, no bundle cost). e2e stubs
+  the charity host and asserts the request carries no referrer and nothing we added.
+- **Title screen:** decided before first paint by an inline script in index.html (deep links, a warm
+  return < 10 min, the new "Open straight into the game" setting, webdriver) — a unit test *runs that
+  script* against a fake page and checks it agrees with `shouldShowTitle` on 96 cases. Wordmark in a
+  2 KB Fraunces WONK cut. The scene is the rule drawn large: a closed ring of the board's own block
+  sprites standing in the sea, lagoon water inside, a fish doing lazy-eights; the first cut was +3.5 KB
+  initial JS, so the scene moved to a lazy chunk that fades in (+1.0 KB now). Iterations from
+  screenshots: a focus ring showing on load (programmatic focus) → ring only after a key; the play
+  triangle sat low (grid row span) → flex; jagged lagoon steps and grid-like shadows → a sandy reef
+  flat under the ring with one soft shadow; a dark disc painted over the moon's halo → crescent cut
+  out of the disc. Play is "Continue · Endless 3,150" when a run is in progress, never "New game".
+- **Native splashes** now come in Day and Night (iOS dark-appearance variant, Android `-night`), so a
+  Day cold launch doesn't go navy → cream; one 2732² image per appearance instead of three copies.
+- **Load:** the machine hit load average 270 (other projects' builds too). Two unit sims and the
+  combo-sim timed out in pre-commit; reruns pass. The combo-sim hang guard is now 90 s (it's a
+  correctness property, ~5 s alone) — no perf budget touched.
