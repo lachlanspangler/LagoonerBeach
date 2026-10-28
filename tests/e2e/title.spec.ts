@@ -124,3 +124,35 @@ test('Night, reduced motion and a small phone with Larger text', async ({ page }
   expect(r.foot.bottom).toBeLessThanOrEqual(r.h);
   expect(r.lock.top).toBeGreaterThanOrEqual(0);
 });
+
+test('behind the title the game stays out of reach, even after a sheet opened from it closes', async ({ page }) => {
+  await boot(page, 'title=1');
+  const reachable = () =>
+    page.evaluate(
+      () => [...document.querySelectorAll('#ui > button, #game')].filter((e) => !e.closest('[inert]')).length,
+    );
+  expect(await reachable()).toBe(0);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.locator('.sheet[data-kind="settings"]')).toHaveCount(0);
+  expect(await reachable()).toBe(0);
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(title(page)).toHaveCount(0, { timeout: 1500 });
+  expect(await reachable()).toBeGreaterThan(0);
+});
+
+test('the phone switching to dark mode while the title is up repaints its sky', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await boot(page, 'title=1');
+  await page.waitForFunction(() => document.querySelector('#title-bg.on'));
+  const sky = () =>
+    page.evaluate(() => {
+      const c = document.getElementById('title-bg') as HTMLCanvasElement;
+      const d = c.getContext('2d')!.getImageData(4, 4, 1, 1).data;
+      return d[0]! + d[1]! + d[2]!;
+    });
+  expect(await sky()).toBeGreaterThan(600); // cream
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect.poll(sky).toBeLessThan(150); // night
+  expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('night');
+});

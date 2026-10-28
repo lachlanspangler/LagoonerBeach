@@ -122,6 +122,10 @@ function wakeAudio(): void {
   if (profile.settings.music && !document.hidden) music.start(freshSeed());
 }
 const profile: Profile = loadProfile();
+/** The title screen (ADR 0015), while it's up; set at the end of boot. */
+let title: Title | null = null;
+/** Moments that would have played behind the title (the welcome-back toast): run after Play. */
+const afterTitle: (() => void)[] = [];
 
 const freshSeed = (): number => envSeed(params);
 /** Move logs of the live Classic/Daily games, saved with them (leaderboards replay them). */
@@ -283,6 +287,7 @@ function applyTheme(): void {
   else if (music.playing || sfx.graph()) wakeAudio();
   haptics.enabled = profile.settings.haptics;
   dirty = true;
+  title?.refresh(); // the OS flipped dark/light while the title is up: its sky follows
 }
 darkQuery.addEventListener('change', applyTheme);
 motionQuery.addEventListener('change', applyTheme);
@@ -1048,7 +1053,6 @@ const ui = new Ui({
     else profile.settings[k] = !profile.settings[k];
     saveProfile(profile);
     applyTheme();
-    title?.refresh();
     ui.showSettings(profile);
   },
   onTitleOff: () => {
@@ -1074,7 +1078,6 @@ const ui = new Ui({
     profile.settings.theme = t;
     saveProfile(profile);
     applyTheme();
-    title?.refresh();
     ui.showSettings(profile);
   },
   onShare: () => {
@@ -1304,7 +1307,8 @@ function step(): void {
   const wasDragging = scene.drag !== null;
   scene.drag = drag.view(now);
   scene.covered = ui.open;
-  if (dirty || scene.busy(now) || fx.pending) {
+  // the opaque title covers the board: draw nothing under it (Play marks the board dirty)
+  if (title === null && (dirty || scene.busy(now) || fx.pending)) {
     const t0 = performance.now();
     scene.draw(now, dt);
     drawTimes.push(performance.now() - t0);
@@ -1327,10 +1331,12 @@ function step(): void {
   const td = dayIndex(today());
   const streak = visibleStreak(profile.daily, td);
   if (streak > 0 && profile.daily.lastDay !== td)
-    setTimeout(
-      () => scene.toast(`Welcome back · Streak ${streak} — today's Daily is waiting`, performance.now(), 2600),
-      900,
-    );
+    setTimeout(() => {
+      const show = () =>
+        scene.toast(`Welcome back · Streak ${streak} — today's Daily is waiting`, performance.now(), 2600);
+      if (titleShowing()) afterTitle.push(() => setTimeout(show, 700));
+      else show();
+    }, 900);
 }
 
 // a lazy chunk 404s after a deploy → reload once onto the new index (guarded against loops)
@@ -1361,7 +1367,6 @@ requestAnimationFrame(frame);
 // ------------------------------------------------------------------ title screen (ADR 0015)
 // index.html already decided (before first paint) whether it shows; here it comes to life. The game
 // is fully booted behind it, so Play is instant: one tap that also unlocks audio and starts the music.
-let title: Title | null = null;
 if (titleShowing()) {
   title = new Title(
     scene.sprites,
@@ -1375,6 +1380,7 @@ if (titleShowing()) {
         title?.close();
         title = null;
         updateHint(); // the first-run demo starts now, not behind the title
+        for (const f of afterTitle.splice(0)) f();
         dirty = true;
         ui.announce(
           state.moves > 0 && !state.over

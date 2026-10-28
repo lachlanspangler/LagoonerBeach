@@ -63,6 +63,7 @@ export class Title {
   private scene: TitleScene | null = null;
   closed = false;
   private inerted: HTMLElement[] = [];
+  private onKey = () => (document.documentElement.dataset.kb = '1');
 
   constructor(
     sprites: SpriteCache,
@@ -87,7 +88,7 @@ export class Title {
     document.getElementById('t-settings')!.addEventListener('click', () => h.onSettings());
     // Play has focus (Enter plays), but the ring only shows once a key is used
     this.play.focus({ preventScroll: true });
-    addEventListener('keydown', () => (document.documentElement.dataset.kb = '1'), { once: true, capture: true });
+    addEventListener('keydown', this.onKey, { once: true, capture: true });
     void import('./titleScene.ts')
       .then((m) => {
         if (!this.closed) this.scene = new m.TitleScene(sprites, palette, reduced);
@@ -112,6 +113,9 @@ export class Title {
     if (this.closed) return;
     this.closed = true;
     this.scene?.stop();
+    this.scene = null;
+    removeEventListener('keydown', this.onKey, { capture: true });
+    const hadFocus = this.el.contains(document.activeElement);
     this.el.classList.add('leaving');
     // the board rises into place as the title lifts away (one shared move; reduced motion: a fade)
     document.getElementById('game')?.animate(
@@ -129,6 +133,8 @@ export class Title {
       },
     );
     for (const el of this.inerted) el.inert = false;
+    // keyboard focus lands on the game's first control, not on <body> when Play goes away
+    if (hadFocus) document.querySelector<HTMLElement>('#ui > button:not([inert])')?.focus({ preventScroll: true });
     let gone = false;
     const done = () => {
       if (gone) return;

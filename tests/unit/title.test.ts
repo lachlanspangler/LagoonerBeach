@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { WARM_MS, shouldShowTitle } from '../../src/ui/title.ts';
+import { K_PROFILE } from '../../src/platform/storage.ts';
 
 // index.html decides before first paint whether the title shows (ADR 0015); src/ui/title.ts holds
 // the same rule for code and tests. Run the inline script itself against a fake page and check the
@@ -12,7 +13,7 @@ function runInline(search: string, title: object, webdriver: boolean, now: numbe
   const dataset: Record<string, string> = {};
   const store: Record<string, string> = {
     'atoll.v1.title': JSON.stringify(title),
-    'atoll.v1.profile': JSON.stringify({ settings: { theme } }),
+    [K_PROFILE]: JSON.stringify({ settings: { theme } }),
   };
   const fake = {
     document: { documentElement: { dataset }, fonts: { load: () => undefined } },
@@ -68,6 +69,7 @@ describe('title screen: when it shows', () => {
     expect(shouldShowTitle('?titlerules', {}, now, true)).toBe(true);
   });
   it('sets the theme before first paint', () => {
+    expect(inline).toContain(`'${K_PROFILE}'`); // the same key the game saves its profile under
     expect(runInline('', {}, false, now, 'night').theme).toBe('night');
     expect(runInline('', {}, false, now, 'day', true).theme).toBe('day');
     expect(runInline('', {}, false, now, 'auto', true).theme).toBe('night');

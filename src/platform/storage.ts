@@ -86,7 +86,8 @@ export const DEFAULT_PROFILE: Profile = {
   puzzle: { index: 0, solved: [] },
 };
 
-const K_PROFILE = 'atoll.v1.profile';
+/** Also read by index.html's pre-paint script (theme); tests/unit/title.test.ts pins it. */
+export const K_PROFILE = 'atoll.v1.profile';
 const K_GAME = 'atoll.v1.game';
 const K_DAILY = 'atoll.v1.daily';
 

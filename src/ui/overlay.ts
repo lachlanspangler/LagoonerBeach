@@ -20,6 +20,7 @@ import { icon, type IconName } from './icons.ts';
 import { pageFace } from './pageFace.ts';
 import { retryable } from '../platform/lazy.ts';
 import { showRetry } from './retry.ts';
+import { titleShowing } from './title.ts';
 
 export interface UiHandlers {
   onOpenMenu(): void;
@@ -310,7 +311,8 @@ export class Ui {
   }
 
   private setTopBarInert(on: boolean): void {
-    for (const b of [this.menuBtn, this.sideBtn]) b.toggleAttribute('inert', on);
+    // behind the title screen they stay out of reach even when a sheet opened from it closes
+    for (const b of [this.menuBtn, this.sideBtn]) b.toggleAttribute('inert', on || titleShowing());
   }
 
   private returnFocus: HTMLElement | null = null;

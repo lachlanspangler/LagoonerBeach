@@ -61,12 +61,17 @@ export class TitleScene {
     cancelAnimationFrame(this.raf);
     removeEventListener('resize', this.onResize);
     document.removeEventListener('visibilitychange', this.onVis);
+    // let go of the layers (two full-screen canvases at dpr 2) once the title fades
+    setTimeout(() => {
+      this.base = this.ring = null;
+      this.cv.width = this.cv.height = 0;
+    }, 800);
   }
 
   private onResize = () => this.refresh();
   private onVis = () => {
     cancelAnimationFrame(this.raf);
-    if (!document.hidden && !this.stopped) this.raf = requestAnimationFrame(this.frame);
+    if (!document.hidden && !this.stopped && !this.reduced()) this.raf = requestAnimationFrame(this.frame);
   };
 
   private resize(): void {
@@ -257,7 +262,13 @@ export class TitleScene {
     RING.forEach((row, j) =>
       [...row].forEach((ch, i) => {
         if (!/\d/.test(ch)) return;
-        g.drawImage(this.sprites.pebble(p, Number(ch), cell), x + i * cell, y + j * cell, cell, cell);
+        g.drawImage(
+          this.sprites.build(p, Number(ch), cell, 'normal', (i * 3 + j) % 3),
+          x + i * cell,
+          y + j * cell,
+          cell,
+          cell,
+        );
       }),
     );
     return c;
