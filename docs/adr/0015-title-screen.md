@@ -48,6 +48,11 @@
 - **Day and Night** follow the theme. Night adds stars and a crescent moon, and its Play is the
   inverted cyan button.
 
+## Amendment (2026-10-28, owner)
+The title is just the wordmark, the tagline, the atoll and Play: the About and Settings pills and the
+fish are gone ("remove about and setting and the fish … from intro screen"). About is reached from
+the home menu (Menu › About) and Settings; "Open straight into the game" lives in Menu › Settings.
+
 ## Consequences
 - `#title` lives inside `#ui` at z 20. While it shows, sheets open above it (`.veil` z 40) and
   close back to it.

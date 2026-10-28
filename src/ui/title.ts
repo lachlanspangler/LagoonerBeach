@@ -53,8 +53,6 @@ export const titleShowing = (): boolean => document.documentElement.dataset.titl
 
 export interface TitleHooks {
   onPlay(): void;
-  onAbout(): void;
-  onSettings(): void;
 }
 
 export class Title {
@@ -72,9 +70,6 @@ export class Title {
     h: TitleHooks,
   ) {
     this.el.querySelector('.t-play-ic')!.innerHTML = icon('play', { filled: true });
-    const [about, settings] = this.el.querySelectorAll<HTMLElement>('.t-pill-ic');
-    about!.innerHTML = icon('info');
-    settings!.innerHTML = icon('settings');
     this.el.querySelector('.t-wave')!.innerHTML =
       '<svg viewBox="0 0 92 10"><path d="M2 6c5-4 10-4 15 0s10 4 15 0 10-4 15 0 10 4 15 0 10-4 15 0 10 4 13 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
     // the board and its buttons sit behind the title: out of reach (screen readers, Tab) until Play
@@ -84,8 +79,6 @@ export class Title {
     ].filter((e): e is HTMLElement => !!e && !e.inert);
     for (const el of this.inerted) el.inert = true;
     this.play.addEventListener('click', () => !this.closed && h.onPlay());
-    document.getElementById('t-about')!.addEventListener('click', () => h.onAbout());
-    document.getElementById('t-settings')!.addEventListener('click', () => h.onSettings());
     // Play has focus (Enter plays), but the ring only shows once a key is used
     this.play.focus({ preventScroll: true });
     addEventListener('keydown', this.onKey, { once: true, capture: true });

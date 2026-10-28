@@ -3,8 +3,8 @@
  * on screen and playable; this canvas fades in behind it a moment later.
  *
  * The game's own idea drawn large: a closed ring of blocks (the same sprites as the board) standing
- * in the sea, with calm lagoon water inside it and a fish turning slow circles. Static layers are
- * drawn once to offscreen canvases; a frame is two blits, a few shimmer arcs and the fish (30 fps
+ * in the sea, with calm lagoon water inside it. Static layers are
+ * drawn once to offscreen canvases; a frame is two blits and a few shimmer arcs (30 fps
  * cap, stopped when hidden or when the title closes).
  */
 import type { Palette } from '../render/theme.ts';
@@ -31,7 +31,7 @@ export class TitleScene {
   private w = 0;
   private h = 0;
   private dpr = 1;
-  /** The lagoon interior in CSS px (fish and shimmer live inside it). */
+  /** The lagoon interior in CSS px (the shimmer lives inside it). */
   private lag = { x: 0, y: 0, w: 0, h: 0, cell: 0 };
   /** Where the open sea starts (CSS px from the top). */
   private shore = 0;
@@ -91,7 +91,9 @@ export class TitleScene {
     this.cv.height = Math.round(this.h * this.dpr);
     // the sea starts just under Play; the atoll sits centred in what's left above the footer
     const pr = this.play.getBoundingClientRect();
-    const fr = this.el.querySelector('.t-foot')!.getBoundingClientRect();
+    // the sea runs to the bottom edge: the atoll sits above the home indicator's safe area
+    const bottom = r.bottom - parseFloat(getComputedStyle(this.el).paddingBottom || '0');
+    const fr = { top: bottom };
     this.shore = Math.min(this.h - 140, pr.bottom - r.top + Math.max(28, (fr.top - pr.bottom) * 0.12));
     const room = fr.top - r.top - this.shore - 20;
     // phones: up to 46 px blocks; tablets grow the vignette to ~60% of the width
@@ -325,39 +327,6 @@ export class TitleScene {
       g.quadraticCurveTo(sx + 9, sy - 3, sx + 18, sy);
       g.stroke();
     }
-    // the fish turns slow lazy-eights inside the lagoon
-    const cx = x + lw / 2;
-    const cy = y + lh / 2 + cell * 0.1;
-    const a = t * 0.45;
-    const fx = cx + Math.sin(a) * cell * 1.55;
-    const fy = cy + Math.sin(a * 2) * cell * 0.42;
-    const dx = Math.cos(a) * 1.55;
-    const dy = Math.cos(a * 2) * 0.84;
-    const ang = Math.atan2(dy, dx);
-    const s = cell * 0.36;
-    g.save();
-    g.translate(fx, fy);
-    g.rotate(ang);
-    const wag = Math.sin(t * 7) * 0.25;
-    g.fillStyle = night ? 'rgba(4,20,30,0.35)' : 'rgba(30,110,140,0.22)';
-    g.beginPath();
-    g.ellipse(2, s * 0.5, s, s * 0.42, 0, 0, Math.PI * 2);
-    g.fill(); // its shadow on the lagoon floor
-    g.fillStyle = night ? '#ffb39c' : '#f2795b';
-    g.beginPath();
-    g.ellipse(0, 0, s, s * 0.46, 0, 0, Math.PI * 2);
-    g.fill();
-    g.beginPath();
-    g.moveTo(-s * 0.8, 0);
-    g.lineTo(-s * 1.55, -s * (0.48 + wag));
-    g.lineTo(-s * 1.55, s * (0.48 - wag));
-    g.closePath();
-    g.fill();
-    g.fillStyle = night ? '#0b1622' : '#2b231c';
-    g.beginPath();
-    g.arc(s * 0.5, -s * 0.08, Math.max(1.2, s * 0.11), 0, Math.PI * 2);
-    g.fill();
-    g.restore();
     // lagoon glints
     for (let i = 0; i < 5; i++) {
       const gx = x + cell * (2 + ((i * 1.7 + t * 0.12) % 4));

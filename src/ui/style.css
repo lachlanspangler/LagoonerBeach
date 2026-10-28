@@ -1077,7 +1077,7 @@ html[data-title='1'] .title {
   z-index: 20;
   pointer-events: auto;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 0.9fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1.05fr);
   justify-items: center;
   padding: calc(env(safe-area-inset-top) + 9vh) 24px calc(env(safe-area-inset-bottom) + 20px);
   background: var(--bg);
@@ -1203,36 +1203,6 @@ html[data-theme='night'] .t-play {
 .t-play-s:empty {
   display: none;
 }
-.t-foot {
-  grid-row: 5;
-  display: flex;
-  gap: 16px;
-  animation: t-fade 260ms 60ms var(--ease-standard) both;
-}
-.t-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: clamp(44px, 5vw, 52px);
-  min-width: 96px;
-  padding: 0 18px 0 14px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 251, 245, 0.72);
-  color: var(--ink);
-  font: 800 calc(clamp(15px, 1.9vw, 18px) * var(--fs)) / 1 var(--font);
-  cursor: pointer;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-}
-html[data-theme='night'] .t-pill {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-}
-.t-pill-ic .ic {
-  width: 20px;
-  height: 20px;
-}
 html:not([data-kb='1']) .title :focus-visible {
   outline: none;
 }
@@ -1246,8 +1216,7 @@ html[data-title='1'] .title.leaving {
   pointer-events: none;
 }
 .title.leaving .t-lock,
-.title.leaving .t-play,
-.title.leaving .t-foot {
+.title.leaving .t-play {
   /* a leave animation replaces the entry one (whose fill holds transform), so it runs smoothly */
   animation: t-leave-down 180ms var(--ease-exit) forwards;
 }
@@ -1296,15 +1265,10 @@ html[data-rm='1'] .title {
     animation-delay: 0ms !important;
   }
 }
-/* tablets: the composition sits higher, the vignette and pills grow with the screen */
+/* tablets: the composition sits higher, the vignette grows with the screen */
 @media (min-width: 700px) {
   html[data-title='1'] .title {
-    grid-template-rows: minmax(0, 0.55fr) auto auto minmax(0, 1fr) auto;
-  }
-  .t-pill {
-    min-height: 60px;
-    font-size: calc(19px * var(--fs));
-    padding: 0 26px 0 20px;
+    grid-template-rows: minmax(0, 0.55fr) auto auto minmax(0, 1.15fr);
   }
   .t-play {
     width: min(70vw, 460px);

@@ -61,11 +61,9 @@ describe('text contrast (tokens)', () => {
         expect(contrast(over(fg, bg), bg)).toBeGreaterThanOrEqual(min);
       });
 
-  // the title screen (ADR 0015): wordmark and tagline on the sky, the pills over the sea
-  it('title: wordmark, tagline and pills stay AA on every stop of the scene', () => {
+  // the title screen (ADR 0015): wordmark and tagline on the sky
+  it('title: wordmark, tagline and Play label stay AA on every stop of the scene', () => {
     const css = readFileSync('src/ui/style.css', 'utf8');
-    const pill = (sel: string) => new RegExp(`${sel} \\{[^}]*?background: (rgba\\([^)]+\\))`).exec(css)![1]!;
-    const pills = { day: pill('\\.t-pill'), night: pill("html\\[data-theme='night'\\] \\.t-pill") };
     for (const p of [DAY, NIGHT]) {
       const k = TITLE_COLORS[p.name === 'night' ? 'night' : 'day'];
       for (const sky of k.sky) {
@@ -76,10 +74,6 @@ describe('text contrast (tokens)', () => {
         // the Night title's Play is the accent a step deeper (style.css): its label stays AA
         const fill = /html\[data-theme='night'\] \.t-play \{[^}]*?(#[0-9a-f]{6});/i.exec(css)![1]!;
         expect(contrast(p.onAccent, fill), `night Play label on ${fill}`).toBeGreaterThanOrEqual(4.5);
-      }
-      for (const sea of [...k.sea, ...k.sky]) {
-        const bg = over(pills[p.name === 'night' ? 'night' : 'day'], sea);
-        expect(contrast(p.text, bg), `${p.name} pill over ${sea}`).toBeGreaterThanOrEqual(4.5);
       }
     }
   });

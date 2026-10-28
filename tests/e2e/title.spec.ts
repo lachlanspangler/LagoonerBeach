@@ -1,6 +1,6 @@
 /**
  * The title screen (ADR 0015): shows on a cold launch, one tap into play, never in the way of a deep
- * link, a quick return or a player who switched it off, and a quiet way to About and Settings.
+ * link, a quick return or a player who switched it off. Just the wordmark, the atoll and Play.
  * Automated runs skip it unless asked: `?title` forces it, `?titlerules` applies the real rules.
  */
 import { expect, test, type Page } from '@playwright/test';
@@ -18,10 +18,8 @@ test('cold launch: the title, then one tap into a playable board', async ({ page
   const box = (await play.boundingBox())!;
   expect(box.width).toBeGreaterThanOrEqual(240);
   expect(box.height).toBeGreaterThanOrEqual(64);
-  for (const name of ['About', 'Settings']) {
-    const b = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
-    expect(b.height, name).toBeGreaterThanOrEqual(44);
-  }
+  // nothing else to press: About and Settings live in the game's menu
+  await expect(title(page).getByRole('button')).toHaveCount(1);
   // the wordmark is set in its own face (2 KB, ADR 0013), not a fallback
   await page.evaluate(() => document.fonts.ready);
   expect(await page.evaluate(() => document.fonts.check('800 64px "Lagoon Title"', 'Lagooner Beach'))).toBe(true);
@@ -79,8 +77,11 @@ test('never in the way: deep links, quick returns and the setting skip it', asyn
   await p.evaluate(() => window.dispatchEvent(new Event('pagehide')));
   const at = await p.evaluate(() => JSON.parse(localStorage.getItem('atoll.v1.title')!).at as number);
   expect(Math.abs(Date.now() - at)).toBeLessThan(10_000);
-  // the setting, from the title's own Settings
+  // the setting, in Menu › Settings once you're playing
   await p.evaluate(() => localStorage.removeItem('atoll.v1.title'));
+  await p.getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(p.locator('#title')).toHaveCount(0, { timeout: 1500 });
+  await p.getByRole('button', { name: 'Menu' }).click();
   await p.getByRole('button', { name: 'Settings', exact: true }).click();
   const sw = p.getByRole('switch', { name: 'Open straight into the game' });
   await expect(sw).toHaveAttribute('aria-checked', 'false');
@@ -90,52 +91,36 @@ test('never in the way: deep links, quick returns and the setting skip it', asyn
   await p.context().close();
 });
 
-test('About from the title, then back to it and play', async ({ page }) => {
-  await boot(page, 'title=1');
-  await page.getByRole('button', { name: 'About', exact: true }).click();
-  const about = page.locator('.sheet[data-kind="about"]');
-  await expect(about).toBeVisible();
-  await expect(about).toContainText('I will not take any funding.');
-  // the sheet sits above the title, and closing it returns to the title
-  const top = await page.evaluate(() => {
-    const r = document.querySelector('.sheet[data-kind="about"]')!.getBoundingClientRect();
-    return document.elementFromPoint(r.x + r.width / 2, r.y + 40)?.closest('.sheet') !== null;
-  });
-  expect(top).toBe(true);
-  await about.getByRole('button', { name: 'Close' }).click();
-  await expect(about).toBeHidden();
-  await expect(title(page)).toBeVisible();
-  await page.getByRole('button', { name: 'Play', exact: true }).click();
-  await expect(title(page)).toHaveCount(0, { timeout: 1500 });
-});
-
 test('Night, reduced motion and a small phone with Larger text', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await boot(page, 'title=1');
   expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('night');
-  // everything on screen, nothing overlapping: lockup above Play above the footer
+  // everything on screen, nothing overlapping: lockup above Play, Play well above the bottom
   const r = await page.evaluate(() => {
     const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-    return { lock: b('.t-lock'), play: b('.t-play'), foot: b('.t-foot'), h: innerHeight };
+    return { lock: b('.t-lock'), play: b('.t-play'), h: innerHeight };
   });
   expect(r.lock.bottom).toBeLessThanOrEqual(r.play.top);
-  expect(r.play.bottom).toBeLessThan(r.foot.top);
-  expect(r.foot.bottom).toBeLessThanOrEqual(r.h);
+  expect(r.play.bottom).toBeLessThan(r.h * 0.75);
   expect(r.lock.top).toBeGreaterThanOrEqual(0);
 });
 
-test('behind the title the game stays out of reach, even after a sheet opened from it closes', async ({ page }) => {
+test('behind the title the game stays out of reach until Play', async ({ page }) => {
   await boot(page, 'title=1');
   const reachable = () =>
     page.evaluate(
       () => [...document.querySelectorAll('#ui > button, #game')].filter((e) => !e.closest('[inert]')).length,
     );
   expect(await reachable()).toBe(0);
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: 'Done' }).click();
-  await expect(page.locator('.sheet[data-kind="settings"]')).toHaveCount(0);
-  expect(await reachable()).toBe(0);
+  await page.keyboard.press('Tab');
+  // Tab never lands on the HUD hidden behind the title
+  expect(
+    await page.evaluate(() => {
+      const a = document.activeElement;
+      return !a || !!a.closest('#title') || !a.closest('#ui');
+    }),
+  ).toBe(true);
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(title(page)).toHaveCount(0, { timeout: 1500 });
   expect(await reachable()).toBeGreaterThan(0);

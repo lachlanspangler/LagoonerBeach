@@ -1395,14 +1395,6 @@ if (titleShowing()) {
             : 'New game.',
         );
       },
-      onAbout: () => {
-        wakeAudio();
-        ui.showAbout(journal);
-      },
-      onSettings: () => {
-        wakeAudio();
-        ui.showSettings(profile);
-      },
     },
   );
   const inRun = bootMode === 'puzzle' || (state.moves > 0 && !state.over);
