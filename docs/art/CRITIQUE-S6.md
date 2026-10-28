@@ -10,7 +10,7 @@ the reviewer asked for is in git history under "critic round N".
 | 2 (2026-10-28) | Title, all six blocks, About | 2 A · 9 A− · 6 B+ · 2 B · 1 B− |
 | 3 | same | 0 A · 10 A− · 5 B+ · 2 B (a stricter reviewer: "candy" materials, hand-off) |
 | 4 | same, verifying round 3 | **11 A · 4 A−**, nothing below A− |
-| 5 | verifying round 4's five A− fixes | see below |
+| 5 | verifying round 4's five A− fixes | **16 A · 0 A−** (celebrations kept their round-4 A) |
 
 ## What moved the grades
 - **Title:**
@@ -43,3 +43,6 @@ the reviewer asked for is in git history under "critic round N".
 - Larger text stays 1.12× in sheets; the layouts are tested at that scale.
 - The PMMC card keeps the dolphin; the game has no seal species, and the copy says marine mammals.
 - The COMBO badge crossfade.
+
+Round 5's optional nit (the first-run demo began while the board was still fading in) was fixed: the demo
+now starts 400 ms after Play.

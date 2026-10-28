@@ -1379,7 +1379,8 @@ if (titleShowing()) {
         haptics.fire('tick');
         title?.close();
         title = null;
-        updateHint(); // the first-run demo starts now, not behind the title
+        updateHint(); // the first-run demo starts now, not behind the title...
+        if (scene.hint) scene.hint = { ...scene.hint, start: scene.hint.start + 400 }; // ...once the board is in
         for (const f of afterTitle.splice(0)) f();
         dirty = true;
         ui.announce(
