@@ -6,10 +6,19 @@ Character limits noted per field. Copy is original. Screenshots: `npx tsx script
 ## Shared
 - **Name (30):** Lagooner Beach
 - **Category:** Games › Puzzle (secondary: Board)
-- **Age rating:** 4+ / Everyone (no violence, no purchases in v1, no ads in v1). With online
+- **Age rating:** 4+ / Everyone (no violence, no purchases, no ads — ever: the game takes no
+  funding, see ADR 0016). With online
   leaderboards on, answer "yes" to user-generated content: player names only, 7 letters A–Z,
   filtered on device and server, no chat or messaging.
-- **Price:** Free
+- **Price:** Free. No in-app purchases, no ads, no tips (ADR 0016). Store forms: "Contains ads: No",
+  "In-app purchases: No".
+- **External links:** the About page links to five coastal-wildlife charities (in the system
+  browser, untracked; list in `docs/research/CHARITIES.md`). The game never collects or forwards
+  donations. App Store Review Guideline 3.2.2(iv): apps that raise money for
+  charities "must be free on the App Store and may only collect funds outside of the app, such as
+  via Safari" — we are free and collect nothing; links open in the system browser. Google Play's
+  payments policy likewise permits linking out to a charity's own site for donations. Re-check the
+  current wording at submission.
 - **Privacy:** policy `public/privacy.html` (host at a public URL before submitting). The labels
   depend on the build (see "Privacy" below): demo-board builds collect nothing; builds with
   `VITE_LB_URL` set collect leaderboard data after the player opts in.

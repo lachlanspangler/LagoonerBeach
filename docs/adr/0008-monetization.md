@@ -1,6 +1,12 @@
 # ADR 0008 — Monetization: light, cosmetic, never in the loop
 
-- Status: proposed (owner decides before launch) · Date: 2026-10-16
+- Status: **superseded** by ADR 0016 (2026-10-27): the Supporter Pack and option B are **rejected**.
+  Lagooner Beach takes no funding of any kind: no purchases, no ads, no tips, no sponsorship. The
+  About page instead points players to coastal-wildlife charities they can give to directly
+  (`docs/adr/0016-about-and-no-funding.md`, evidence in `docs/research/CHARITIES.md`).
+- Original status: proposed (owner decides before launch) · Date: 2026-10-16
+
+> Kept below for the record. Nothing in this ADR is to be built.
 
 ## Principles (non-negotiable)
 1. **Nothing pay-to-win.** No paid pieces, undos, revives, hints, lures or catch boosts. The dealer's
@@ -10,7 +16,7 @@
 4. **No data.** Any ad SDK must run without tracking (contextual only, no IDFA/AAID prompts) or it
    doesn't ship (see `docs/store/PRIVACY.md`).
 
-## Recommendation for v1: free, ad-free, one optional "Supporter Pack"
+## ~~Recommendation for v1: free, ad-free, one optional "Supporter Pack"~~ (rejected 2026-10-27)
 - **Supporter Pack** (one-time IAP, e.g. $2.99): three extra pebble styles + two board themes
   (e.g. "Sunset", "Tide pool"), a supporter shell on the journal cover. Purely cosmetic; everything
   else stays free forever. Also works as a tip jar.
@@ -18,7 +24,7 @@
   fatigue. A small cosmetic IAP keeps the ratings high, needs no tracking, and is simple to build
   with StoreKit / Play Billing via a Capacitor plugin.
 
-## If revenue later requires ads (option B, opt-in by the owner)
+## ~~If revenue later requires ads (option B, opt-in by the owner)~~ (rejected 2026-10-27)
 - Interstitial **only between games**, at most once every 3 games and never in the first 10
   minutes of a session or before game 5 for new players; skippable after 5 s; never on Daily or
   Reef results; removed by the Supporter Pack.
@@ -29,7 +35,7 @@
 ## Not doing
 Energy/lives, loot boxes, currencies, battle passes, timed offers, push notifications for sales.
 
-## Implementation notes (when the owner says go)
+## ~~Implementation notes~~ (void: there will be no purchase flow)
 `@capacitor-community/in-app-purchases` or RevenueCat-free StoreKit/Billing wrappers; product id
 `supporter_pack`; entitlement stored locally (and restorable via the store). Cosmetics already
 exist as skins (`src/meta/unlocks.ts`), so the pack is a data change plus a purchase screen in
