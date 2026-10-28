@@ -8,7 +8,7 @@ there are no other branches and no worktrees. Nothing is pushed.
 **Green (2026-10-28, this machine):**
 - `make check`: unit, property and server tests, lint, format and ledger sync.
 - `make e2e`: 205 functional tests on Chromium and WebKit, then the 10 perf budgets run alone and serially. That includes the new block warm-up budget (≈37/38 ms against 40 ms at dpr 3 under a 4× CPU throttle). No budget was loosened.
-- Release build: initial JS 62.9 KB gz (budget 64), CSS 6.0 KB (budget 6, 6,045 of 6,144 B). Debug hooks and demo boards don't leak (`npm run size`).
+- Release build: initial JS 62.7 KB gz (budget 64), CSS 5.8 KB (budget 6). Debug hooks and demo boards don't leak (`npm run size`).
 - iOS Simulator (iOS 27, Release, this project's own "Lagooner iPhone" simulator): the title renders. This run found and fixed a ship blocker: the app had no UIScene lifecycle, and iOS 27 stops such apps at launch.
 - Android emulator (`emulator-5594`, debug APK, the real WebView): title on a fresh launch, then Play onto the first-run board.
 - Shots: `docs/media/after/s5/ios-simulator-title.jpg`, `android-emulator-*.jpg`.
@@ -16,8 +16,8 @@ there are no other branches and no worktrees. Nothing is pushed.
 **What's new (all your session-5 asks):**
 - **Title screen** (ADR 0013, ADR 0015).
   - "Lagooner Beach" in a 2 KB Fraunces display cut, with one big Play button. When a run is in progress it reads Continue and names the mode, e.g. "Endless · 3,150".
-  - A quiet About pill and a Settings pill.
-  - Behind it, a living atoll drawn with the board's own blocks.
+  - Nothing else to press (your call, 2026-10-28): About and Settings live in the home menu.
+  - Behind it, a calm atoll drawn with the board's own blocks.
   - Day/Night, reduced motion, Larger text and tablet layouts.
   - Tapping Play plays a synthesized chime and starts the music. The hand-off to the board takes about 370 ms.
   - Never in the way: it's skipped for deep links such as a shared Daily, for a return within 10 minutes, when Settings › "Open straight into the game" is on, and in automated runs.
@@ -30,11 +30,12 @@ there are no other branches and no worktrees. Nothing is pushed.
   - pink coralline crust
 
   They stay readable from 22 px, Day and Night. Colourblind separation is tested on the rendered sprites, and there's a non-text 3:1 boundary against the cell (tested). Pops, ring bursts and celebrations were re-checked on the new blocks. The old look is still available as the "Smooth Stones" style.
-- **Journal.** Every habitat shows its requirement next to its name, plus found/total and a tick when complete. The requirement is generated from the same rule data the game catches with, and property tests prove the two can't drift. There's also a rarity and golden summary (1 in 64, from the game's own constant), spoiler-free hints, and Switch to Night / Play Reefs nudges.
+- **Journal.** Every habitat shows its requirement next to its name, plus found/total and a tick when complete. Catch rules are now just pool size and combo (your call, 2026-10-28; ADR 0007 amended): hints read "3–5 cells, ×6 combo", habitat lines "Pools of 1–5 cells · combos from ×6". No shapes, islands or cascade waves. The requirement is generated from the same rule data the game catches with, and property tests prove the two can't drift. There's also a rarity and golden summary (1 in 64, from the game's own constant), spoiler-free hints, and Switch to Night / Play Reefs nudges.
 - **About** (ADR 0016).
   - A short note signed "Lachlan Spangler · grew up in Laguna Beach · advocates for marine wildlife protection".
   - It says plainly "I will not take any funding." and then "But you can donate to these charities and funds to help coastal wildlife:".
-  - Five verified 501(c)(3)s, each beside a creature from the game: Pacific Marine Mammal Center, Laguna Ocean Foundation, Surfrider Foundation, Monterey Bay Aquarium and Ocean Conservancy. The evidence (EIN, IRS record and the official donate page) is in `docs/research/CHARITIES.md`.
+  - Reachable from Menu › About and Settings.
+  - Five verified 501(c)(3)s, each with its own logo and beside a creature from the game: Pacific Marine Mammal Center, Laguna Ocean Foundation, Surfrider Foundation, Monterey Bay Aquarium and Ocean Conservancy. The evidence (EIN, IRS record and the official donate page) is in `docs/research/CHARITIES.md`.
   - Links open the charity's own page in the system browser, untracked and with no referrer.
   - ADR 0008's Supporter Pack is rejected. The store listing and privacy policy now say "no purchases".
 - **Design critic:** five rounds by fresh reviewers. The last two came out at 11 A / 4 A−, then **16 A / 0 A−**. The record is in `docs/art/CRITIQUE-S6.md`.
@@ -45,16 +46,17 @@ there are no other branches and no worktrees. Nothing is pushed.
 1. **Sign-off on the About page:** the wording and the five charities. It's all in `src/ui/sheets.ts` (`showAbout`) and `src/meta/charities.ts`; to read it, open the game → About. Two choices I made that you may want to change:
    - The lead line is "I spent my childhood turning over rocks in the tide pools.", and the note ends with "I made this game to stand up for them."
    - Monterey Bay Aquarium (sea otters) replaced The Marine Mammal Center, so no two cards are the same cause.
-2. **Name and trademark check** for "Lagooner Beach".
-3. **Bundle id:** replace `com.example.atoll` in `capacitor.config.ts` before the first store upload.
-4. **Accounts and signing:**
+2. **Charity logos:** they're the charities' own, unaltered and bundled, used only to identify each one next to its donate link. Most nonprofits have brand guidelines, so confirm with each (or tell me to drop the logos) before release.
+3. **Name and trademark check** for "Lagooner Beach".
+4. **Bundle id:** replace `com.example.atoll` in `capacitor.config.ts` before the first store upload.
+5. **Accounts and signing:**
    - Apple Developer (team id; signing in Xcode).
    - Play Console.
    - An Android upload keystore in `android/keystore.properties` (format in `android/app/build.gradle`).
-5. **Leaderboard backend (optional for launch):** see `docs/server/DEPLOY.md`. Without it the game ships with no leaderboards and "Data Not Collected".
-6. **Privacy:** host `public/privacy.html` and add a contact email.
-7. **Share link:** replace the `SHARE_URL = 'lagooner.beach'` placeholder in `src/ui/share-card.ts`.
-8. **A real phone:** 10–20 minutes on an iPhone (iOS 27 especially, after the scene fix) and an Android phone. Check:
+6. **Leaderboard backend (optional for launch):** see `docs/server/DEPLOY.md`. Without it the game ships with no leaderboards and "Data Not Collected".
+7. **Privacy:** host `public/privacy.html` and add a contact email.
+8. **Share link:** replace the `SHARE_URL = 'lagooner.beach'` placeholder in `src/ui/share-card.ts`.
+9. **A real phone:** 10–20 minutes on an iPhone (iOS 27 especially, after the scene fix) and an Android phone. Check:
    - the title → Play hand-off;
    - the new blocks at arm's length;
    - the Play chime level;
@@ -72,7 +74,6 @@ there are no other branches and no worktrees. Nothing is pushed.
 - **Re-shoot the store screenshots** with the title and the new blocks (`scripts/store-shots.ts`). The ones in `artifacts/store/` predate session 5.
 - **The eligible-chances counter** for undiscovered species (I-201) needs a journal save-format change, so it's left for after launch.
 - **Larger text is 1.12× in sheets.** The critic suggested 1.25×; that needs a layout pass, because every sheet is tested to fit at 375×667.
-- **CSS is 99 bytes under its 6 KB budget.** The next UI change needs to trim before it adds.
 - **After launch,** tune catch odds and the endless curve from real play (`scripts/catch-sim.ts`, `scripts/reef-curve.ts`).
 
 ## What works
