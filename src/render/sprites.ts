@@ -430,7 +430,7 @@ export class SpriteCache {
         g.roundRect(x, top, w, h * 1.3, w / 2);
         g.fill();
         const tip = g.createRadialGradient(x + w * 0.42, top + w * 0.38, 0, x + w * 0.42, top + w * 0.38, w * 0.55);
-        tip.addColorStop(0, shade(base, 0.62));
+        tip.addColorStop(0, shade(base, 0.42)); // a matte growing tip, not a glossy cap
         tip.addColorStop(1, shade(base, 0.1).replace('rgb', 'rgba').replace(')', ',0)'));
         g.fillStyle = tip;
         g.fillRect(x, top, w, w);
@@ -490,7 +490,8 @@ export class SpriteCache {
     } else {
       // pink coralline crust: chalky encrusting algae over rock, raised in a few low knobs (lit
       // top-left, shadowed low-right), with the pale growing margin real crusts have
-      const knobs = dots([4, 6, 8][lod]!, s * (lod ? 0.1 : 0.13), s * (lod ? 0.17 : 0.2));
+      // many small knobs (a crust, not popcorn)
+      const knobs = dots([5, 9, 12][lod]!, s * (lod ? 0.075 : 0.11), s * (lod ? 0.13 : 0.16));
       if (lod > 1) knobs.push(...dots(8, s * 0.035, s * 0.06));
       const sh = new Path2D();
       const body = new Path2D();
