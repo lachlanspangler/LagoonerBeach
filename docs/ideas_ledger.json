@@ -4838,8 +4838,8 @@
    "basis": "est",
    "value": 9,
    "effort": 3,
-   "status": "chosen",
-   "reason": "Owner ask; JOURNAL_REQUIREMENTS.md."
+   "status": "built",
+   "reason": "Built (S5): HABITAT_REQ in src/meta/reqText.ts; lines generated from the members' req and proved true (journalReq.test.ts)."
   },
   {
    "id": "I-174",
@@ -4867,8 +4867,8 @@
    "basis": "est",
    "value": 9,
    "effort": 1,
-   "status": "chosen",
-   "reason": ""
+   "status": "built",
+   "reason": "Built (S5): got/total, a success tick and 'complete' for screen readers; Golden x/n once complete."
   },
   {
    "id": "I-175",
@@ -4896,8 +4896,8 @@
    "basis": "est",
    "value": 6,
    "effort": 1,
-   "status": "chosen",
-   "reason": ""
+   "status": "built",
+   "reason": "Built (S5): summary block above the habitats, pips + found/total per tier."
   },
   {
    "id": "I-176",
@@ -4925,8 +4925,8 @@
    "basis": "est",
    "value": 7,
    "effort": 1,
-   "status": "chosen",
-   "reason": ""
+   "status": "built",
+   "reason": "Built (S5): 'Golden x/47 · 1 in 64 …' from catch.ts GOLDEN_ODDS (a statistical test pins the rate)."
   },
   {
    "id": "I-177",
@@ -4954,8 +4954,8 @@
    "basis": "est",
    "value": 8,
    "effort": 1,
-   "status": "chosen",
-   "reason": ""
+   "status": "built",
+   "reason": "Built (S5): silhouettes + ??? kept; the hint is generated from the rule (names the pool, never the creature). It is exact about shape and size, not vague: the research found vague copy drifting from the rules."
   },
   {
    "id": "I-178",
@@ -4983,8 +4983,8 @@
    "basis": "est",
    "value": 9,
    "effort": 2,
-   "status": "chosen",
-   "reason": "Owner ask."
+   "status": "built",
+   "reason": "Built (S5): gate implication over an enumerated context space, plus req ≡ the old lambdas for all 47."
   },
   {
    "id": "I-179",
@@ -5623,6 +5623,64 @@
    "effort": 1,
    "status": "backlog",
    "reason": ""
+  },
+  {
+   "id": "I-201",
+   "kind": "feature",
+   "name": "Eligible-chances counter",
+   "pitch": "Undiscovered tiles show 'Close: 3 chances' (lagoons that met the rule), Hades-style, no odds.",
+   "closest": "Hades Codex progress bars",
+   "new": "Progress toward an unknown without a spoiler",
+   "scores": [
+    2,
+    2,
+    1,
+    2,
+    1,
+    2,
+    1,
+    2,
+    2,
+    1,
+    2,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 6,
+   "effort": 3,
+   "status": "backlog",
+   "reason": "Needs a journal save-format field (chances[id]) and a migration; skipped for the v1.0.0 RC (S5). JOURNAL_REQUIREMENTS.md §3.4."
+  },
+  {
+   "id": "I-202",
+   "kind": "polish",
+   "name": "Legendary pill vs new dot",
+   "pitch": "On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill.",
+   "closest": "",
+   "new": "",
+   "scores": [
+    2,
+    2,
+    2,
+    2,
+    1,
+    2,
+    1,
+    2,
+    2,
+    1,
+    1,
+    1,
+    2,
+    2
+   ],
+   "basis": "est",
+   "value": 3,
+   "effort": 1,
+   "status": "backlog",
+   "reason": "Seen in the S5 journal review (375 px); predates the requirement work."
   }
  ]
 }
