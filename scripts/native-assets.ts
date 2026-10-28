@@ -4,10 +4,12 @@
  *  - Android legacy + round launcher icons (mdpi…xxxhdpi), adaptive foreground (108dp canvas,
  *    art inside the 72dp safe zone) + background colour, splash.png at every existing size
  *  - Play Store: 512 icon and 1024×500 feature graphic → artifacts/store/
- *   npx tsx scripts/native-assets.ts [--play-only]   (LB_URL dev server: the creature on the feature graphic)
+ *   npx tsx scripts/native-assets.ts [--play-only | --splash-only]   (LB_URL dev server: the creature on the feature graphic)
+ * Splashes come in Day and Night (iOS: a dark-appearance variant; Android: `-night` resources), so a
+ * cold launch goes from the splash to the title screen (ADR 0015) without a dark → cream flash.
  */
 import { chromium } from '@playwright/test';
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
 const SEA = '#0F2233';
@@ -47,7 +49,52 @@ const sized = (s: string, w: number, h: number) =>
   s.replace('width="512" height="512"', `width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"`);
 
 // --play-only: just the Play Store icon + feature graphic (leaves the native projects alone)
-if (!process.argv.includes('--play-only')) await natives();
+if (process.argv.includes('--splash-only')) await splashes();
+else if (!process.argv.includes('--play-only')) await natives();
+/** Day (the title's sand) and Night (the sea) splashes, iOS and Android. */
+async function splashes(): Promise<void> {
+  const splash = (w: number, h: number, night: boolean) =>
+    `<div style="width:${w}px;height:${h}px;display:grid;place-items:center;background:${
+      night
+        ? 'radial-gradient(circle at 50% 45%,#1B4E6B,#0B1622 70%)'
+        : 'radial-gradient(circle at 50% 45%,#FFFDF8,#F3E7D5 75%)'
+    }">
+  ${sized(svg({ bg: false, rx: 0, scale: 1 }), Math.round(Math.min(w, h) * 0.22), Math.round(Math.min(w, h) * 0.22))}</div>`;
+  const IOS = 'ios/App/App/Assets.xcassets/Splash.imageset';
+  // one image per appearance (scale-less): the same 2732² art served every scale before, three times over
+  for (const f of readdirSync(IOS).filter((x) => x.endsWith('.png'))) rmSync(`${IOS}/${f}`);
+  await render(splash(2732, 2732, false), 2732, 2732, `${IOS}/splash-2732x2732.png`);
+  await render(splash(2732, 2732, true), 2732, 2732, `${IOS}/splash-2732x2732-dark.png`);
+  const images = [
+    { idiom: 'universal', filename: 'splash-2732x2732.png' },
+    {
+      appearances: [{ appearance: 'luminosity', value: 'dark' }],
+      idiom: 'universal',
+      filename: 'splash-2732x2732-dark.png',
+    },
+  ];
+  writeFileSync(
+    `${IOS}/Contents.json`,
+    JSON.stringify({ images, info: { version: 1, author: 'xcode' } }, null, 2) + '\n',
+  );
+  // Android: every existing splash.png at its own size (Day), and a -night twin of each
+  const RES = 'android/app/src/main/res';
+  const sizeOf = (f: string) => {
+    const out = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', f]).toString();
+    return { w: Number(/pixelWidth: (\d+)/.exec(out)![1]), h: Number(/pixelHeight: (\d+)/.exec(out)![1]) };
+  };
+  for (const dir of readdirSync(RES).filter((x) => x.startsWith('drawable') && !x.includes('night'))) {
+    const f = `${RES}/${dir}/splash.png`;
+    if (!existsSync(f)) continue;
+    const { w, h } = sizeOf(f);
+    await render(splash(w, h, false), w, h, f);
+    // qualifier order: orientation, then night, then density (drawable-port-night-xxhdpi)
+    const nd = dir === 'drawable' ? 'drawable-night' : dir.replace(/^drawable-(port|land)-/, 'drawable-$1-night-');
+    mkdirSync(`${RES}/${nd}`, { recursive: true });
+    await render(splash(w, h, true), w, h, `${RES}/${nd}/splash.png`);
+  }
+}
+
 async function natives(): Promise<void> {
   // iOS
   await render(
@@ -81,13 +128,7 @@ async function natives(): Promise<void> {
     ],
     { stdio: 'ignore' },
   );
-  const splash = (
-    w: number,
-    h: number,
-  ) => `<div style="width:${w}px;height:${h}px;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#1B4E6B,#0B1622 70%)">
-  ${sized(svg({ bg: false, rx: 0, scale: 1 }), Math.round(Math.min(w, h) * 0.22), Math.round(Math.min(w, h) * 0.22))}</div>`;
-  for (const f of readdirSync('ios/App/App/Assets.xcassets/Splash.imageset').filter((x) => x.endsWith('.png')))
-    await render(splash(2732, 2732), 2732, 2732, `ios/App/App/Assets.xcassets/Splash.imageset/${f}`);
+  await splashes();
 
   // Android launcher icons
   const RES = 'android/app/src/main/res';
@@ -123,19 +164,6 @@ async function natives(): Promise<void> {
     `${RES}/values/ic_launcher_background.xml`,
     `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">${SEA}</color>\n</resources>\n`,
   );
-  // Android splash: regenerate every existing splash.png at its own size
-  const { default: sizeOf } = {
-    default: (f: string) => {
-      const out = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', f]).toString();
-      return { w: Number(/pixelWidth: (\d+)/.exec(out)![1]), h: Number(/pixelHeight: (\d+)/.exec(out)![1]) };
-    },
-  };
-  for (const dir of readdirSync(RES).filter((x) => x.startsWith('drawable'))) {
-    const f = `${RES}/${dir}/splash.png`;
-    if (!existsSync(f)) continue;
-    const { w, h } = sizeOf(f);
-    await render(splash(w, h), w, h, f);
-  }
 }
 
 // Play Store assets
