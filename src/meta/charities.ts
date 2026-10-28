@@ -23,7 +23,7 @@ export const CHARITIES: readonly Charity[] = [
     id: 'pmmc',
     name: 'Pacific Marine Mammal Center',
     where: 'Laguna Beach',
-    does: 'Rescues, treats and releases stranded seals and sea lions.',
+    does: 'Rescues, treats and releases stranded marine mammals, mostly seals and sea lions.',
     url: 'https://apps.pacificmmc.org/donate',
     ein: '95-3680896',
     species: 'dolphin',

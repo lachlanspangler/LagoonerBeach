@@ -87,7 +87,9 @@ export class TitleScene {
     const fr = this.el.querySelector('.t-foot')!.getBoundingClientRect();
     this.shore = Math.min(this.h - 140, pr.bottom - r.top + Math.max(28, (fr.top - pr.bottom) * 0.12));
     const room = fr.top - r.top - this.shore - 20;
-    const cell = Math.max(20, Math.min(46, Math.floor(Math.min((this.w - 32) / 8, room / 6.6))));
+    // phones: up to 46 px blocks; tablets grow the vignette to ~60% of the width
+    const cap = this.w >= 700 ? Math.floor(Math.min(this.w * 0.6, this.h * 0.46) / 8) : 46;
+    const cell = Math.max(20, Math.min(cap, Math.floor(Math.min((this.w - 32) / 8, room / 6.6))));
     const gw = 8 * cell;
     const gh = 6 * cell;
     const gx = Math.round((this.w - gw) / 2);
@@ -146,7 +148,7 @@ export class TitleScene {
       }
       g.globalAlpha = 1;
       const mx = w * 0.82;
-      const my = Math.max(64, h * 0.1);
+      const my = this.lightY(64, h * 0.1);
       const halo = g.createRadialGradient(mx, my, 16, mx, my, 40);
       halo.addColorStop(0, 'rgba(244,236,214,0.12)');
       halo.addColorStop(1, 'rgba(244,236,214,0)');
@@ -168,7 +170,7 @@ export class TitleScene {
       g.restore();
     } else {
       const sx = w * 0.8;
-      const sy = Math.max(70, h * 0.11);
+      const sy = this.lightY(70, h * 0.11);
       const sun = g.createRadialGradient(sx, sy, 22, sx, sy, 34);
       sun.addColorStop(0, 'rgba(247,214,140,0.22)');
       sun.addColorStop(1, 'rgba(247,214,140,0)');
@@ -240,6 +242,13 @@ export class TitleScene {
       g.stroke();
     }
     return c;
+  }
+
+  /** The sun's/moon's height: high in the sky, and always clear of the wordmark (tall screens). */
+  private lightY(min: number, want: number): number {
+    const lock = this.el.querySelector('.t-lock')!.getBoundingClientRect();
+    const top = lock.top - this.el.getBoundingClientRect().top;
+    return Math.max(36, Math.min(Math.max(min, want), top - 48));
   }
 
   private shoreline(g: CanvasRenderingContext2D, y0: number, amp: number): void {

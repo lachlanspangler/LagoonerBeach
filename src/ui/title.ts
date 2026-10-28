@@ -126,8 +126,9 @@ export class Title {
             { opacity: 1, transform: 'none' },
           ],
       {
-        duration: this.reduced() ? 150 : 420,
-        delay: this.reduced() ? 0 : 60,
+        // the board comes in once the title is mostly gone (no tray-over-atoll double image)
+        duration: this.reduced() ? 150 : 300,
+        delay: this.reduced() ? 0 : 140,
         easing: 'cubic-bezier(.2,.8,.2,1)',
         fill: 'backwards',
       },

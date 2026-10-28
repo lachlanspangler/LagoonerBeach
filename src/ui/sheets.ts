@@ -182,8 +182,10 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
   const note = document.createElement('div');
   note.className = 'ab-note';
   note.innerHTML = `<p class="ab-lead">I spent my childhood turning over rocks in the tide pools.</p>
+    <p class="ab-by">Lachlan Spangler, Laguna\u00a0Beach</p>
     <p>The hermit crabs, sea stars and octopuses in this game come from there. Their real cousins
-    need clean water and a little looking after.</p>
+    need clean water, protected reefs and a little looking after. I made this game to stand up for
+    them.</p>
     <p class="ab-pledge"><b>I will not take any funding.</b><small>No ads, no purchases, no tips, no sponsors.</small></p>
     <p>But you can donate to these charities and funds to help coastal wildlife:</p>`;
   body.append(note);
@@ -221,7 +223,7 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
   body.append(list);
   const sig = document.createElement('p');
   sig.className = 'ab-sig';
-  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach</small>`;
+  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach · speaks up for marine wildlife</small>`;
   body.append(sig);
   const fine = document.createElement('p');
   fine.className = 'ab-fine';
