@@ -36,6 +36,7 @@ export class TitleScene {
   /** Where the open sea starts (CSS px from the top). */
   private shore = 0;
   private stopped = false;
+  private ro: ResizeObserver | null = null;
 
   constructor(
     private sprites: SpriteCache,
@@ -45,6 +46,11 @@ export class TitleScene {
     // the scene waits for the fonts' layout (the lockup's size decides where the sea starts)
     void document.fonts?.ready.then(() => this.resize());
     addEventListener('resize', this.onResize);
+    // iOS settles the safe-area insets after first layout (the title's padding changes, the window
+    // doesn't): watch the title's own box so the atoll never ends up under the pills
+    let first = true;
+    this.ro = new ResizeObserver(() => (first ? (first = false) : this.refresh()));
+    this.ro.observe(this.el);
     document.addEventListener('visibilitychange', this.onVis);
     this.resize();
   }
@@ -60,6 +66,7 @@ export class TitleScene {
     this.stopped = true;
     cancelAnimationFrame(this.raf);
     removeEventListener('resize', this.onResize);
+    this.ro?.disconnect();
     document.removeEventListener('visibilitychange', this.onVis);
     // let go of the layers (two full-screen canvases at dpr 2) once the title fades
     setTimeout(() => {
@@ -91,7 +98,7 @@ export class TitleScene {
     const lockW = this.el.querySelector('.title-word')!.getBoundingClientRect().width;
     const cap = this.w >= 700 ? Math.floor(Math.min(this.w * 0.6, this.h * 0.46, lockW * 0.75) / 8) : 46;
     // 6 rows + the reef flat's rim + at least 12 px of open water under the shoreline
-    const cell = Math.max(20, Math.min(cap, Math.floor(Math.min((this.w - 32) / 8, (room - 12) / 6.6))));
+    const cell = Math.max(14, Math.min(cap, Math.floor(Math.min((this.w - 32) / 8, (room - 12) / 6.6))));
     const gw = 8 * cell;
     const gh = 6 * cell;
     const gx = Math.round((this.w - gw) / 2);
