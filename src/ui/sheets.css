@@ -712,7 +712,7 @@ html[data-theme='night'] .reef.done {
 }
 .ab-pledge b {
   display: block;
-  font: 900 calc(19px * var(--fs))/1.25 var(--font-display);
+  font: 600 calc(21px * var(--fs))/1.25 var(--font-display);
 }
 .ab-pledge small {
   display: block;
@@ -746,10 +746,13 @@ html[data-theme='night'] .reef.done {
   flex: none;
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 72%);
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(239, 229, 214, 0.6);
+  background:
+    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 30%, transparent), transparent 70%),
+    color-mix(in srgb, var(--surface) 60%, var(--surface-sunk));
 }
 .ab-text {
   flex: 1;
@@ -802,4 +805,11 @@ html[data-theme='night'] .reef.done {
   margin: var(--s4) 0 0;
   font: 700 calc(12px * var(--fs))/1.45 var(--font);
   color: var(--ink-2);
+}
+
+.about-sheet .sheet-head {
+  transition: box-shadow var(--dur-quick) var(--ease-standard);
+}
+.about-sheet .sheet-head.scrolled {
+  box-shadow: 0 1px 0 var(--line);
 }

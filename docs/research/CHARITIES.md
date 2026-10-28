@@ -19,9 +19,9 @@ never use affiliate or referral links, and never add tracking parameters.
 | **Pacific Marine Mammal Center** | Laguna Beach, CA | 95-3680896 | "Friends Of The Sea Lion Inc", Laguna Beach CA, subsection 3, ruling 1982-08 (PMMC's founding name) | "a non-profit 501(c)(3) organization tax-ID number 95-3680896" ([pacificmmc.org](https://www.pacificmmc.org/)) | https://apps.pacificmmc.org/donate | 200 |
 | **Laguna Ocean Foundation** | Laguna Beach, CA | 71-0953427 | "Laguna Ocean Foundation", Laguna Beach CA, subsection 3, ruling 2004-09 | "is a 501(c)(3), nonprofit organization" ([lagunaoceanfoundation.org](https://www.lagunaoceanfoundation.org/)) | https://lagunaoceanfoundation.org/donate/ | 200 |
 | **Surfrider Foundation** | San Clemente, CA (HQ) | 95-3941826 | "Surfrider Foundation", San Clemente CA, subsection 3 | "As a non-profit 501(c)(3) organization, donations to the Surfrider Foundation are tax-exempt" ([surfrider.org/501c3-compliance](https://www.surfrider.org/501c3-compliance)) | https://www.surfrider.org/donate | 200 |
-| **The Marine Mammal Center** | Sausalito, CA | 51-0144434 | "Marine Mammal Center", Sausalito CA, subsection 3 | "Federal Tax ID Number: 51-0144434" ([marinemammalcenter.org](https://www.marinemammalcenter.org/)) | https://www.marinemammalcenter.org/donate (redirects to its own donate.marinemammalcenter.org) | 200 |
+| The Marine Mammal Center | Sausalito, CA | 51-0144434 | "Marine Mammal Center", Sausalito CA, subsection 3 | "Federal Tax ID Number: 51-0144434" ([marinemammalcenter.org](https://www.marinemammalcenter.org/)) | https://www.marinemammalcenter.org/donate (redirects to its own donate.marinemammalcenter.org) | 200 |
 | **Ocean Conservancy** | Washington, DC | 23-7245152 | "Ocean Conservancy Inc", Washington DC, subsection 3 | "Ocean Conservancy is a 501(c)3 – Donations are 100% tax-deductible as allowed by law." ([oceanconservancy.org](https://oceanconservancy.org/)) | https://oceanconservancy.org/donate/ | 403 to curl (bot wall on donate.oceanconservancy.org); the redirect target is its own donation platform. Opens fine in a browser. |
-| Monterey Bay Aquarium | Monterey, CA | 94-2487469 | "Monterey Bay Aquarium Foundation", subsection 3 | "The Monterey Bay Aquarium is a 501(c)(3) nonprofit organization" ([montereybayaquarium.org](https://www.montereybayaquarium.org/)) | https://www.montereybayaquarium.org/support-us/donate | 405 to curl (a HEAD/bot filter) |
+| **Monterey Bay Aquarium** | Monterey, CA | 94-2487469 | "Monterey Bay Aquarium Foundation", subsection 3 | "The Monterey Bay Aquarium is a 501(c)(3) nonprofit organization" ([montereybayaquarium.org](https://www.montereybayaquarium.org/)) | https://www.montereybayaquarium.org/support-us/donate (301 → its own tickets.montereybayaquarium.org/donate, heading "Donate", checked 2026-10-28) | 405 to curl (a bot filter); opens in a browser |
 
 Mission lines, quoted from each homepage:
 - **PMMC:** a marine mammal teaching hospital inspiring "ocean stewardship and conservation through
@@ -42,12 +42,15 @@ All six verify. We link five, in this order:
 2. **Laguna Ocean Foundation.** Laguna's tide pools, which are the game's Shallows: hermit crabs,
    sea stars, limpets and periwinkles.
 3. **Surfrider Foundation.** Clean water and beaches on the same coast.
-4. **The Marine Mammal Center.** California's largest marine mammal hospital; sea otters.
+4. **Monterey Bay Aquarium.** Its sea otter programme "pioneered an approach of pairing orphaned
+   southern sea otter pups with surrogate mothers" (homepage, 2026-10-28); sea otters and kelp.
 5. **Ocean Conservancy.** Ocean trash and the International Coastal Cleanup; sea turtles.
 
-**Left out: Monterey Bay Aquarium.** It is a verified 501(c)(3) and does real conservation work,
-but its donate flow is tied to tickets and membership. That makes it read more like an attraction
-than a cause on a short list, and we already have five.
+**Swapped on 2026-10-28: The Marine Mammal Center → Monterey Bay Aquarium.** An independent design
+review pointed out that two "Marine Mammal Center"s side by side (PMMC and TMMC, both rescuing seals)
+read as one cause twice. TMMC is still a verified 501(c)(3) (above), but the aquarium's sea otter
+surrogacy programme gives the otter card its own cause: kelp forests. Our first pass had left the
+aquarium out because its giving runs through ticketing; its donate page is a plain donation form.
 
 All five are US 501(c)(3)s. Players outside the US can still give, but tax treatment differs.
 The copy says nothing about tax.

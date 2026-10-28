@@ -157,13 +157,13 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
   about: async (p) => {
     await p.getByRole('button', { name: 'Menu' }).click();
     await p.getByRole('button', { name: 'Settings' }).click();
-    await p.getByRole('button', { name: /^Why the ocean/ }).click();
+    await p.getByRole('button', { name: /^A note from Lachlan/ }).click();
     await p.waitForTimeout(700);
   },
   'about-end': async (p) => {
     await p.getByRole('button', { name: 'Menu' }).click();
     await p.getByRole('button', { name: 'Settings' }).click();
-    await p.getByRole('button', { name: /^Why the ocean/ }).click();
+    await p.getByRole('button', { name: /^A note from Lachlan/ }).click();
     await p.waitForTimeout(500);
     await p.evaluate(() => {
       const sc = document.querySelector('.veil .sheet-body') as HTMLElement | null;

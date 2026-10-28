@@ -134,8 +134,8 @@ export function showSettings(k: SheetKit, p: Profile): void {
   const why = k.button(
     'about-open',
     'row row-link',
-    `<span class="row-ic">${icon('shell')}</span><span class="row-label">Why the ocean<small>A note from Lachlan, and charities you can give to</small></span><span class="chev">${icon('chevronRight')}</span>`,
-    'Why the ocean: a note from Lachlan, and charities you can give to',
+    `<span class="row-ic">${icon('shell')}</span><span class="row-label">A note from Lachlan<small>Why the ocean, and charities you can give to</small></span><span class="chev">${icon('chevronRight')}</span>`,
+    'A note from Lachlan: why the ocean, and charities you can give to',
     () => k.h.onAbout(),
   );
   about.append(why);
@@ -174,15 +174,16 @@ export function showSettings(k: SheetKit, p: Profile): void {
  * works, drawn as a silhouette until you've caught it (no spoilers). Links are plain anchors: the
  * native shells hand any off-app URL to the system browser; no referrer, no query strings.
  */
-export function showAbout(k: SheetKit, j: Journal, back?: { label: string; fn: () => void }): void {
-  const { card, body } = k.sheet('Why the ocean', { kind: 'about', back: back?.fn, backLabel: back?.label });
+export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: () => void }): void {
+  const { card, head, body } = k.sheet('About', { kind: 'about', back: back?.fn, backLabel: back?.label });
   card.classList.add('about-sheet');
-  const ink = night() ? '#6C8193A0' : '#968672A0';
+  // a hairline under the header once the page scrolls, so text never slides under it unannounced
+  body.addEventListener('scroll', () => head.classList.toggle('scrolled', body.scrollTop > 4), { passive: true });
   const note = document.createElement('div');
   note.className = 'ab-note';
-  note.innerHTML = `<p class="ab-lead">I grew up in Laguna Beach, turning over rocks in the tide pools.</p>
-    <p>The hermit crabs, sea stars and octopuses in this game come from those afternoons. Their real
-    cousins need clean water and a little looking after.</p>
+  note.innerHTML = `<p class="ab-lead">I spent my childhood turning over rocks in the tide pools.</p>
+    <p>The hermit crabs, sea stars and octopuses in this game come from there. Their real cousins
+    need clean water and a little looking after.</p>
     <p class="ab-pledge"><b>I will not take any funding.</b><small>No ads, no purchases, no tips, no sponsors.</small></p>
     <p>But you can donate to these charities and funds to help coastal wildlife:</p>`;
   body.append(note);
@@ -203,10 +204,11 @@ export function showAbout(k: SheetKit, j: Journal, back?: { label: string; fn: (
     const pool = document.createElement('span');
     pool.className = 'ab-pool';
     pool.setAttribute('aria-hidden', 'true');
+    // always in full colour: these stand for real animals the charity looks after, not journal
+    // secrets (a grey silhouette here read as a broken image); caught or not, it's the same card
     if (sp) {
-      const e = j.entries[sp.id];
       pool.style.setProperty('--hab', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
-      pool.append(creatureThumb(sp, 44, e ? undefined : ink, false, { avatar: true }));
+      pool.append(creatureThumb(sp, 46, undefined, false, { avatar: true }));
     }
     a.append(pool);
     a.insertAdjacentHTML(

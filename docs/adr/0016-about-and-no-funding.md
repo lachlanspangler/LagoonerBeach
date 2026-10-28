@@ -11,7 +11,7 @@
 ## Decision
 - **The game takes no funding of any kind.** No purchases, no ads, no tips and no sponsors. The
   store forms say "Contains ads: No" and "In-app purchases: No" (`docs/store/LISTING.md`).
-- **"Why the ocean"** is a sheet in the lazy sheets chunk, reachable from Settings › About and from
+- **About** ("A note from Lachlan") is a sheet in the lazy sheets chunk, reachable from Settings › About and from
   the title's About pill. It holds:
   - a short note: the Laguna tide pools, and the hermit crabs, sea stars and octopuses of the game;
   - the pledge in a tinted panel: "**I will not take any funding.** No ads, no purchases, no tips,
@@ -24,12 +24,14 @@
   1. Pacific Marine Mammal Center (Laguna Beach)
   2. Laguna Ocean Foundation (Laguna Beach)
   3. Surfrider Foundation
-  4. The Marine Mammal Center
+  4. Monterey Bay Aquarium (its sea otter surrogacy programme; swapped in for The Marine Mammal
+     Center on 2026-10-28 so no two cards share a cause)
   5. Ocean Conservancy
 
-  Monterey Bay Aquarium is verified too but left out (see CHARITIES.md).
-- **Each card** shows a creature from the game that lives where the charity works. It appears as a
-  silhouette until you've caught it, so there are no spoilers.
+  The Marine Mammal Center is verified too (see CHARITIES.md).
+- **Each card** shows a creature from the game that lives where the charity works, always in full
+  colour (2026-10-28: a grey silhouette read as a broken image; these stand for real animals, not
+  journal secrets).
 - **Links are plain anchors**: `target=_blank`, `rel="noopener noreferrer external"`,
   `referrerpolicy="no-referrer"`, and no query strings we add.
   - On the web they open a new tab.

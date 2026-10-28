@@ -10,7 +10,7 @@ import { boot } from './helpers.ts';
 async function openAbout(page: Page) {
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: /^Why the ocean/ }).click();
+  await page.getByRole('button', { name: /^A note from Lachlan/ }).click();
   await expect(page.locator('.sheet[data-kind="about"]')).toBeVisible();
 }
 
@@ -18,7 +18,7 @@ test('About: pledge, signature and every charity link, from Settings and back', 
   const errors = await boot(page);
   await openAbout(page);
   const sheet = page.locator('.sheet[data-kind="about"]');
-  await expect(sheet.getByRole('heading', { name: 'Why the ocean' })).toBeVisible();
+  await expect(sheet.getByRole('heading', { name: 'About', exact: true })).toBeVisible();
   await expect(sheet).toContainText('I will not take any funding.');
   await expect(sheet).toContainText('you can donate to these charities and funds to help coastal wildlife');
   await expect(sheet).toContainText('Lachlan Spangler');
@@ -65,7 +65,7 @@ test('About: Larger text and Night keep it inside the screen and readable', asyn
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('switch', { name: 'Larger text' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-large', '1');
-  await page.getByRole('button', { name: /^Why the ocean/ }).click();
+  await page.getByRole('button', { name: /^A note from Lachlan/ }).click();
   await expect(page.locator('.sheet[data-kind="about"]')).toBeVisible();
   await page.waitForTimeout(600);
   const r = await page.locator('.sheet[data-kind="about"]').boundingBox();

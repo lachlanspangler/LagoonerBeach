@@ -47,12 +47,12 @@ export const CHARITIES: readonly Charity[] = [
     species: 'starfish',
   },
   {
-    id: 'tmmc',
-    name: 'The Marine Mammal Center',
-    where: 'California coast',
-    does: 'Rescue, rehabilitation and research for marine mammals.',
-    url: 'https://www.marinemammalcenter.org/donate',
-    ein: '51-0144434',
+    id: 'mba',
+    name: 'Monterey Bay Aquarium',
+    where: 'Central California',
+    does: 'Raises orphaned sea otter pups with surrogate mothers, then returns them to the kelp.',
+    url: 'https://www.montereybayaquarium.org/support-us/donate',
+    ein: '94-2487469',
     species: 'otter',
   },
   {
