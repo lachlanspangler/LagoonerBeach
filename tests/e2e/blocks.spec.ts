@@ -6,7 +6,8 @@
  * lightness texture straight off the canvas, in Day and Night, at dpr 1 and 2:
  * - under protan / deutan / tritan the six means stay apart (ΔE > 10, the default skin's floor);
  * - each mean stays near its hex (a pattern can't quietly drift a colour toward a neighbour);
- * - in greyscale (mean L* and its texture contrast) no pair is closer than with the old flat look.
+ * - in greyscale (mean L*, texture contrast, grain direction) every pair stays at least 4 apart and
+ *   no closer than with the old flat look.
  */
 import { expect, test, type Page } from '@playwright/test';
 import { boot } from './helpers.ts';
@@ -22,6 +23,8 @@ interface Face {
   rgb: RGB;
   L: number;
   sd: number;
+  /** Lightness edges across minus along (−1 … 1): grain direction, e.g. lobes vs bedding. */
+  an: number;
 }
 
 async function faces(page: Page, skin: string): Promise<Face[]> {
@@ -48,12 +51,14 @@ async function faces(page: Page, skin: string): Promise<Face[]> {
       const y = 0.2126 * lin(r) + 0.7152 * lin(gg) + 0.0722 * lin(b);
       return y > 216 / 24389 ? 116 * Math.cbrt(y) - 16 : (24389 / 27) * y;
     };
-    const out: { rgb: [number, number, number]; L: number; sd: number }[] = [];
+    const out: { rgb: [number, number, number]; L: number; sd: number; an: number }[] = [];
     for (let row = 0; row < 6; row++) {
       let r = 0;
       let gg = 0;
       let b = 0;
       const Ls: number[] = [];
+      let ex = 0;
+      let ey = 0;
       for (let col = 0; col < 8; col++) {
         // the face (inside the silhouette, above the lip): 16–84% across, 14–76% down the cell
         const x = Math.round((l.board.x + (col + 0.16) * l.cell) * k);
@@ -61,6 +66,14 @@ async function faces(page: Page, skin: string): Promise<Face[]> {
         const w = Math.round(l.cell * 0.68 * k);
         const h = Math.round(l.cell * 0.62 * k);
         const d = g.getImageData(x, y, w, h).data;
+        const at = (i: number, j: number) =>
+          Lstar(d[(j * w + i) * 4]!, d[(j * w + i) * 4 + 1]!, d[(j * w + i) * 4 + 2]!);
+        for (let j = 0; j < h - 1; j++)
+          for (let i = 0; i < w - 1; i++) {
+            const c = at(i, j);
+            ex += Math.abs(at(i + 1, j) - c);
+            ey += Math.abs(at(i, j + 1) - c);
+          }
         for (let i = 0; i < d.length; i += 4) {
           r += d[i]!;
           gg += d[i + 1]!;
@@ -71,7 +84,7 @@ async function faces(page: Page, skin: string): Promise<Face[]> {
       const n = Ls.length;
       const L = Ls.reduce((s, v) => s + v, 0) / n;
       const sd = Math.sqrt(Ls.reduce((s, v) => s + (v - L) ** 2, 0) / n);
-      out.push({ rgb: [r / n, gg / n, b / n], L, sd });
+      out.push({ rgb: [r / n, gg / n, b / n], L, sd, an: (ex - ey) / (ex + ey) });
     }
     return out;
   });
@@ -83,11 +96,17 @@ const minPair = (fs: Face[], k?: (typeof KINDS)[number]) => {
   for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) m = Math.min(m, deltaE(cs[i]!, cs[j]!));
   return m;
 };
-/** Greyscale separation of a pair: mean lightness and lightness texture (L* units). */
+const NAMES = ['coral', 'sun', 'kelp', 'lagoon', 'orchid', 'shell'];
+const PAIRS = NAMES.flatMap((a, i) => NAMES.slice(i + 1).map((b) => `${a}/${b}`));
+/**
+ * Greyscale separation of a pair: mean lightness, lightness texture (L* units) and grain direction
+ * (anisotropy × 20, so a fully vertical vs isotropic grain counts like 20 L*).
+ */
 const greyPairs = (fs: Face[]) => {
   const out: number[] = [];
   for (let i = 0; i < 6; i++)
-    for (let j = i + 1; j < 6; j++) out.push(Math.hypot(fs[i]!.L - fs[j]!.L, fs[i]!.sd - fs[j]!.sd));
+    for (let j = i + 1; j < 6; j++)
+      out.push(Math.hypot(fs[i]!.L - fs[j]!.L, fs[i]!.sd - fs[j]!.sd, (fs[i]!.an - fs[j]!.an) * 20));
   return out;
 };
 
@@ -112,13 +131,15 @@ for (const scheme of ['light', 'dark'] as const)
         `${scheme} dpr ${dpr}: normal ${minPair(reef).toFixed(1)} ` +
           KINDS.map((k) => `${k} ${minPair(reef, k).toFixed(1)}`).join(' ') +
           ` | drift ${drift.map((d) => d.toFixed(1)).join(' ')}` +
-          ` | grey min ${Math.min(...rg).toFixed(1)} (flat look ${Math.min(...fg).toFixed(1)})` +
-          ` | sd ${reef.map((f) => f.sd.toFixed(1)).join(' ')}`,
+          ` | grey min ${Math.min(...rg).toFixed(1)} ${PAIRS[rg.indexOf(Math.min(...rg))]} (flat look ${Math.min(...fg).toFixed(1)} ${PAIRS[fg.indexOf(Math.min(...fg))]})` +
+          ` | L ${reef.map((f) => f.L.toFixed(0)).join(' ')}` +
+          ` | sd ${reef.map((f) => f.sd.toFixed(1)).join(' ')} | grain ${reef.map((f) => f.an.toFixed(2)).join(' ')}`,
       );
       for (const k of KINDS) expect(minPair(reef, k), k).toBeGreaterThan(10);
       expect(minPair(reef)).toBeGreaterThan(20);
       for (const d of drift) expect(d).toBeLessThan(15);
       // texture is a second cue: in greyscale every pair is at least as far apart as flat stones
       expect(Math.min(...rg)).toBeGreaterThanOrEqual(Math.min(...fg));
+      expect(Math.min(...rg)).toBeGreaterThan(4);
       await ctx.close();
     });
