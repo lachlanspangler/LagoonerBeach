@@ -1,0 +1,39 @@
+# Publishes the release web build to GitHub Pages → https://lachlanspangler.github.io/Atoll/
+# One-time setup in the repo: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# The build uses relative paths (vite base './'), so it works under the /Atoll/ sub-path.
+# No leaderboard server is configured, so the published game has no leaderboards (ADR 0010).
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      # a release build must not ship debug hooks or demo boards (size-check fails if it does)
+      - run: npm run size
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
