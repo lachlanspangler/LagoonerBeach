@@ -7,7 +7,7 @@ import { pieceById, type Piece } from '../core/pieces.ts';
 import type { TrayPiece } from '../core/dealer.ts';
 import { computeLayout, hudStack, trayCellFor, type Insets, type Layout } from './layout.ts';
 import { Kind, Particles } from './particles.ts';
-import { SpriteCache } from './sprites.ts';
+import { SpriteCache, VARIANTS, cellVariant } from './sprites.ts';
 import { DAY, DISPLAY_STACK, FONT_STACK, GEOM, MOTION, fmt, type Palette } from './theme.ts';
 import { Burst } from './burst.ts';
 import { Celebrate, spring } from './celebrate.ts';
@@ -319,6 +319,7 @@ export class Scene {
     private readonly g: CanvasRenderingContext2D,
   ) {
     this.sprites = new SpriteCache(1);
+    this.sprites.lazy = true;
     this.layout = computeLayout(360, 640);
   }
 
@@ -341,14 +342,33 @@ export class Scene {
     this.panel = null;
   }
 
-  /** Pre-render every pebble sprite the current layout can need, so first use never stalls. */
-  warmSprites(): void {
-    const sizes = [Math.round(this.layout.cell), Math.round(this.layout.trayCell)];
-    for (let c = 1; c <= 6; c++)
-      for (const s of sizes) {
-        this.sprites.pebble(this.palette, c, s, 'normal');
-        this.sprites.pebble(this.palette, c, s, 'lit');
-      }
+  /**
+   * Pre-render every block sprite the current layout can need (board cells in every per-cell
+   * variant, tray pieces in one), one colour per task so no idle slice runs long; until a sprite
+   * is built the cache stands in the nearest one (SpriteCache.lazy). `now` does it all at once.
+   */
+  warmSprites(now = false): void {
+    const sp = this.sprites;
+    const p = this.palette;
+    const look = sp.look;
+    const board = Math.round(this.layout.cell);
+    const tray = Math.round(this.layout.trayCell);
+    const one = (c: number) => {
+      // a resize, theme or style change since this was queued: that one queues its own warm-up
+      if (look !== sp.look || p !== this.palette || board !== Math.round(this.layout.cell)) return;
+      for (const [s, n] of [
+        [board, VARIANTS],
+        [tray, 1],
+      ] as const)
+        for (let v = 0; v < n; v++) {
+          sp.build(p, c, s, 'normal', v);
+          sp.build(p, c, s, 'lit', v);
+        }
+    };
+    for (let c = 1; c <= 6; c++) {
+      if (now) one(c);
+      else setTimeout(() => one(c), (c - 1) * 16);
+    }
   }
 
   /** Bundled fonts arrived: re-render cached display text. */
@@ -428,12 +448,14 @@ export class Scene {
     const top = Math.max(l.hud.y + l.hud.h, l.board.y - l.cell * 0.7);
     g.rect(l.board.x - l.cell * 0.7, top, l.board.w + l.cell * 1.4, l.board.y + l.board.h + l.cell * 0.4 - top);
     g.clip();
+    const vAt = (x: number, y: number) =>
+      cellVariant(Math.floor((y - l.board.y) / l.cell) * N + Math.floor((x - l.board.x) / l.cell));
     this.burst.draw(
       g,
       now,
       l.cell,
-      (c) => this.sprites.pebble(p, c, ps, 'lit'),
-      (c) => this.sprites.pebble(p, c, ps, 'normal'),
+      (c, x, y) => this.sprites.pebble(p, c, ps, 'lit', vAt(x, y)),
+      (c, x, y) => this.sprites.pebble(p, c, ps, 'normal', vAt(x, y)),
     );
     g.restore();
     this.drawRipples(now);
@@ -641,7 +663,7 @@ export class Scene {
       if (lit && !this.reducedMotion) scale *= 1.03 + 0.03 * Math.sin(now / 90 + i);
       const [x, y, s] = this.cellRect(i, scale);
       g.drawImage(
-        this.sprites.pebble(this.palette, c, Math.round(this.layout.cell), lit ? 'lit' : 'normal'),
+        this.sprites.pebble(this.palette, c, Math.round(this.layout.cell), lit ? 'lit' : 'normal', cellVariant(i)),
         x,
         y,
         s,
@@ -660,7 +682,13 @@ export class Scene {
       const i = (pv.ay + dy) * N + pv.ax + dx;
       if (pv.ring.has(i)) continue; // drawn lit as part of the ring
       const [x, y, s] = this.cellRect(i);
-      g.drawImage(this.sprites.pebble(this.palette, pv.color, Math.round(l.cell)), x, y, s, s);
+      g.drawImage(
+        this.sprites.pebble(this.palette, pv.color, Math.round(l.cell), 'normal', cellVariant(i)),
+        x,
+        y,
+        s,
+        s,
+      );
     }
     g.globalAlpha = 1;
     if (pv.ring.size) {
@@ -669,7 +697,7 @@ export class Scene {
         const i = (pv.ay + dy) * N + pv.ax + dx;
         if (!pv.ring.has(i)) continue;
         const [x, y, s] = this.cellRect(i);
-        g.drawImage(this.sprites.pebble(this.palette, pv.color, Math.round(l.cell), 'lit'), x, y, s, s);
+        g.drawImage(this.sprites.pebble(this.palette, pv.color, Math.round(l.cell), 'lit', cellVariant(i)), x, y, s, s);
       }
       g.globalAlpha = 1;
     }
@@ -686,7 +714,14 @@ export class Scene {
       const oy = lerp(pl.fromY, ty, e);
       for (const [dx, dy] of pl.piece.cells) {
         this.g.drawImage(
-          this.sprites.pebble(this.palette, pl.color, Math.round(l.cell)),
+          // the cell it lands in decides its variant, so the stone doesn't change on landing
+          this.sprites.pebble(
+            this.palette,
+            pl.color,
+            Math.round(l.cell),
+            'normal',
+            cellVariant((pl.ay + dy) * N + pl.ax + dx),
+          ),
           ox + dx * l.cell,
           oy + dy * l.cell,
           l.cell,

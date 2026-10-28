@@ -1,5 +1,5 @@
 /** Visual definitions for cosmetic pebble skins (ids match src/meta/unlocks.ts). */
-export type SkinStyle = 'pebble' | 'glyph' | 'glass' | 'coral' | 'lantern' | 'pearl';
+export type SkinStyle = 'reef' | 'pebble' | 'glyph' | 'glass' | 'coral' | 'lantern' | 'pearl';
 
 export interface SkinLook {
   readonly id: string;
@@ -9,8 +9,15 @@ export interface SkinLook {
 }
 
 export const LOOKS: Record<string, SkinLook> = {
+  // the default: six real reef materials (ADR 0014); the id stays 'pebble' so saves resolve
   pebble: {
     id: 'pebble',
+    style: 'reef',
+    colors: ['#000', '#F2795B', '#F2B93B', '#53C08C', '#3D9BE9', '#8E5BD8', '#EC86AE'],
+  },
+  // the pre-1.1 default look, kept selectable: soft sea-worn stones, one highlight (ADR 0003)
+  smooth: {
+    id: 'smooth',
     style: 'pebble',
     colors: ['#000', '#F2795B', '#F2B93B', '#53C08C', '#3D9BE9', '#8E5BD8', '#EC86AE'],
   },
