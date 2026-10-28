@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**195 ideas** — chosen: 23 · built: 30 · prototyped: 4 · shortlisted: 4 · backlog: 51 · merged: 5 · rejected: 78
+**195 ideas** — chosen: 23 · built: 31 · prototyped: 4 · shortlisted: 4 · backlog: 50 · merged: 5 · rejected: 78
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -60,6 +60,7 @@
 | I-095 | built | Welcome back | On launch, a quiet toast with your live streak. | Duolingo-lite | 23 | ✗ | 5/1 | est |
 | I-097 | built | Large text | A setting that scales menus and canvas text. | OS dynamic type | 23 | ✗ | 5/3 | est |
 | I-099 | built | Erase my data | Settings: erase all progress (two taps). | Privacy-respecting apps | 23 | ✗ | 5/1 | est |
+| I-202 | built | Legendary pill vs new dot | On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill. |  | 23 | ✗ | 3/1 | est |
 | I-075 | built | Ambient sea | Soft procedural wave bed under the SFX. | Calm puzzle games | 20 | ✗ | 3/3 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
@@ -118,7 +119,6 @@
 | I-200 | backlog | Title in store screenshot | The first store frame shows the title screen. |  | 24 | ✗ | 5/1 | est |
 | I-100 | backlog | Leaderboards | Game Center / Play Games best-score boards. | Block Blast | 23 | ✗ | 5/4 | est |
 | I-201 | backlog | Eligible-chances counter | Undiscovered tiles show 'Close: 3 chances' (lagoons that met the rule), Hades-style, no odds. | Hades Codex progress bars | 23 | ✗ | 6/3 | est |
-| I-202 | backlog | Legendary pill vs new dot | On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill. |  | 23 | ✗ | 3/1 | est |
 | I-098 | backlog | Cell-cursor mode | Play with a keyboard/switch cursor over cells, with spoken previews. | Accessible board games | 20 | ✗ | 4/7 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
 | I-041 | merged | Flip Puzzle | Use these pieces to wipe the pattern clean. | Lights Out | 23 | ✗ | 6/3 | est |
@@ -626,6 +626,14 @@
 - **Value/effort:** 5/1
 - **Reason:** Matches the no-data privacy stance.
 
+### I-202 — Legendary pill vs new dot (built)
+- **Pitch:** On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 3/1
+- **Reason:** Session 6: on epic/legendary tiles the new dot sits on the frame corner, ringed in the page colour, clear of the word pill.
+
 ### I-075 — Ambient sea (built)
 - **Pitch:** Soft procedural wave bed under the SFX.
 - **Closest existing:** Calm puzzle games
@@ -1092,15 +1100,7 @@
 - **What's new:** Progress toward an unknown without a spoiler
 - **Scores (R1..R14):** 2 2 1 2 1 2 1 2 2 1 2 1 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 6/3
-- **Reason:** Needs a journal save-format field (chances[id]) and a migration; skipped for the v1.0.0 RC (S5). JOURNAL_REQUIREMENTS.md §3.4.
-
-### I-202 — Legendary pill vs new dot (backlog)
-- **Pitch:** On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill.
-- **Closest existing:** 
-- **What's new:** 
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 1 1 2 2 → **23**/28, gates FAIL (est)
-- **Value/effort:** 3/1
-- **Reason:** Seen in the S5 journal review (375 px); predates the requirement work.
+- **Reason:** Needs a journal save-format field (chances[id]) and a migration; skipped for the v1.0.0 RC (S5). JOURNAL_REQUIREMENTS.md §3.4. Session 6: still backlog — needs a journal save-format change (new validated field + migration); not worth the risk for the RC.
 
 ### I-098 — Cell-cursor mode (backlog)
 - **Pitch:** Play with a keyboard/switch cursor over cells, with spoken previews.

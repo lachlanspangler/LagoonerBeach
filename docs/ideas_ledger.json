@@ -5651,7 +5651,7 @@
    "value": 6,
    "effort": 3,
    "status": "backlog",
-   "reason": "Needs a journal save-format field (chances[id]) and a migration; skipped for the v1.0.0 RC (S5). JOURNAL_REQUIREMENTS.md §3.4."
+   "reason": "Needs a journal save-format field (chances[id]) and a migration; skipped for the v1.0.0 RC (S5). JOURNAL_REQUIREMENTS.md §3.4. Session 6: still backlog — needs a journal save-format change (new validated field + migration); not worth the risk for the RC."
   },
   {
    "id": "I-202",
@@ -5679,8 +5679,8 @@
    "basis": "est",
    "value": 3,
    "effort": 1,
-   "status": "backlog",
-   "reason": "Seen in the S5 journal review (375 px); predates the requirement work."
+   "status": "built",
+   "reason": "Session 6: on epic/legendary tiles the new dot sits on the frame corner, ringed in the page colour, clear of the word pill."
   }
  ]
 }

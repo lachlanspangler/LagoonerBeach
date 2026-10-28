@@ -145,6 +145,16 @@
   border-radius: 50%;
   background: var(--coral);
 }
+/* epic and legendary tiles wear a wide word pill across the top: the "new" dot moves out to the
+   frame's corner (ringed in the page colour) so the two never overlap (I-202) */
+.j-tile.r-epic .new,
+.j-tile.r-legendary .new {
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 2px var(--surface);
+}
 /* shell pips: 1–5 filled of 5 (mask = the icon set's shell) */
 .pips {
   display: inline-flex;
