@@ -21,7 +21,9 @@ export interface SkinDef {
 
 export const SKINS: readonly SkinDef[] = [
   // the default style; "pebble" stays its id (saves), but the word belongs to the reef blocks
-  { id: 'pebble', name: 'Classic', hint: '', unlocked: () => true },
+  { id: 'pebble', name: 'Reef', hint: '', unlocked: () => true },
+  // the old default look (ADR 0014): never gated, so nobody loses it
+  { id: 'smooth', name: 'Smooth Stones', hint: '', unlocked: () => true },
   { id: 'glyph', name: 'Glyph (high contrast)', hint: '', unlocked: () => true },
   { id: 'seaglass', name: 'Sea Glass', hint: 'Capture a lagoon of 6+', unlocked: (p) => p.bestPocket >= 6 },
   { id: 'coral', name: 'Coral', hint: 'Play the daily 3 days in a row', unlocked: (p) => p.dailyLongest >= 3 },

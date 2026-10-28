@@ -114,14 +114,15 @@ export class Burst {
     g: CanvasRenderingContext2D,
     now: number,
     size: number,
-    lit: (color: number) => CanvasImageSource,
-    plain: (color: number) => CanvasImageSource = lit,
+    lit: (color: number, x: number, y: number) => CanvasImageSource,
+    plain: (color: number, x: number, y: number) => CanvasImageSource = lit,
   ): void {
     for (let i = 0; i < this.count; i++) {
       const st = this.start[i]!;
-      const spr = lit(this.color[i]!);
       const x0 = this.x0[i]!;
       const y0 = this.y0[i]!;
+      // the home cell is passed along so a stone keeps its per-cell look as it flies
+      const spr = lit(this.color[i]!, x0, y0);
       if (now < st) {
         // waiting its turn: lit, in place
         g.drawImage(spr, x0 - size / 2, y0 - size / 2, size, size);
@@ -162,7 +163,7 @@ export class Burst {
       }
       if (m > 0) {
         g.globalAlpha = a * m;
-        g.drawImage(plain(this.color[i]!), -s / 2, -s / 2, s, s);
+        g.drawImage(plain(this.color[i]!, x0, y0), -s / 2, -s / 2, s, s);
       }
       g.restore();
     }

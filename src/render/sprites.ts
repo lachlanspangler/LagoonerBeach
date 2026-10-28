@@ -1,11 +1,24 @@
 /**
- * Pre-rendered pebble sprites (one per color × size × variant) so the per-frame cost of a block is a
- * single drawImage. Cache is invalidated when cell size or DPR changes.
+ * Pre-rendered block sprites (one per look × theme × color × size × state × per-cell variant) so the
+ * per-frame cost of a block is a single drawImage. Cache is invalidated when cell size or DPR changes.
+ *
+ * The default 'reef' style (ADR 0014) draws six real materials, one per colour: brain coral, golden
+ * coral-rag limestone, sea glass, blue coral, wet porphyry and pink coralline crust. Each has an
+ * organic silhouette within a few % of the cell, one top-left light (lit ridges, dark crevices), its
+ * own micro-structure, a contact shadow and a wet highlight. Detail is chosen by tile size (LOD), and
+ * three seeded variants per colour keep walls from tiling. Everything is deterministic.
  */
 import { GEOM, type Palette } from './theme.ts';
 import { LOOKS, type SkinLook } from './skins.ts';
 
 export type Variant = 'normal' | 'lit';
+type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+type Surface = HTMLCanvasElement | OffscreenCanvas;
+
+/** Seeded variants per colour (reef style). */
+export const VARIANTS = 3;
+/** Variant of a board cell (0..2): a fixed hash of the index, so a saved board looks the same. */
+export const cellVariant = (i: number): number => (Math.imul(i + 11, 0x9e3779b1) >>> 16) % VARIANTS;
 
 function shade(hex: string, amt: number): string {
   const n = parseInt(hex.slice(1), 16);
@@ -16,8 +29,61 @@ function shade(hex: string, amt: number): string {
   return `rgb(${r},${g},${b})`;
 }
 
+/** mulberry32: deterministic visual randomness (never Math.random at draw time). */
+function rng(a: number): () => number {
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Silhouette per material: superellipse exponent (higher = squarer), edge wobble (share of the
+ * half-size), two wobble frequencies, wet highlight strength.
+ */
+const MAT: readonly (readonly [n: number, wob: number, f1: number, f2: number, spec: number])[] = [
+  [4, 0, 1, 1, 0],
+  [3.1, 0.022, 3, 7, 0.5], // 1 brain coral: a dome, soft lumps
+  [4.6, 0.03, 4, 9, 0.3], // 2 sandstone: a chunky worn lump, matte
+  [3.6, 0.006, 2, 3, 0.45], // 3 sea glass: tumbled, frosted
+  [5.2, 0.014, 3, 6, 0.42], // 4 blue coral: packed lobes
+  [3.0, 0.01, 2, 5, 0.95], // 5 porphyry: a wet beach-worn pebble
+  [3.5, 0.04, 6, 9, 0.18], // 6 coralline crust: lumpy, chalky
+];
+
+/** Unit silhouettes per (material, variant): computed once, scaled per sprite. */
+const SHAPES = new Map<number, Float32Array>();
+
+/** Superellipse with a seeded wobble, smoothed through midpoints. */
+function blob(g: Ctx | Path2D, cx: number, cy: number, hw: number, hh: number, color: number, ph: number): void {
+  const id = color * 64 + Math.round(ph * 10);
+  let u = SHAPES.get(id);
+  if (!u) {
+    const [n, wob, f1, f2] = MAT[color] ?? MAT[0]!;
+    u = new Float32Array(64);
+    for (let k = 0; k < 32; k++) {
+      const t = (k / 32) * Math.PI * 2;
+      const c = Math.cos(t);
+      const s = Math.sin(t);
+      const r = 1 + wob * (0.6 * Math.sin(f1 * t + ph) + 0.4 * Math.sin(f2 * t + ph * 2.3));
+      u[k * 2] = Math.sign(c) * Math.abs(c) ** (2 / n) * r;
+      u[k * 2 + 1] = Math.sign(s) * Math.abs(s) ** (2 / n) * r;
+    }
+    SHAPES.set(id, u);
+  }
+  const pts: number[] = [];
+  for (let k = 0; k < 32; k++) pts.push(cx + u[k * 2]! * hw, cy + u[k * 2 + 1]! * hh);
+  const mid = (i: number, j: number) => (pts[(i * 2 + j) % 64]! + pts[(i * 2 + 2 + j) % 64]!) / 2;
+  if (!(g instanceof Path2D)) g.beginPath();
+  g.moveTo(mid(0, 0), mid(0, 1));
+  for (let i = 1; i <= 32; i++) g.quadraticCurveTo(pts[(i % 32) * 2]!, pts[(i % 32) * 2 + 1]!, mid(i, 0), mid(i, 1));
+  g.closePath();
+}
+
 export class SpriteCache {
-  private cache = new Map<string, HTMLCanvasElement | OffscreenCanvas>();
+  private cache = new Map<string, Surface>();
   look: SkinLook = LOOKS.pebble!;
   constructor(private dpr: number) {}
 
@@ -28,15 +94,52 @@ export class SpriteCache {
   reset(dpr: number): void {
     this.dpr = dpr;
     this.cache.clear();
+    this.built.clear();
   }
 
-  pebble(p: Palette, color: number, size: number, variant: Variant = 'normal'): CanvasImageSource {
-    const key = `${this.look.id}:${p.name}:${color}:${size}:${variant}`;
+  /**
+   * Lazy mode (the live scene): a sprite that isn't built yet is stood in for by the nearest one
+   * already built for that stone (another size or variant; the caller scales it anyway), so a
+   * frame never pays for drawing a material: in-between sizes of a drag or a tray return, and
+   * variants before the idle warm-up reaches them. Only a stone with nothing built yet is drawn.
+   */
+  lazy = false;
+  private built = new Map<string, [size: number, v: number, c: Surface][]>();
+
+  /** `vari` (0..2) picks a seeded variant of the reef materials; other styles have one look. */
+  pebble(p: Palette, color: number, size: number, variant: Variant = 'normal', vari = 0): CanvasImageSource {
+    return this.get(p, color, size, variant, vari, this.lazy);
+  }
+
+  /** Build (if needed) and return the exact sprite, lazy mode or not (warm-up). */
+  build(p: Palette, color: number, size: number, variant: Variant = 'normal', vari = 0): CanvasImageSource {
+    return this.get(p, color, size, variant, vari, false);
+  }
+
+  private get(p: Palette, color: number, size: number, variant: Variant, vari: number, lazy: boolean): Surface {
+    const reef = this.look.style === 'reef';
+    const v = reef ? vari % VARIANTS : 0;
+    const stone = `${this.look.id}:${p.name}:${color}:${variant}`;
+    const key = `${stone}:${size}:${v}`;
     let c = this.cache.get(key);
-    if (!c) {
-      c = this.drawPebble(p, color, size, variant);
-      this.cache.set(key, c);
+    if (c) return c;
+    const have = this.built.get(stone) ?? [];
+    if (lazy && have.length) {
+      // same variant first, then the closest size (larger wins a tie: downscaling stays crisp)
+      let best = have[0]!;
+      const cost = (e: [number, number, Surface]) =>
+        (e[1] === v ? 0 : 1000) + Math.abs(e[0] - size) - (e[0] >= size ? 0.5 : 0);
+      for (const e of have) if (cost(e) < cost(best)) best = e;
+      return best[2];
     }
+    c = reef
+      ? variant === 'lit'
+        ? this.litReef(p, color, size, v)
+        : this.drawReef(p, color, size, v)
+      : this.drawPebble(p, color, size, variant);
+    this.cache.set(key, c);
+    have.push([size, v, c]);
+    this.built.set(stone, have);
     return c;
   }
 
@@ -60,7 +163,7 @@ export class SpriteCache {
     return c;
   }
 
-  private canvas(px: number): HTMLCanvasElement | OffscreenCanvas {
+  private canvas(px: number): Surface {
     if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(px, px);
     const c = document.createElement('canvas');
     c.width = px;
@@ -68,12 +171,368 @@ export class SpriteCache {
     return c;
   }
 
-  /** Sprite covers the full cell (size × size CSS px) including gutter and shadow padding. */
-  private drawPebble(p: Palette, color: number, size: number, variant: Variant): HTMLCanvasElement | OffscreenCanvas {
-    const px = Math.ceil(size * this.dpr);
-    const c = this.canvas(px);
+  private ctx(size: number): [Surface, CanvasRenderingContext2D] {
+    const c = this.canvas(Math.ceil(size * this.dpr));
     const g = c.getContext('2d') as CanvasRenderingContext2D;
     g.scale(this.dpr, this.dpr);
+    return [c, g];
+  }
+
+  /** The face silhouette of a reef sprite (shared by the normal and lit drawings). */
+  private face(g: Ctx | Path2D, size: number, color: number, v: number, inset = 0): void {
+    const gut = size * GEOM.gutter;
+    const s = size - gut * 2;
+    blob(g, size / 2, gut + s * 0.45, s / 2 - inset, s * 0.45 - inset, color, 1.3 + v * 2.1 + color);
+  }
+
+  /** "This will be captured": the same stone, lifted toward the light, with the ring outline. */
+  private litReef(p: Palette, color: number, size: number, v: number): Surface {
+    const [c, g] = this.ctx(size);
+    g.drawImage(this.build(p, color, size, 'normal', v), 0, 0, size, size);
+    const s = size * (1 - GEOM.gutter * 2);
+    this.face(g, size, color, v);
+    g.fillStyle = p.name === 'night' ? 'rgba(220,250,255,0.2)' : 'rgba(255,255,255,0.24)';
+    g.fill();
+    g.strokeStyle = p.ringOutline;
+    g.lineWidth = Math.max(2, s * 0.085);
+    this.face(g, size, color, v, g.lineWidth / 2);
+    g.stroke();
+    return c;
+  }
+
+  private drawReef(p: Palette, color: number, size: number, v: number): Surface {
+    const [c, g] = this.ctx(size);
+    const base = this.look.colors[color] ?? '#888888';
+    const night = p.name === 'night';
+    const gut = size * GEOM.gutter;
+    const s = size - gut * 2;
+    const h = s * 0.9;
+    const x0 = gut;
+    const y0 = gut;
+    const cx = size / 2;
+    const ph = 1.3 + v * 2.1 + color;
+    const lod = size < 30 ? 0 : size < 50 ? 1 : 2;
+    const rnd = rng(color * 7919 + v * 104729 + 17);
+    const spec = MAT[color]![4];
+    const lt = shade(base, night ? 0.42 : 0.38);
+    const fillPath = (path: Path2D, style: string, a = 1) => {
+      g.globalAlpha = a;
+      g.fillStyle = style;
+      g.fill(path);
+      g.globalAlpha = 1;
+    };
+    // the face first; everything on it is drawn 'source-atop' (no clip masks: they are the
+    // costly part of a small canvas), then the lip and shadow go in behind ('destination-over')
+    const face = new Path2D();
+    this.face(face, size, color, v);
+    g.fillStyle = base;
+    g.fill(face);
+    g.globalCompositeOperation = 'source-atop';
+    const dots = (n: number, rMin: number, rMax: number): number[][] => {
+      const out: number[][] = [];
+      for (let i = 0; i < n; i++)
+        out.push([x0 + s * (0.08 + 0.84 * rnd()), y0 + h * (0.08 + 0.84 * rnd()), rMin + (rMax - rMin) * rnd()]);
+      return out;
+    };
+    const disc = (path: Path2D, x: number, y: number, r: number) => {
+      path.moveTo(x + r, y);
+      path.arc(x, y, r, 0, Math.PI * 2);
+    };
+    // grain this small reads the same as a square and costs a fraction of an arc
+    const speck = (path: Path2D, x: number, y: number, r: number) => path.rect(x - r, y - r, r * 1.8, r * 1.8);
+
+    if (color === 1) {
+      // brain coral: a labyrinth of thick rounded ridges (a random spanning tree of a jittered
+      // grid, each run bowed so it meanders) over narrow valleys; ridges drop a shadow down-right
+      // and catch the light on their upper-left crest
+      const G = 5 + lod;
+      const cw = s / G;
+      const ch = h / G;
+      const P: number[][] = [];
+      for (let j = 0; j < G; j++)
+        for (let i = 0; i < G; i++)
+          P.push([x0 + (i + 0.5 + (rnd() - 0.5) * 0.55) * cw, y0 + (j + 0.5 + (rnd() - 0.5) * 0.55) * ch]);
+      const seen = new Uint8Array(G * G);
+      const ridge = new Path2D();
+      const first = Math.floor(rnd() * G * G);
+      const stack = [first];
+      seen[first] = 1;
+      let fresh = true;
+      while (stack.length) {
+        const at = stack[stack.length - 1]!;
+        const ax = at % G;
+        const nb = [ax > 0 ? at - 1 : -1, ax < G - 1 ? at + 1 : -1, at - G, at + G].filter(
+          (q) => q >= 0 && q < G * G && !seen[q],
+        );
+        if (!nb.length) {
+          stack.pop();
+          fresh = true;
+          continue;
+        }
+        const q = nb[Math.floor(rnd() * nb.length)]!;
+        seen[q] = 1;
+        const [ex, ey] = P[at]!;
+        const [qx, qy] = P[q]!;
+        if (fresh) ridge.moveTo(ex!, ey!);
+        fresh = false;
+        ridge.quadraticCurveTo(
+          (ex! + qx!) / 2 + (rnd() - 0.5) * cw * 0.5,
+          (ey! + qy!) / 2 + (rnd() - 0.5) * ch * 0.5,
+          qx!,
+          qy!,
+        );
+        stack.push(q);
+      }
+      g.fillStyle = shade(base, night ? -0.4 : -0.32);
+      g.fillRect(x0, y0, s, h);
+      const w = cw * 0.64;
+      const d = Math.max(0.5, w * 0.16);
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      g.lineWidth = w;
+      g.translate(d, d);
+      g.strokeStyle = shade(base, night ? -0.58 : -0.5);
+      g.stroke(ridge);
+      g.translate(-d, -d);
+      g.strokeStyle = shade(base, 0.08);
+      g.stroke(ridge);
+      g.translate(-d * 0.8, -d * 0.8);
+      g.lineWidth = w * 0.36;
+      g.globalAlpha = 0.55;
+      g.strokeStyle = shade(base, 0.42);
+      g.stroke(ridge);
+      g.globalAlpha = 1;
+      g.translate(d * 0.8, d * 0.8);
+    } else if (color === 2) {
+      // golden sandstone, beach-worn: wavy bedding layers in ochre tones (each bed lit on its top
+      // edge, a thin dark parting below), gritty grain, and a few weathering pits
+      const beds = [4, 5, 7][lod]!;
+      const ang = (rnd() - 0.5) * 0.5;
+      const amp = h * (0.03 + rnd() * 0.03);
+      const fr = (Math.PI * 2) / (s * (0.8 + rnd() * 0.6));
+      const p0 = rnd() * 6.3;
+      let yb = y0 - h * 0.1;
+      for (let i = 0; i < beds; i++) {
+        const th = ((h * 1.25) / beds) * (0.7 + rnd() * 0.6);
+        const tone = shade(base, [0.12, -0.12, 0.04, -0.2, 0.16, -0.06, 0.08][i % 7]!);
+        const bed = new Path2D();
+        const edge = new Path2D();
+        const yy = (u: number, o: number) => o + Math.sin(fr * u + p0 + i * 0.7) * amp + (u - x0 - s / 2) * ang;
+        for (let k = 0; k <= 10; k++) {
+          const u = x0 - 2 + ((s + 4) * k) / 10;
+          bed[k ? 'lineTo' : 'moveTo'](u, yy(u, yb));
+          edge[k ? 'lineTo' : 'moveTo'](u, yy(u, yb));
+        }
+        for (let k = 10; k >= 0; k--) {
+          const u = x0 - 2 + ((s + 4) * k) / 10;
+          bed.lineTo(u, yy(u, yb + th));
+        }
+        bed.closePath();
+        fillPath(bed, tone);
+        g.lineWidth = Math.max(0.6, s * 0.022);
+        g.strokeStyle = shade(base, -0.42);
+        g.globalAlpha = 0.6;
+        g.stroke(edge);
+        g.translate(0, g.lineWidth);
+        g.strokeStyle = lt;
+        g.stroke(edge);
+        g.translate(0, -g.lineWidth);
+        g.globalAlpha = 1;
+        yb += th;
+      }
+      const grain = new Path2D();
+      const grain2 = new Path2D();
+      for (const [x, y, r] of dots(10 + lod * 26, s * 0.01, s * 0.022)) speck(rnd() < 0.5 ? grain : grain2, x!, y!, r!);
+      fillPath(grain, lt, 0.6);
+      fillPath(grain2, shade(base, -0.45), 0.5);
+      const lip = new Path2D();
+      const hole = new Path2D();
+      for (const [x, y, r] of dots(lod, s * 0.03, s * 0.05)) {
+        disc(lip, x! + r! * 0.3, y! + r! * 0.3, r!);
+        disc(hole, x!, y!, r!);
+      }
+      fillPath(lip, lt, 0.6);
+      fillPath(hole, shade(base, -0.4));
+    } else if (color === 3) {
+      // sea glass: translucent body (light passes through and glows low-right), frosted skin,
+      // tumbled C-marks, and a bright rim where the top-left edge catches the sun
+      const glowG = g.createRadialGradient(x0 + s * 0.62, y0 + h * 0.68, 0, x0 + s * 0.62, y0 + h * 0.68, s * 0.6);
+      glowG.addColorStop(0, shade(base, 0.38));
+      glowG.addColorStop(0.6, base);
+      glowG.addColorStop(1, shade(base, -0.12));
+      g.fillStyle = glowG;
+      g.fillRect(x0, y0, s, h);
+      const frost = new Path2D();
+      for (const [x, y, r] of dots(10 + lod * 40, s * 0.01, s * 0.022)) speck(frost, x!, y!, r!);
+      fillPath(frost, shade(base, 0.6), 0.35);
+      if (lod) {
+        g.strokeStyle = shade(base, 0.55);
+        g.lineWidth = Math.max(0.6, s * 0.02);
+        for (const [x, y, r] of dots(lod * 2, s * 0.04, s * 0.07)) {
+          g.beginPath();
+          g.arc(x!, y!, r!, 0.4, 2.6);
+          g.stroke();
+        }
+      }
+      const rim = g.createLinearGradient(x0, y0, x0 + s * 0.8, y0 + h * 0.8);
+      rim.addColorStop(0, 'rgba(255,255,255,0.95)');
+      rim.addColorStop(0.45, 'rgba(255,255,255,0.1)');
+      rim.addColorStop(1, 'rgba(255,255,255,0.3)');
+      g.strokeStyle = rim;
+      g.lineWidth = Math.max(1.1, s * 0.06);
+      this.face(g, size, color, v, s * 0.065);
+      g.stroke();
+    } else if (color === 4) {
+      // blue coral (Heliopora): packed rounded lobes of uneven height with dark grooves; each lobe
+      // is a lit cylinder with a paler growing tip and, from 30 px, rows of polyp pores
+      g.fillStyle = shade(base, night ? -0.5 : -0.45);
+      g.fillRect(x0, y0, s, h);
+      const n = v === 2 ? 4 : 3;
+      const cw = s / n;
+      const pores = new Path2D();
+      const poreLip = new Path2D();
+      for (let i = 0; i < n; i++) {
+        const w = cw * (0.82 + rnd() * 0.12);
+        const x = x0 + i * cw + (cw - w) / 2 + (rnd() - 0.5) * cw * 0.08;
+        const top = y0 + h * (0.01 + rnd() * 0.2);
+        const gr = g.createLinearGradient(x, 0, x + w, 0);
+        gr.addColorStop(0, shade(base, 0.38));
+        gr.addColorStop(0.4, shade(base, 0.16));
+        gr.addColorStop(1, shade(base, -0.16));
+        g.fillStyle = gr;
+        g.beginPath();
+        g.roundRect(x, top, w, h * 1.3, w / 2);
+        g.fill();
+        const tip = g.createRadialGradient(x + w * 0.42, top + w * 0.38, 0, x + w * 0.42, top + w * 0.38, w * 0.55);
+        tip.addColorStop(0, shade(base, 0.62));
+        tip.addColorStop(1, shade(base, 0.1).replace('rgb', 'rgba').replace(')', ',0)'));
+        g.fillStyle = tip;
+        g.fillRect(x, top, w, w);
+        if (lod) {
+          const rows = 2 + lod * 2;
+          for (let k = 0; k < rows; k++)
+            for (let m = 0; m < lod; m++) {
+              const px = x + w * (lod === 1 ? 0.5 : 0.3 + m * 0.4) + (rnd() - 0.5) * w * 0.2;
+              const py = top + w * 0.8 + ((h - w * 0.5) / rows) * (k + (m ? 0.5 : 0));
+              const r = s * (0.026 - lod * 0.005);
+              disc(poreLip, px + r * 0.35, py + r * 0.45, r);
+              disc(pores, px, py, r);
+            }
+        }
+      }
+      fillPath(poreLip, lt, night ? 0.8 : 0.6);
+      fillPath(pores, shade(base, night ? -0.62 : -0.55));
+    } else if (color === 5) {
+      // porphyry: dark lilac groundmass set with pale angular feldspar crystals and a few black
+      // flecks, tumbled smooth and wet (the strongest highlight in the set)
+      const wet = g.createLinearGradient(0, y0, 0, y0 + h);
+      wet.addColorStop(0, shade(base, -0.02));
+      wet.addColorStop(1, shade(base, -0.34));
+      g.fillStyle = wet;
+      g.fillRect(x0, y0, s, h);
+      const xl = new Path2D();
+      const mafic = new Path2D();
+      const crystals = (path: Path2D, n: number, rMin: number, rMax: number) => {
+        for (const [x, y, r] of dots(n, rMin, rMax)) {
+          const a = rnd() * Math.PI;
+          const e = 0.4 + rnd() * 0.3;
+          const ca = Math.cos(a) * r!;
+          const sa = Math.sin(a) * r!;
+          path.moveTo(x! + ca, y! + sa);
+          path.lineTo(x! - sa * e, y! + ca * e);
+          path.lineTo(x! - ca, y! - sa);
+          path.lineTo(x! + sa * e, y! - ca * e);
+          path.closePath();
+        }
+      };
+      crystals(xl, [5, 9, 16][lod]!, s * 0.04, s * (lod ? 0.085 : 0.1));
+      crystals(mafic, [2, 5, 9][lod]!, s * 0.02, s * 0.05);
+      fillPath(xl, shade(base, 0.5), 0.8);
+      fillPath(mafic, shade(base, -0.75), 0.85);
+    } else {
+      // pink coralline crust: chalky encrusting algae over rock, raised in a few low knobs (lit
+      // top-left, shadowed low-right), with the pale growing margin real crusts have
+      const knobs = dots([4, 6, 8][lod]!, s * (lod ? 0.1 : 0.13), s * (lod ? 0.17 : 0.2));
+      if (lod > 1) knobs.push(...dots(8, s * 0.035, s * 0.06));
+      const sh = new Path2D();
+      const body = new Path2D();
+      const hi = new Path2D();
+      for (const [x, y, r] of knobs) {
+        disc(sh, x! + r! * 0.2, y! + r! * 0.26, r!);
+        disc(body, x!, y!, r! * 0.95);
+        disc(hi, x! - r! * 0.28, y! - r! * 0.3, r! * 0.5);
+      }
+      fillPath(sh, shade(base, night ? -0.5 : -0.42), 0.7);
+      fillPath(body, base);
+      fillPath(hi, shade(base, 0.36), 0.85);
+      const chalk = new Path2D();
+      for (const [x, y, r] of dots(6 + lod * 22, s * 0.01, s * 0.02)) speck(chalk, x!, y!, r!);
+      fillPath(chalk, shade(base, 0.7), 0.5);
+      g.strokeStyle = shade(base, 0.62);
+      g.globalAlpha = 0.8;
+      g.lineWidth = Math.max(0.9, s * 0.045);
+      this.face(g, size, color, v, s * 0.01);
+      g.stroke();
+      g.globalAlpha = 1;
+    }
+
+    // volume: lit dome top-left, occluded toward the lower-right edge (tinted, not grey, so the
+    // stone keeps its colour)
+    const vol = g.createRadialGradient(x0 + s * 0.36, y0 + h * 0.3, s * 0.05, x0 + s * 0.4, y0 + h * 0.36, s * 0.78);
+    vol.addColorStop(0, 'rgba(255,255,255,0.12)');
+    vol.addColorStop(0.5, 'rgba(255,255,255,0)');
+    vol.addColorStop(
+      1,
+      shade(base, night ? -0.7 : -0.6)
+        .replace('rgb', 'rgba')
+        .replace(')', ',0.45)'),
+    );
+    g.fillStyle = vol;
+    g.fillRect(x0, y0, s, h);
+    // colour grade: the hex's hue and saturation over the material's own light and dark, so the
+    // texture lives in luminance and the stone keeps its piece colour (ADR 0014 §CVD)
+    g.globalCompositeOperation = 'color';
+    g.globalAlpha = 0.6;
+    g.fillStyle = base;
+    g.fill(face);
+    g.globalCompositeOperation = 'source-atop';
+    g.globalAlpha = 1;
+    // wet highlight: a soft bloom plus a sharp glint
+    const hx = x0 + s * 0.3;
+    const hy = y0 + h * 0.24;
+    const bl = g.createRadialGradient(hx, hy, 0, hx, hy, s * 0.3);
+    bl.addColorStop(0, `rgba(255,255,255,${spec * 0.45})`);
+    bl.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = bl;
+    g.fillRect(x0, y0, s, h);
+    g.fillStyle = `rgba(255,255,255,${Math.min(0.95, spec * 1.05)})`;
+    g.beginPath();
+    g.ellipse(hx - s * 0.02, hy - h * 0.03, s * 0.085, s * 0.04, -0.6, 0, Math.PI * 2);
+    g.fill();
+    if (night) {
+      // a cool moonlit rim along the top edge separates the stone from the navy board
+      const rl = g.createLinearGradient(0, y0, 0, y0 + h * 0.3);
+      rl.addColorStop(0, 'rgba(190,240,255,0.3)');
+      rl.addColorStop(1, 'rgba(190,240,255,0)');
+      g.fillStyle = rl;
+      g.fillRect(x0, y0, s, h * 0.3);
+    }
+    g.globalCompositeOperation = 'destination-over';
+    // the side the light doesn't reach
+    g.fillStyle = shade(base, night ? -0.46 : -0.34);
+    blob(g, cx, y0 + s / 2, s / 2, s / 2, color, ph);
+    g.fill();
+    // soft contact shadow, a little wider than the stone
+    g.fillStyle = night ? 'rgba(0,0,0,0.4)' : 'rgba(80,55,30,0.24)';
+    blob(g, cx, y0 + s * 0.535, s * 0.505, s * 0.48, color, ph);
+    g.fill();
+    g.globalCompositeOperation = 'source-over';
+    return c;
+  }
+
+  /** Sprite covers the full cell (size × size CSS px) including gutter and shadow padding. */
+  private drawPebble(p: Palette, color: number, size: number, variant: Variant): Surface {
+    const [c, g] = this.ctx(size);
     const base = this.look.colors[color] ?? '#888888';
     const gut = size * GEOM.gutter;
     const x = gut;
