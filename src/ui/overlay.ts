@@ -42,6 +42,8 @@ export interface UiHandlers {
   onTrySkin?(id: string): void;
   onSettings(): void;
   onJournal(): void;
+  /** The About page (ADR 0016), from Settings or the title screen. */
+  onAbout(): void;
   /** Absent = leaderboards switched off for this build (no menu entry). */
   onLeaderboards?(): void;
   onErase(): void;
@@ -73,7 +75,7 @@ export interface SheetKit {
   show(card: HTMLElement, dismiss: boolean | (() => void), kind?: string): void;
   sheet(
     title: string,
-    o: { back?: () => void; full?: boolean; kind: string; close?: boolean },
+    o: { back?: () => void; backLabel?: string; full?: boolean; kind: string; close?: boolean },
   ): { card: HTMLElement; head: HTMLElement; body: HTMLElement; title: HTMLElement };
   seenFor(j: Journal): Set<string>;
   markUnseen(j: Journal): void;
@@ -374,13 +376,16 @@ export class Ui {
   }
 
   /** A sheet with a title row (title, optional leading back button, close button) and a body. */
-  private sheet(title: string, o: { back?: () => void; full?: boolean; kind: string; close?: boolean }) {
+  private sheet(
+    title: string,
+    o: { back?: () => void; backLabel?: string; full?: boolean; kind: string; close?: boolean },
+  ) {
     const card = document.createElement('div');
     card.className = `sheet${o.full ? ' full' : ''}`;
     card.dataset.kind = o.kind;
     const head = document.createElement('div');
     head.className = 'sheet-head';
-    if (o.back) head.append(this.button('', 'round', icon('back'), 'Back to journal', o.back));
+    if (o.back) head.append(this.button('', 'round', icon('back'), o.backLabel ?? 'Back to journal', o.back));
     const t = document.createElement('h2');
     t.className = 'title-m';
     t.textContent = title;
@@ -548,6 +553,10 @@ export class Ui {
   }
   showJournal(j: Journal): void {
     this.withSheets((m) => m.showJournal(this.kit(), j));
+  }
+  /** Why the ocean (ADR 0016): the letter, the no-funding pledge and the charities. */
+  showAbout(j: Journal, back?: { label: string; fn: () => void }): void {
+    this.withSheets((m) => m.showAbout(this.kit(), j, back));
   }
   /** Reefs by chapter, shipped and endless (src/ui/reefList.ts); tap one to play it. */
   showReefs(m: ReefListModel): void {

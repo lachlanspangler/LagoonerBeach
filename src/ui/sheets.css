@@ -470,3 +470,116 @@ html[data-theme='night'] .reef.done {
 .credits .about {
   padding-top: 0;
 }
+
+/* ═══ About: why the ocean (ADR 0016) ═══ */
+.ab-note p {
+  margin: 0 0 var(--s3);
+  font: 650 calc(16px * var(--fs))/1.5 var(--font);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.ab-note .ab-lead {
+  font: 600 calc(21px * var(--fs))/1.3 var(--font-display);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.ab-note .ab-pledge {
+  margin: var(--s4) 0;
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-lg);
+  background: var(--accent-tint);
+  color: var(--ink);
+}
+.ab-pledge b {
+  display: block;
+  font: 900 calc(19px * var(--fs))/1.25 var(--font-display);
+}
+.ab-pledge small {
+  display: block;
+  margin-top: 2px;
+  font: 700 calc(14px * var(--fs))/1.35 var(--font);
+  color: var(--ink-2);
+}
+.ab-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s2);
+}
+.ab-link {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 64px;
+  padding: var(--s3);
+  border-radius: var(--r-lg);
+  background: var(--surface-sunk);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--dur-press) var(--ease-standard);
+}
+.ab-link:active {
+  transform: scale(0.98);
+}
+.ab-pool {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 72%);
+}
+.ab-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.ab-text b {
+  font: 800 calc(16px * var(--fs))/1.25 var(--font);
+}
+.ab-where {
+  font: 750 calc(12px * var(--fs))/1.3 var(--font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.ab-does {
+  font: 650 calc(14px * var(--fs))/1.35 var(--font);
+  color: var(--ink-2);
+}
+.ab-host {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font: 800 calc(13px * var(--fs))/1.3 var(--font);
+  color: var(--accent);
+}
+.ab-host .ic {
+  width: 14px;
+  height: 14px;
+}
+.ab-sig {
+  margin: var(--s5) 0 0;
+  text-align: right;
+  font: 600 calc(20px * var(--fs))/1.2 var(--font-display);
+  color: var(--ink);
+}
+.ab-sig::before {
+  content: '— ';
+  color: var(--ink-3);
+}
+.ab-sig small {
+  display: block;
+  margin-top: 2px;
+  font: 700 calc(13px * var(--fs))/1.3 var(--font);
+  color: var(--ink-2);
+}
+.ab-fine {
+  margin: var(--s4) 0 0;
+  font: 700 calc(12px * var(--fs))/1.45 var(--font);
+  color: var(--ink-2);
+}

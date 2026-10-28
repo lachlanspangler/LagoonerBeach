@@ -147,6 +147,23 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
     });
     await p.waitForTimeout(200);
   },
+  about: async (p) => {
+    await p.getByRole('button', { name: 'Menu' }).click();
+    await p.getByRole('button', { name: 'Settings' }).click();
+    await p.getByRole('button', { name: /^Why the ocean/ }).click();
+    await p.waitForTimeout(700);
+  },
+  'about-end': async (p) => {
+    await p.getByRole('button', { name: 'Menu' }).click();
+    await p.getByRole('button', { name: 'Settings' }).click();
+    await p.getByRole('button', { name: /^Why the ocean/ }).click();
+    await p.waitForTimeout(500);
+    await p.evaluate(() => {
+      const sc = document.querySelector('.veil .sheet-body') as HTMLElement | null;
+      if (sc) sc.scrollTop = 9999;
+    });
+    await p.waitForTimeout(300);
+  },
   results: async (p) => {
     await p.evaluate(() => (window as any).__atoll.showResults({ score: 9640, prevBest: 12480 }));
     await p.waitForTimeout(1600);

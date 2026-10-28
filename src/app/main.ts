@@ -1008,6 +1008,7 @@ const ui = new Ui({
   onOpenMenu: () => openMenu(),
   onSettings: () => ui.showSettings(profile),
   onJournal: () => ui.showJournal(journal),
+  onAbout: () => ui.showAbout(journal, { label: 'Back to settings', fn: () => ui.showSettings(profile) }),
   onLeaderboards: LB_ON ? openBoards : undefined,
   onErase: () => {
     erasing = true; // don't let the unload handlers write it all back

@@ -8,6 +8,7 @@ import './sheets.css';
 import type { Profile } from '../platform/storage.ts';
 import { loadWoke, saveSeen, saveWoke } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
+import { CHARITIES, hostOf } from '../meta/charities.ts';
 import { HABITATS, SPECIES, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
 import { dozesNow, drawCreature, drowsyPick, hasNewArt } from '../render/creatures.ts';
@@ -118,6 +119,14 @@ export function showSettings(k: SheetKit, p: Profile): void {
   info.innerHTML = `<b>Lagooner Beach ${__APP_VERSION__}</b> · no ads, no tracking.<br>
     Sounds and music are made in code, on your device.`;
   about.append(info);
+  const why = k.button(
+    'about-open',
+    'row row-link',
+    `<span class="row-ic">${icon('shell')}</span><span class="row-label">Why the ocean<small>A note from Lachlan, and charities you can give to</small></span><span class="chev">${icon('chevronRight')}</span>`,
+    'Why the ocean: a note from Lachlan, and charities you can give to',
+    () => k.h.onAbout(),
+  );
+  about.append(why);
   // font licences live one tap away, behind Credits
   const credits = document.createElement('details');
   credits.className = 'credits';
@@ -144,6 +153,68 @@ export function showSettings(k: SheetKit, p: Profile): void {
   body.append(erase);
   card.append(k.button('', 'btn primary', 'Done', 'Done', () => k.h.onResume()));
   k.show(card, true, 'settings');
+}
+
+// ─────────────────────────────────────────────────────────────────────────── about
+/**
+ * Why the ocean (ADR 0016): a short signed note, the no-funding pledge, and verified charities
+ * (src/meta/charities.ts). Each charity sits beside a creature from the game that lives where it
+ * works, drawn as a silhouette until you've caught it (no spoilers). Links are plain anchors: the
+ * native shells hand any off-app URL to the system browser; no referrer, no query strings.
+ */
+export function showAbout(k: SheetKit, j: Journal, back?: { label: string; fn: () => void }): void {
+  const { card, body } = k.sheet('Why the ocean', { kind: 'about', back: back?.fn, backLabel: back?.label });
+  card.classList.add('about-sheet');
+  const ink = night() ? '#6C8193A0' : '#968672A0';
+  const note = document.createElement('div');
+  note.className = 'ab-note';
+  note.innerHTML = `<p class="ab-lead">I grew up in Laguna Beach, turning over rocks in the tide pools.</p>
+    <p>The hermit crabs, sea stars and octopuses in this game come from those afternoons. Their real
+    cousins need clean water and a little looking after.</p>
+    <p class="ab-pledge"><b>I will not take any funding.</b><small>No ads, no purchases, no tips, no sponsors.</small></p>
+    <p>But you can donate to these charities and funds to help coastal wildlife:</p>`;
+  body.append(note);
+  const list = document.createElement('ul');
+  list.className = 'ab-list';
+  list.setAttribute('aria-label', 'Coastal wildlife charities');
+  for (const c of CHARITIES) {
+    const sp = SPECIES.find((x) => x.id === c.species);
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.className = 'ab-link';
+    a.href = c.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer external';
+    a.referrerPolicy = 'no-referrer';
+    a.dataset.charity = c.id;
+    a.setAttribute('aria-label', `${c.name}, ${c.where}. ${c.does} Donate at ${hostOf(c.url)}, opens in your browser`);
+    const pool = document.createElement('span');
+    pool.className = 'ab-pool';
+    pool.setAttribute('aria-hidden', 'true');
+    if (sp) {
+      const e = j.entries[sp.id];
+      pool.style.setProperty('--hab', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
+      pool.append(creatureThumb(sp, 44, e ? undefined : ink, false, { avatar: true }));
+    }
+    a.append(pool);
+    a.insertAdjacentHTML(
+      'beforeend',
+      `<span class="ab-text"><b>${c.name}</b><small class="ab-where">${c.where}</small><span class="ab-does">${c.does}</span><span class="ab-host">${hostOf(c.url)}${icon('external')}</span></span>`,
+    );
+    li.append(a);
+    list.append(li);
+  }
+  body.append(list);
+  const sig = document.createElement('p');
+  sig.className = 'ab-sig';
+  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach</small>`;
+  body.append(sig);
+  const fine = document.createElement('p');
+  fine.className = 'ab-fine';
+  fine.textContent =
+    "Each link opens the charity's own page in your browser. The game doesn't track the tap and takes no cut.";
+  body.append(fine);
+  k.show(card, true, 'about');
 }
 
 // ─────────────────────────────────────────────────────────────────────────── journal

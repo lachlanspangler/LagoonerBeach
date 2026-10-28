@@ -119,6 +119,8 @@ const ICONS = {
     fill: 'M12 3.8l2.5 5.2 5.6.7-4.1 3.9 1.1 5.6L12 16.4l-5.1 2.8L8 13.6 3.9 9.7l5.6-.7L12 3.8Z',
   },
   erase: { d: 'M5 7h14M10 4h4M7 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h5a1.5 1.5 0 0 0 1.5-1.5L17 7' },
+  /** Opens outside the app (charity links): a box with an arrow leaving it. */
+  external: { d: 'M13.5 4.5h6v6M19.5 4.5 11 13M17.5 14v4a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h4' },
   info: { d: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 11v5.5M12 7.8v.2' },
   restart: { d: 'M5 12a7 7 0 1 0 2.2-5.1M5 4.5v3.5h3.5' },
   play: { d: 'M8 5.5v13l10-6.5-10-6.5Z', fill: 'M8 5.5v13l10-6.5-10-6.5Z' },
