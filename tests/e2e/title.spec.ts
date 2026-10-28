@@ -50,16 +50,14 @@ test('a run in progress: Play says what it continues', async ({ page }) => {
   await expect(page.locator('.t-play-s')).toHaveText(/^Endless/);
 });
 
-test('never in the way: deep links, quick returns and the setting skip it', async ({ page, context }) => {
-  // Each launch is a new page; this one stays open to set the stored state between them (closing
-  // a launched page records "hidden just now", as leaving the app does).
-  await boot(page, 'seed=1');
+test('never in the way: deep links, quick returns and the setting skip it', async ({ browser }) => {
+  // Each launch is a fresh context (a cold start) with the stored state set before any page script
+  // runs. Pages sharing a context raced: a closing page's "hidden just now" write could land after
+  // the next launch's setup (WebKit's storage is asynchronous across pages).
   const launch = async (query: string, prefs: object | null) => {
-    await page.evaluate(
-      (v) => (v ? localStorage.setItem('atoll.v1.title', v) : localStorage.removeItem('atoll.v1.title')),
-      prefs && JSON.stringify(prefs),
-    );
-    const p = await context.newPage();
+    const ctx = await browser.newContext();
+    if (prefs) await ctx.addInitScript((v) => localStorage.setItem('atoll.v1.title', v), JSON.stringify(prefs));
+    const p = await ctx.newPage();
     await p.goto(`/?debug=1&titlerules&${query}`);
     await p.waitForFunction(() => (window as any).__atoll);
     return p;
@@ -67,7 +65,7 @@ test('never in the way: deep links, quick returns and the setting skip it', asyn
   const shown = async (query: string, prefs: object | null) => {
     const p = await launch(query, prefs);
     const on = await showing(p);
-    await p.close();
+    await p.context().close();
     return on;
   };
   expect(await shown('mode=daily', null), 'a shared Daily link: zero taps').toBe(false);
@@ -89,7 +87,7 @@ test('never in the way: deep links, quick returns and the setting skip it', asyn
   await sw.click();
   await expect(p.getByRole('switch', { name: 'Open straight into the game' })).toHaveAttribute('aria-checked', 'true');
   expect(await p.evaluate(() => JSON.parse(localStorage.getItem('atoll.v1.title')!).off)).toBe(true);
-  await p.close();
+  await p.context().close();
 });
 
 test('About from the title, then back to it and play', async ({ page }) => {

@@ -81,12 +81,13 @@ export class TitleScene {
     const pr = this.play.getBoundingClientRect();
     const fr = this.el.querySelector('.t-foot')!.getBoundingClientRect();
     this.shore = Math.min(this.h - 140, pr.bottom - r.top + Math.max(28, (fr.top - pr.bottom) * 0.12));
-    const room = fr.top - r.top - this.shore - 12;
+    const room = fr.top - r.top - this.shore - 20;
     const cell = Math.max(20, Math.min(46, Math.floor(Math.min((this.w - 32) / 8, room / 6.6))));
     const gw = 8 * cell;
     const gh = 6 * cell;
     const gx = Math.round((this.w - gw) / 2);
-    const gy = Math.round(this.shore + Math.max(10, (room - gh) / 2 + cell * 0.25));
+    // centred in the sea, never closer than 16 px (plus the reef flat's rim) to the pills
+    const gy = Math.round(this.shore + Math.max(10, Math.min((room - gh) / 2 + cell * 0.25, room - gh - cell * 0.2)));
     this.lag = { x: gx, y: gy, w: gw, h: gh, cell };
     this.base = this.drawBase();
     this.ring = this.drawRing();
@@ -122,20 +123,30 @@ export class TitleScene {
       let s = 7;
       const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
       g.fillStyle = '#eef3f6';
-      for (let i = 0; i < 26; i++) {
-        g.globalAlpha = 0.25 + rnd() * 0.55;
+      const top = this.el.getBoundingClientRect().top;
+      const keepOut = [...this.el.querySelectorAll('.t-lock, .t-play')].map((e) => e.getBoundingClientRect());
+      const clear = (x: number, y: number) =>
+        keepOut.every((b) => x < b.left - 12 || x > b.right + 12 || y < b.top - top - 12 || y > b.bottom - top + 12);
+      for (let i = 0, n = 0; i < 80 && n < 26; i++) {
+        const a = 0.25 + rnd() * 0.55;
+        const x = rnd() * w;
+        const y = rnd() * shore * 0.9;
+        const r = 0.6 + rnd() * 1.1;
+        if (!clear(x, y)) continue;
+        n++;
+        g.globalAlpha = a;
         g.beginPath();
-        g.arc(rnd() * w, rnd() * shore * 0.9, 0.6 + rnd() * 1.1, 0, Math.PI * 2);
+        g.arc(x, y, r, 0, Math.PI * 2);
         g.fill();
       }
       g.globalAlpha = 1;
       const mx = w * 0.82;
       const my = Math.max(64, h * 0.1);
-      const halo = g.createRadialGradient(mx, my, 6, mx, my, 70);
-      halo.addColorStop(0, 'rgba(238,243,246,0.22)');
-      halo.addColorStop(1, 'rgba(238,243,246,0)');
+      const halo = g.createRadialGradient(mx, my, 16, mx, my, 40);
+      halo.addColorStop(0, 'rgba(244,236,214,0.12)');
+      halo.addColorStop(1, 'rgba(244,236,214,0)');
       g.fillStyle = halo;
-      g.fillRect(mx - 70, my - 70, 140, 140);
+      g.fillRect(mx - 40, my - 40, 80, 80);
       // the crescent is cut out of the disc (not painted over it), so the halo shows through
       const [mc, mg] = this.layer();
       mg.fillStyle = '#f4ecd6';
@@ -153,12 +164,12 @@ export class TitleScene {
     } else {
       const sx = w * 0.8;
       const sy = Math.max(70, h * 0.11);
-      const sun = g.createRadialGradient(sx, sy, 18, sx, sy, 84);
-      sun.addColorStop(0, 'rgba(247,214,140,0.5)');
+      const sun = g.createRadialGradient(sx, sy, 22, sx, sy, 34);
+      sun.addColorStop(0, 'rgba(247,214,140,0.22)');
       sun.addColorStop(1, 'rgba(247,214,140,0)');
       g.fillStyle = sun;
-      g.fillRect(sx - 84, sy - 84, 168, 168);
-      g.fillStyle = '#f7d68c';
+      g.fillRect(sx - 34, sy - 34, 68, 68);
+      g.fillStyle = '#f5d17f';
       g.beginPath();
       g.arc(sx, sy, 22, 0, Math.PI * 2);
       g.fill();
@@ -177,9 +188,9 @@ export class TitleScene {
     g.strokeStyle = night ? 'rgba(238,243,246,0.28)' : 'rgba(255,255,255,0.85)';
     g.lineWidth = 2;
     g.beginPath();
-    for (let x = 0; x <= w; x += 4) {
+    for (let x = -8; x <= w + 8; x += 4) {
       const y = shore + Math.sin(x / 38) * 5 + Math.sin(x / 13) * 1.2;
-      if (x === 0) g.moveTo(x, y);
+      if (x === -8) g.moveTo(x, y);
       else g.lineTo(x, y);
     }
     g.stroke();
@@ -201,7 +212,7 @@ export class TitleScene {
     g.fillStyle = night ? '#1f3a48' : '#bfe6ee';
     blob(cell * 0.2, cell * 0.42);
     g.restore();
-    g.fillStyle = night ? '#4a5a5e' : '#f0dcb8';
+    g.fillStyle = night ? '#3a5566' : '#f0dcb8';
     blob(cell * 0.08, cell * 0.34);
     const cx = x + this.lag.w / 2;
     const cy = y + this.lag.h / 2;
@@ -228,10 +239,12 @@ export class TitleScene {
 
   private shoreline(g: CanvasRenderingContext2D, y0: number, amp: number): void {
     const { w, h } = this;
+    const yAt = (x: number) => y0 + Math.sin(x / 38) * amp + Math.sin(x / 13) * 1.2;
     g.beginPath();
-    g.moveTo(0, h);
-    for (let x = 0; x <= w; x += 4) g.lineTo(x, y0 + Math.sin(x / 38) * amp + Math.sin(x / 13) * 1.2);
-    g.lineTo(w, h);
+    g.moveTo(-8, h);
+    for (let x = -8; x < w + 8; x += 4) g.lineTo(x, yAt(x));
+    g.lineTo(w + 8, yAt(w + 8));
+    g.lineTo(w + 8, h);
     g.closePath();
     g.fill();
   }

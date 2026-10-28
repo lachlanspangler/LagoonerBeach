@@ -62,6 +62,7 @@ export class Title {
   private play = document.getElementById('t-play') as HTMLButtonElement;
   private scene: TitleScene | null = null;
   closed = false;
+  private inerted: HTMLElement[] = [];
 
   constructor(
     sprites: SpriteCache,
@@ -75,6 +76,12 @@ export class Title {
     settings!.innerHTML = icon('settings');
     this.el.querySelector('.t-wave')!.innerHTML =
       '<svg viewBox="0 0 92 10"><path d="M2 6c5-4 10-4 15 0s10 4 15 0 10-4 15 0 10 4 15 0 10-4 15 0 10 4 13 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+    // the board and its buttons sit behind the title: out of reach (screen readers, Tab) until Play
+    this.inerted = [
+      document.getElementById('game'),
+      ...document.querySelectorAll<HTMLElement>('#ui > :not(#title)'),
+    ].filter((e): e is HTMLElement => !!e && !e.inert);
+    for (const el of this.inerted) el.inert = true;
     this.play.addEventListener('click', () => !this.closed && h.onPlay());
     document.getElementById('t-about')!.addEventListener('click', () => h.onAbout());
     document.getElementById('t-settings')!.addEventListener('click', () => h.onSettings());
@@ -106,6 +113,22 @@ export class Title {
     this.closed = true;
     this.scene?.stop();
     this.el.classList.add('leaving');
+    // the board rises into place as the title lifts away (one shared move; reduced motion: a fade)
+    document.getElementById('game')?.animate(
+      this.reduced()
+        ? [{ opacity: 0 }, { opacity: 1 }]
+        : [
+            { opacity: 0, transform: 'translateY(18px) scale(0.985)' },
+            { opacity: 1, transform: 'none' },
+          ],
+      {
+        duration: this.reduced() ? 150 : 420,
+        delay: this.reduced() ? 0 : 60,
+        easing: 'cubic-bezier(.2,.8,.2,1)',
+        fill: 'backwards',
+      },
+    );
+    for (const el of this.inerted) el.inert = false;
     let gone = false;
     const done = () => {
       if (gone) return;
