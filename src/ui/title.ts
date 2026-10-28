@@ -136,7 +136,18 @@ export class Title {
     );
     for (const el of this.inerted) el.inert = false;
     // keyboard focus lands on the game's first control, not on <body> when Play goes away
-    if (hadFocus) document.querySelector<HTMLElement>('#ui > button:not([inert])')?.focus({ preventScroll: true });
+    // (only for keyboard players: a tap must not leave a focus ring on the menu button)
+    if (hadFocus && document.documentElement.dataset.kb === '1')
+      document.querySelector<HTMLElement>('#ui > button:not([inert])')?.focus({ preventScroll: true });
+    else if (hadFocus) (document.activeElement as HTMLElement | null)?.blur?.();
+    // the HUD buttons come in with the board, not over the fading title
+    for (const el of this.inerted)
+      if (el.id !== 'game')
+        el.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: this.reduced() ? 150 : 220,
+          delay: this.reduced() ? 0 : 150,
+          fill: 'backwards',
+        });
     let gone = false;
     const done = () => {
       if (gone) return;

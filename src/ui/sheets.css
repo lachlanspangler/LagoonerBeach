@@ -831,6 +831,5 @@ html[data-theme='night'] .ab-link {
 }
 html[data-theme='night'] .ab-pool {
   background:
-    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%),
-    color-mix(in srgb, var(--surface) 70%, #ffffff);
+    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%), #3a5470;
 }

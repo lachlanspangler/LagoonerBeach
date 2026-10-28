@@ -222,7 +222,7 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
   body.append(list);
   const sig = document.createElement('p');
   sig.className = 'ab-sig';
-  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach · advocates for marine wildlife protection</small>`;
+  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach</small><small>advocates for marine wildlife protection</small>`;
   body.append(sig);
   const fine = document.createElement('p');
   fine.className = 'ab-fine';

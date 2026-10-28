@@ -460,16 +460,18 @@ export class SpriteCache {
       g.fillRect(x0, y0, s, h);
       const xl = new Path2D();
       const mafic = new Path2D();
-      // feldspar laths: small cream rectangles, roughly aligned (0–35°) as they are in the rock;
-      // at 24 px two or three larger ones carry it
-      const laths = (path: Path2D, n: number, lMin: number, lMax: number, aspect: number) => {
-        const tilt = rnd() * 0.6;
-        for (const [x, y, l] of dots(n, lMin, lMax)) {
-          const a = tilt + rnd() * 0.6;
+      // feldspar crystals, cream: mixed sizes (about 2:1), half of them long laths, aligned within ±25° of one flow axis
+      const laths = (path: Path2D, n: number, lMin: number, lMax: number, aspect0: number) => {
+        const tilt = rnd() * Math.PI;
+        for (const [x, y, l0] of dots(n, lMin, lMax)) {
+          const a = tilt + (rnd() - 0.5) * 0.87;
+          const big = rnd() < 0.4;
+          const l = l0! * (big ? 1.25 : 0.62);
+          const aspect = rnd() < 0.5 ? 0.4 : aspect0;
           const ca = Math.cos(a);
           const sa = Math.sin(a);
-          const hl = l! / 2;
-          const hw = (l! * aspect) / 2;
+          const hl = l / 2;
+          const hw = (l * aspect) / 2;
           path.moveTo(x! + ca * hl - sa * hw, y! + sa * hl + ca * hw);
           path.lineTo(x! - ca * hl - sa * hw, y! - sa * hl + ca * hw);
           path.lineTo(x! - ca * hl + sa * hw, y! - sa * hl - ca * hw);
@@ -483,7 +485,7 @@ export class SpriteCache {
       for (const [x, y, r] of dots(14 + lod * 40, s * 0.01, s * 0.022)) speck(rnd() < 0.6 ? gDark : gPale, x!, y!, r!);
       fillPath(gDark, shade(base, -0.5), 0.55);
       fillPath(gPale, shade(base, 0.35), 0.45);
-      laths(xl, [3, 5, 6][lod]!, s * [0.14, 0.11, 0.09][lod]!, s * [0.18, 0.15, 0.13][lod]!, 0.7);
+      laths(xl, [3, 6, 8][lod]!, s * [0.14, 0.11, 0.09][lod]!, s * [0.18, 0.15, 0.13][lod]!, 0.7);
       laths(mafic, [2, 4, 7][lod]!, s * 0.035, s * 0.06, 0.6);
       fillPath(xl, '#EFDDE6', 0.9);
       fillPath(mafic, shade(base, -0.75), 0.8);

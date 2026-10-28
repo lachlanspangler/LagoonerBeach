@@ -90,12 +90,15 @@ export class TitleScene {
     // phones: up to 46 px blocks; tablets grow the vignette to ~60% of the width
     const lockW = this.el.querySelector('.title-word')!.getBoundingClientRect().width;
     const cap = this.w >= 700 ? Math.floor(Math.min(this.w * 0.6, this.h * 0.46, lockW * 0.75) / 8) : 46;
-    const cell = Math.max(20, Math.min(cap, Math.floor(Math.min((this.w - 32) / 8, room / 6.6))));
+    // 6 rows + the reef flat's rim + at least 12 px of open water under the shoreline
+    const cell = Math.max(20, Math.min(cap, Math.floor(Math.min((this.w - 32) / 8, (room - 12) / 6.6))));
     const gw = 8 * cell;
     const gh = 6 * cell;
     const gx = Math.round((this.w - gw) / 2);
     // centred in the sea, never closer than 16 px (plus the reef flat's rim) to the pills
-    const gy = Math.round(this.shore + Math.max(10, Math.min((room - gh) / 2 + cell * 0.25, room - gh - cell * 0.2)));
+    const gy = Math.round(
+      this.shore + Math.max(12 + cell * 0.2, Math.min((room - gh) / 2 + cell * 0.25, room - gh - cell * 0.2)),
+    );
     this.lag = { x: gx, y: gy, w: gw, h: gh, cell };
     this.base = this.drawBase();
     this.ring = this.drawRing();
