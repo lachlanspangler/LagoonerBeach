@@ -70,6 +70,11 @@ describe('text contrast (tokens)', () => {
         expect(contrast(p.text, sky), `${p.name} wordmark on ${sky}`).toBeGreaterThanOrEqual(4.5);
         expect(contrast(p.textDim, sky), `${p.name} tagline on ${sky}`).toBeGreaterThanOrEqual(4.5);
       }
+      if (p.name === 'night') {
+        // the Night title's Play is the accent a step deeper (style.css): its label stays AA
+        const fill = /html\[data-theme='night'\] \.t-play \{[^}]*?(#[0-9a-f]{6});/i.exec(css)![1]!;
+        expect(contrast(p.onAccent, fill), `night Play label on ${fill}`).toBeGreaterThanOrEqual(4.5);
+      }
       for (const sea of [...k.sea, ...k.sky]) {
         const bg = over(pills[p.name === 'night' ? 'night' : 'day'], sea);
         expect(contrast(p.text, bg), `${p.name} pill over ${sea}`).toBeGreaterThanOrEqual(4.5);
