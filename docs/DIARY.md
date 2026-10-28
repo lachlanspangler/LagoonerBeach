@@ -761,3 +761,32 @@ gets overloaded); commit per item, never push. Baseline: 512 unit / 165 e2e / 8 
   launch is now a fresh context with its state injected before page scripts (36/36 on repeat).
 - **I-202 fixed:** the new dot moves to the frame corner on epic/legendary tiles. I-201 (chances
   counter) stays backlog: it needs a journal save-format change.
+- **Code review (fresh reviewer, 11 findings), fixed:** the HUD buttons came back into Tab/screen-reader
+  reach under the title after a sheet opened from it closed (`setTopBarInert(false)`); the
+  welcome-back toast fired invisibly behind the title (now waits for Play); an OS dark/light flip
+  left the title sky stale (refresh inside `applyTheme`; `let title` hoisted above boot to dodge the
+  TDZ); the board drew 60 fps under the opaque title (skipped until Play); the title ring could use
+  scaled stand-in sprites (exact `build()` now); title canvases and a keydown listener were held after
+  close; reduced motion restarted on tab return; focus dropped to `<body>` after Play. Tests: the
+  profile key the pre-paint script reads is pinned to `K_PROFILE`; e2e for the inert HUD and the
+  theme flip. Left as-is, documented: native splashes follow the OS appearance (they can't know the
+  in-app theme before JS runs), and a block's texture variant settles on drop (tray pieces use
+  variant 0; the board's per-cell variant is what keeps walls from tiling).
+- **Critic round 2 (2 A · 9 A− · 6 B+ · 2 B · 1 B−), fixed:**
+  - *Blocks:* one shared hot glint made the whole set candy → only the wet porphyry shines; coral,
+    sandstone and coralline are matte, sea glass frosted (dense pitting, seed bubbles, a soft
+    translucent edge; the "smile" ticks are gone). Porphyry became granular (salt-and-pepper
+    groundmass, cream feldspar laths, mafic flecks). Darker sandstone partings, coralline as a crust
+    of many small knobs, matte blue-coral tips, a gentler lit state (no whitewash at peak), tier words
+    ≤ 88 % of the board. New non-text contrast test: every colour has a ≥ 3:1 boundary against the
+    cell (day lip −0.44, night moonlit rim). One trap: lifting porphyry's Night face for contrast
+    pushed it toward blue coral under deuteranopia (ΔE 7.2 < 10, caught by blocks.spec) → the rim
+    carries the contrast instead.
+  - *Title:* the leave animation now replaces the entry one (the old transition was pinned by
+    `fill: both`), the board comes in once the title is mostly gone, tablets sit higher with a 60 %
+    vignette and 56 px pills, Larger text reaches the title, wordmark leading 1.04, glassy Night pills,
+    sun/moon kept clear of the wordmark on tall screens.
+  - *About:* a byline under the lead, an explicit advocacy line, signature "speaks up for marine
+    wildlife", PMMC copy says marine mammals (its card's dolphin now fits), brighter Night tiles.
+  - Baselines re-made deliberately for the materials: start light/dark, midgame, Atoll ×5 (each
+    read by eye; only block surfaces differ).
