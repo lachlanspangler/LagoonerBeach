@@ -1,6 +1,6 @@
-# Publishes the release web build to GitHub Pages → https://lachlanspangler.github.io/Atoll/
+# Publishes the release web build to GitHub Pages → https://lachlanspangler.github.io/LagoonerBeach/
 # One-time setup in the repo: Settings → Pages → Build and deployment → Source: "GitHub Actions".
-# The build uses relative paths (vite base './'), so it works under the /Atoll/ sub-path.
+# The build uses relative paths (vite base './'), so it works under the /LagoonerBeach/ sub-path.
 # No leaderboard server is configured, so the published game has no leaderboards (ADR 0010).
 name: pages
 on:

@@ -1,12 +1,12 @@
 /**
  * Smoke-test the release build served under a sub-path, the way GitHub Pages serves it
- * (https://<user>.github.io/Atoll/). Start a server first:
- *   npm run build && npx vite preview --base /Atoll/ --port 8765
+ * (https://<user>.github.io/LagoonerBeach/). Start a server first:
+ *   npm run build && npx vite preview --base /LagoonerBeach/ --port 8765
  *   npx tsx scripts/pages-check.ts [url]
  */
 import { chromium } from '@playwright/test';
 
-const url = process.argv[2] ?? 'http://localhost:8765/Atoll/';
+const url = process.argv[2] ?? 'http://localhost:8765/LagoonerBeach/';
 const b = await chromium.launch({ args: ['--mute-audio'] });
 const p = await b.newPage({ viewport: { width: 390, height: 844 } });
 const errors: string[] = [];
