@@ -15,8 +15,6 @@ import {
   describe as describeReq,
   gateOpen,
   habitatLine,
-  habitatParts,
-  hasFeature,
   membersOf,
 } from '../../src/meta/reqText.ts';
 import { forEachContext } from './ctxSpace.ts';
@@ -52,7 +50,6 @@ describe('habitat gates', () => {
     expect(gateOpen(reef, { night: false, mode: 'puzzle' })).toBe(true);
     expect(gateOpen(reef, { night: true, mode: 'daily' })).toBe(false);
     expect(gateOpen(undefined, { night: false, mode: 'classic' })).toBe(true);
-    expect(gateOpen({ notMode: ['puzzle'] }, { night: false, mode: 'puzzle' })).toBe(false);
     expect(gateOpen({ theme: 'day' }, { night: false, mode: 'daily' })).toBe(true);
   });
   it('gateOpen agrees with matches() on the theme and mode of every context', () => {
@@ -68,12 +65,12 @@ describe('habitat gates', () => {
 describe('habitat lines (next to each category)', () => {
   it('are pinned (a change here is a deliberate copy or rules change)', () => {
     expect(Object.fromEntries(IDS.map((h) => [h, habitatLine(h)]))).toEqual({
-      shallows: 'Small pools of 1–5 cells · a Daily visitor',
-      lagoon: 'Shaped pools: lines, squares, plus, L, rectangles, round · 2+ pools at once · big pools of 6+ cells',
-      deep: 'Big pools of 6+ cells · islands · cascades · a Daily visitor',
-      night: 'Only in the Night theme',
-      reef: 'Only in Reef puzzles',
-      legend: 'Cascades 3 waves deep · clearing the whole board · huge pools around an island · ×5+ combos',
+      shallows: 'Pools of 1–5 cells · combos from ×6',
+      lagoon: 'Pools of 3+ cells · combos from ×4',
+      deep: 'Pools of 6+ cells · combos from ×3',
+      night: 'Only at night',
+      reef: 'Only in Reefs',
+      legend: 'Pools of 12+ cells · combos from ×5',
     });
   });
   it('gated habitats say their gate, in describe()’s words', () => {
@@ -84,84 +81,50 @@ describe('habitat lines (next to each category)', () => {
           .join(', ')}`.toLowerCase(),
       );
   });
-  it('every keyword is produced by at least one member’s describe()', () => {
+  it('the cell range in a line is exactly the sizes its members are caught at (over the space)', () => {
     for (const h of IDS) {
-      const said = membersOf(h).map((s) => describeReq(s.req).join(', '));
-      for (const p of habitatParts(h))
-        expect(
-          said.some((t) => t.includes(p.key)),
-          `${h}: "${p.key}"`,
-        ).toBe(true);
+      const m = /Pools of (\d+)(?:–(\d+)|\+) cells/.exec(habitatLine(h));
+      if (!m) continue;
+      const sized = membersOf(h).filter((s) => s.req.minArea !== undefined || s.req.maxArea !== undefined);
+      let lo = Infinity;
+      let hi = 0;
+      forEachContext((c) => {
+        if (sized.some((s) => matches(s.req, c))) {
+          lo = Math.min(lo, c.area);
+          hi = Math.max(hi, c.area);
+        }
+      });
+      expect(lo, h).toBe(Number(m[1]));
+      expect(hi, h).toBe(m[2] ? Number(m[2]) : 20); // "N+" = unbounded (the space goes up to 20 cells)
     }
   });
-  it('every member is covered by the line (a feature it has, or the gate)', () => {
-    for (const h of IDS) {
-      const hr = HABITAT_REQ[h];
-      for (const sp of membersOf(h)) {
-        const covered = !!hr.gate || (hr.features ?? []).some((f) => hasFeature(f, sp.req));
-        expect(covered, `${h}: ${sp.id}`).toBe(true);
-      }
+  it('the combo in a line is the smallest any member needs (ungated habitats; gated ones say their gate)', () => {
+    for (const h of IDS.filter((x) => !HABITAT_REQ[x].gate)) {
+      const m = /combos from ×(\d+)/.exec(habitatLine(h));
+      const need = membersOf(h)
+        .map((s) => s.req.streak)
+        .filter((x) => x !== undefined);
+      expect(m ? Number(m[1]) : undefined, h).toBe(need.length ? Math.min(...need) : undefined);
     }
-  });
-  it('every listed feature is had by some member (no "islands" without an island species)', () => {
-    for (const h of IDS)
-      for (const f of HABITAT_REQ[h].features ?? [])
-        expect(
-          membersOf(h).some((s) => hasFeature(f, s.req)),
-          `${h}: ${f}`,
-        ).toBe(true);
-  });
-  it('cell counts in a line are the real catchable sizes of the members it speaks for (over the space)', () => {
-    let checked = 0;
-    for (const h of IDS)
-      for (const f of ['small', 'big'] as const) {
-        if (!HABITAT_REQ[h].features?.includes(f)) continue;
-        const members = membersOf(h).filter((s) => hasFeature(f, s.req));
-        const p = habitatParts(h).find((x) => x.key === f)!;
-        const m = /of (\d+)(?:–(\d+)|\+) cells/.exec(p.text)!;
-        let lo = Infinity;
-        let hi = 0;
-        forEachContext((c) => {
-          if (plausible(c) && members.some((s) => matches(s.req, c))) {
-            lo = Math.min(lo, c.area);
-            hi = Math.max(hi, c.area);
-          }
-        });
-        expect(lo, `${h}: ${p.text}`).toBe(Number(m[1]));
-        // "N+" = unbounded (the space goes up to 20 cells)
-        expect(hi, `${h}: ${p.text}`).toBe(m[2] ? Number(m[2]) : 20);
-        checked++;
-      }
-    expect(checked).toBe(3); // Shallows small, Lagoon big, Deep big
   });
 });
 
-/** Sizes classify() can give each shape (dot = 1 cell, 2×2 square = 4, rectangle ≥ 2×3, island ring ≥ 8, …). */
-function plausible(c: CatchContext): boolean {
-  const a = c.area;
-  switch (c.shape) {
-    case 'dot':
-      return a === 1;
-    case 'pair':
-      return a === 2;
-    case 'square2':
-      return a === 4;
-    case 'square3':
-      return a === 9;
-    case 'plus':
-      return a === 5;
-    case 'corner':
-      return a >= 3 && a <= 7;
-    case 'island':
-      return a >= 8;
-    case 'rect':
-      return a >= 6;
-    case 'blob':
-      return a >= 4;
-    default:
-      return a >= 3;
-  }
-}
+describe('rules are only pool size and combo (owner, 2026-10-28)', () => {
+  it('no shapes, waves, islands, moves, tiers or clears in any rule', () => {
+    const allowed = ['minArea', 'maxArea', 'streak', 'theme', 'mode'];
+    for (const sp of SPECIES)
+      expect(
+        Object.keys(sp.req).filter((k) => !allowed.includes(k)),
+        sp.id,
+      ).toEqual([]);
+  });
+  it('theme and mode only as the Night and Reef habitat gates (and the Night-only legend)', () => {
+    for (const sp of SPECIES) {
+      if (sp.req.mode) expect(sp.habitat, sp.id).toBe('reef');
+      if (sp.req.theme) expect([sp.habitat, sp.id]).toSatisfy(([h, id]) => h === 'night' || id === 'kraken');
+    }
+  });
+});
 
 const ctx: CatchContext = {
   area: 1,
@@ -178,17 +141,9 @@ const ctx: CatchContext = {
 };
 
 describe('tile badges (conditions beyond the habitat)', () => {
-  it('exactly the day-only, Night-only and Daily-only species outside their gate', () => {
+  it('only the Night-only legend has a condition beyond its habitat', () => {
     const got = Object.fromEntries(SPECIES.filter((s) => badgesFor(s).length).map((s) => [s.id, badgesFor(s)]));
-    expect(got).toEqual({
-      minnow: ['day'],
-      periwinkle: ['day'],
-      sanddollar: ['day'],
-      parrot: ['day'],
-      sunfish: ['daily'],
-      otter: ['daily'],
-      kraken: ['night'],
-    });
+    expect(got).toEqual({ kraken: ['night'] });
   });
   it('a badge means the species really is never catchable outside it', () => {
     for (const sp of SPECIES)

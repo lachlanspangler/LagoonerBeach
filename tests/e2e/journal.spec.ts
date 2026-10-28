@@ -50,8 +50,8 @@ test('every habitat shows its requirement line and its progress, as a heading', 
     ).toBeVisible();
   }
   // the requirement lines are the shipped copy, not hand-typed in the test
-  await expect(sec(page, 'night').locator('.j-req')).toHaveText('Only in the Night theme');
-  await expect(sec(page, 'reef').locator('.j-req')).toHaveText('Only in Reef puzzles');
+  await expect(sec(page, 'night').locator('.j-req')).toHaveText('Only at night');
+  await expect(sec(page, 'reef').locator('.j-req')).toHaveText('Only in Reefs');
 });
 
 test('a complete habitat gets a tick and its golden count; incomplete ones do not', async ({ page }) => {
@@ -116,29 +116,31 @@ test('undiscovered tiles keep the secret: silhouettes, ???, and a hint that neve
     }
   }
   // the label carries the generated hint (and any condition badge)
-  const otter = SPECIES.find((s) => s.id === 'otter')!;
+  const kraken = SPECIES.find((s) => s.id === 'kraken')!;
   await expect(
-    page.getByRole('button', { name: `Unknown rare creature, Daily only. How to find it: ${hintFor(otter)}` }),
+    page.getByRole('button', {
+      name: `Unknown legendary creature, Night theme only. How to find it: ${hintFor(kraken)}`,
+    }),
   ).toHaveCount(1);
   // the species page says how to find it, still without the name
   await page
-    .getByRole('button', { name: `Unknown rare creature, Daily only. How to find it: ${hintFor(otter)}` })
+    .getByRole('button', { name: `Unknown legendary creature, Night theme only. How to find it: ${hintFor(kraken)}` })
     .click();
   await expect(page.locator('.sp-name')).toHaveText('???');
   await expect(page.locator('.sp-how')).toContainText('How to find it');
-  await expect(page.locator('.sp-how p')).toHaveText(hintFor(otter));
-  await expect(page.locator('.sp-how')).toContainText('Daily only');
-  await expect(page.locator('.sheet').last()).not.toContainText(otter.name);
+  await expect(page.locator('.sp-how p')).toHaveText(hintFor(kraken));
+  await expect(page.locator('.sp-how')).toContainText('Night theme only');
+  await expect(page.locator('.sheet').last()).not.toContainText(kraken.name);
 });
 
 test('found species: badge in the label, and "How to find it" on its page', async ({ page }) => {
   await boot(page, 'seed=3&fast=1');
-  await openJournal(page, ['minnow']);
-  const tile = page.getByRole('button', { name: /^Silver Minnow, common, caught \d+, Day theme only/ });
-  await expect(tile.locator('.j-badge.b-day')).toHaveCount(1);
+  await openJournal(page, ['minnow', 'kraken']);
+  const tile = page.getByRole('button', { name: /^Baby Kraken, legendary, caught \d+, Night theme only/ });
+  await expect(tile.locator('.j-badge.b-night')).toHaveCount(1);
   await tile.click();
-  await expect(page.locator('.sp-how p')).toHaveText(hintFor(SPECIES.find((s) => s.id === 'minnow')!));
-  await expect(page.locator('.sp-how')).toContainText('Day theme only');
+  await expect(page.locator('.sp-how p')).toHaveText(hintFor(SPECIES.find((s) => s.id === 'kraken')!));
+  await expect(page.locator('.sp-how')).toContainText('Night theme only');
 });
 
 test('gate nudges: "Switch to Night" in Day, "Play Reefs" outside Reefs; neither once the gate is open', async ({

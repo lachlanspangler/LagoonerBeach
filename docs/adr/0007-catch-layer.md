@@ -49,3 +49,18 @@ reefs, legends. A lighter real player (fewer games/day) stretches this to many w
 - Original procedural art for 20 body types × palettes × patterns (no assets).
 - Any change to conditions requires re-running catch-rates `--write` and the sim; the test suite
   checks every species stays catchable.
+
+## Amendment (2026-10-28, owner): rules are pool size and combo only
+> "the descriptions for how to get the creatures are too word heavy. It should simply be how big the
+> pool or how many combos needed should be. Remove the 'waves' logic or island logic."
+
+Every species' rule (`src/meta/req.ts`) is now just a pool-size range and/or a COMBO ×N minimum, plus
+the two habitat gates (Night: the Night theme; Reef: Reef puzzles; and the Night-only kraken). Shapes
+(lines, squares, plus, L, rectangles, blobs), islands, cascade waves, pools-at-once, move counts,
+reef tiers/clears, clean boards, the Daily-only and Day-only gates are gone. Hints read like
+"3–5 cells, ×6 combo"; habitat lines like "Pools of 1–5 cells · combos from ×6". Thresholds were set
+from simulated play (`scripts/catch-rates.ts`: combos are common — a human-like bot reaches ×12 ~40
+times a day — and big pools rare: 12+ cells ~1/day, 16+ ~0.1/day), then per-species chances were
+regenerated (`catchTuning.ts`). `catch-sim`: median 16 species on day 1, 40 by day 10, 46 by day 21
+(one legendary, the kraken, stays a long hunt). The dealer, scoring and RULES_VERSION are untouched —
+catches never touch the dealer RNG. Existing journals keep everything they've found.

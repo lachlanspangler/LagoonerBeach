@@ -813,3 +813,20 @@ gets overloaded); commit per item, never push. Baseline: 512 unit / 165 e2e / 8 
 - **End state:** main only, everything committed, make check + make e2e (205 + 10 perf) green,
   initial JS 62.9 KB, CSS 6,045/6,144 B. Needs from the owner: sign-off on the About wording and the
   five charities, plus the standing store items (STATUS).
+
+## 2026-10-28 (session 6, owner follow-ups)
+- **About in the Menu** (Menu › About, back returns to the menu) and **each charity's own logo** on
+  its card — fetched from the charities' sites, trimmed, bundled (never hot-linked), shown unaltered
+  on the badge their artwork was drawn for (white logos on navy). Logo use is nominative; flagged in
+  STATUS for the owner to confirm brand permission. (I had rejected logos in the ledger for exactly
+  that reason; the owner asked, so built and flagged.)
+- **Title stripped to wordmark, tagline, atoll and Play** (owner): no About/Settings pills, no fish.
+  "Open straight into the game" now lives only in Menu › Settings.
+- **Catch rules: pool size and combo only** (owner: "too word heavy … remove the waves logic or
+  island logic"). Decision: also drop shapes, pools-at-once, move counts, reef tiers/clears, clean
+  board and the Day/Daily gates — the ask was "simply how big the pool or how many combos"; keeping
+  the Night and Reef habitat gates since they *are* those categories. Thresholds from simulated play
+  (combos are far more common than big pools), chances regenerated; ADR 0007 amended. The old
+  rule-equivalence test (frozen lambdas) is gone by design; new tests pin that rules use only those
+  fields, that hints never mention waves/islands/shapes, and that habitat lines are exactly the
+  members' sizes and smallest combo.

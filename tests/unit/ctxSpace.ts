@@ -8,7 +8,12 @@
  * Shapes and sizes are not forced to agree (an "hline" of area 9 in a 2×5 box is in here): the rules
  * must agree on contexts the game never makes too.
  */
-import type { CatchContext, Shape } from '../../src/meta/creatures.ts';
+import { SPECIES, type CatchContext, type Shape } from '../../src/meta/creatures.ts';
+
+/** COMBO values to sweep: 0, and at and just below every threshold a species uses. */
+const STREAKS = [
+  ...new Set([0, ...SPECIES.flatMap((s) => (s.req.streak === undefined ? [] : [s.req.streak - 1, s.req.streak]))]),
+].sort((a, b) => a - b);
 
 export const SHAPES: readonly Shape[] = [
   'dot',
@@ -41,7 +46,7 @@ const POOL_CONDITIONS: readonly Omit<CatchContext, 'area' | 'shape' | 'w' | 'h'>
   {
     wave: 3,
     pockets: 3,
-    streak: 12,
+    streak: Math.max(...STREAKS),
     moves: 90,
     clean: true,
     night: true,
@@ -119,7 +124,7 @@ export function forEachContext(fn: (c: CatchContext) => void): void {
   for (const [shape, area, w, h] of POOLS)
     for (let wave = 1; wave <= 3; wave++)
       for (let pockets = 1; pockets <= 3; pockets++)
-        for (const streak of [4, 5, 6, 7, 8, 11, 12])
+        for (const streak of STREAKS)
           for (const moves of [59, 60, 89, 90])
             for (const night of [false, true])
               for (const mode of MODES)
