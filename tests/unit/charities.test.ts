@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CHARITIES, hostOf } from '../../src/meta/charities.ts';
 import { SPECIES } from '../../src/meta/creatures.ts';
@@ -31,6 +31,12 @@ describe('charities (About page)', () => {
       expect(doc).toContain(hostOf(c.url));
     }
     expect(new Set(CHARITIES.map((c) => c.id)).size).toBe(CHARITIES.length);
+  });
+  it('each shows its own logo, bundled (never hot-linked: no tracking, works offline)', () => {
+    for (const c of CHARITIES) {
+      expect(c.logo.src, c.name).toMatch(/^\.\/charities\/[a-z]+\.png$/);
+      expect(existsSync(`public/${c.logo.src.slice(2)}`), c.logo.src).toBe(true);
+    }
   });
   it('each sits beside a real species from the game', () => {
     for (const c of CHARITIES)

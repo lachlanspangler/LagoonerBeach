@@ -16,6 +16,11 @@ export interface Charity {
   readonly ein: string;
   /** A species from the game that lives where this charity works (shown beside it). */
   readonly species: string;
+  /**
+   * The charity's own logo, unaltered (fetched from its website, trimmed, `public/charities/`), and
+   * the badge it sits on: some are drawn for a dark header (white artwork), some for a light one.
+   */
+  readonly logo: { readonly src: string; readonly on: 'light' | 'dark' };
 }
 
 export const CHARITIES: readonly Charity[] = [
@@ -27,6 +32,7 @@ export const CHARITIES: readonly Charity[] = [
     url: 'https://apps.pacificmmc.org/donate',
     ein: '95-3680896',
     species: 'dolphin',
+    logo: { src: './charities/pmmc.png', on: 'dark' },
   },
   {
     id: 'lof',
@@ -36,6 +42,7 @@ export const CHARITIES: readonly Charity[] = [
     url: 'https://lagunaoceanfoundation.org/donate/',
     ein: '71-0953427',
     species: 'hermit',
+    logo: { src: './charities/lof.png', on: 'light' },
   },
   {
     id: 'surfrider',
@@ -45,6 +52,7 @@ export const CHARITIES: readonly Charity[] = [
     url: 'https://www.surfrider.org/donate',
     ein: '95-3941826',
     species: 'starfish',
+    logo: { src: './charities/surfrider.png', on: 'light' },
   },
   {
     id: 'mba',
@@ -54,6 +62,7 @@ export const CHARITIES: readonly Charity[] = [
     url: 'https://www.montereybayaquarium.org/support-us/donate',
     ein: '94-2487469',
     species: 'otter',
+    logo: { src: './charities/mba.png', on: 'dark' },
   },
   {
     id: 'oc',
@@ -63,6 +72,7 @@ export const CHARITIES: readonly Charity[] = [
     url: 'https://oceanconservancy.org/donate/',
     ein: '23-7245152',
     species: 'turtle',
+    logo: { src: './charities/oc.png', on: 'light' },
   },
 ];
 

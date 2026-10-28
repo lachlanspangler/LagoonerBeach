@@ -136,7 +136,7 @@ export function showSettings(k: SheetKit, p: Profile): void {
     'row row-link',
     `<span class="row-ic">${icon('shell')}</span><span class="row-label">A note from Lachlan<small>Why the ocean, and charities you can give to</small></span><span class="chev">${icon('chevronRight')}</span>`,
     'A note from Lachlan: why the ocean, and charities you can give to',
-    () => k.h.onAbout(),
+    () => k.h.onAbout('settings'),
   );
   about.append(why);
   // font licences live one tap away, behind Credits
@@ -214,7 +214,7 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
     a.append(pool);
     a.insertAdjacentHTML(
       'beforeend',
-      `<span class="ab-text"><b>${c.name}</b><small class="ab-where">${c.where}</small><span class="ab-does">${c.does}</span><span class="ab-host">${hostOf(c.url)}${icon('external')}</span></span>`,
+      `<span class="ab-text"><span class="ab-logo ab-logo-${c.logo.on}"><img src="${c.logo.src}" alt="" decoding="async"></span><small class="ab-where">${c.where}</small><span class="ab-does">${c.does}</span><span class="ab-host">${hostOf(c.url)}${icon('external')}</span></span>`,
     );
     li.append(a);
     list.append(li);

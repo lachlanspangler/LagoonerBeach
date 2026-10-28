@@ -833,3 +833,28 @@ html[data-theme='night'] .ab-pool {
   background:
     radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%), #3a5470;
 }
+/* each charity's own logo, on the badge its artwork was drawn for (light or dark) */
+.ab-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  max-width: 100%;
+  height: 40px;
+  margin-bottom: 4px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.ab-logo-light {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(43, 35, 28, 0.08);
+}
+.ab-logo-dark {
+  background: #12324a;
+}
+.ab-logo img {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}

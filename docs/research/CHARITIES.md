@@ -55,6 +55,15 @@ aquarium out because its giving runs through ticketing; its donate page is a pla
 All five are US 501(c)(3)s. Players outside the US can still give, but tax treatment differs.
 The copy says nothing about tax.
 
+## Logos (added 2026-10-28, owner's request)
+Each card shows the charity's own logo, unaltered, fetched from its website on 2026-10-28 and only
+trimmed and resized (`public/charities/<id>.png`, ≤ 40 KB each, bundled so nothing is hot-linked):
+PMMC and Monterey Bay Aquarium publish white artwork for dark headers (shown on a navy badge); Laguna
+Ocean Foundation, Surfrider and Ocean Conservancy (its colour stacked logo) on white. Use is
+nominative — to identify the charity next to a link to its own donation page, with no endorsement
+implied — but most nonprofits have brand guidelines: **the owner should confirm with each charity
+(or drop the logos) before release** (STATUS).
+
 ## How the links behave in the app
 - Plain `<a href target="_blank" rel="noopener noreferrer">` links, with no query strings we add.
 - **iOS and Android:** a tap is routed to the system browser. WKWebView and Android WebView do not

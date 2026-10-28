@@ -43,8 +43,8 @@ export interface UiHandlers {
   onTrySkin?(id: string): void;
   onSettings(): void;
   onJournal(): void;
-  /** The About page (ADR 0016), from Settings or the title screen. */
-  onAbout(): void;
+  /** The About page (ADR 0016), from Settings, the home menu or the title screen. */
+  onAbout(from?: 'settings' | 'menu'): void;
   /** Settings › "Open straight into the game" (skip the title screen, ADR 0015). */
   onTitleOff(): void;
   /** Absent = leaderboards switched off for this build (no menu entry). */
@@ -535,6 +535,9 @@ export class Ui {
       );
     links.append(
       this.button('', 'link-tile', `${icon('settings')}<span>Settings</span>`, 'Settings', () => this.h.onSettings()),
+      this.button('menu-about', 'link-tile', `${icon('info')}<span>About</span>`, 'About', () =>
+        this.h.onAbout('menu'),
+      ),
     );
     card.append(links);
     this.show(card, canResume, 'menu');

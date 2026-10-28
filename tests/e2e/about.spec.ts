@@ -78,3 +78,19 @@ test('About: Larger text and Night keep it inside the screen and readable', asyn
   );
   expect(over).toBe(0);
 });
+
+test('About from the home menu, with logos, and back to the menu', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'About', exact: true }).click();
+  const sheet = page.locator('.sheet[data-kind="about"]');
+  await expect(sheet).toBeVisible();
+  const logos = sheet.locator('.ab-logo img');
+  await expect(logos).toHaveCount(CHARITIES.length);
+  // every logo actually loads (bundled files, not hot-linked)
+  await expect
+    .poll(() => logos.evaluateAll((els) => els.every((e) => (e as HTMLImageElement).naturalWidth > 0)))
+    .toBe(true);
+  await sheet.getByRole('button', { name: 'Back to menu' }).click();
+  await expect(page.locator('.sheet[data-kind="menu"]')).toBeVisible();
+});

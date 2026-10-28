@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**195 ideas** — chosen: 23 · built: 31 · prototyped: 4 · shortlisted: 4 · backlog: 50 · merged: 5 · rejected: 78
+**195 ideas** — chosen: 23 · built: 32 · prototyped: 4 · shortlisted: 4 · backlog: 50 · merged: 5 · rejected: 77
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -62,6 +62,7 @@
 | I-099 | built | Erase my data | Settings: erase all progress (two taps). | Privacy-respecting apps | 23 | ✗ | 5/1 | est |
 | I-202 | built | Legendary pill vs new dot | On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill. |  | 23 | ✗ | 3/1 | est |
 | I-075 | built | Ambient sea | Soft procedural wave bed under the SFX. | Calm puzzle games | 20 | ✗ | 3/3 | est |
+| I-194 | built | Charity logos | Show each charity's logo. |  | 16 | ✗ | 3/2 | est |
 | I-005 | prototyped | Overgrowth (growing tray) | Every piece you skip grows one block. | Block Blast | 23 | ✗ | 6/3 | meas |
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
@@ -202,7 +203,6 @@
 | I-189 | rejected | Donation matching | Pledge to match donations. |  | 16 | ✗ | 2/5 | est |
 | I-191 | rejected | Beach clean-up reminder | A gentle seasonal note linking to Coastal Cleanup Day. |  | 16 | ✗ | 4/2 | est |
 | I-193 | rejected | Share the About page | Share sheet for the charity list. |  | 16 | ✗ | 3/2 | est |
-| I-194 | rejected | Charity logos | Show each charity's logo. |  | 16 | ✗ | 3/2 | est |
 
 ## Details
 
@@ -641,6 +641,14 @@
 - **Scores (R1..R14):** 2 2 2 2 1 1 1 2 0 1 1 1 2 2 → **20**/28, gates FAIL (est)
 - **Value/effort:** 3/3
 - **Reason:** Generative synthesized music + wave ambience with its own toggle.
+
+### I-194 — Charity logos (built)
+- **Pitch:** Show each charity's logo.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** Session 6, owner request: each charity's own logo on its card (bundled, unaltered); confirm brand permission before release.
 
 ### I-005 — Overgrowth (growing tray) (prototyped)
 - **Pitch:** Every piece you skip grows one block.
@@ -1767,11 +1775,3 @@
 - **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
 - **Value/effort:** 3/2
 - **Reason:** Not asked; keep it modest.
-
-### I-194 — Charity logos (rejected)
-- **Pitch:** Show each charity's logo.
-- **Closest existing:** 
-- **What's new:** 
-- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
-- **Value/effort:** 3/2
-- **Reason:** Trademark use + asset weight; names + one line read better.

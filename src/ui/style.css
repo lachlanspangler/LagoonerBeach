@@ -940,7 +940,9 @@ html[data-theme='night'] .round {
 }
 .home-links {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* one row however many tiles there are (Journal, Leaderboards, Settings, About) */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 10px;
   margin-top: var(--s4);
 }
@@ -980,11 +982,10 @@ html[data-theme='night'] .round {
   display: inline-flex;
 }
 .link-tile .tile-badge {
+  /* a superscript on the book (a row of four tiles leaves no room beside it) */
   position: absolute;
-  left: 100%;
-  top: 50%;
-  margin-left: 5px;
-  transform: translateY(-50%);
+  left: 60%;
+  top: -7px;
   padding: 2px 6px;
   border-radius: var(--r-pill);
   background: var(--accent-tint);
