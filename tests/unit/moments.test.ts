@@ -175,7 +175,9 @@ describe('combo anti-exploit (combo-sim, fixed seeds)', () => {
     // the farmer keeps combos at least as long, and still loses: the combo alone doesn't pay
     expect(median(farmer.map((g) => g.maxStreak))).toBeGreaterThanOrEqual(median(greedy.map((g) => g.maxStreak)) * 0.6);
     expect(fm).toBeLessThan(gm * 0.75);
-  }, 20_000);
+    // deterministic, not a perf check: ~5 s alone, but 20 s+ when the machine is busy (a pre-commit
+    // run next to builds and browsers timed out), so the timeout only guards against a hang
+  }, 90_000);
 });
 
 describe('staged celebration boards (filmstrips, baselines, perf) produce their moment', () => {

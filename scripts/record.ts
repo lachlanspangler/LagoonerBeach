@@ -17,7 +17,10 @@ mkdirSync(OUT, { recursive: true });
 mkdirSync(RAW, { recursive: true });
 const b = await chromium.launch();
 
-async function clip(name: string, run: (p: Page) => Promise<void>) {
+const only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1]!.split(',') : null;
+
+async function clip(name: string, run: (p: Page) => Promise<void>, o: { query?: string; trim?: string } = {}) {
+  if (only && !only.includes(name)) return;
   const dir = `${RAW}/${name}`;
   rmSync(dir, { recursive: true, force: true });
   const ctx = await b.newContext({
@@ -27,10 +30,10 @@ async function clip(name: string, run: (p: Page) => Promise<void>) {
     recordVideo: { dir, size: { width: 390, height: 844 } },
   });
   const p = await ctx.newPage();
-  await p.goto(`${url}/?debug=1&seed=42`);
+  await p.goto(`${url}/?debug=1&${o.query ?? 'seed=42'}`);
   await p.waitForFunction(() => (window as any).__atoll);
   await p.evaluate(() => document.fonts.ready);
-  await p.evaluate(() => ((window as any).__atoll.profile().firstRunDone = true));
+  if (!o.query) await p.evaluate(() => ((window as any).__atoll.profile().firstRunDone = true));
   await p.waitForTimeout(600);
   await run(p);
   await ctx.close();
@@ -43,7 +46,7 @@ async function clip(name: string, run: (p: Page) => Promise<void>) {
     '-loglevel',
     'error',
     '-ss',
-    '0.9',
+    o.trim ?? '0.9',
     '-i',
     `${dir}/clip.webm`,
     '-vf',
@@ -80,6 +83,28 @@ async function staged(p: Page, key: string, combo?: number) {
   await p.waitForTimeout(2600);
 }
 
+// launch → title → one tap → the first-run board, its demo, and a first lagoon (ADR 0015)
+await clip(
+  'launch-title-play',
+  async (p) => {
+    await p.waitForTimeout(1600);
+    const play = await p.locator('#t-play').boundingBox();
+    await p.mouse.move(play!.x + play!.width / 2, play!.y + play!.height / 2, { steps: 12 });
+    await p.waitForTimeout(250);
+    await p.mouse.down();
+    await p.waitForTimeout(90);
+    await p.mouse.up();
+    await p.waitForTimeout(2200);
+    const plan = await p.evaluate(() => (window as any).__atoll.plan('greedy'));
+    await p.mouse.move(plan.down.x, plan.down.y, { steps: 8 });
+    await p.mouse.down();
+    await p.mouse.move(plan.up.x, plan.up.y, { steps: 22 });
+    await p.waitForTimeout(250);
+    await p.mouse.up();
+    await p.waitForTimeout(2600);
+  },
+  { query: 'title=1', trim: '0.2' },
+);
 await clip('combo-lagoon', (p) => staged(p, 'lagoon', 6));
 await clip('cascade', (p) => staged(p, 'cascade', 3));
 await clip('biggest', (p) => staged(p, 'biggest'));
