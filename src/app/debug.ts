@@ -210,6 +210,25 @@ export function installDebugApi(d: DebugDeps): void {
       const over = Math.max(box0 - l, r + 1 - box1, box0 - t, b + 1 - box1);
       return { over: over / s, w: (r - l + 1) / s, h: (b - t + 1) / s };
     },
+    /**
+     * Sprite warm-up cost (ADR 0014): rebuild every block sprite the layout needs at `dpr`, force
+     * the canvases to rasterize (they record lazily), and return the ms; the cache is then reset.
+     */
+    spriteWarm(dpr = 3) {
+      const sc = d.scene;
+      sc.sprites.reset(dpr);
+      const sink = new OffscreenCanvas(4, 4).getContext('2d')!;
+      const t0 = performance.now();
+      sc.warmSprites(true);
+      const all = (sc.sprites as unknown as { cache: Map<string, CanvasImageSource> }).cache;
+      for (const c of all.values()) sink.drawImage(c, 0, 0, 4, 4);
+      sink.getImageData(0, 0, 1, 1);
+      const ms = performance.now() - t0;
+      const n = all.size;
+      sc.sprites.reset(sc.dpr);
+      sc.warmSprites(true);
+      return { ms, sprites: n };
+    },
     debugSkin(id: string) {
       d.scene.sprites.setLook(lookFor(id));
       d.setState(d.state());
