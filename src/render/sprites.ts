@@ -20,6 +20,16 @@ export const VARIANTS = 3;
 /** Variant of a board cell (0..2): a fixed hash of the index, so a saved board looks the same. */
 export const cellVariant = (i: number): number => (Math.imul(i + 11, 0x9e3779b1) >>> 16) % VARIANTS;
 
+/**
+ * The edges that separate a reef stone from an empty cell (WCAG 1.4.11, 3:1 for graphics): by day
+ * the dark lip under the stone, by night a thin moonlit rim (the lip is lost on the navy board).
+ * tests/unit/contrast.test.ts checks every colour against the cell.
+ */
+export const reefEdge = (base: string, night: boolean): { lip: string; rim: string | null } => ({
+  lip: shade(base, night ? -0.46 : -0.44),
+  rim: night ? shade(base, 0.3) : null,
+});
+
 function shade(hex: string, amt: number): string {
   const n = parseInt(hex.slice(1), 16);
   const ch = (v: number) => Math.max(0, Math.min(255, Math.round(amt >= 0 ? v + (255 - v) * amt : v * (1 + amt))));
@@ -45,12 +55,14 @@ function rng(a: number): () => number {
  */
 const MAT: readonly (readonly [n: number, wob: number, f1: number, f2: number, spec: number])[] = [
   [4, 0, 1, 1, 0],
-  [3.1, 0.022, 3, 7, 0.5], // 1 brain coral: a dome, soft lumps
-  [4.6, 0.03, 4, 9, 0.3], // 2 sandstone: a chunky worn lump, matte
-  [3.6, 0.006, 2, 3, 0.45], // 3 sea glass: tumbled, frosted
-  [5.2, 0.014, 3, 6, 0.42], // 4 blue coral: packed lobes
-  [3.0, 0.01, 2, 5, 0.95], // 5 porphyry: a wet beach-worn pebble
-  [3.5, 0.04, 6, 9, 0.18], // 6 coralline crust: lumpy, chalky
+  // spec: only the wet pebble shines; coral and stone are matte, the glass is frosted (critic r2:
+  // one shared hot glint turned the whole set into candy)
+  [3.1, 0.022, 3, 7, 0.2], // 1 brain coral: a dome, soft lumps, matte
+  [4.6, 0.03, 4, 9, 0.1], // 2 sandstone: a chunky worn lump, matte
+  [3.6, 0.006, 2, 3, 0.16], // 3 sea glass: tumbled, frosted (no glint)
+  [5.2, 0.014, 3, 6, 0.18], // 4 blue coral: packed lobes, matte caps
+  [3.0, 0.01, 2, 5, 0.7], // 5 porphyry: a wet beach-worn pebble, the one wet stone
+  [3.5, 0.04, 6, 9, 0.08], // 6 coralline crust: lumpy, chalky
 ];
 
 /** Unit silhouettes per (material, variant): computed once, scaled per sprite. */
@@ -191,12 +203,16 @@ export class SpriteCache {
     g.drawImage(this.build(p, color, size, 'normal', v), 0, 0, size, size);
     const s = size * (1 - GEOM.gutter * 2);
     this.face(g, size, color, v);
-    g.fillStyle = p.name === 'night' ? 'rgba(220,250,255,0.2)' : 'rgba(255,255,255,0.24)';
+    // a light lift, not a whitewash: the material stays readable on a lit ring (critic r2), the
+    // outline carries the "this will be captured" signal
+    g.fillStyle = p.name === 'night' ? 'rgba(220,250,255,0.1)' : 'rgba(255,255,255,0.12)';
     g.fill();
     g.strokeStyle = p.ringOutline;
-    g.lineWidth = Math.max(2, s * 0.085);
+    g.globalAlpha = 0.9;
+    g.lineWidth = Math.max(2, s * 0.075);
     this.face(g, size, color, v, g.lineWidth / 2);
     g.stroke();
+    g.globalAlpha = 1;
     return c;
   }
 
@@ -329,9 +345,9 @@ export class SpriteCache {
         }
         bed.closePath();
         fillPath(bed, tone);
-        g.lineWidth = Math.max(0.6, s * 0.022);
-        g.strokeStyle = shade(base, -0.42);
-        g.globalAlpha = 0.6;
+        g.lineWidth = Math.max(0.6, s * 0.024);
+        g.strokeStyle = shade(base, -0.52);
+        g.globalAlpha = 0.75;
         g.stroke(edge);
         g.translate(0, g.lineWidth);
         g.strokeStyle = lt;
@@ -362,18 +378,19 @@ export class SpriteCache {
       glowG.addColorStop(1, shade(base, -0.12));
       g.fillStyle = glowG;
       g.fillRect(x0, y0, s, h);
+      // a matte frosted skin: dense fine pitting, white at low alpha
       const frost = new Path2D();
-      for (const [x, y, r] of dots(10 + lod * 40, s * 0.01, s * 0.022)) speck(frost, x!, y!, r!);
-      fillPath(frost, shade(base, 0.6), 0.35);
-      if (lod) {
-        g.strokeStyle = shade(base, 0.55);
-        g.lineWidth = Math.max(0.6, s * 0.02);
-        for (const [x, y, r] of dots(lod * 2, s * 0.04, s * 0.07)) {
-          g.beginPath();
-          g.arc(x!, y!, r!, 0.4, 2.6);
-          g.stroke();
-        }
+      for (const [x, y, r] of dots(24 + lod * 60, s * 0.008, s * 0.02)) speck(frost, x!, y!, r!);
+      fillPath(frost, '#FFFFFF', 0.18);
+      // one or two seed bubbles trapped in the glass (big enough to survive 24 px)
+      const bub = new Path2D();
+      const bubHi = new Path2D();
+      for (const [x, y, r] of dots(1 + (lod > 0 ? 1 : 0), s * 0.05, s * 0.075)) {
+        disc(bub, x!, y!, r!);
+        disc(bubHi, x! - r! * 0.3, y! - r! * 0.3, r! * 0.38);
       }
+      fillPath(bub, shade(base, -0.22), 0.55);
+      fillPath(bubHi, '#FFFFFF', 0.7);
       // thicker glass at the tumbled edge: a deeper, more saturated band inside the outline, so
       // the milky middle reads as frosted and the stone as translucent
       g.strokeStyle = shade(base, -0.3);
@@ -382,12 +399,13 @@ export class SpriteCache {
       this.face(g, size, color, v, s * 0.02);
       g.stroke();
       g.globalAlpha = 1;
+      // the worn edge lets light through: a soft lighter band just inside the outline, all round
       const rim = g.createLinearGradient(x0, y0, x0 + s * 0.8, y0 + h * 0.8);
-      rim.addColorStop(0, 'rgba(255,255,255,0.95)');
-      rim.addColorStop(0.45, 'rgba(255,255,255,0.1)');
-      rim.addColorStop(1, 'rgba(255,255,255,0.3)');
+      rim.addColorStop(0, 'rgba(255,255,255,0.6)');
+      rim.addColorStop(0.5, 'rgba(255,255,255,0.22)');
+      rim.addColorStop(1, 'rgba(255,255,255,0.36)');
       g.strokeStyle = rim;
-      g.lineWidth = Math.max(1.1, s * 0.06);
+      g.lineWidth = Math.max(1.4, s * 0.07);
       this.face(g, size, color, v, s * 0.065);
       g.stroke();
     } else if (color === 4) {
@@ -434,29 +452,41 @@ export class SpriteCache {
       // porphyry: dark lilac groundmass set with pale angular feldspar crystals and a few black
       // flecks, tumbled smooth and wet (the strongest highlight in the set)
       const wet = g.createLinearGradient(0, y0, 0, y0 + h);
+      // (Night: the same dark face; the moonlit rim, not a lighter body, separates it from the
+      // board — a lighter purple drifted toward blue coral under deuteranopia)
       wet.addColorStop(0, shade(base, -0.02));
       wet.addColorStop(1, shade(base, -0.34));
       g.fillStyle = wet;
       g.fillRect(x0, y0, s, h);
       const xl = new Path2D();
       const mafic = new Path2D();
-      const crystals = (path: Path2D, n: number, rMin: number, rMax: number) => {
-        for (const [x, y, r] of dots(n, rMin, rMax)) {
-          const a = rnd() * Math.PI;
-          const e = 0.4 + rnd() * 0.3;
-          const ca = Math.cos(a) * r!;
-          const sa = Math.sin(a) * r!;
-          path.moveTo(x! + ca, y! + sa);
-          path.lineTo(x! - sa * e, y! + ca * e);
-          path.lineTo(x! - ca, y! - sa);
-          path.lineTo(x! + sa * e, y! - ca * e);
+      // feldspar laths: small cream rectangles, roughly aligned (0–35°) as they are in the rock;
+      // at 24 px two or three larger ones carry it
+      const laths = (path: Path2D, n: number, lMin: number, lMax: number, aspect: number) => {
+        const tilt = rnd() * 0.6;
+        for (const [x, y, l] of dots(n, lMin, lMax)) {
+          const a = tilt + rnd() * 0.6;
+          const ca = Math.cos(a);
+          const sa = Math.sin(a);
+          const hl = l! / 2;
+          const hw = (l! * aspect) / 2;
+          path.moveTo(x! + ca * hl - sa * hw, y! + sa * hl + ca * hw);
+          path.lineTo(x! - ca * hl - sa * hw, y! - sa * hl + ca * hw);
+          path.lineTo(x! - ca * hl + sa * hw, y! - sa * hl - ca * hw);
+          path.lineTo(x! + ca * hl + sa * hw, y! + sa * hl - ca * hw);
           path.closePath();
         }
       };
-      crystals(xl, [5, 9, 16][lod]!, s * 0.04, s * (lod ? 0.085 : 0.1));
-      crystals(mafic, [2, 5, 9][lod]!, s * 0.02, s * 0.05);
-      fillPath(xl, shade(base, 0.5), 0.8);
-      fillPath(mafic, shade(base, -0.75), 0.85);
+      // the groundmass is granular, not glossy: a fine salt-and-pepper of dark and pale grains
+      const gDark = new Path2D();
+      const gPale = new Path2D();
+      for (const [x, y, r] of dots(14 + lod * 40, s * 0.01, s * 0.022)) speck(rnd() < 0.6 ? gDark : gPale, x!, y!, r!);
+      fillPath(gDark, shade(base, -0.5), 0.55);
+      fillPath(gPale, shade(base, 0.35), 0.45);
+      laths(xl, [4, 9, 15][lod]!, s * [0.1, 0.07, 0.05][lod]!, s * [0.15, 0.12, 0.1][lod]!, 0.42);
+      laths(mafic, [2, 4, 7][lod]!, s * 0.035, s * 0.06, 0.6);
+      fillPath(xl, '#EADCF0', 0.85);
+      fillPath(mafic, shade(base, -0.75), 0.8);
     } else {
       // pink coralline crust: chalky encrusting algae over rock, raised in a few low knobs (lit
       // top-left, shadowed low-right), with the pale growing margin real crusts have
@@ -513,10 +543,20 @@ export class SpriteCache {
     bl.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = bl;
     g.fillRect(x0, y0, s, h);
-    g.fillStyle = `rgba(255,255,255,${Math.min(0.95, spec * 1.05)})`;
-    g.beginPath();
-    g.ellipse(hx - s * 0.02, hy - h * 0.03, s * 0.085, s * 0.04, -0.6, 0, Math.PI * 2);
-    g.fill();
+    if (spec > 0.5) {
+      g.fillStyle = `rgba(255,255,255,${Math.min(0.95, spec * 1.05)})`;
+      g.beginPath();
+      g.ellipse(hx - s * 0.02, hy - h * 0.03, s * 0.085, s * 0.04, -0.6, 0, Math.PI * 2);
+      g.fill();
+    }
+    const edge = reefEdge(base, night);
+    if (edge.rim) {
+      // a thin moonlit outline: the stone's edge against the navy board (≥ 3:1, see reefEdge)
+      g.strokeStyle = edge.rim;
+      g.lineWidth = Math.max(0.75, s * 0.028);
+      this.face(g, size, color, v, s * 0.012);
+      g.stroke();
+    }
     if (night) {
       // a cool moonlit rim along the top edge separates the stone from the navy board
       const rl = g.createLinearGradient(0, y0, 0, y0 + h * 0.3);
@@ -527,7 +567,7 @@ export class SpriteCache {
     }
     g.globalCompositeOperation = 'destination-over';
     // the side the light doesn't reach
-    g.fillStyle = shade(base, night ? -0.46 : -0.34);
+    g.fillStyle = edge.lip;
     blob(g, cx, y0 + s / 2, s / 2, s / 2, color, ph);
     g.fill();
     // soft contact shadow, a little wider than the stone

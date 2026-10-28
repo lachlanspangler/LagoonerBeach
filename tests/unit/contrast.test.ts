@@ -9,6 +9,8 @@ import { describe, expect, it } from 'vitest';
 import { contrast } from '../../src/render/color.ts';
 import { CSS_VARS, DAY, NIGHT, type Palette } from '../../src/render/theme.ts';
 import { TITLE_COLORS } from '../../src/ui/titleScene.ts';
+import { reefEdge } from '../../src/render/sprites.ts';
+import { LOOKS } from '../../src/render/skins.ts';
 
 /** Flatten an rgba() over a hex background to a hex (what the eye sees). */
 function over(fg: string, bg: string): string {
@@ -80,6 +82,25 @@ describe('text contrast (tokens)', () => {
         expect(contrast(p.text, bg), `${p.name} pill over ${sea}`).toBeGreaterThanOrEqual(4.5);
       }
     }
+  });
+
+  // non-text contrast (WCAG 1.4.11): every reef block stays 3:1 apart from an empty cell, by its
+  // body or the edge drawn for it (sprites.ts reefEdge), Day and Night
+  it('reef blocks: each colour has a ≥ 3:1 boundary against the board cell', () => {
+    const hex = (c: string) => {
+      const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(c);
+      return m ? '#' + [m[1], m[2], m[3]].map((v) => Number(v).toString(16).padStart(2, '0')).join('') : c;
+    };
+    for (const p of [DAY, NIGHT])
+      for (const base of LOOKS.pebble!.colors.slice(1)) {
+        const e = reefEdge(base, p.name === 'night');
+        const best = Math.max(
+          contrast(base, p.cell),
+          contrast(hex(e.lip), p.cell),
+          e.rim ? contrast(hex(e.rim), p.cell) : 0,
+        );
+        expect(best, `${p.name} ${base}`).toBeGreaterThanOrEqual(3);
+      }
   });
 
   it('water cyan is never small text on light (it is material): 1.9:1 by day', () => {

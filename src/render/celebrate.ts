@@ -435,7 +435,7 @@ export class Celebrate {
         }
         alpha *= 1 - out;
         // never wider than the board
-        const fit = Math.min(1, (l.board.w * 0.94) / (spr.w * 1));
+        const fit = Math.min(1, (l.board.w * 0.88) / (spr.w * 1)); // a word never spans the board (critic r2)
         // tier 4: a soft warm glow pools behind the word (fades in, never a flash)
         if (w.tier >= 4) {
           const ga = 0.5 * Math.min(1, k / 220) * alpha;
