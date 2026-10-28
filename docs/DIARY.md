@@ -733,3 +733,31 @@ gets overloaded); commit per item, never push. Baseline: 512 unit / 165 e2e / 8 
   gate is open or the habitat is complete.
 - **Skipped on purpose:** the per-species "chances" counter (save-format change) → ledger backlog.
 - Bundle: initial JS 58.5 → 58.2 KB gz (the hint strings left it); sheets chunk 7.5 → 10.5 KB gz.
+
+## 2026-10-28 (session 6) — Recovery after the crash, then finish
+- **Recovery:** both /tmp worktrees were gone (`git worktree prune`). `s5-blocks` had 6 commits and
+  merged cleanly into main (title, journal, about had moved on; no conflicts). What the crash lost:
+  ADR 0014, the blocks before/after media and its diary notes, all uncommitted on the branch. ADR
+  0014 was rebuilt from the commits and code (mapping: brain coral, golden coral-rag sandstone, sea
+  glass, blue coral, wet porphyry, pink coralline crust — two rocks, three corals, a glass).
+  Branches: main only.
+- **Baseline:** make check 567 green. The first `make e2e` lost its preview server mid-run (150
+  ERR_CONNECTION_REFUSED, environmental); the rerun: 200/201, the one a midgame pixel baseline whose
+  only diff was the strip hint chip's text raster after the merge → re-made deliberately.
+- **Critic round 1 (title B+/B, About B), fixed:** crisp sun + tight warm moon glow; stars kept 12 px
+  off the lockup and Play; the shoreline spans the full width (a right-edge seam); the atoll stays
+  16 px+ from the pills and shrinks rather than squeezes; iPad scales type/Play/pills with clamp();
+  Night Play a step deeper (#4FB6D2, label 7.1:1, tested) and Day Play a lit top edge; the hand-off
+  actually moves now (the entry animations' `fill: both` was pinning transform, so only opacity
+  faded) — title lifts, board rises; the board and its buttons are `inert` behind the title.
+  About: titled "About" (opened from "About"), a lead that no longer repeats the signature, one
+  serif weight, a hairline under the header once scrolled, and **full-colour creature tiles**
+  (decision: these stand for the real animals each charity looks after, not journal secrets; a grey
+  silhouette read as a broken image). **Charity swap:** two "Marine Mammal Center"s read as one cause
+  twice → Monterey Bay Aquarium (sea otter surrogacy, verified 501(c)(3), donate page checked)
+  replaces The Marine Mammal Center (still verified, documented).
+- **Flake fixed at the root:** the title skip-rules e2e shared one context across launches; in
+  WebKit a closing page's "hidden just now" write could land after the next launch's setup. Each
+  launch is now a fresh context with its state injected before page scripts (36/36 on repeat).
+- **I-202 fixed:** the new dot moves to the frame corner on epic/legendary tiles. I-201 (chances
+  counter) stays backlog: it needs a journal save-format change.
