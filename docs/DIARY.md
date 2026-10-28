@@ -702,3 +702,34 @@ gets overloaded); commit per item, never push. Baseline: 512 unit / 165 e2e / 8 
 - **Load:** the machine hit load average 270 (other projects' builds too). Two unit sims and the
   combo-sim timed out in pre-commit; reruns pass. The combo-sim hang guard is now 90 s (it's a
   correctness property, ~5 s alone) — no perf budget touched.
+
+## 2026-10-27 (Session 5) — Journal: requirements next to each category
+- **One source of truth.** Every species' catch rule is now data (`src/meta/req.ts`: `Req` +
+  `matches`); `when()` is derived from it, and the journal's words come from the same data
+  (`src/meta/reqText.ts`, lazy chunk: `describe`, generated hints, habitat lines, tile badges). Proved
+  no behaviour change first: an equivalence test pins all 47 old lambdas over a 190k-context space
+  (mutating three thresholds made it fail on exactly those three), and `catch-sim` / `catch-rates`
+  print byte-identical reports before and after. Catches still never touch the dealer RNG.
+- **Copy can't drift now.** The hand-typed hints are gone; the research's drift (grouper vs parrot,
+  the four day-only species, "small") is fixed by construction. Words follow the screen: "×6+ combo"
+  (the HUD says COMBO; "Streak" is the Daily's day count), "in the Night theme" (the rule is the
+  theme, Auto included), digits for cells.
+- **Habitat lines** are built from the members' rules (numbers computed), and tests prove each
+  keyword is said by some member's describe(), every member is covered, cell counts are the real
+  catchable sizes, and every Night/Reef member implies its gate. The research's "Huge pools…" for
+  Deep was false (barracuda, dolphin, sunfish need 6+), so Deep reads "Big pools of 6+ cells".
+- **Design, three rounds on the screens (Day, Night, 375 + Larger text):**
+  1. Summary box (rarity pips + found/total, Golden x/47 · 1 in 64) above the habitats; requirement
+     line under each name; the nudge on its own row under the bar; badges low-left on tiles.
+     Critique: the nudge row cost ~56 px per gated habitat and read detached from the rule; the
+     Daily icon (sunrise) read as a second ☀ at 12 px; the rarity row had no label; "7 /9" gap.
+  2. Nudge and, once complete, "✦ Golden x/n" moved onto the requirement's row (right side, 44 px
+     hit area via negative margins, wraps under Larger text); Daily badge → calendar; "By rarity"
+     label; tick chip in the success token beside the count.
+  3. 375×667 Larger text and Night review: everything wraps inside the sheet; kept. Spotted the
+     "new" dot sitting on the LEGENDARY pill (predates this work) → ledger backlog.
+- **"Switch to Night" switches** (and lands on Settings with Night selected, one tap back) rather
+  than only opening Settings: the label promises it. "Play Reefs" starts Reef mode; no nudge when the
+  gate is open or the habitat is complete.
+- **Skipped on purpose:** the per-species "chances" counter (save-format change) → ledger backlog.
+- Bundle: initial JS 58.5 → 58.2 KB gz (the hint strings left it); sheets chunk 7.5 → 10.5 KB gz.

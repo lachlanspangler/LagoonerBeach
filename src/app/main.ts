@@ -1550,11 +1550,14 @@ function debugDeps(): DebugDeps {
       revealEndGame: () => reveal.endGame(),
       haptics: () => haptics.log.slice(),
       shareCard: async (id) => {
-        const { renderShareCard } = await import('../ui/share-card.ts');
+        const [{ renderShareCard }, { hintFor }] = await Promise.all([
+          import('../ui/share-card.ts'),
+          import('../meta/reqText.ts'),
+        ]);
         const sp = SPECIES_BY_ID.get(id)!;
         const log: string[] = [];
         const c = renderShareCard(sp, { date: today(), log });
-        return { w: c.width, h: c.height, png: c.toDataURL('image/png').length, text: log, hint: sp.hint };
+        return { w: c.width, h: c.height, png: c.toDataURL('image/png').length, text: log, hint: hintFor(sp) };
       },
       shareTry: async (id) => {
         const { renderShareCard, shareCanvas } = await import('../ui/share-card.ts');

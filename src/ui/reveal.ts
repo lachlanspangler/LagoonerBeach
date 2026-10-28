@@ -165,11 +165,6 @@ export function formatSize(cm: number): string {
   return cm >= 100 ? `${(cm / 100).toFixed(cm >= 1000 ? 0 : 1)} m` : `${cm.toFixed(1)} cm`;
 }
 
-/** How it was caught, as a short line from the species' hint ("Lives in long, flat pools."). */
-export function howLine(sp: Species): string {
-  return sp.hint.replace(/\.$/, '');
-}
-
 interface Active {
   item: RevealItem;
   sp: Species;

@@ -2,6 +2,8 @@
  * The Beach Journal: every creature you can catch. Pure data. Species are tied to lagoon *shapes*
  * and *conditions* so the collection teaches the core mechanic (ADR 0007).
  */
+import { matches, type Req } from './req.ts';
+
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 export type Habitat = 'shallows' | 'lagoon' | 'deep' | 'night' | 'reef' | 'legend';
 export type Body =
@@ -65,21 +67,20 @@ export interface Species {
   readonly pattern: Pattern;
   /** Size range in cm (records are kept per species). */
   readonly size: readonly [number, number];
-  /** Shown while undiscovered. */
-  readonly hint: string;
   readonly flavor: string;
-  /** When can it be caught, and how strongly it competes when it can. */
+  /** When it can be caught, as data (req.ts). The journal's hints are generated from it (reqText.ts). */
+  readonly req: Req;
+  /** `matches(req, c)`: can it be caught in this lagoon? */
   readonly when: (c: CatchContext) => boolean;
+  /** How strongly it competes for the everyday pick when it can. */
   readonly weight: number;
 }
 
-const small = (c: CatchContext) => c.area <= 2;
-const mid = (c: CatchContext) => c.area >= 3 && c.area <= 5;
-const big = (c: CatchContext) => c.area >= 6 && c.area <= 11;
-const huge = (c: CatchContext) => c.area >= 12;
-const day = (c: CatchContext) => !c.night;
-
-export const SPECIES: readonly Species[] = [
+/**
+ * The catalogue. Each species' `req` (src/meta/req.ts) is the one source of truth for when it can be
+ * caught; its `when()` and every word the journal says about it (src/meta/reqText.ts) come from it.
+ */
+const DEFS: readonly Omit<Species, 'when'>[] = [
   // ── Shallows: everyday catches from small pools ─────────────────────────────────────────────
   {
     id: 'minnow',
@@ -90,9 +91,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#B8C4CF', '#7F8FA0'],
     pattern: 'plain',
     size: [3, 7],
-    hint: 'Any little pool.',
     flavor: 'Always first to arrive, always first to leave.',
-    when: (c) => small(c) && day(c),
+    req: { maxArea: 2, theme: 'day' },
     weight: 100,
   },
   {
@@ -104,9 +104,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#8A6F5A', '#C9B49C'],
     pattern: 'bands',
     size: [1, 3],
-    hint: 'A single-cell pool.',
     flavor: 'Carries its house and is in no hurry.',
-    when: (c) => c.shape === 'dot' && day(c),
+    req: { shape: ['dot'], theme: 'day' },
     weight: 80,
   },
   {
@@ -118,9 +117,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#E0784E', '#F2C14E'],
     pattern: 'plain',
     size: [2, 6],
-    hint: 'A two-cell pool.',
     flavor: 'Borrowed shell, owns the beach.',
-    when: (c) => c.shape === 'pair',
+    req: { shape: ['pair'] },
     weight: 90,
   },
   {
@@ -132,9 +130,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#A99C8C', '#D9CFC1'],
     pattern: 'bands',
     size: [1, 4],
-    hint: 'A single-cell pool.',
     flavor: 'Holds on tighter than anything its size.',
-    when: (c) => c.shape === 'dot',
+    req: { shape: ['dot'] },
     weight: 60,
   },
   {
@@ -146,9 +143,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#E9DCC4', '#C8B596'],
     pattern: 'plain',
     size: [4, 9],
-    hint: 'A small pool on a calm day.',
     flavor: 'Worth nothing. Priceless.',
-    when: (c) => small(c) && day(c),
+    req: { maxArea: 2, theme: 'day' },
     weight: 50,
   },
   {
@@ -160,9 +156,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F59A8B', '#FFD3C7'],
     pattern: 'bands',
     size: [2, 5],
-    hint: 'A small pool.',
     flavor: 'Flicks backwards when surprised. Always surprised.',
-    when: (c) => c.area <= 4,
+    req: { maxArea: 4 },
     weight: 60,
   },
   {
@@ -174,9 +169,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#9DAA6B', '#5E6B3A'],
     pattern: 'spots',
     size: [4, 10],
-    hint: 'A pool of three to five cells.',
     flavor: 'Peeks out of holes like it owns them.',
-    when: (c) => mid(c),
+    req: { minArea: 3, maxArea: 5 },
     weight: 70,
   },
   {
@@ -188,9 +182,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#E7C8A0', '#B7845B'],
     pattern: 'stripes',
     size: [2, 6],
-    hint: 'A pool of three to five cells.',
     flavor: 'Hums if you hold it to your ear. Probably.',
-    when: (c) => mid(c),
+    req: { minArea: 3, maxArea: 5 },
     weight: 50,
   },
   // ── Lagoon: shape specialists (build the shape, meet the creature) ──────────────────────────
@@ -203,9 +196,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#D8C79A', '#A89462'],
     pattern: 'plain',
     size: [10, 25],
-    hint: 'Lives in long, flat pools.',
     flavor: 'Dives into sand faster than you can blink.',
-    when: (c) => c.shape === 'hline',
+    req: { shape: ['hline'] },
     weight: 260,
   },
   {
@@ -217,9 +209,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#5E7D3C', '#D9D27A'],
     pattern: 'spots',
     size: [40, 120],
-    hint: 'A long, flat pool — five cells or more.',
     flavor: 'Grins at everyone. Means it.',
-    when: (c) => c.shape === 'hline' && c.w >= 5,
+    req: { shape: ['hline'], minW: 5 },
     weight: 400,
   },
   {
@@ -231,9 +222,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#EDE6D3', '#3B3229'],
     pattern: 'spots',
     size: [20, 40],
-    hint: 'Lives in tall, narrow pools.',
     flavor: 'Sways with the current, one of a crowd.',
-    when: (c) => c.shape === 'vline',
+    req: { shape: ['vline'] },
     weight: 240,
   },
   {
@@ -245,9 +235,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F2B93B', '#E07A2E'],
     pattern: 'bands',
     size: [6, 18],
-    hint: 'A tall, narrow pool — four cells or more.',
     flavor: 'The dads carry the babies. Respect.',
-    when: (c) => c.shape === 'vline' && c.h >= 4,
+    req: { shape: ['vline'], minH: 4 },
     weight: 380,
   },
   {
@@ -259,9 +248,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#C9503A', '#F2A27A'],
     pattern: 'spots',
     size: [6, 14],
-    hint: 'A perfectly square pool, two by two.',
     flavor: 'Folds itself into a tidy little box.',
-    when: (c) => c.shape === 'square2',
+    req: { shape: ['square2'] },
     weight: 320,
   },
   {
@@ -273,9 +261,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F2D43B', '#3B3229'],
     pattern: 'spots',
     size: [8, 30],
-    hint: 'A perfectly square pool, three by three.',
     flavor: 'Built like a brick. Swims like a bubble.',
-    when: (c) => c.shape === 'square3',
+    req: { shape: ['square3'] },
     weight: 600,
   },
   {
@@ -287,9 +274,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F2795B', '#FFC1A6'],
     pattern: 'spots',
     size: [8, 25],
-    hint: 'A plus-shaped pool.',
     flavor: 'Five arms, zero rush.',
-    when: (c) => c.shape === 'plus',
+    req: { shape: ['plus'] },
     weight: 500,
   },
   {
@@ -301,9 +287,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#B48A6E', '#F3E1C8'],
     pattern: 'stripes',
     size: [10, 35],
-    hint: 'An L-shaped pool.',
     flavor: 'Changes colour to match its mood.',
-    when: (c) => c.shape === 'corner',
+    req: { shape: ['corner'] },
     weight: 220,
   },
   {
@@ -315,9 +300,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#B49A72', '#7E6A4A'],
     pattern: 'spots',
     size: [15, 45],
-    hint: 'A wide, flat rectangle of a pool.',
     flavor: 'Both eyes on one side. Sees you anyway.',
-    when: (c) => c.shape === 'rect' && c.w > c.h,
+    req: { shape: ['rect'], wGtH: true },
     weight: 200,
   },
   {
@@ -329,9 +313,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#8C9BA8', '#C7D0D8'],
     pattern: 'spots',
     size: [40, 120],
-    hint: 'A big rectangular pool.',
     flavor: 'Glides like a thought you almost had.',
-    when: (c) => c.shape === 'rect' && c.area >= 6,
+    req: { shape: ['rect'], minArea: 6 },
     weight: 240,
   },
   {
@@ -343,9 +326,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F2792E', '#FFFFFF'],
     pattern: 'bands',
     size: [6, 11],
-    hint: 'Two pools sealed with one piece.',
     flavor: 'Never alone. Never quiet.',
-    when: (c) => c.pockets >= 2,
+    req: { pockets: 2 },
     weight: 160,
   },
   {
@@ -357,9 +339,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3D6FE9', '#9BC2FF'],
     pattern: 'plain',
     size: [5, 9],
-    hint: 'Three pools sealed with one piece.',
     flavor: 'Small, brave, very blue.',
-    when: (c) => c.pockets >= 3,
+    req: { pockets: 3 },
     weight: 500,
   },
   {
@@ -371,9 +352,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#D9C27A', '#7A6A3A'],
     pattern: 'spots',
     size: [10, 30],
-    hint: 'A pool of three to five cells, round-ish.',
     flavor: 'Doubles in size when nervous. Relatable.',
-    when: (c) => mid(c) && c.shape === 'blob',
+    req: { shape: ['blob'], minArea: 3, maxArea: 5 },
     weight: 60,
   },
   {
@@ -385,9 +365,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3BC9A0', '#E86FB0'],
     pattern: 'stripes',
     size: [20, 60],
-    hint: 'A big pool, six cells or more.',
     flavor: 'Eats coral, makes sand. You are standing on its work.',
-    when: (c) => c.area >= 6 && day(c),
+    req: { minArea: 6, theme: 'day' },
     weight: 70,
   },
   {
@@ -399,9 +378,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#8A6A4E', '#C9A57A'],
     pattern: 'spots',
     size: [40, 150],
-    hint: 'A big pool, six cells or more.',
     flavor: 'Unbothered. Enormous. Unbothered.',
-    when: (c) => big(c),
+    req: { minArea: 6, maxArea: 11 },
     weight: 40,
   },
   // ── Deep: rewards for huge pools, long games and cascades ──────────────────────────────────
@@ -414,9 +392,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#C2506B', '#F2A1B6'],
     pattern: 'spots',
     size: [30, 100],
-    hint: 'A huge pool — twelve cells or more.',
     flavor: 'Three hearts, eight arms, one mischievous plan.',
-    when: (c) => huge(c),
+    req: { minArea: 12 },
     weight: 120,
   },
   {
@@ -428,9 +405,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#2E3B4E', '#E8EEF2'],
     pattern: 'plain',
     size: [300, 700],
-    hint: 'A huge rectangular pool.',
     flavor: 'Flies underwater. Waves back.',
-    when: (c) => c.shape === 'rect' && huge(c),
+    req: { shape: ['rect'], minArea: 12 },
     weight: 400,
   },
   {
@@ -442,9 +418,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#5E8A4E', '#C9B47A'],
     pattern: 'spots',
     size: [60, 120],
-    hint: 'A pool with an island in the middle.',
     flavor: 'Came back to the beach where it was born.',
-    when: (c) => c.shape === 'island',
+    req: { shape: ['island'] },
     weight: 500,
   },
   {
@@ -456,9 +431,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#9AA6B2', '#3B4652'],
     pattern: 'bands',
     size: [50, 150],
-    hint: 'A big pool, late in a long game.',
     flavor: 'All teeth, all speed, no small talk.',
-    when: (c) => c.area >= 6 && c.moves >= 60,
+    req: { minArea: 6, moves: 60 },
     weight: 160,
   },
   {
@@ -470,9 +444,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#7E8C99', '#C7D0D8'],
     pattern: 'plain',
     size: [200, 400],
-    hint: 'A huge pool, deep into a long game.',
     flavor: 'Sees in every direction. Even that one.',
-    when: (c) => huge(c) && c.moves >= 90,
+    req: { minArea: 12, moves: 90 },
     weight: 400,
   },
   {
@@ -484,9 +457,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#E9DCC4', '#B5653A'],
     pattern: 'stripes',
     size: [12, 25],
-    hint: 'Comes up on the second wave of a cascade.',
     flavor: 'Older than the dinosaurs and still getting around.',
-    when: (c) => c.wave >= 2,
+    req: { wave: 2 },
     weight: 300,
   },
   {
@@ -498,9 +470,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#7FA8C9', '#E8EEF2'],
     pattern: 'plain',
     size: [150, 300],
-    hint: 'A big pool on a streak of twelve.',
     flavor: 'Likes you. Genuinely.',
-    when: (c) => c.streak >= 12 && c.area >= 6,
+    req: { minArea: 6, streak: 12 },
     weight: 120,
   },
   {
@@ -512,9 +483,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#5B3A7A', '#9C7AC9'],
     pattern: 'plain',
     size: [4, 10],
-    hint: 'A one-cell pool on a streak of six.',
     flavor: 'Do not hug.',
-    when: (c) => c.shape === 'dot' && c.streak >= 6,
+    req: { shape: ['dot'], streak: 6 },
     weight: 120,
   },
   // ── Night: only when the beach is dark (Night theme) ───────────────────────────────────────
@@ -527,9 +497,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#2FB8D8', '#9BF0FF'],
     pattern: 'spots',
     size: [3, 8],
-    hint: 'A small pool, after dark.',
     flavor: 'Carries its own night light.',
-    when: (c) => c.night && c.area <= 4,
+    req: { maxArea: 4, theme: 'night' },
     weight: 120,
   },
   {
@@ -541,9 +510,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#C9D6FF', '#7DF9E8'],
     pattern: 'plain',
     size: [10, 40],
-    hint: 'A pool of three cells or more, after dark.',
     flavor: 'No brain, no heart, no worries.',
-    when: (c) => c.night && c.area >= 3,
+    req: { minArea: 3, theme: 'night' },
     weight: 140,
   },
   {
@@ -555,9 +523,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#E86FB0', '#7DF9E8'],
     pattern: 'stripes',
     size: [3, 15],
-    hint: 'A long, narrow pool, after dark.',
     flavor: 'Rainbows run along its ribs.',
-    when: (c) => c.night && (c.shape === 'hline' || c.shape === 'vline'),
+    req: { shape: ['hline', 'vline'], theme: 'night' },
     weight: 500,
   },
   {
@@ -569,9 +536,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3D9BE9', '#9BF0FF'],
     pattern: 'spots',
     size: [5, 8],
-    hint: 'Two pools at once, after dark.',
     flavor: 'Blinks hello in blue.',
-    when: (c) => c.night && c.pockets >= 2,
+    req: { pockets: 2, theme: 'night' },
     weight: 500,
   },
   {
@@ -583,9 +549,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3B3240', '#F2E97A'],
     pattern: 'plain',
     size: [20, 100],
-    hint: 'A huge pool, after dark.',
     flavor: 'Brings its own lamp to every party.',
-    when: (c) => c.night && huge(c),
+    req: { minArea: 12, theme: 'night' },
     weight: 500,
   },
   {
@@ -597,9 +562,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#7DF9E8', '#E9FDFF'],
     pattern: 'spots',
     size: [1, 2],
-    hint: 'A one-cell pool after dark, on a streak of six.',
     flavor: 'A million tiny stars that came down to swim.',
-    when: (c) => c.night && c.shape === 'dot' && c.streak >= 6,
+    req: { shape: ['dot'], streak: 6, theme: 'night' },
     weight: 400,
   },
   // ── Reef: caught in Reef puzzles ───────────────────────────────────────────────────────────
@@ -612,9 +576,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F2D43B', '#3B3229'],
     pattern: 'bands',
     size: [10, 20],
-    hint: 'Any pool in a Reef puzzle.',
     flavor: 'Wears a fake eye on its tail to fool you.',
-    when: (c) => c.mode === 'puzzle',
+    req: { mode: ['puzzle'] },
     weight: 80,
   },
   {
@@ -626,9 +589,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3D9BE9', '#1A1A1A'],
     pattern: 'stripes',
     size: [6, 12],
-    hint: 'A cascade in a Reef puzzle.',
     flavor: 'Runs the reef spa. Tips appreciated.',
-    when: (c) => c.mode === 'puzzle' && c.wave >= 2,
+    req: { wave: 2, mode: ['puzzle'] },
     weight: 600,
   },
   {
@@ -640,9 +602,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#C9503A', '#FFF1E6'],
     pattern: 'stripes',
     size: [20, 40],
-    hint: 'Clear a Deep or Abyss reef.',
     flavor: 'Fabulous. Do not touch the fabulous.',
-    when: (c) => c.mode === 'puzzle' && !!c.reefWin && (c.tier === 'deep' || c.tier === 'abyss'),
+    req: { reefWin: true, tier: ['deep', 'abyss'], mode: ['puzzle'] },
     weight: 600,
   },
   {
@@ -654,9 +615,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3BC9A0', '#2E6FD8'],
     pattern: 'spots',
     size: [60, 120],
-    hint: 'Clear an Abyss reef.',
     flavor: 'Has been sitting here thinking for a century.',
-    when: (c) => c.mode === 'puzzle' && !!c.reefWin && c.tier === 'abyss',
+    req: { reefWin: true, tier: ['abyss'], mode: ['puzzle'] },
     weight: 900,
   },
   // ── Daily visitors ─────────────────────────────────────────────────────────────────────────
@@ -669,9 +629,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#B7C3CF', '#E8EEF2'],
     pattern: 'plain',
     size: [100, 300],
-    hint: 'A big pool in the Daily.',
     flavor: 'Sunbathes on the surface. Every single day.',
-    when: (c) => c.mode === 'daily' && c.area >= 6,
+    req: { minArea: 6, mode: ['daily'] },
     weight: 260,
   },
   {
@@ -683,9 +642,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#7A5A3E', '#D9C2A6'],
     pattern: 'plain',
     size: [100, 150],
-    hint: 'A pool of three or more in the Daily, on a streak of eight.',
     flavor: 'Holds hands while sleeping so nobody drifts away.',
-    when: (c) => c.mode === 'daily' && c.streak >= 8 && c.area >= 3,
+    req: { minArea: 3, streak: 8, mode: ['daily'] },
     weight: 220,
   },
   // ── Legends: the moments you'll remember ───────────────────────────────────────────────────
@@ -698,9 +656,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#3E5A73', '#E8EEF2'],
     pattern: 'spots',
     size: [800, 1200],
-    hint: 'A cascade three waves deep.',
     flavor: 'The biggest fish in the sea, and a gentle one.',
-    when: (c) => c.wave >= 3,
+    req: { wave: 3 },
     weight: 2000,
   },
   {
@@ -712,9 +669,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#C9A53B', '#8AB17D'],
     pattern: 'stripes',
     size: [20, 35],
-    hint: 'Clear the whole board in one go.',
     flavor: 'Looks like seaweed. Is royalty.',
-    when: (c) => c.clean && c.mode !== 'puzzle',
+    req: { clean: true, notMode: ['puzzle'] },
     weight: 2000,
   },
   {
@@ -726,9 +682,8 @@ export const SPECIES: readonly Species[] = [
     colors: ['#F2C14E', '#FFF1C2'],
     pattern: 'spots',
     size: [80, 140],
-    hint: 'A huge pool with an island in the middle.',
     flavor: 'Said to visit once a lifetime. Today was the day.',
-    when: (c) => c.shape === 'island' && huge(c),
+    req: { shape: ['island'], minArea: 12 },
     weight: 1200,
   },
   {
@@ -740,12 +695,13 @@ export const SPECIES: readonly Species[] = [
     colors: ['#5B3A7A', '#E86FB0'],
     pattern: 'spots',
     size: [40, 60],
-    hint: 'A huge pool, after dark, on a streak of five.',
     flavor: 'Will be terrifying someday. Today it is adorable.',
-    when: (c) => c.night && huge(c) && c.streak >= 5,
+    req: { minArea: 12, streak: 5, theme: 'night' },
     weight: 2000,
   },
 ];
+
+export const SPECIES: readonly Species[] = DEFS.map((d) => ({ ...d, when: (c: CatchContext) => matches(d.req, c) }));
 
 export const SPECIES_BY_ID: ReadonlyMap<string, Species> = new Map(SPECIES.map((s) => [s.id, s]));
 

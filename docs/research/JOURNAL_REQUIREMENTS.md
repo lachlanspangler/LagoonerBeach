@@ -1,6 +1,6 @@
 # Beach Journal: showing unlock requirements and progress (research + design proposal)
 
-Status: research and proposal. No code changed. Builds on `docs/research/COLLECTION.md` (why
+Status: shipped in session 5 (see §6 for what changed from this proposal). Builds on `docs/research/COLLECTION.md` (why
 collection loops work) and ADR 0007. Code read: `src/meta/creatures.ts`, `src/meta/catch.ts`,
 `src/meta/journal.ts`, `src/meta/catchTuning.ts`, `src/ui/sheets.ts` (`showJournal`,
 `showSpecies`), `src/app/main.ts:199,257`.
@@ -251,3 +251,24 @@ doesn't jump between themes.
 4. `chances` counter (save format change: validate and default to 0 in the journal loader).
 5. Decide separately whether day-only species should stay day-only. The alternative is a Day
    habitat counterpart to Night, which would make the gate symmetric and explainable.
+
+---
+
+## 6. As shipped (session 5): deviations from this proposal
+- `describe()` and everything else the journal says live in `src/meta/reqText.ts` (lazy sheets
+  chunk); `req.ts` holds only `Req` + `matches`, so the initial bundle got smaller, not bigger.
+- `Req` uses `minArea` / `maxArea` instead of an `area` tuple (reads better as data).
+- Words: "on a ×6+ combo" (the HUD's COMBO; "Streak" means the Daily day streak), "in the Night /
+  Day theme" (the rule is the theme, Auto included) instead of "after dark" / "by day".
+- Mixed habitats get lines built from the members' rules (features with computed numbers), not
+  authored strings. As shipped: Shallows "Small pools of 1–5 cells · a Daily visitor"; Lagoon "Shaped
+  pools: lines, squares, plus, L, rectangles, round · 2+ pools at once · big pools of 6+ cells"; Deep
+  "Big pools of 6+ cells · islands · cascades · a Daily visitor" (§3.2's "Huge pools" was false for
+  three members); Night "Only in the Night theme"; Reef "Only in Reef puzzles"; Legends "Cascades 3
+  waves deep · clearing the whole board · huge pools around an island · ×5+ combos".
+- No gate icons in headers (the line says it); the "Switch to Night" nudge switches the theme and
+  shows Settings; "Play Reefs" starts Reef mode. Tiles carry the hint in their accessible name, not
+  as visible text (78 px tiles); species pages show "How to find it" for found and unknown species.
+- Legends hints are not behind "Tap to reveal": like every hint they name the pool, never the creature.
+- Not built: the `chances` counter (§3.4, save-format change; ideas ledger backlog) and the
+  "Habitat complete" strip chip (I-180, shortlisted).

@@ -4,7 +4,7 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**193 ideas** — chosen: 29 · built: 24 · prototyped: 4 · shortlisted: 4 · backlog: 49 · merged: 5 · rejected: 78
+**195 ideas** — chosen: 23 · built: 30 · prototyped: 4 · shortlisted: 4 · backlog: 51 · merged: 5 · rejected: 78
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
@@ -21,12 +21,6 @@
 | I-164 | chosen | Procedural material sprites | Draw materials procedurally into the existing per-size sprite cache. | Townscaper | 24 | ✗ | 8/4 | est |
 | I-166 | chosen | Per-cell variation | Each cell picks one of several variants so a wall doesn't tile. | Islanders | 24 | ✗ | 7/2 | est |
 | I-172 | chosen | Shape-glyph on materials (Glyph style) | Glyph accessibility style keeps its symbols over the new materials. |  | 24 | ✗ | 8/1 | est |
-| I-173 | chosen | Habitat requirement line | Each journal habitat header shows how to find its creatures. | Animal Crossing Critterpedia | 24 | ✗ | 9/3 | est |
-| I-174 | chosen | Per-habitat progress | '3/7' and a tick per habitat. | Pokédex | 24 | ✗ | 9/1 | est |
-| I-175 | chosen | Rarity progress row | Caught per rarity tier. | Genshin achievements | 24 | ✗ | 6/1 | est |
-| I-176 | chosen | Golden progress | Golden variants found / total with the 1-in-64 rule. | Shiny Pokémon | 24 | ✗ | 7/1 | est |
-| I-177 | chosen | Spoiler-free hints | Undiscovered species keep silhouettes + the vague hint; no exact shapes. | Hades codex | 24 | ✗ | 8/1 | est |
-| I-178 | chosen | Requirement/rule property test | Each species' catch condition implies its habitat requirement. |  | 24 | ✗ | 9/2 | est |
 | I-181 | chosen | Journal completion percent | Overall % on the cover. | Pokédex | 24 | ✗ | 5/1 | est |
 | I-184 | chosen | About page: why the ocean | A few lines from Lachlan about Laguna's tide pools, tied to the game's creatures. | Alba: A Wildlife Adventure | 24 | ✗ | 8/2 | est |
 | I-185 | chosen | Charity links | 3–5 verified coastal-wildlife charities, system browser, untracked. |  | 24 | ✗ | 9/2 | est |
@@ -53,6 +47,12 @@
 | I-087 | built | Tide dots | Three dots show how many dry moves your streak has left. | — | 24 | ✗ | 7/1 | est |
 | I-088 | built | Last-chance wobble | Pieces that can't fit shake 'no' before game over. | — | 24 | ✗ | 5/1 | est |
 | I-089 | built | Second lesson | After your first pinch, the next hint suggests a 2-cell lagoon. | Onboarding ladders | 24 | ✗ | 5/2 | est |
+| I-173 | built | Habitat requirement line | Each journal habitat header shows how to find its creatures. | Animal Crossing Critterpedia | 24 | ✗ | 9/3 | est |
+| I-174 | built | Per-habitat progress | '3/7' and a tick per habitat. | Pokédex | 24 | ✗ | 9/1 | est |
+| I-175 | built | Rarity progress row | Caught per rarity tier. | Genshin achievements | 24 | ✗ | 6/1 | est |
+| I-176 | built | Golden progress | Golden variants found / total with the 1-in-64 rule. | Shiny Pokémon | 24 | ✗ | 7/1 | est |
+| I-177 | built | Spoiler-free hints | Undiscovered species keep silhouettes + the vague hint; no exact shapes. | Hades codex | 24 | ✗ | 8/1 | est |
+| I-178 | built | Requirement/rule property test | Each species' catch condition implies its habitat requirement. |  | 24 | ✗ | 9/2 | est |
 | I-062 | built | Difficulty ramp | Pieces get chunkier the longer you survive. | Block Blast generator | 23 | ✗ | 8/3 | meas |
 | I-080 | built | Streak haptics | Capture haptics grow stronger as your streak builds. | — | 23 | ✗ | 5/1 | est |
 | I-090 | built | Colorblind audit | Simulate deuteranopia/protanopia on every skin; flag pairs that collide. | — | 23 | ✗ | 4/1 | est |
@@ -117,6 +117,8 @@
 | I-190 | backlog | Real-world creature facts | Species page gets one true fact and the real animal's status. | Beyond Blue | 24 | ✗ | 6/4 | est |
 | I-200 | backlog | Title in store screenshot | The first store frame shows the title screen. |  | 24 | ✗ | 5/1 | est |
 | I-100 | backlog | Leaderboards | Game Center / Play Games best-score boards. | Block Blast | 23 | ✗ | 5/4 | est |
+| I-201 | backlog | Eligible-chances counter | Undiscovered tiles show 'Close: 3 chances' (lagoons that met the rule), Hades-style, no odds. | Hades Codex progress bars | 23 | ✗ | 6/3 | est |
+| I-202 | backlog | Legendary pill vs new dot | On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill. |  | 23 | ✗ | 3/1 | est |
 | I-098 | backlog | Cell-cursor mode | Play with a keyboard/switch cursor over cells, with spoken previews. | Accessible board games | 20 | ✗ | 4/7 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
 | I-041 | merged | Flip Puzzle | Use these pieces to wipe the pattern clean. | Lights Out | 23 | ✗ | 6/3 | est |
@@ -308,54 +310,6 @@
 - **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
 - **Value/effort:** 8/1
 - **Reason:** Accessibility must not regress.
-
-### I-173 — Habitat requirement line (chosen)
-- **Pitch:** Each journal habitat header shows how to find its creatures.
-- **Closest existing:** Animal Crossing Critterpedia
-- **What's new:** Copy comes from the same spec as the catch rules.
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 9/3
-- **Reason:** Owner ask; JOURNAL_REQUIREMENTS.md.
-
-### I-174 — Per-habitat progress (chosen)
-- **Pitch:** '3/7' and a tick per habitat.
-- **Closest existing:** Pokédex
-- **What's new:** 
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 9/1
-- **Reason:** 
-
-### I-175 — Rarity progress row (chosen)
-- **Pitch:** Caught per rarity tier.
-- **Closest existing:** Genshin achievements
-- **What's new:** 
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 6/1
-- **Reason:** 
-
-### I-176 — Golden progress (chosen)
-- **Pitch:** Golden variants found / total with the 1-in-64 rule.
-- **Closest existing:** Shiny Pokémon
-- **What's new:** 
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 7/1
-- **Reason:** 
-
-### I-177 — Spoiler-free hints (chosen)
-- **Pitch:** Undiscovered species keep silhouettes + the vague hint; no exact shapes.
-- **Closest existing:** Hades codex
-- **What's new:** 
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 8/1
-- **Reason:** 
-
-### I-178 — Requirement/rule property test (chosen)
-- **Pitch:** Each species' catch condition implies its habitat requirement.
-- **Closest existing:** 
-- **What's new:** Copy can never drift from rules.
-- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
-- **Value/effort:** 9/2
-- **Reason:** Owner ask.
 
 ### I-181 — Journal completion percent (chosen)
 - **Pitch:** Overall % on the cover.
@@ -565,6 +519,54 @@
 - **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 1 1 1 2 2 → **24**/28, gates FAIL (est)
 - **Value/effort:** 5/2
 - **Reason:** Second lesson hint until the first 2+ cell lagoon, then a one-time chip.
+
+### I-173 — Habitat requirement line (built)
+- **Pitch:** Each journal habitat header shows how to find its creatures.
+- **Closest existing:** Animal Crossing Critterpedia
+- **What's new:** Copy comes from the same spec as the catch rules.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/3
+- **Reason:** Built (S5): HABITAT_REQ in src/meta/reqText.ts; lines generated from the members' req and proved true (journalReq.test.ts).
+
+### I-174 — Per-habitat progress (built)
+- **Pitch:** '3/7' and a tick per habitat.
+- **Closest existing:** Pokédex
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/1
+- **Reason:** Built (S5): got/total, a success tick and 'complete' for screen readers; Golden x/n once complete.
+
+### I-175 — Rarity progress row (built)
+- **Pitch:** Caught per rarity tier.
+- **Closest existing:** Genshin achievements
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** Built (S5): summary block above the habitats, pips + found/total per tier.
+
+### I-176 — Golden progress (built)
+- **Pitch:** Golden variants found / total with the 1-in-64 rule.
+- **Closest existing:** Shiny Pokémon
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** Built (S5): 'Golden x/47 · 1 in 64 …' from catch.ts GOLDEN_ODDS (a statistical test pins the rate).
+
+### I-177 — Spoiler-free hints (built)
+- **Pitch:** Undiscovered species keep silhouettes + the vague hint; no exact shapes.
+- **Closest existing:** Hades codex
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** Built (S5): silhouettes + ??? kept; the hint is generated from the rule (names the pool, never the creature). It is exact about shape and size, not vague: the research found vague copy drifting from the rules.
+
+### I-178 — Requirement/rule property test (built)
+- **Pitch:** Each species' catch condition implies its habitat requirement.
+- **Closest existing:** 
+- **What's new:** Copy can never drift from rules.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/2
+- **Reason:** Built (S5): gate implication over an enumerated context space, plus req ≡ the old lambdas for all 47.
 
 ### I-062 — Difficulty ramp (built)
 - **Pitch:** Pieces get chunkier the longer you survive.
@@ -1083,6 +1085,22 @@
 - **Scores (R1..R14):** 2 2 2 2 2 2 1 2 2 0 1 1 2 2 → **23**/28, gates FAIL (est)
 - **Value/effort:** 5/4
 - **Reason:** Blocked on the owner: needs developer accounts and Game Center / Play Games setup; would also change the no-data policy (opt-in).
+
+### I-201 — Eligible-chances counter (backlog)
+- **Pitch:** Undiscovered tiles show 'Close: 3 chances' (lagoons that met the rule), Hades-style, no odds.
+- **Closest existing:** Hades Codex progress bars
+- **What's new:** Progress toward an unknown without a spoiler
+- **Scores (R1..R14):** 2 2 1 2 1 2 1 2 2 1 2 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 6/3
+- **Reason:** Needs a journal save-format field (chances[id]) and a migration; skipped for the v1.0.0 RC (S5). JOURNAL_REQUIREMENTS.md §3.4.
+
+### I-202 — Legendary pill vs new dot (backlog)
+- **Pitch:** On epic/legendary journal tiles the 'new' dot sits on the rarity word; move it beside the pill.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 1 1 2 2 → **23**/28, gates FAIL (est)
+- **Value/effort:** 3/1
+- **Reason:** Seen in the S5 journal review (375 px); predates the requirement work.
 
 ### I-098 — Cell-cursor mode (backlog)
 - **Pitch:** Play with a keyboard/switch cursor over cells, with spoken previews.

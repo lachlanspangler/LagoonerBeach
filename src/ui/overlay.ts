@@ -82,6 +82,8 @@ export interface SheetKit {
   seenFor(j: Journal): Set<string>;
   markUnseen(j: Journal): void;
   announce(text: string): void;
+  /** The mode being played (the journal's Reef nudge). */
+  mode(): Mode;
 }
 
 let lastInput: 'key' | 'pointer' = 'pointer';
@@ -575,6 +577,7 @@ export class Ui {
       seenFor: (j) => this.seenFor(j),
       markUnseen: (j) => this.markUnseen(j),
       announce: (t) => this.announce(t),
+      mode: () => this.mode,
     };
   }
 
