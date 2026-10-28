@@ -4,11 +4,39 @@
 > Scores: rubric R1–R14 (`docs/research/RUBRIC.md`), 0–2 each, max 28. ★ gates = R1,R2,R5,R6,R10.
 > `basis`: `est` = estimated before prototyping, `meas` = R4/R5/R6/R11 replaced by bot measurements.
 
-**139 ideas** — chosen: 1 · built: 24 · prototyped: 4 · shortlisted: 0 · backlog: 43 · merged: 5 · rejected: 62
+**193 ideas** — chosen: 29 · built: 24 · prototyped: 4 · shortlisted: 4 · backlog: 49 · merged: 5 · rejected: 78
 
 | id | status | name | pitch | closest | total | gates | value/effort | basis |
 |---|---|---|---|---|---|---|---|---|
 | I-001 | chosen | Hollow (loop clear) | Close a loop of blocks and everything inside it pops. | Block Blast + Go capture + Two Dots squares | 27 | ✓ | 10/4 | meas |
+| I-147 | chosen | Title screen with wordmark + big Play | Calm lagoon title, 'Lagooner Beach' wordmark, one large Play button. | Monument Valley, Alto's Odyssey | 24 | ✗ | 8/4 | est |
+| I-148 | chosen | Play button shows what you'll resume | Play reads 'Continue' with the mode and score when a saved game exists. | Two Dots | 24 | ✗ | 7/2 | est |
+| I-149 | chosen | Skip the intro on deep links | ?mode=daily / share links / ?seed open straight into the board. | Wordle | 24 | ✗ | 9/1 | est |
+| I-150 | chosen | Skip the intro on quick returns | Back within 30 minutes (or resumed from background) goes straight to the board. | Threes | 24 | ✗ | 8/2 | est |
+| I-152 | chosen | Play-tap water chime | Synthesized droplet + soft major-third chime on Play. | Monument Valley | 24 | ✗ | 7/2 | est |
+| I-154 | chosen | Day/Night title by theme | Title palette follows the Day/Night theme; Night gets stars and moonlit water. | Alto's Odyssey | 24 | ✗ | 7/2 | est |
+| I-155 | chosen | Wordmark draw-on animation | Letters fade/rise in on cold launch (once), still under reduced motion. | A Short Hike | 24 | ✗ | 6/2 | est |
+| I-159 | chosen | Native splash hands off to the title | Native splash colour matches the title background so launch feels seamless. | Monument Valley | 24 | ✗ | 7/1 | est |
+| I-163 | chosen | Coral & rock block materials | Each colour becomes a real material: brain coral, sea glass, basalt… | Dorfromantik | 24 | ✗ | 9/6 | est |
+| I-164 | chosen | Procedural material sprites | Draw materials procedurally into the existing per-size sprite cache. | Townscaper | 24 | ✗ | 8/4 | est |
+| I-166 | chosen | Per-cell variation | Each cell picks one of several variants so a wall doesn't tile. | Islanders | 24 | ✗ | 7/2 | est |
+| I-172 | chosen | Shape-glyph on materials (Glyph style) | Glyph accessibility style keeps its symbols over the new materials. |  | 24 | ✗ | 8/1 | est |
+| I-173 | chosen | Habitat requirement line | Each journal habitat header shows how to find its creatures. | Animal Crossing Critterpedia | 24 | ✗ | 9/3 | est |
+| I-174 | chosen | Per-habitat progress | '3/7' and a tick per habitat. | Pokédex | 24 | ✗ | 9/1 | est |
+| I-175 | chosen | Rarity progress row | Caught per rarity tier. | Genshin achievements | 24 | ✗ | 6/1 | est |
+| I-176 | chosen | Golden progress | Golden variants found / total with the 1-in-64 rule. | Shiny Pokémon | 24 | ✗ | 7/1 | est |
+| I-177 | chosen | Spoiler-free hints | Undiscovered species keep silhouettes + the vague hint; no exact shapes. | Hades codex | 24 | ✗ | 8/1 | est |
+| I-178 | chosen | Requirement/rule property test | Each species' catch condition implies its habitat requirement. |  | 24 | ✗ | 9/2 | est |
+| I-181 | chosen | Journal completion percent | Overall % on the cover. | Pokédex | 24 | ✗ | 5/1 | est |
+| I-184 | chosen | About page: why the ocean | A few lines from Lachlan about Laguna's tide pools, tied to the game's creatures. | Alba: A Wildlife Adventure | 24 | ✗ | 8/2 | est |
+| I-185 | chosen | Charity links | 3–5 verified coastal-wildlife charities, system browser, untracked. |  | 24 | ✗ | 9/2 | est |
+| I-186 | chosen | No-funding pledge | 'I will not take any funding.' stated plainly. |  | 24 | ✗ | 9/1 | est |
+| I-192 | chosen | About reachable from Settings | The About page is also in Settings › About. |  | 24 | ✗ | 8/1 | est |
+| I-195 | chosen | Donate link affordance | Each link shows its host (e.g. pacificmmc.org) and an 'opens in browser' icon. |  | 24 | ✗ | 7/1 | est |
+| I-196 | chosen | Charity link e2e | e2e asserts every About link matches CHARITIES.md. |  | 24 | ✗ | 8/1 | est |
+| I-197 | chosen | Material visual baselines | Pixel baselines for every block material, Day and Night, 3 sizes. |  | 24 | ✗ | 8/2 | est |
+| I-198 | chosen | Intro skip e2e | e2e: cold launch shows intro; deep link and quick return skip it. |  | 24 | ✗ | 8/1 | est |
+| I-199 | chosen | Intro perf budget | Title scene frame cost stays under the draw budget. |  | 24 | ✗ | 7/1 | est |
 | I-093 | built | Beach Journal | Every lagoon catches beach creatures tied to its shape; collect all 47. | Animal Crossing museum, Neko Atsume | 28 | ✓ | 10/6 | est |
 | I-069 | built | Seal tick | A tiny haptic+sound the moment your drag would seal a lagoon. | — | 27 | ✓ | 8/1 | est |
 | I-074 | built | Clear-the-reef puzzles | Hand-checked daily puzzle: clear a set board with fixed pieces. | Meowdoku levels | 27 | ✓ | 8/5 | est |
@@ -37,6 +65,10 @@
 | I-003 | prototyped | Flip (XOR stamp) | Every block flips the tiles it lands on. | Lights Out + Block Blast | 21 | ✗ | 7/3 | meas |
 | I-004 | prototyped | Exact Count | Each row and column clears when it holds exactly its number. | Nonograms + Block Blast | 21 | ✗ | 6/3 | meas |
 | I-002 | prototyped | Skid (slide-in) | Flick blocks in from the edge; they slide until they hit something. | Tetris (one-way gravity), ice-slide puzzles | 20 | ✗ | 7/4 | meas |
+| I-153 | shortlisted | Title scene creatures drift by | One or two already-caught species swim across the title lagoon. | Neko Atsume | 24 | ✗ | 7/3 | est |
+| I-160 | shortlisted | Dedicated display face for the wordmark | Subset a display font to just the wordmark glyphs. | Florence | 24 | ✗ | 7/2 | est |
+| I-169 | shortlisted | Pop debris matches material | Ring bursts spit sand, coral chips or glass flecks by material. |  | 24 | ✗ | 6/3 | est |
+| I-180 | shortlisted | Habitat complete stamp | A stamp and a small sound when a habitat fills. | Animal Crossing museum | 24 | ✗ | 6/2 | est |
 | I-101 | backlog | Creature style guide | One construction kit (eyes, blush, ink outline, palette) every species follows. | Neko Atsume / Pokémon | 27 | ✗ | 9/3 | est |
 | I-102 | backlog | Size classes | XS shrimp → XXL kraken: real relative scale in leaps, journal and reveal. | Animal Crossing fish shadows | 27 | ✗ | 8/2 | est |
 | I-103 | backlog | Idle personalities | Each species has its own idle: hermit peeks, octopus wiggles, ray glides, puffer inflates. | Neko Atsume | 27 | ✗ | 8/5 | est |
@@ -78,6 +110,12 @@
 | I-144 | backlog | Spring buttons | Buttons squish on press with a spring and a soft tick. | Duolingo | 27 | ✗ | 5/1 | est |
 | I-145 | backlog | Sheet transitions | Menus slide up with a spring; backdrop blur. | iOS sheets | 27 | ✗ | 5/1 | est |
 | I-146 | backlog | Results screen redesign | Score hero, best delta, combo max, catches row, primary CTA. | Royal Match | 27 | ✗ | 7/2 | est |
+| I-167 | backlog | Wet sheen on fresh blocks | A placed block glints wet for a moment. |  | 24 | ✗ | 5/2 | est |
+| I-168 | backlog | Coral polyps open in a lagoon ring | Ring blocks bristle just before they pop. |  | 24 | ✗ | 5/3 | est |
+| I-170 | backlog | Sea-glass translucency | Sea-glass block is frosted and lets the board show through a touch. |  | 24 | ✗ | 5/2 | est |
+| I-179 | backlog | Hint ladder for long-missing species | After N lagoons without a catch, the hint sharpens. | Stardew bundles | 24 | ✗ | 6/3 | est |
+| I-190 | backlog | Real-world creature facts | Species page gets one true fact and the real animal's status. | Beyond Blue | 24 | ✗ | 6/4 | est |
+| I-200 | backlog | Title in store screenshot | The first store frame shows the title screen. |  | 24 | ✗ | 5/1 | est |
 | I-100 | backlog | Leaderboards | Game Center / Play Games best-score boards. | Block Blast | 23 | ✗ | 5/4 | est |
 | I-098 | backlog | Cell-cursor mode | Play with a keyboard/switch cursor over cells, with spoken previews. | Accessible board games | 20 | ✗ | 4/7 | est |
 | I-042 | merged | Hollow Daily Puzzle | Clear the whole board with today's pieces. | Wordle-style dailies | 27 | ✓ | 8/5 | est |
@@ -147,6 +185,22 @@
 | I-059 | rejected | Stripes | Rows clear when their colors alternate. | Pattern puzzles | 17 | ✗ | 2/3 | est |
 | I-060 | rejected | Sinkers | Heavy pieces fall, light ones float. | Tetris | 17 | ✗ | 2/3 | est |
 | I-036 | rejected | Seasons | The clearing rule changes every tray. | Roguelite modifiers | 16 | ✗ | 2/5 | est |
+| I-151 | rejected | Tap anywhere to play | Any tap on the title scene (not just the button) starts. | Alto's Odyssey | 16 | ✗ | 6/1 | est |
+| I-156 | rejected | Intro 'Daily' chip | A small Daily chip under Play showing today's state (played/streak). | NYT Games | 16 | ✗ | 5/2 | est |
+| I-157 | rejected | Logo splash before title | A studio-logo splash before the title. | Most mobile games | 16 | ✗ | 1/1 | est |
+| I-158 | rejected | Login / account on title | Sign in to sync. | Royal Match | 16 | ✗ | 1/5 | est |
+| I-161 | rejected | Hand-lettered SVG wordmark | Draw the wordmark as custom SVG paths. | Gris | 16 | ✗ | 6/6 | est |
+| I-162 | rejected | Script font wordmark | Use a brush/script face. | Lobster-style titles | 16 | ✗ | 3/1 | est |
+| I-165 | rejected | Bitmap texture atlas for blocks | Painted textures in an atlas. | Candy Crush | 16 | ✗ | 4/4 | est |
+| I-171 | rejected | Barnacles on old blocks | Blocks that sit for many moves grow barnacles. |  | 16 | ✗ | 4/4 | est |
+| I-182 | rejected | Exact catch odds in the journal | Show each species' percent. |  | 16 | ✗ | 3/1 | est |
+| I-183 | rejected | Habitat filter tabs | Tabs per habitat. | Zelda compendium | 16 | ✗ | 4/3 | est |
+| I-187 | rejected | Tip jar | Optional tip IAP. | Many indies | 16 | ✗ | 1/4 | est |
+| I-188 | rejected | Supporter Pack | Cosmetic IAP (ADR 0008). |  | 16 | ✗ | 1/5 | est |
+| I-189 | rejected | Donation matching | Pledge to match donations. |  | 16 | ✗ | 2/5 | est |
+| I-191 | rejected | Beach clean-up reminder | A gentle seasonal note linking to Coastal Cleanup Day. |  | 16 | ✗ | 4/2 | est |
+| I-193 | rejected | Share the About page | Share sheet for the charity list. |  | 16 | ✗ | 3/2 | est |
+| I-194 | rejected | Charity logos | Show each charity's logo. |  | 16 | ✗ | 3/2 | est |
 
 ## Details
 
@@ -158,6 +212,230 @@
 - **Value/effort:** 10/4
 - **Reason:** Chosen (ADR 0001). Only candidate passing every gate on measured data; huge planning headroom; big loops form a visible jackpot.
 - **Data:** hollow8-ramp2: median moves random/firstFit/greedy/search 17/27/80/488; score skill 53.7×; firstFit÷search 0.03, greedy÷search 0.12; 2.2 moves/clear; median best pocket 19 cells. R4=1: greedy sessions too long until ramp is tuned. R2 needs a scripted first tray (pocket in 2 moves).
+
+### I-147 — Title screen with wordmark + big Play (chosen)
+- **Pitch:** Calm lagoon title, 'Lagooner Beach' wordmark, one large Play button.
+- **Closest existing:** Monument Valley, Alto's Odyssey
+- **What's new:** A living lagoon behind the title, drawn by the same renderer.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/4
+- **Reason:** Owner ask; ADR 0015.
+
+### I-148 — Play button shows what you'll resume (chosen)
+- **Pitch:** Play reads 'Continue' with the mode and score when a saved game exists.
+- **Closest existing:** Two Dots
+- **What's new:** One tap resumes exactly where you were.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** Removes a menu step for returning players.
+
+### I-149 — Skip the intro on deep links (chosen)
+- **Pitch:** ?mode=daily / share links / ?seed open straight into the board.
+- **Closest existing:** Wordle
+- **What's new:** The intro never blocks a share link.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/1
+- **Reason:** Owner constraint.
+
+### I-150 — Skip the intro on quick returns (chosen)
+- **Pitch:** Back within 30 minutes (or resumed from background) goes straight to the board.
+- **Closest existing:** Threes
+- **What's new:** Fast players never see it twice in a session.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** Owner: never in the way of a fast player.
+
+### I-152 — Play-tap water chime (chosen)
+- **Pitch:** Synthesized droplet + soft major-third chime on Play.
+- **Closest existing:** Monument Valley
+- **What's new:** Sets the tone in 300 ms.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** Owner ask: a sound on the play tap.
+
+### I-154 — Day/Night title by theme (chosen)
+- **Pitch:** Title palette follows the Day/Night theme; Night gets stars and moonlit water.
+- **Closest existing:** Alto's Odyssey
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** 
+
+### I-155 — Wordmark draw-on animation (chosen)
+- **Pitch:** Letters fade/rise in on cold launch (once), still under reduced motion.
+- **Closest existing:** A Short Hike
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** Reduced motion: no movement, instant.
+
+### I-159 — Native splash hands off to the title (chosen)
+- **Pitch:** Native splash colour matches the title background so launch feels seamless.
+- **Closest existing:** Monument Valley
+- **What's new:** No flash between native splash and web title.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** 
+
+### I-163 — Coral & rock block materials (chosen)
+- **Pitch:** Each colour becomes a real material: brain coral, sea glass, basalt…
+- **Closest existing:** Dorfromantik
+- **What's new:** Materials stay identified by hue first, texture second.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/6
+- **Reason:** Owner ask; ADR 0014.
+
+### I-164 — Procedural material sprites (chosen)
+- **Pitch:** Draw materials procedurally into the existing per-size sprite cache.
+- **Closest existing:** Townscaper
+- **What's new:** Zero asset bytes.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/4
+- **Reason:** Bundle- and perf-safe; ADR 0014.
+
+### I-166 — Per-cell variation (chosen)
+- **Pitch:** Each cell picks one of several variants so a wall doesn't tile.
+- **Closest existing:** Islanders
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** Existing variant slot.
+
+### I-172 — Shape-glyph on materials (Glyph style) (chosen)
+- **Pitch:** Glyph accessibility style keeps its symbols over the new materials.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** Accessibility must not regress.
+
+### I-173 — Habitat requirement line (chosen)
+- **Pitch:** Each journal habitat header shows how to find its creatures.
+- **Closest existing:** Animal Crossing Critterpedia
+- **What's new:** Copy comes from the same spec as the catch rules.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/3
+- **Reason:** Owner ask; JOURNAL_REQUIREMENTS.md.
+
+### I-174 — Per-habitat progress (chosen)
+- **Pitch:** '3/7' and a tick per habitat.
+- **Closest existing:** Pokédex
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/1
+- **Reason:** 
+
+### I-175 — Rarity progress row (chosen)
+- **Pitch:** Caught per rarity tier.
+- **Closest existing:** Genshin achievements
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** 
+
+### I-176 — Golden progress (chosen)
+- **Pitch:** Golden variants found / total with the 1-in-64 rule.
+- **Closest existing:** Shiny Pokémon
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** 
+
+### I-177 — Spoiler-free hints (chosen)
+- **Pitch:** Undiscovered species keep silhouettes + the vague hint; no exact shapes.
+- **Closest existing:** Hades codex
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** 
+
+### I-178 — Requirement/rule property test (chosen)
+- **Pitch:** Each species' catch condition implies its habitat requirement.
+- **Closest existing:** 
+- **What's new:** Copy can never drift from rules.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/2
+- **Reason:** Owner ask.
+
+### I-181 — Journal completion percent (chosen)
+- **Pitch:** Overall % on the cover.
+- **Closest existing:** Pokédex
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/1
+- **Reason:** 
+
+### I-184 — About page: why the ocean (chosen)
+- **Pitch:** A few lines from Lachlan about Laguna's tide pools, tied to the game's creatures.
+- **Closest existing:** Alba: A Wildlife Adventure
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** Owner ask; ADR 0016.
+
+### I-185 — Charity links (chosen)
+- **Pitch:** 3–5 verified coastal-wildlife charities, system browser, untracked.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/2
+- **Reason:** CHARITIES.md.
+
+### I-186 — No-funding pledge (chosen)
+- **Pitch:** 'I will not take any funding.' stated plainly.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 9/1
+- **Reason:** Owner ask.
+
+### I-192 — About reachable from Settings (chosen)
+- **Pitch:** The About page is also in Settings › About.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** 
+
+### I-195 — Donate link affordance (chosen)
+- **Pitch:** Each link shows its host (e.g. pacificmmc.org) and an 'opens in browser' icon.
+- **Closest existing:** 
+- **What's new:** Honest about where you're going.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** 
+
+### I-196 — Charity link e2e (chosen)
+- **Pitch:** e2e asserts every About link matches CHARITIES.md.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** 
+
+### I-197 — Material visual baselines (chosen)
+- **Pitch:** Pixel baselines for every block material, Day and Night, 3 sizes.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/2
+- **Reason:** 
+
+### I-198 — Intro skip e2e (chosen)
+- **Pitch:** e2e: cold launch shows intro; deep link and quick return skip it.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 8/1
+- **Reason:** 
+
+### I-199 — Intro perf budget (chosen)
+- **Pitch:** Title scene frame cost stays under the draw budget.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/1
+- **Reason:** 
 
 ### I-093 — Beach Journal (built)
 - **Pitch:** Every lagoon catches beach creatures tied to its shape; collect all 47.
@@ -389,6 +667,38 @@
 - **Value/effort:** 7/4
 - **Reason:** Rejected after prototype: shallow ceiling (search survives 25 moves), and deaths happen with half the board empty because big pieces cannot reach open space — feels unfair.
 - **Data:** skid: 11/13/17/25 moves; skill 3.6×; ≤4-cell variant 13/14/20/29.
+
+### I-153 — Title scene creatures drift by (shortlisted)
+- **Pitch:** One or two already-caught species swim across the title lagoon.
+- **Closest existing:** Neko Atsume
+- **What's new:** Your journal shows up on the title screen.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/3
+- **Reason:** Lovely if cheap; drawn from the lazy art chunk only when loaded.
+
+### I-160 — Dedicated display face for the wordmark (shortlisted)
+- **Pitch:** Subset a display font to just the wordmark glyphs.
+- **Closest existing:** Florence
+- **What's new:** Tiny file, big personality.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 7/2
+- **Reason:** Font picked in TITLE_TYPE.md / ADR 0013.
+
+### I-169 — Pop debris matches material (shortlisted)
+- **Pitch:** Ring bursts spit sand, coral chips or glass flecks by material.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/3
+- **Reason:** Only if the burst stays readable.
+
+### I-180 — Habitat complete stamp (shortlisted)
+- **Pitch:** A stamp and a small sound when a habitat fills.
+- **Closest existing:** Animal Crossing museum
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/2
+- **Reason:** 
 
 ### I-101 — Creature style guide (backlog)
 - **Pitch:** One construction kit (eyes, blush, ink outline, palette) every species follows.
@@ -716,6 +1026,54 @@
 - **What's new:** Clear hierarchy.
 - **Scores (R1..R14):** 2 2 2 2 2 2 2 2 2 1 2 2 2 2 → **27**/28, gates FAIL (est)
 - **Value/effort:** 7/2
+- **Reason:** 
+
+### I-167 — Wet sheen on fresh blocks (backlog)
+- **Pitch:** A placed block glints wet for a moment.
+- **Closest existing:** 
+- **What's new:** Ties placement to water.
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** 
+
+### I-168 — Coral polyps open in a lagoon ring (backlog)
+- **Pitch:** Ring blocks bristle just before they pop.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/3
+- **Reason:** Risk of busy normal moves.
+
+### I-170 — Sea-glass translucency (backlog)
+- **Pitch:** Sea-glass block is frosted and lets the board show through a touch.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** 
+
+### I-179 — Hint ladder for long-missing species (backlog)
+- **Pitch:** After N lagoons without a catch, the hint sharpens.
+- **Closest existing:** Stardew bundles
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/3
+- **Reason:** Changes the feel of discovery; post-launch.
+
+### I-190 — Real-world creature facts (backlog)
+- **Pitch:** Species page gets one true fact and the real animal's status.
+- **Closest existing:** Beyond Blue
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 6/4
+- **Reason:** Needs careful fact-checking per species.
+
+### I-200 — Title in store screenshot (backlog)
+- **Pitch:** The first store frame shows the title screen.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 2 2 2 2 1 2 1 2 2 1 2 1 2 2 → **24**/28, gates FAIL (est)
+- **Value/effort:** 5/1
 - **Reason:** 
 
 ### I-100 — Leaderboards (backlog)
@@ -1271,3 +1629,131 @@
 - **Scores (R1..R14):** 0 0 0 1 2 2 2 2 1 1 1 1 1 2 → **16**/28, gates FAIL (est)
 - **Value/effort:** 2/5
 - **Reason:** Anti-simplicity.
+
+### I-151 — Tap anywhere to play (rejected)
+- **Pitch:** Any tap on the title scene (not just the button) starts.
+- **Closest existing:** Alto's Odyssey
+- **What's new:** Zero aiming.
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 6/1
+- **Reason:** Conflicts with the quiet About link and accidental taps on launch; the big button is enough.
+
+### I-156 — Intro 'Daily' chip (rejected)
+- **Pitch:** A small Daily chip under Play showing today's state (played/streak).
+- **Closest existing:** NYT Games
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 5/2
+- **Reason:** Keep the title to Play + quiet links; Daily lives one tap away in the menu. Extra choices slow a fast player.
+
+### I-157 — Logo splash before title (rejected)
+- **Pitch:** A studio-logo splash before the title.
+- **Closest existing:** Most mobile games
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 1/1
+- **Reason:** Anti-pattern: an unskippable wall before play.
+
+### I-158 — Login / account on title (rejected)
+- **Pitch:** Sign in to sync.
+- **Closest existing:** Royal Match
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 1/5
+- **Reason:** No accounts by design; privacy.
+
+### I-161 — Hand-lettered SVG wordmark (rejected)
+- **Pitch:** Draw the wordmark as custom SVG paths.
+- **Closest existing:** Gris
+- **What's new:** Fully original.
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 6/6
+- **Reason:** Higher effort, harder to iterate; an OFL display face subset is cheaper and accessible as real text.
+
+### I-162 — Script font wordmark (rejected)
+- **Pitch:** Use a brush/script face.
+- **Closest existing:** Lobster-style titles
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 3/1
+- **Reason:** Thin scripts read poorly at small sizes and feel generic.
+
+### I-165 — Bitmap texture atlas for blocks (rejected)
+- **Pitch:** Painted textures in an atlas.
+- **Closest existing:** Candy Crush
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 4/4
+- **Reason:** Asset weight, blur at dpr 3, and day/night needs double atlases.
+
+### I-171 — Barnacles on old blocks (rejected)
+- **Pitch:** Blocks that sit for many moves grow barnacles.
+- **Closest existing:** 
+- **What's new:** A visible age cue.
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 4/4
+- **Reason:** Adds state to the board view; noise in the colourblind audit.
+
+### I-182 — Exact catch odds in the journal (rejected)
+- **Pitch:** Show each species' percent.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 3/1
+- **Reason:** Turns discovery into a spreadsheet; spoils rare surprises.
+
+### I-183 — Habitat filter tabs (rejected)
+- **Pitch:** Tabs per habitat.
+- **Closest existing:** Zelda compendium
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 4/3
+- **Reason:** Six short sections scroll fine; tabs hide progress.
+
+### I-187 — Tip jar (rejected)
+- **Pitch:** Optional tip IAP.
+- **Closest existing:** Many indies
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 1/4
+- **Reason:** Contradicts no funding.
+
+### I-188 — Supporter Pack (rejected)
+- **Pitch:** Cosmetic IAP (ADR 0008).
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 1/5
+- **Reason:** Contradicts no funding; ADR 0008 superseded.
+
+### I-189 — Donation matching (rejected)
+- **Pitch:** Pledge to match donations.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 2/5
+- **Reason:** A financial promise we can't verify or keep in an app; also 'funding'-adjacent.
+
+### I-191 — Beach clean-up reminder (rejected)
+- **Pitch:** A gentle seasonal note linking to Coastal Cleanup Day.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 4/2
+- **Reason:** Push-like nudge; keep the game quiet.
+
+### I-193 — Share the About page (rejected)
+- **Pitch:** Share sheet for the charity list.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** Not asked; keep it modest.
+
+### I-194 — Charity logos (rejected)
+- **Pitch:** Show each charity's logo.
+- **Closest existing:** 
+- **What's new:** 
+- **Scores (R1..R14):** 1 1 2 1 1 1 1 2 2 0 1 0 1 2 → **16**/28, gates FAIL (est)
+- **Value/effort:** 3/2
+- **Reason:** Trademark use + asset weight; names + one line read better.
