@@ -65,6 +65,13 @@ async function open(night: boolean, query = 'seed=42', fresh = false): Promise<P
 const frames = (p: Page) => p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
 const screens: Record<string, (p: Page) => Promise<void>> = {
+  // the title screen (ADR 0015): `?title` forces it (automated runs skip it by default)
+  title: async (p) => {
+    await p.waitForTimeout(900);
+  },
+  'title-first': async (p) => {
+    await p.waitForTimeout(900);
+  },
   'play-start': async () => {},
   'play-midgame': async (p) => {
     await p.evaluate((bd) => (window as any).__atoll.setup(bd, ['tri-h', 'square', 'cup-up']), BOARD);
@@ -391,6 +398,8 @@ const screens: Record<string, (p: Page) => Promise<void>> = {
 };
 const special: Record<string, { query?: string; fresh?: boolean }> = {
   'first-run': { query: 'seed=42', fresh: true },
+  title: { query: 'title=1' },
+  'title-first': { query: 'title=1', fresh: true },
   'first-capture': { query: 'seed=42', fresh: true },
   offline: { query: 'seed=5&lboffline=1' },
   'results-real': { query: 'seed=8&fast=1' },

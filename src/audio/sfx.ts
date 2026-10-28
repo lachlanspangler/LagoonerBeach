@@ -303,6 +303,23 @@ export class Sfx {
     this.hiss(at + 0.3, 0.5, 5200, 2, 0.05);
   }
 
+  /**
+   * The title's Play tap (INTRO_SCREEN §5.8): a pebble drops into the lagoon and the lagoon answers.
+   * Stone tok → upward water plip → a small wave folding over → two pentatonic notes (the music's
+   * own language). Night sits lower and softer.
+   */
+  titlePlay(night = false): void {
+    const o = night ? 0.5 : 1;
+    this.tone(174 * o, 0, 0.09, 'triangle', 0.28, 104 * o);
+    this.hiss(0, 0.04, 2400, 3, 0.14);
+    this.tone(520 * o, 0.04, 0.11, 'sine', 0.14, 1040 * o);
+    this.hiss(0.1, 0.38, 2600, 1.6, night ? 0.045 : 0.06, 700, 0.06);
+    const [a, b] = night ? [0, 2] : [0, 4];
+    this.tone(this.note(a, night ? -1 : 0), 0.12, 0.45, 'triangle', 0.07);
+    this.tone(this.note(b, night ? -1 : 0), 0.2, 0.45, 'triangle', 0.07);
+    this.tone(this.note(b, night ? -2 : -1), 0.2, 0.5, 'sine', 0.04);
+  }
+
   /** A creature dives back into the water beside the board: a soft plop + spray (quiet: often 3 at once). */
   splash(big = false, at = 0): void {
     this.tone(big ? 300 : 380, at, 0.07, 'sine', big ? 0.07 : 0.045, big ? 140 : 180);

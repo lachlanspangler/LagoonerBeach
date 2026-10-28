@@ -31,16 +31,74 @@
         font-weight: 900;
         font-display: swap;
       }
+      @font-face {
+        font-family: 'Lagoon Title';
+        src: url('/fonts/lagoon-title.woff2') format('woff2');
+        font-weight: 800;
+        font-display: block;
+      }
     </style>
     <script>
       document.fonts?.load?.('800 16px "Lagoon UI"');
       document.fonts?.load?.('900 16px "Lagoon Display"');
+      // The title screen (ADR 0015) is decided before first paint, so it never flashes in or out.
+      // Skipped for deep links (?mode= ?seed=, a shared Daily), a warm return (< 10 min), the
+      // "Open straight into the game" setting, and automated runs (unless ?title forces it, or
+      // ?titlerules applies these rules as for a person: e2e).
+      // The theme is applied here too, so the first frame is already Day or Night.
+      (function () {
+        var d = document.documentElement;
+        var q = new URLSearchParams(location.search);
+        var t = {};
+        var th = 'auto';
+        try {
+          t = JSON.parse(localStorage.getItem('atoll.v1.title') || '{}') || {};
+          th = (JSON.parse(localStorage.getItem('atoll.v1.profile') || '{}').settings || {}).theme || 'auto';
+        } catch (e) {}
+        if (th !== 'day' && th !== 'night') th = matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+        d.dataset.theme = th;
+        var skip =
+          q.has('mode') ||
+          q.has('seed') ||
+          q.has('notitle') ||
+          t.off === true ||
+          (typeof t.at === 'number' && Date.now() - t.at < 600000 && Date.now() >= t.at) ||
+          (navigator.webdriver === true && !q.has('titlerules'));
+        if (q.has('title')) skip = false;
+        if (!skip) {
+          d.dataset.title = '1';
+          document.fonts?.load?.('800 16px "Lagoon Title"');
+        }
+      })();
     </script>
     <link rel="stylesheet" href="./src/ui/style.css" />
   </head>
   <body>
     <canvas id="game" aria-label="Lagooner Beach game board" role="img"></canvas>
-    <div id="ui"></div>
+    <div id="ui">
+      <main id="title" class="title" aria-labelledby="title-word">
+        <canvas id="title-bg" aria-hidden="true"></canvas>
+        <div class="t-lock">
+          <h1 id="title-word" class="title-word" aria-label="Lagooner Beach">
+            <span>Lagooner</span> <span>Beach</span>
+          </h1>
+          <span class="t-wave" aria-hidden="true"></span>
+          <p class="t-tag">Close a loop. Water fills it.</p>
+        </div>
+        <button id="t-play" class="t-play" type="button">
+          <span class="t-play-ic" aria-hidden="true"></span
+          ><span class="t-play-t"><span class="t-play-l">Play</span><small class="t-play-s"></small></span>
+        </button>
+        <nav class="t-foot" aria-label="More">
+          <button id="t-about" class="t-pill" type="button">
+            <span class="t-pill-ic" aria-hidden="true"></span>About
+          </button>
+          <button id="t-settings" class="t-pill" type="button">
+            <span class="t-pill-ic" aria-hidden="true"></span>Settings
+          </button>
+        </nav>
+      </main>
+    </div>
     <div id="sr" class="sr-only" aria-live="polite"></div>
     <script type="module" src="./src/app/main.ts"></script>
   </body>

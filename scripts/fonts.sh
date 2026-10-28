@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Reproducible font build (SIL OFL 1.1 fonts from github.com/google/fonts).
 #   FONTTOOLS=/path/to/venv/bin scripts/fonts.sh      (needs fonttools + brotli)
-# → public/fonts/lagoon-display-{900,600}.woff2, lagoon-ui.woff2, OFL-*.txt
+# → public/fonts/lagoon-display-{900,600}.woff2, lagoon-ui.woff2, lagoon-title.woff2, OFL-*.txt
 set -euo pipefail
 BIN=${FONTTOOLS:-}
 OUT=public/fonts
@@ -18,4 +18,7 @@ sub() { "$BIN"pyftsubset "$1" --unicodes="$U" --layout-features=kern,liga,case,t
 sub "$SRC/f900.ttf" "$OUT/lagoon-display-900.woff2"
 sub "$SRC/f600.ttf" "$OUT/lagoon-display-600.woff2"
 sub "$SRC/nunito.ttf" "$OUT/lagoon-ui.woff2"
+# the title wordmark (ADR 0013): a characterful display cut, subset to just "Lagooner Beach" (~2 KB)
+"$BIN"fonttools varLib.instancer "$SRC/fraunces.ttf" SOFT=100 WONK=1 opsz=144 wght=800 -q -o "$SRC/ftitle.ttf"
+"$BIN"pyftsubset "$SRC/ftitle.ttf" --text="Lagooner Beach" --layout-features=kern,liga --name-IDs=0,1,2,13,14 --flavor=woff2 --output-file="$OUT/lagoon-title.woff2"
 ls -l "$OUT"

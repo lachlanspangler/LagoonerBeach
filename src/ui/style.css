@@ -1055,3 +1055,217 @@ html[data-rm='1'] .icon-btn.collect {
   white-space: nowrap;
   cursor: pointer;
 }
+
+/* ═══ Title screen (ADR 0015; INTRO_SCREEN §5): static, painted before the bundle runs ═══ */
+@font-face {
+  font-family: 'Lagoon Title';
+  src: url('/fonts/lagoon-title.woff2') format('woff2');
+  font-weight: 800;
+  font-display: block;
+}
+.title {
+  display: none;
+}
+html[data-title='1'] .title {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: auto;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 0.9fr) auto;
+  justify-items: center;
+  padding: calc(env(safe-area-inset-top) + 9vh) 24px calc(env(safe-area-inset-bottom) + 20px);
+  background: var(--bg);
+  overflow: hidden;
+  transition:
+    opacity 260ms var(--ease-exit),
+    visibility 0s 260ms;
+}
+html[data-title='1'] #ui > .veil {
+  z-index: 40;
+}
+#title-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-standard);
+}
+#title-bg.on {
+  opacity: 1;
+}
+.t-lock {
+  position: relative;
+  grid-row: 1;
+  align-self: end;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  animation: t-rise 520ms var(--ease-enter) both;
+}
+.title-word {
+  margin: 0;
+  font:
+    800 clamp(56px, min(19vw, 9.6vh), 112px) / 0.98 'Lagoon Title',
+    var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  font-kerning: normal;
+}
+.title-word span {
+  display: block;
+}
+.t-wave {
+  display: block;
+  width: 116px;
+  height: 12px;
+  margin-top: 14px;
+  color: var(--water);
+}
+.t-wave svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.t-tag {
+  margin: 12px 0 0;
+  font: 700 calc(17px * var(--fs)) / 1.35 var(--font);
+  color: var(--ink-2);
+}
+.t-play {
+  position: relative;
+  grid-row: 3;
+  margin-top: clamp(28px, 6vh, 56px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: min(300px, 80vw);
+  min-height: 76px;
+  padding: 10px 28px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 900 calc(28px * var(--fs)) / 1.05 var(--font);
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 6px 0 var(--accent-lip),
+    0 16px 32px rgba(14, 63, 102, 0.22);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: t-rise 560ms 120ms var(--spring-sheet) both;
+  transition:
+    transform var(--dur-instant) var(--ease-standard),
+    box-shadow var(--dur-instant) var(--ease-standard);
+}
+html[data-theme='night'] .t-play {
+  box-shadow:
+    0 6px 0 var(--accent-lip),
+    0 16px 36px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(111, 211, 236, 0.18);
+}
+.t-play:active {
+  transform: translateY(5px) scale(0.985);
+  box-shadow: 0 1px 0 var(--accent-lip);
+}
+.t-play-ic {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+.t-play-t {
+  display: grid;
+  justify-items: start;
+}
+.t-play-ic .ic {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.5;
+}
+.t-play-s {
+  font: 800 calc(15px * var(--fs)) / 1.2 var(--font);
+  opacity: 0.88;
+  letter-spacing: 0;
+}
+.t-play-s:empty {
+  display: none;
+}
+.t-foot {
+  grid-row: 5;
+  display: flex;
+  gap: 16px;
+  animation: t-fade 400ms 260ms var(--ease-standard) both;
+}
+.t-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 96px;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 251, 245, 0.72);
+  color: var(--ink);
+  font: 800 calc(15px * var(--fs)) / 1 var(--font);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+html[data-theme='night'] .t-pill {
+  background: rgba(10, 21, 32, 0.6);
+}
+.t-pill-ic .ic {
+  width: 20px;
+  height: 20px;
+}
+html:not([data-kb='1']) .title :focus-visible {
+  outline: none;
+}
+.title :focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+html[data-title='1'] .title.leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.title.leaving .t-lock,
+.title.leaving .t-play,
+.title.leaving .t-foot {
+  transform: scale(0.96);
+  transition: transform 260ms var(--ease-exit);
+}
+@keyframes t-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes t-fade {
+  from {
+    opacity: 0;
+  }
+}
+html[data-rm='1'] .title *,
+html[data-rm='1'] .title {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .title * {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+}
+@media (min-width: 700px) and (min-aspect-ratio: 1/1) {
+  .title-word span {
+    display: inline;
+  }
+  .title-word {
+    font-size: clamp(72px, 8.5vw, 112px);
+  }
+}

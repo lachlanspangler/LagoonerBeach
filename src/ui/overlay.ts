@@ -44,6 +44,8 @@ export interface UiHandlers {
   onJournal(): void;
   /** The About page (ADR 0016), from Settings or the title screen. */
   onAbout(): void;
+  /** Settings › "Open straight into the game" (skip the title screen, ADR 0015). */
+  onTitleOff(): void;
   /** Absent = leaderboards switched off for this build (no menu entry). */
   onLeaderboards?(): void;
   onErase(): void;

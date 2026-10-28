@@ -57,6 +57,7 @@ import type { PuzzleResultOpts } from '../ui/results.ts';
 import type { RevealItem } from '../ui/reveal.ts';
 import { LazyReveal } from '../ui/reveal-lazy.ts';
 import { showRetry } from '../ui/retry.ts';
+import { Title, markHidden, setTitleOff, titleOff, titleShowing } from '../ui/title.ts';
 import { installPreloadRecovery } from '../platform/lazy.ts';
 import { freshSeed as envSeed, today } from './env.ts';
 import { RunLog, hasPendingLbWork, markForget, type FinishedRun } from '../platform/runlog.ts';
@@ -1047,6 +1048,11 @@ const ui = new Ui({
     else profile.settings[k] = !profile.settings[k];
     saveProfile(profile);
     applyTheme();
+    title?.refresh();
+    ui.showSettings(profile);
+  },
+  onTitleOff: () => {
+    setTitleOff(!titleOff());
     ui.showSettings(profile);
   },
   onTrySkin: (id) => {
@@ -1068,6 +1074,7 @@ const ui = new Ui({
     profile.settings.theme = t;
     saveProfile(profile);
     applyTheme();
+    title?.refresh();
     ui.showSettings(profile);
   },
   onShare: () => {
@@ -1239,6 +1246,7 @@ const drag = new DragController(canvas, {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (erasing) return;
+    markHidden();
     persist();
     saveProfile(profile);
     music.stop();
@@ -1251,6 +1259,7 @@ document.addEventListener('visibilitychange', () => {
 let erasing = false;
 window.addEventListener('pagehide', () => {
   if (erasing) return;
+  markHidden();
   persist();
   saveProfile(profile);
 });
@@ -1348,6 +1357,48 @@ applyTheme();
 syncScene();
 if (bootMode === 'puzzle') switchMode('puzzle');
 requestAnimationFrame(frame);
+
+// ------------------------------------------------------------------ title screen (ADR 0015)
+// index.html already decided (before first paint) whether it shows; here it comes to life. The game
+// is fully booted behind it, so Play is instant: one tap that also unlocks audio and starts the music.
+let title: Title | null = null;
+if (titleShowing()) {
+  title = new Title(
+    scene.sprites,
+    () => scene.palette,
+    () => scene.reducedMotion,
+    {
+      onPlay: () => {
+        wakeAudio();
+        sfx.titlePlay(scene.palette.name === 'night');
+        haptics.fire('tick');
+        title?.close();
+        title = null;
+        updateHint(); // the first-run demo starts now, not behind the title
+        dirty = true;
+        ui.announce(
+          state.moves > 0 && !state.over
+            ? `${mode === 'puzzle' ? 'Reef' : mode === 'daily' ? 'Daily' : 'Endless'}. Score ${fmt(state.score)}.`
+            : 'New game.',
+        );
+      },
+      onAbout: () => {
+        wakeAudio();
+        ui.showAbout(journal);
+      },
+      onSettings: () => {
+        wakeAudio();
+        ui.showSettings(profile);
+      },
+    },
+  );
+  const inRun = bootMode === 'puzzle' || (state.moves > 0 && !state.over);
+  const what =
+    bootMode === 'puzzle'
+      ? `Reef ${profile.puzzle.index + 1}`
+      : `${mode === 'daily' ? 'Daily' : 'Endless'}${state.score > 0 ? ` · ${fmt(state.score)}` : ''}`;
+  title.setPlay(inRun ? { sub: what, label: what.replace(' · ', ', ') } : null);
+}
 // bundled fonts arrive after first paint (font-display: swap): redraw once they're in. Two load()
 // promises and `loadingdone` all report the same arrival: the text sprites are cleared and rewarmed
 // once per real change of the loaded font set (coalesced to a frame, then compared).

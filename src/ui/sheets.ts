@@ -9,6 +9,7 @@ import type { Profile } from '../platform/storage.ts';
 import { loadWoke, saveSeen, saveWoke } from '../platform/storage.ts';
 import { SKINS } from '../meta/unlocks.ts';
 import { CHARITIES, hostOf } from '../meta/charities.ts';
+import { titleOff } from './title.ts';
 import { HABITATS, SPECIES, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
 import { dozesNow, drawCreature, drowsyPick, hasNewArt } from '../render/creatures.ts';
@@ -101,6 +102,14 @@ export function showSettings(k: SheetKit, p: Profile): void {
   row(look, 'style', 'Style', style, next ? `${left} more to find` : undefined);
   sw(look, 'motion', 'Reduced motion', rm, 'reducedMotion');
   sw(look, 'textSize', 'Larger text', !!s.largeText, 'largeText');
+  {
+    // the title screen (ADR 0015) keeps its own tiny record, read before first paint
+    const on = titleOff();
+    const b = k.button('', 'switch', '<i></i>', 'Open straight into the game', () => k.h.onTitleOff());
+    b.setAttribute('role', 'switch');
+    b.setAttribute('aria-checked', String(on));
+    row(look, 'play', 'Open straight into the game', b, 'Skip the title screen');
+  }
 
   if (p.stats.games) {
     const prog = group('Your beach');
