@@ -14,8 +14,6 @@ export interface Charity {
   /** The official donate page. */
   readonly url: string;
   readonly ein: string;
-  /** A species from the game that lives where this charity works (shown beside it). */
-  readonly species: string;
   /**
    * The charity's own logo, unaltered (fetched from its website, trimmed, `public/charities/`), and
    * the badge it sits on: some are drawn for a dark header (white artwork), some for a light one.
@@ -31,7 +29,6 @@ export const CHARITIES: readonly Charity[] = [
     does: 'Rescues, treats and releases stranded marine mammals, mostly seals and sea lions.',
     url: 'https://apps.pacificmmc.org/donate',
     ein: '95-3680896',
-    species: 'dolphin',
     logo: { src: './charities/pmmc.png', on: 'dark' },
   },
   {
@@ -41,7 +38,6 @@ export const CHARITIES: readonly Charity[] = [
     does: 'Teaches tide-pool care at eight Laguna Beach pools, every day.',
     url: 'https://lagunaoceanfoundation.org/donate/',
     ein: '71-0953427',
-    species: 'hermit',
     logo: { src: './charities/lof.png', on: 'light' },
   },
   {
@@ -51,7 +47,6 @@ export const CHARITIES: readonly Charity[] = [
     does: 'Clean water and healthy beaches, one coastline at a time.',
     url: 'https://www.surfrider.org/donate',
     ein: '95-3941826',
-    species: 'starfish',
     logo: { src: './charities/surfrider.png', on: 'light' },
   },
   {
@@ -61,7 +56,6 @@ export const CHARITIES: readonly Charity[] = [
     does: 'Raises orphaned sea otter pups with surrogate mothers, then returns them to the kelp.',
     url: 'https://www.montereybayaquarium.org/support-us/donate',
     ein: '94-2487469',
-    species: 'otter',
     logo: { src: './charities/mba.png', on: 'dark' },
   },
   {
@@ -71,7 +65,6 @@ export const CHARITIES: readonly Charity[] = [
     does: 'Keeps trash out of the sea, home of the International Coastal Cleanup.',
     url: 'https://oceanconservancy.org/donate/',
     ein: '23-7245152',
-    species: 'turtle',
     logo: { src: './charities/oc.png', on: 'light' },
   },
 ];

@@ -432,8 +432,6 @@ export class Ui {
       chips.push(
         `<span class="chip gold">${icon('crown', { filled: true })}Best <b class="num">${fmt(p.best)}</b></span>`,
       );
-    if (p.daily.current > 0)
-      chips.push(`<span class="chip accent">${icon('streak')}${p.daily.current}-day streak</span>`);
     if (chips.length) {
       const c = document.createElement('div');
       c.className = 'home-chips';

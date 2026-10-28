@@ -1375,7 +1375,6 @@ requestAnimationFrame(frame);
 // is fully booted behind it, so Play is instant: one tap that also unlocks audio and starts the music.
 if (titleShowing()) {
   title = new Title(
-    scene.sprites,
     () => scene.palette,
     () => scene.reducedMotion,
     {

@@ -7,7 +7,6 @@
  * fades in when it lands, so it costs the initial bundle nothing.
  */
 import type { Palette } from '../render/theme.ts';
-import type { SpriteCache } from '../render/sprites.ts';
 import type { TitleScene } from './titleScene.ts';
 import { icon } from './icons.ts';
 
@@ -64,7 +63,6 @@ export class Title {
   private onKey = () => (document.documentElement.dataset.kb = '1');
 
   constructor(
-    sprites: SpriteCache,
     palette: () => Palette,
     private reduced: () => boolean,
     h: TitleHooks,
@@ -84,7 +82,7 @@ export class Title {
     addEventListener('keydown', this.onKey, { once: true, capture: true });
     void import('./titleScene.ts')
       .then((m) => {
-        if (!this.closed) this.scene = new m.TitleScene(sprites, palette, reduced);
+        if (!this.closed) this.scene = new m.TitleScene(palette, reduced);
       })
       .catch(() => undefined); // no scene (offline, a failed chunk): the title still works as is
   }

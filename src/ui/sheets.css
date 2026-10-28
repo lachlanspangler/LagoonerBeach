@@ -742,18 +742,6 @@ html[data-theme='night'] .reef.done {
 .ab-link:active {
   transform: scale(0.98);
 }
-.ab-pool {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: rgba(239, 229, 214, 0.6);
-  background:
-    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 30%, transparent), transparent 70%),
-    color-mix(in srgb, var(--surface) 60%, var(--surface-sunk));
-}
 .ab-text {
   flex: 1;
   min-width: 0;
@@ -821,17 +809,9 @@ html[data-theme='night'] .reef.done {
   text-transform: uppercase;
   color: var(--ink-2);
 }
-html[data-theme='night'] .ab-pool {
-  background:
-    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%), var(--surface);
-}
 /* Night: the cards lift off the sheet instead of sinking into it */
 html[data-theme='night'] .ab-link {
   background: color-mix(in srgb, var(--surface) 90%, #ffffff);
-}
-html[data-theme='night'] .ab-pool {
-  background:
-    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%), #3a5470;
 }
 /* each charity's own logo, on the badge its artwork was drawn for (light or dark) */
 .ab-logo {

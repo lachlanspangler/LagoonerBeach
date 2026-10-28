@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CHARITIES, hostOf } from '../../src/meta/charities.ts';
-import { SPECIES } from '../../src/meta/creatures.ts';
 
 // The About page's list must be exactly the verified picks in docs/research/CHARITIES.md (ADR 0016).
 const doc = readFileSync('docs/research/CHARITIES.md', 'utf8');
@@ -37,12 +36,5 @@ describe('charities (About page)', () => {
       expect(c.logo.src, c.name).toMatch(/^\.\/charities\/[a-z]+\.png$/);
       expect(existsSync(`public/${c.logo.src.slice(2)}`), c.logo.src).toBe(true);
     }
-  });
-  it('each sits beside a real species from the game', () => {
-    for (const c of CHARITIES)
-      expect(
-        SPECIES.some((s) => s.id === c.species),
-        c.species,
-      ).toBe(true);
   });
 });

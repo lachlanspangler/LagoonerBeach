@@ -170,8 +170,7 @@ export function showSettings(k: SheetKit, p: Profile): void {
 // ─────────────────────────────────────────────────────────────────────────── about
 /**
  * Why the ocean (ADR 0016): a short signed note, the no-funding pledge, and verified charities
- * (src/meta/charities.ts). Each charity sits beside a creature from the game that lives where it
- * works, drawn as a silhouette until you've caught it (no spoilers). Links are plain anchors: the
+ * (src/meta/charities.ts), each with its own logo. Links are plain anchors: the
  * native shells hand any off-app URL to the system browser; no referrer, no query strings.
  */
 export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: () => void }): void {
@@ -192,7 +191,6 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
   list.className = 'ab-list';
   list.setAttribute('aria-label', 'Coastal wildlife charities');
   for (const c of CHARITIES) {
-    const sp = SPECIES.find((x) => x.id === c.species);
     const li = document.createElement('li');
     const a = document.createElement('a');
     a.className = 'ab-link';
@@ -202,16 +200,6 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
     a.referrerPolicy = 'no-referrer';
     a.dataset.charity = c.id;
     a.setAttribute('aria-label', `${c.name}, ${c.where}. ${c.does} Donate at ${hostOf(c.url)}, opens in your browser`);
-    const pool = document.createElement('span');
-    pool.className = 'ab-pool';
-    pool.setAttribute('aria-hidden', 'true');
-    // always in full colour: these stand for real animals the charity looks after, not journal
-    // secrets (a grey silhouette here read as a broken image); caught or not, it's the same card
-    if (sp) {
-      pool.style.setProperty('--hab', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
-      pool.append(creatureThumb(sp, 52, undefined, false, { avatar: true }));
-    }
-    a.append(pool);
     a.insertAdjacentHTML(
       'beforeend',
       `<span class="ab-text"><span class="ab-logo ab-logo-${c.logo.on}"><img src="${c.logo.src}" alt="" decoding="async"></span><small class="ab-where">${c.where}</small><span class="ab-does">${c.does}</span><span class="ab-host">${hostOf(c.url)}${icon('external')}</span></span>`,

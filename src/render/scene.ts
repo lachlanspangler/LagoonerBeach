@@ -100,11 +100,15 @@ interface Placing {
 }
 
 /** Seconds a leaping creature stays on screen. */
-/** Longest leap: flight (≤ 1.1 s) + nothing after (the splash is its own effect). */
-export const FISH_LIFE = 1.15;
-/** Leap gravity in cells/s² and the default flight time (fx.leap solves the arc with these). */
-export const FISH_GRAVITY = 34;
-export const FISH_FLIGHT = 0.8;
+/** Longest leap: flight (≤ 1.7 s) + nothing after (the splash is its own effect). */
+export const FISH_LIFE = 1.75;
+/**
+ * Leap gravity in cells/s² and the default flight time (fx.leap solves the arc with these). A soft,
+ * floaty arc (owner, 2026-10-28: they were "thrown out of the tide pools too fast"): same height,
+ * about 1.5× the time in the air.
+ */
+export const FISH_GRAVITY = 15;
+export const FISH_FLIGHT = 1.2;
 
 export const FONT = FONT_STACK;
 /** Display voice (callouts, names, titles). Never for numbers: its digits are proportional. */

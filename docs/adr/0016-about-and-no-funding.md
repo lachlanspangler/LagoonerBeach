@@ -29,9 +29,7 @@
   5. Ocean Conservancy
 
   The Marine Mammal Center is verified too (see CHARITIES.md).
-- **Each card** shows a creature from the game that lives where the charity works, always in full
-  colour (2026-10-28: a grey silhouette read as a broken image; these stand for real animals, not
-  journal secrets).
+- **Each card** shows the charity's own logo (2026-10-28; the creature tiles were removed at the owner's request).
 - **Links are plain anchors**: `target=_blank`, `rel="noopener noreferrer external"`,
   `referrerpolicy="no-referrer"`, and no query strings we add.
   - On the web they open a new tab.
