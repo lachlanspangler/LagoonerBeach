@@ -467,6 +467,11 @@ html[data-theme='night'] .reef.done {
 .credits[open] > summary .chev {
   transform: rotate(180deg);
 }
+.about + .row-link,
+.row-link + .credits,
+.credits + .row-link {
+  border-top: 1px solid var(--line);
+}
 .credits .about {
   padding-top: 0;
 }

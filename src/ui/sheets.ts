@@ -125,7 +125,7 @@ export function showSettings(k: SheetKit, p: Profile): void {
   const about = group('About');
   const info = document.createElement('div');
   info.className = 'about';
-  info.innerHTML = `<b>Lagooner Beach ${__APP_VERSION__}</b> · no ads, no tracking.<br>
+  info.innerHTML = `<b>Lagooner Beach ${__APP_VERSION__}</b> · no ads, no purchases, no tracking.<br>
     Sounds and music are made in code, on your device.`;
   about.append(info);
   const why = k.button(
