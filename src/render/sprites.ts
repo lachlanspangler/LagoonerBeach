@@ -374,6 +374,14 @@ export class SpriteCache {
           g.stroke();
         }
       }
+      // thicker glass at the tumbled edge: a deeper, more saturated band inside the outline, so
+      // the milky middle reads as frosted and the stone as translucent
+      g.strokeStyle = shade(base, -0.3);
+      g.globalAlpha = 0.45;
+      g.lineWidth = s * 0.13;
+      this.face(g, size, color, v, s * 0.02);
+      g.stroke();
+      g.globalAlpha = 1;
       const rim = g.createLinearGradient(x0, y0, x0 + s * 0.8, y0 + h * 0.8);
       rim.addColorStop(0, 'rgba(255,255,255,0.95)');
       rim.addColorStop(0.45, 'rgba(255,255,255,0.1)');
