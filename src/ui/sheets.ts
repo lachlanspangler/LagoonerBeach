@@ -11,6 +11,7 @@ import { SKINS } from '../meta/unlocks.ts';
 import { CHARITIES, hostOf } from '../meta/charities.ts';
 import { HABITATS, SPECIES, type Species } from '../meta/creatures.ts';
 import { found, type Journal } from '../meta/journal.ts';
+import { hintFor } from '../meta/reqText.ts';
 import { dozesNow, drawCreature, drowsyPick, hasNewArt } from '../render/creatures.ts';
 import { lookFor } from '../render/skins.ts';
 import { fmt } from '../render/theme.ts';
@@ -269,7 +270,7 @@ export function showJournal(k: SheetKit, j: Journal): void {
         '',
         e
           ? `${sp.name}, ${sp.rarity}, caught ${e.count}${isNew ? ', new' : ''}`
-          : `Unknown ${sp.rarity} creature. Hint: ${sp.hint}`,
+          : `Unknown ${sp.rarity} creature. Hint: ${hintFor(sp)}`,
         () => showSpecies(k, sp, j),
       );
       b.style.setProperty('--hab', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
@@ -354,7 +355,7 @@ function showSpecies(k: SheetKit, sp: Species, j: Journal): void {
   } else {
     info.innerHTML = `<h3 class="sp-name">???</h3>
       <div class="sp-rarity">${pipsHtml(RARITY_RANK[sp.rarity], 'lg')}<span class="overline">${sp.rarity}</span></div>
-      <p class="sp-flavor">Hint: ${sp.hint}</p>`;
+      <p class="sp-flavor">Hint: ${hintFor(sp)}</p>`;
   }
   body.append(info);
   k.show(card, true, 'species');

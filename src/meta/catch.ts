@@ -110,6 +110,9 @@ export function catchSeed(gameSeed: number, move: number, wave: number, pocket: 
   return hashSeed(`catch:${gameSeed}:${move}:${wave}:${pocket}`);
 }
 
+/** A catch of a species already in the journal is golden 1 time in GOLDEN_ODDS (the journal says so). */
+export const GOLDEN_ODDS = 64;
+
 /** Fallback chance per matching lagoon by rarity (per-species tuned values live in catchTuning.ts). */
 export const CHANCE: Record<string, number> = { uncommon: 0.07, rare: 0.025, epic: 0.016, legendary: 0.12 };
 const ORDER = ['legendary', 'epic', 'rare', 'uncommon'];
@@ -148,7 +151,7 @@ export function rollCatches(ctx: CatchContext, rng: Rng, journal: JournalView): 
       i === 0 && first
         ? first
         : pool[rng.weighted(pool.map((s) => s.weight * (out.some((o) => o.id === s.id) ? 0.4 : 1)))]!;
-    out.push({ id: sp.id, size: sizeFor(sp, rng), golden: journal.has(sp.id) && rng.next() < 1 / 64 });
+    out.push({ id: sp.id, size: sizeFor(sp, rng), golden: journal.has(sp.id) && rng.next() < 1 / GOLDEN_ODDS });
   }
   return out;
 }

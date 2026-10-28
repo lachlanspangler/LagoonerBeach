@@ -98,4 +98,11 @@ describe('species requirements (data) say exactly what the old code said', () =>
     expect(n).toBeGreaterThan(150_000);
     expect([...bad.entries()]).toEqual([]);
   });
+  it('when() is derived from req (the catch roll and the journal read the same data)', () => {
+    let k = 0;
+    forEachContext((c) => {
+      if (k++ % 37) return;
+      for (const sp of SPECIES) if (sp.when(c) !== matches(sp.req, c)) throw new Error(`${sp.id} ${JSON.stringify(c)}`);
+    });
+  });
 });
