@@ -273,6 +273,16 @@ a {
 #side-btn {
   right: var(--hud-btn-x, calc(var(--safe-right) + 14px));
 }
+/* the one hint per game sits just left of the journal */
+#hint-btn {
+  right: calc(var(--hud-btn-x, calc(var(--safe-right) + 14px)) + 58px);
+}
+#hint-btn[hidden] {
+  display: none;
+}
+#hint-btn.used {
+  opacity: 0.4;
+}
 /* unseen journal pages: a coral dot (shape + position, never colour alone: it's a dot) */
 .icon-btn .dot {
   position: absolute;

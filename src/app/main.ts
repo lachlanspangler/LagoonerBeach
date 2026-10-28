@@ -12,7 +12,7 @@ import {
 } from '../core/game.ts';
 import { dailySeed, dayIndex, recordDaily, visibleStreak } from '../core/daily.ts';
 import { pieceById } from '../core/pieces.ts';
-import { hashSeed } from '../core/rng.ts';
+import { Rng, hashSeed } from '../core/rng.ts';
 import { N } from '../core/grid.ts';
 import { fitsAnywhere } from '../core/rules.ts';
 
@@ -435,8 +435,59 @@ function updateMisfits(): void {
   scene.misfit = state.tray.map((t) => t !== null && !fitsAnywhere(state.board, pieceById(t.pieceId)));
 }
 
+// ------------------------------------------------------------------ the one hint per game
+// Endless and Daily: one tap shows a good move on the board (it never plays it). One per game:
+// remembered per run so a reload doesn't hand out another. It stays until you place a piece.
+const K_HINT = 'atoll.v1.hint';
+const runKey = (): string => `${mode}:${mode === 'daily' ? dailyDate : state.seed}`;
+function hintUsed(): boolean {
+  try {
+    return localStorage.getItem(K_HINT) === runKey();
+  } catch {
+    return false;
+  }
+}
+/** The hint on show: for which move number, which cells, since when. */
+let gameHint: { moves: number; cells: number[]; start: number } | null = null;
+async function gameHintNow(): Promise<void> {
+  if (mode === 'puzzle' || state.over) return;
+  if (gameHint?.moves === state.moves) return; // already on the board
+  if (hintUsed()) {
+    scene.toast('One hint per game', performance.now(), 1600);
+    haptics.fire('fail');
+    dirty = true;
+    return;
+  }
+  const { greedyBot } = await import('../sim/bots.ts');
+  const m = greedyBot(state, new Rng(state.seed));
+  if (!m) return;
+  const p = pieceById(state.tray[m.slot]!.pieceId);
+  gameHint = {
+    moves: state.moves,
+    cells: p.cells.map(([dx, dy]) => (m.y + dy) * N + m.x + dx),
+    start: performance.now(),
+  };
+  try {
+    localStorage.setItem(K_HINT, runKey());
+  } catch {
+    /* private mode: the hint just isn't remembered across a reload */
+  }
+  sfx.click();
+  updateHint();
+  ui.setGameHint(true, true);
+  ui.announce('Hint: the outlined cells show a good place for one of your pieces.');
+  dirty = true;
+}
+
 // ------------------------------------------------------------------ teaching hint
 function updateHint(): void {
+  ui.setGameHint(mode !== 'puzzle', hintUsed());
+  // the game's one hint, while it's on the board, outranks the lessons
+  if (mode !== 'puzzle' && gameHint && gameHint.moves === state.moves && !state.over) {
+    scene.coach = null;
+    scene.hint = { cells: gameHint.cells, start: gameHint.start };
+    return;
+  }
   // first run: say the goal in the strip until the first lagoon (UX S3 must-fix 3). A fresh profile
   // deep-linked into the Daily gets it too (the compact lesson: the line and the capture hint, never
   // the teaching deal — everyone's Daily is the same tray)
@@ -448,7 +499,11 @@ function updateHint(): void {
   // second lesson: after the first pinch, point out the first chance at a bigger (2+ cell) lagoon
   const lesson2 = !teaching && profile.firstRunDone && !profile.lesson2Done && mode === 'classic';
   if ((!teaching && !lesson2) || state.over) {
-    scene.hint = null;
+    // the game's one hint shows until the next move
+    scene.hint =
+      gameHint && gameHint.moves === state.moves && !state.over
+        ? { cells: gameHint.cells, start: gameHint.start }
+        : null;
     return;
   }
   // suggest the best capturing move available within the current tray (or the cup's spot first)
@@ -907,6 +962,13 @@ function loadPuzzle(i: number): void {
 function restart(): void {
   ui.close();
   if (mode === 'puzzle') return loadPuzzle(state.seed);
+  // a new game, a new hint
+  gameHint = null;
+  try {
+    localStorage.removeItem(K_HINT);
+  } catch {
+    /* private mode */
+  }
   if (mode === 'daily') {
     // the daily is one seed per day; replay keeps the best score
     dailyDate = today();
@@ -1033,6 +1095,7 @@ const ui = new Ui({
   onNewGame: () => restart(),
   onDaily: () => (mode === 'daily' ? restart() : switchMode('daily')),
   onHint: () => puzzleHint(),
+  onGameHint: () => void gameHintNow(),
   onClassic: () => switchMode('classic'),
   onPuzzles: () => switchMode('puzzle'),
   onPuzzleNext: () => mode === 'puzzle' && loadPuzzle(state.seed + 1),

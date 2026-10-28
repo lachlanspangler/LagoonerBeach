@@ -229,6 +229,8 @@ export function installDebugApi(d: DebugDeps): void {
       sc.warmSprites(true);
       return { ms, sprites: n };
     },
+    /** The cells the board's hint outline marks right now (null: none). */
+    sceneHint: () => (d.scene.hint ? [...d.scene.hint.cells] : null),
     debugSkin(id: string) {
       d.scene.sprites.setLook(lookFor(id));
       d.setState(d.state());

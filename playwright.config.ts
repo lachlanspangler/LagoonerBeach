@@ -34,6 +34,7 @@ export default defineConfig({
         'e2e/gameplay.spec.ts',
         'e2e/about.spec.ts',
         'e2e/title.spec.ts',
+        'e2e/hint.spec.ts',
         'e2e/input.spec.ts',
         'e2e/a11y.spec.ts',
         'e2e/leaderboard.spec.ts',

@@ -36,6 +36,8 @@ export interface UiHandlers {
   onPuzzlePick(index: number): void;
   /** Reef mode's top-bar button. */
   onHint(): void;
+  /** Endless / Daily: the one hint per game (the bulb beside the journal). */
+  onGameHint(): void;
   onToggle(key: 'sound' | 'music' | 'haptics' | 'reducedMotion' | 'largeText'): void;
   onTheme(t: ThemePref): void;
   onSkin(): void;
@@ -122,6 +124,8 @@ export class Ui {
   readonly menuBtn: HTMLButtonElement;
   /** Right of the score: the Beach Journal (Classic, Daily) or the hint bulb (Reefs). */
   readonly sideBtn: HTMLButtonElement;
+  /** Endless / Daily: one hint per game, beside the journal. */
+  readonly hintBtn: HTMLButtonElement;
   private mode: Mode = 'classic';
   private sr: HTMLElement;
   /** null until first used: an existing journal starts "seen" (no wall of dots after an update). */
@@ -136,7 +140,8 @@ export class Ui {
     this.sideBtn = this.button('side-btn', 'icon-btn', '', 'Journal', () =>
       this.mode === 'puzzle' ? h.onHint() : h.onJournal(),
     );
-    this.root.append(this.menuBtn, this.sideBtn);
+    this.hintBtn = this.button('hint-btn', 'icon-btn', icon('hint'), 'Hint, one per game', () => h.onGameHint());
+    this.root.append(this.menuBtn, this.hintBtn, this.sideBtn);
     this.setMode('classic', 0);
   }
 
@@ -222,7 +227,15 @@ export class Ui {
     const puzzle = mode === 'puzzle';
     this.sideBtn.innerHTML = icon(puzzle ? 'hint' : 'journal') + '<span class="dot" aria-hidden="true"></span>';
     this.sideBtn.setAttribute('aria-label', puzzle ? 'Hint' : 'Journal');
+    this.hintBtn.hidden = puzzle; // Reefs have their own hint (the side button)
     if (journal) this.markUnseen(journal);
+  }
+
+  /** The game-hint bulb: shown in Endless and Daily; dimmed once this game's hint is used. */
+  setGameHint(shown: boolean, used: boolean): void {
+    this.hintBtn.hidden = !shown;
+    this.hintBtn.classList.toggle('used', used);
+    this.hintBtn.setAttribute('aria-label', used ? 'Hint used for this game' : 'Hint, one per game');
   }
 
   /** The journal button wears a dot while a caught species hasn't been looked at. */
@@ -312,7 +325,7 @@ export class Ui {
 
   private setTopBarInert(on: boolean): void {
     // behind the title screen they stay out of reach even when a sheet opened from it closes
-    for (const b of [this.menuBtn, this.sideBtn]) b.toggleAttribute('inert', on || titleShowing());
+    for (const b of [this.menuBtn, this.sideBtn, this.hintBtn]) b.toggleAttribute('inert', on || titleShowing());
   }
 
   private returnFocus: HTMLElement | null = null;
