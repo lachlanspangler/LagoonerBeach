@@ -499,7 +499,7 @@ export class Fx {
     const dy = y1 - y0;
     const r = Math.max(rise * c, -dy + c * 0.5);
     const vy0 = -Math.sqrt(2 * g * r);
-    const flight = Math.min(1.7, Math.max(0.85, (-vy0 + Math.sqrt(vy0 * vy0 + 2 * g * dy)) / g));
+    const flight = Math.min(2.4, Math.max(1.2, (-vy0 + Math.sqrt(vy0 * vy0 + 2 * g * dy)) / g));
     return { vx: (x1 - x0) / flight, vy: (dy - 0.5 * g * flight * flight) / flight, flight };
   }
 

@@ -157,7 +157,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'bands',
     size: [2, 5],
     flavor: 'Flicks backwards when surprised. Always surprised.',
-    req: { maxArea: 4 },
+    req: {},
     weight: 60,
   },
   {
@@ -183,7 +183,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'stripes',
     size: [2, 6],
     flavor: 'Hums if you hold it to your ear. Probably.',
-    req: { minArea: 3, maxArea: 5 },
+    req: { minArea: 3 },
     weight: 50,
   },
   // ── Lagoon: shape specialists (build the shape, meet the creature) ──────────────────────────

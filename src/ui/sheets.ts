@@ -14,7 +14,7 @@ import { GOLDEN_ODDS } from '../meta/catch.ts';
 import { HABITATS, SPECIES, type Habitat, type Rarity, type Species } from '../meta/creatures.ts';
 import type { Journal } from '../meta/journal.ts';
 import { journalProgress, type JournalProgress } from '../meta/journalProgress.ts';
-import { BADGE_LABEL, HABITAT_REQ, badgesFor, gateOpen, habitatLine, hintFor, type Badge } from '../meta/reqText.ts';
+import { BADGE_LABEL, HABITAT_REQ, badgesFor, gateOpen, hintFor, type Badge } from '../meta/reqText.ts';
 import { dozesNow, drawCreature, drowsyPick, hasNewArt } from '../render/creatures.ts';
 import { lookFor } from '../render/skins.ts';
 import { fmt } from '../render/theme.ts';
@@ -298,8 +298,9 @@ export function showJournal(k: SheetKit, j: Journal): void {
     const status = `${got} of ${list.length} found${hp.complete ? ', complete' : ''}`;
     sec.innerHTML = `<h3 class="title-s">${hp.name}<span class="sr-only">, ${status}</span></h3><span class="j-count overline num" aria-hidden="true">${got}/${list.length}${
       hp.complete ? `<span class="j-tick" title="Complete">${icon('check')}</span>` : ''
-    }</span><div class="j-reqrow"><p class="j-req">${habitatLine(h)}</p></div><div class="track${hp.complete ? ' full' : ''}"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
-    // beside the requirement: the gate nudge while there's something left to find, golden once complete
+    }</span><div class="j-reqrow"></div><div class="track${hp.complete ? ' full' : ''}"><i style="width:${Math.round((got / list.length) * 100)}%"></i></div>`;
+    // under the name: the gate nudge while there's something left to find, golden once complete
+    // (each creature's own rule is on its page, not here: owner, 2026-10-28)
     const row = sec.querySelector('.j-reqrow')!;
     const nudge = hp.complete ? null : gateNudge(k, h);
     if (nudge) row.append(nudge);

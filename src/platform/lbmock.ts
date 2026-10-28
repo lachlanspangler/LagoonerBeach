@@ -241,6 +241,11 @@ export interface MockOptions {
   latencyMs?: number;
   /** Simulate being offline (debug: `?lboffline=1`). */
   offline?: () => boolean;
+  /**
+   * Fill each board with deterministic demo players (default on: tests and review shots). Off when a
+   * person plays a dev build, so the boards start empty and every row is yours (owner, 2026-10-28).
+   */
+  demoPlayers?: boolean;
 }
 
 export class MockBackend implements LeaderboardBackend {
@@ -278,6 +283,7 @@ export class MockBackend implements LeaderboardBackend {
   private seed(board: BoardId): void {
     if (this.seeded.has(board)) return;
     this.seeded.add(board);
+    if (this.o.demoPlayers === false) return;
     const kind = board.startsWith('daily:') ? 'daily' : board === 'endless:all' ? 'all' : 'week';
     const s = SHAPE[kind];
     const rng = new Rng(hashSeed(`lb-demo:${board}`));

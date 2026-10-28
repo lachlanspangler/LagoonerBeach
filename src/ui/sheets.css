@@ -258,6 +258,9 @@
 .j-sec.done .j-count {
   color: var(--success);
 }
+.j-reqrow:empty {
+  display: none;
+}
 .j-reqrow {
   grid-column: 1 / -1;
   display: flex;

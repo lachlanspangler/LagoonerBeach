@@ -65,7 +65,7 @@ describe('habitat gates', () => {
 describe('habitat lines (next to each category)', () => {
   it('are pinned (a change here is a deliberate copy or rules change)', () => {
     expect(Object.fromEntries(IDS.map((h) => [h, habitatLine(h)]))).toEqual({
-      shallows: 'Pools of 1–5 cells · combos from ×6',
+      shallows: 'Pools of 1+ cells · combos from ×6',
       lagoon: 'Pools of 3+ cells · combos from ×4',
       deep: 'Pools of 6+ cells · combos from ×3',
       night: 'Only at night',

@@ -148,7 +148,11 @@ export class LeaderboardUi {
     const backend = d.url
       ? new HttpBackend(d.url)
       : import.meta.env.VITE_LB === 'demo'
-        ? new MockBackend({ offline: () => !!d.offline })
+        ? new MockBackend({
+            offline: () => !!d.offline,
+            // demo players fill the boards for automated runs (and `?lbdemo`); a person starts empty
+            demoPlayers: navigator.webdriver === true || new URLSearchParams(location.search).has('lbdemo'),
+          })
         : (() => {
             throw new Error('leaderboards need VITE_LB_URL (or VITE_LB=demo in dev/tests)');
           })();

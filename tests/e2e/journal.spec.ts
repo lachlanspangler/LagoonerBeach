@@ -5,7 +5,7 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 import { HABITATS, SPECIES } from '../../src/meta/creatures.ts';
-import { habitatLine, hintFor } from '../../src/meta/reqText.ts';
+import { hintFor } from '../../src/meta/reqText.ts';
 import { boot } from './helpers.ts';
 
 async function openJournal(page: Page, ids: readonly string[] = []) {
@@ -30,15 +30,14 @@ const sec = (page: Page, h: string) => page.locator(`.j-sec[data-habitat="${h}"]
 const REEF = SPECIES.filter((s) => s.habitat === 'reef').map((s) => s.id);
 const SOME = ['minnow', 'hermit', 'sandeel', 'octopus', 'moonjelly', ...REEF];
 
-test('every habitat shows its requirement line and its progress, as a heading', async ({ page }) => {
+test('every habitat shows its progress, as a heading; the rules live on each creature’s page', async ({ page }) => {
   await boot(page, 'seed=3&fast=1');
   await openJournal(page, SOME);
   for (const h of HABITATS) {
     const list = SPECIES.filter((s) => s.habitat === h.id);
     const got = list.filter((s) => SOME.includes(s.id)).length;
     const s = sec(page, h.id);
-    await expect(s.locator('.j-req')).toHaveText(habitatLine(h.id));
-    await expect(s.locator('.j-req')).toBeVisible();
+    await expect(s.locator('.j-req')).toHaveCount(0); // no rule text under the category (owner)
     await expect(s.locator('.j-count')).toHaveText(new RegExp(`^${got}/${list.length}`));
     // screen readers hear "Shallows, 2 of 10 found" (", complete" when it is)
     const done = got === list.length;
@@ -49,9 +48,6 @@ test('every habitat shows its requirement line and its progress, as a heading', 
       }),
     ).toBeVisible();
   }
-  // the requirement lines are the shipped copy, not hand-typed in the test
-  await expect(sec(page, 'night').locator('.j-req')).toHaveText('Only at night');
-  await expect(sec(page, 'reef').locator('.j-req')).toHaveText('Only in Reefs');
 });
 
 test('a complete habitat gets a tick and its golden count; incomplete ones do not', async ({ page }) => {
@@ -176,12 +172,7 @@ test('Night theme: the journal reads the same, with the Night section open', asy
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'night');
   await openJournal(page, SOME);
   await expect(sec(page, 'night').locator('.j-go')).toHaveCount(0);
-  await expect(sec(page, 'night').locator('.j-req')).toBeVisible();
-  // ink-2 on the sheet, as everywhere else (AA pairs live in tests/unit/contrast.test.ts)
-  const [fg, bg] = await sec(page, 'night')
-    .locator('.j-req')
-    .evaluate((e) => [getComputedStyle(e).color, getComputedStyle(e.closest('.sheet')!).backgroundColor]);
-  expect(fg).not.toBe(bg);
+  await expect(sec(page, 'night').locator('.j-count')).toBeVisible();
 });
 
 test('Larger text at 375×667: requirement rows wrap inside the sheet, nothing is clipped', async ({ page }) => {
