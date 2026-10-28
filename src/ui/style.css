@@ -1082,8 +1082,8 @@ html[data-title='1'] .title {
   background: var(--bg);
   overflow: hidden;
   transition:
-    opacity 280ms var(--ease-exit),
-    visibility 0s 280ms;
+    opacity 200ms var(--ease-exit),
+    visibility 0s 200ms;
 }
 html[data-title='1'] #ui > .veil {
   z-index: 40;
@@ -1161,7 +1161,8 @@ html[data-title='1'] #ui > .veil {
     0 16px 32px rgba(14, 63, 102, 0.22);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  animation: t-rise 560ms 120ms var(--spring-sheet) both;
+  /* full strength and tappable from the first frame: it only settles into place */
+  animation: t-settle 420ms var(--spring-sheet) both;
   transition:
     transform var(--dur-instant) var(--ease-standard),
     box-shadow var(--dur-instant) var(--ease-standard);
@@ -1205,7 +1206,7 @@ html[data-theme='night'] .t-play {
   grid-row: 5;
   display: flex;
   gap: 16px;
-  animation: t-fade 400ms 260ms var(--ease-standard) both;
+  animation: t-fade 260ms 60ms var(--ease-standard) both;
 }
 .t-pill {
   display: inline-flex;
@@ -1247,7 +1248,7 @@ html[data-title='1'] .title.leaving {
 .title.leaving .t-play,
 .title.leaving .t-foot {
   /* a leave animation replaces the entry one (whose fill holds transform), so it runs smoothly */
-  animation: t-leave-down 260ms var(--ease-exit) forwards;
+  animation: t-leave-down 180ms var(--ease-exit) forwards;
 }
 .title.leaving .t-lock {
   animation-name: t-leave-up;
@@ -1266,6 +1267,11 @@ html[data-title='1'] .title.leaving {
 }
 html[data-rm='1'] .title.leaving * {
   transform: none !important;
+}
+@keyframes t-settle {
+  from {
+    transform: translateY(8px);
+  }
 }
 @keyframes t-rise {
   from {
@@ -1295,9 +1301,14 @@ html[data-rm='1'] .title {
     grid-template-rows: minmax(0, 0.55fr) auto auto minmax(0, 1fr) auto;
   }
   .t-pill {
-    min-height: 56px;
-    font-size: calc(18px * var(--fs));
-    padding: 0 24px 0 18px;
+    min-height: 60px;
+    font-size: calc(19px * var(--fs));
+    padding: 0 26px 0 20px;
+  }
+  .t-play {
+    width: min(70vw, 460px);
+    min-height: 100px;
+    font-size: calc(40px * var(--fs));
   }
 }
 @media (min-width: 700px) and (min-aspect-ratio: 1/1) {

@@ -746,9 +746,9 @@ html[data-theme='night'] .reef.done {
   flex: none;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
   background: rgba(239, 229, 214, 0.6);
   background:
     radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 30%, transparent), transparent 70%),
@@ -824,4 +824,13 @@ html[data-theme='night'] .reef.done {
 html[data-theme='night'] .ab-pool {
   background:
     radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%), var(--surface);
+}
+/* Night: the cards lift off the sheet instead of sinking into it */
+html[data-theme='night'] .ab-link {
+  background: color-mix(in srgb, var(--surface) 90%, #ffffff);
+}
+html[data-theme='night'] .ab-pool {
+  background:
+    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hab) 34%, transparent), transparent 70%),
+    color-mix(in srgb, var(--surface) 70%, #ffffff);
 }

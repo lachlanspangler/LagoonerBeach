@@ -84,6 +84,20 @@ describe('text contrast (tokens)', () => {
     }
   });
 
+  it('About: the Night charity cards (lifted off the sheet) keep their text AA', () => {
+    const css = readFileSync('src/ui/sheets.css', 'utf8');
+    const t =
+      Number(/html\[data-theme='night'\] \.ab-link \{[^}]*?var\(--surface\) (\d+)%, #ffffff/.exec(css)![1]) / 100;
+    const [r, g, b] = [1, 3, 5].map((i) => Math.round(parseInt(NIGHT.surface.slice(i, i + 2), 16) * t + 255 * (1 - t)));
+    const card = '#' + [r, g, b].map((v) => v!.toString(16).padStart(2, '0')).join('');
+    for (const [label, fg] of [
+      ['name', NIGHT.text],
+      ['place, line', NIGHT.textDim],
+      ['link', NIGHT.accent],
+    ] as const)
+      expect(contrast(fg, card), `${label} on ${card}`).toBeGreaterThanOrEqual(4.5);
+  });
+
   // non-text contrast (WCAG 1.4.11): every reef block stays 3:1 apart from an empty cell, by its
   // body or the edge drawn for it (sprites.ts reefEdge), Day and Night
   it('reef blocks: each colour has a ≥ 3:1 boundary against the board cell', () => {

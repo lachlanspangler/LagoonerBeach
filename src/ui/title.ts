@@ -127,8 +127,9 @@ export class Title {
           ],
       {
         // the board comes in once the title is mostly gone (no tray-over-atoll double image)
-        duration: this.reduced() ? 150 : 300,
-        delay: this.reduced() ? 0 : 140,
+        // the board comes in only as the title finishes going (never both above ~30%)
+        duration: this.reduced() ? 150 : 220,
+        delay: this.reduced() ? 0 : 150,
         easing: 'cubic-bezier(.2,.8,.2,1)',
         fill: 'backwards',
       },

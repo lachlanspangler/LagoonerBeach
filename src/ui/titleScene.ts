@@ -88,7 +88,8 @@ export class TitleScene {
     this.shore = Math.min(this.h - 140, pr.bottom - r.top + Math.max(28, (fr.top - pr.bottom) * 0.12));
     const room = fr.top - r.top - this.shore - 20;
     // phones: up to 46 px blocks; tablets grow the vignette to ~60% of the width
-    const cap = this.w >= 700 ? Math.floor(Math.min(this.w * 0.6, this.h * 0.46) / 8) : 46;
+    const lockW = this.el.querySelector('.title-word')!.getBoundingClientRect().width;
+    const cap = this.w >= 700 ? Math.floor(Math.min(this.w * 0.6, this.h * 0.46, lockW * 0.75) / 8) : 46;
     const cell = Math.max(20, Math.min(cap, Math.floor(Math.min((this.w - 32) / 8, room / 6.6))));
     const gw = 8 * cell;
     const gh = 6 * cell;

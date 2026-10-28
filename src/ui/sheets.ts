@@ -182,7 +182,6 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
   const note = document.createElement('div');
   note.className = 'ab-note';
   note.innerHTML = `<p class="ab-lead">I spent my childhood turning over rocks in the tide pools.</p>
-    <p class="ab-by">Lachlan Spangler, Laguna\u00a0Beach</p>
     <p>The hermit crabs, sea stars and octopuses in this game come from there. Their real cousins
     need clean water, protected reefs and a little looking after. I made this game to stand up for
     them.</p>
@@ -210,7 +209,7 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
     // secrets (a grey silhouette here read as a broken image); caught or not, it's the same card
     if (sp) {
       pool.style.setProperty('--hab', HABITAT_UI[sp.habitat][night() ? 1 : 0]);
-      pool.append(creatureThumb(sp, 46, undefined, false, { avatar: true }));
+      pool.append(creatureThumb(sp, 52, undefined, false, { avatar: true }));
     }
     a.append(pool);
     a.insertAdjacentHTML(
@@ -223,7 +222,7 @@ export function showAbout(k: SheetKit, _j: Journal, back?: { label: string; fn: 
   body.append(list);
   const sig = document.createElement('p');
   sig.className = 'ab-sig';
-  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach · speaks up for marine wildlife</small>`;
+  sig.innerHTML = `Lachlan Spangler<small>grew up in Laguna Beach · advocates for marine wildlife protection</small>`;
   body.append(sig);
   const fine = document.createElement('p');
   fine.className = 'ab-fine';

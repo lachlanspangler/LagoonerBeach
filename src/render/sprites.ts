@@ -59,9 +59,9 @@ const MAT: readonly (readonly [n: number, wob: number, f1: number, f2: number, s
   // one shared hot glint turned the whole set into candy)
   [3.1, 0.022, 3, 7, 0.2], // 1 brain coral: a dome, soft lumps, matte
   [4.6, 0.03, 4, 9, 0.1], // 2 sandstone: a chunky worn lump, matte
-  [3.6, 0.006, 2, 3, 0.16], // 3 sea glass: tumbled, frosted (no glint)
+  [3.3, 0.012, 2, 4, 0], // 3 sea glass: tumbled soft, frosted (no shine at all)
   [5.2, 0.014, 3, 6, 0.18], // 4 blue coral: packed lobes, matte caps
-  [3.0, 0.01, 2, 5, 0.7], // 5 porphyry: a wet beach-worn pebble, the one wet stone
+  [3.0, 0.01, 2, 5, 0.42], // 5 porphyry: a damp beach-worn pebble, the only stone with a glint
   [3.5, 0.04, 6, 9, 0.08], // 6 coralline crust: lumpy, chalky
 ];
 
@@ -323,7 +323,7 @@ export class SpriteCache {
       // golden sandstone, beach-worn: wavy bedding layers in ochre tones (each bed lit on its top
       // edge, a thin dark parting below), gritty grain, and a few weathering pits
       const beds = [4, 5, 7][lod]!;
-      const ang = (rnd() - 0.5) * 0.5;
+      const ang = 0.09 + (rnd() - 0.5) * 0.12; // a 5–8° cross-bedding tilt
       const amp = h * (0.03 + rnd() * 0.03);
       const fr = (Math.PI * 2) / (s * (0.8 + rnd() * 0.6));
       const p0 = rnd() * 6.3;
@@ -345,9 +345,9 @@ export class SpriteCache {
         }
         bed.closePath();
         fillPath(bed, tone);
-        g.lineWidth = Math.max(0.6, s * 0.024);
-        g.strokeStyle = shade(base, -0.52);
-        g.globalAlpha = 0.75;
+        g.lineWidth = Math.max(0.5, s * 0.016);
+        g.strokeStyle = shade(base, -0.4);
+        g.globalAlpha = 0.5;
         g.stroke(edge);
         g.translate(0, g.lineWidth);
         g.strokeStyle = lt;
@@ -363,7 +363,7 @@ export class SpriteCache {
       fillPath(grain2, shade(base, -0.45), 0.5);
       const lip = new Path2D();
       const hole = new Path2D();
-      for (const [x, y, r] of dots(lod, s * 0.03, s * 0.05)) {
+      for (const [x, y, r] of dots(Math.min(lod, 2), s * 0.02, s * 0.032)) {
         disc(lip, x! + r! * 0.3, y! + r! * 0.3, r!);
         disc(hole, x!, y!, r!);
       }
@@ -385,7 +385,7 @@ export class SpriteCache {
       // one or two seed bubbles trapped in the glass (big enough to survive 24 px)
       const bub = new Path2D();
       const bubHi = new Path2D();
-      for (const [x, y, r] of dots(1 + (lod > 0 ? 1 : 0), s * 0.05, s * 0.075)) {
+      for (const [x, y, r] of dots(1 + (lod > 0 ? 1 : 0), s * (lod ? 0.05 : 0.09), s * (lod ? 0.075 : 0.11))) {
         disc(bub, x!, y!, r!);
         disc(bubHi, x! - r! * 0.3, y! - r! * 0.3, r! * 0.38);
       }
@@ -483,9 +483,9 @@ export class SpriteCache {
       for (const [x, y, r] of dots(14 + lod * 40, s * 0.01, s * 0.022)) speck(rnd() < 0.6 ? gDark : gPale, x!, y!, r!);
       fillPath(gDark, shade(base, -0.5), 0.55);
       fillPath(gPale, shade(base, 0.35), 0.45);
-      laths(xl, [4, 9, 15][lod]!, s * [0.1, 0.07, 0.05][lod]!, s * [0.15, 0.12, 0.1][lod]!, 0.42);
+      laths(xl, [3, 5, 6][lod]!, s * [0.14, 0.11, 0.09][lod]!, s * [0.18, 0.15, 0.13][lod]!, 0.7);
       laths(mafic, [2, 4, 7][lod]!, s * 0.035, s * 0.06, 0.6);
-      fillPath(xl, '#EADCF0', 0.85);
+      fillPath(xl, '#EFDDE6', 0.9);
       fillPath(mafic, shade(base, -0.75), 0.8);
     } else {
       // pink coralline crust: chalky encrusting algae over rock, raised in a few low knobs (lit
@@ -496,10 +496,20 @@ export class SpriteCache {
       const sh = new Path2D();
       const body = new Path2D();
       const hi = new Path2D();
+      // knobbly, irregular lumps (not circles): one seeded wobble per knob, shared by its layers
+      const lump = (path: Path2D, x: number, y: number, r: number, k: readonly number[]) => {
+        for (let i = 0; i <= 7; i++) {
+          const a = (i / 7) * Math.PI * 2;
+          const rr = r * k[i % 7]!;
+          path[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+        }
+        path.closePath();
+      };
       for (const [x, y, r] of knobs) {
-        disc(sh, x! + r! * 0.2, y! + r! * 0.26, r!);
-        disc(body, x!, y!, r! * 0.95);
-        disc(hi, x! - r! * 0.28, y! - r! * 0.3, r! * 0.5);
+        const k = Array.from({ length: 7 }, () => 0.78 + rnd() * 0.36);
+        lump(sh, x! + r! * 0.2, y! + r! * 0.26, r!, k);
+        lump(body, x!, y!, r! * 0.95, k);
+        lump(hi, x! - r! * 0.28, y! - r! * 0.3, r! * 0.5, k);
       }
       fillPath(sh, shade(base, night ? -0.5 : -0.42), 0.7);
       fillPath(body, base);
@@ -544,7 +554,7 @@ export class SpriteCache {
     bl.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = bl;
     g.fillRect(x0, y0, s, h);
-    if (spec > 0.5) {
+    if (spec > 0.35) {
       g.fillStyle = `rgba(255,255,255,${Math.min(0.95, spec * 1.05)})`;
       g.beginPath();
       g.ellipse(hx - s * 0.02, hy - h * 0.03, s * 0.085, s * 0.04, -0.6, 0, Math.PI * 2);
