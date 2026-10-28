@@ -321,6 +321,7 @@ export class Scene {
     this.sprites = new SpriteCache(1);
     this.sprites.lazy = true;
     this.layout = computeLayout(360, 640);
+    this.sprites.boardSize = Math.round(this.layout.cell);
   }
 
   /** Visual-only randomness (never used for gameplay). */
@@ -336,6 +337,7 @@ export class Scene {
     this.canvas.style.width = `${w}px`;
     this.canvas.style.height = `${h}px`;
     this.layout = computeLayout(w, h, inset);
+    this.sprites.boardSize = Math.round(this.layout.cell);
     this.sprites.reset(dpr);
     this.celebrate.sprites.dpr = dpr;
     this.celebrate.sprites.clear();
@@ -353,6 +355,7 @@ export class Scene {
     const look = sp.look;
     const board = Math.round(this.layout.cell);
     const tray = Math.round(this.layout.trayCell);
+    sp.boardSize = board;
     const one = (c: number) => {
       // a resize, theme or style change since this was queued: that one queues its own warm-up
       if (look !== sp.look || p !== this.palette || board !== Math.round(this.layout.cell)) return;

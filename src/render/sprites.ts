@@ -119,6 +119,8 @@ export class SpriteCache {
    * variants before the idle warm-up reaches them. Only a stone with nothing built yet is drawn.
    */
   lazy = false;
+  /** The board's cell size (CSS px): smaller stones at the same detail level are scaled from it. */
+  boardSize = 0;
   private built = new Map<string, [size: number, v: number, c: Surface][]>();
 
   /** `vari` (0..2) picks a seeded variant of the reef materials; other styles have one look. */
@@ -149,12 +151,14 @@ export class SpriteCache {
     }
     // a smaller stone at the same level of detail is the bigger one scaled down (one copy, not a
     // second drawing: the tray reuses the board's stones; ADR 0014 warm-up budget)
+    // (always from the board size, so a tray stone looks the same whatever was built first)
+    const B = this.boardSize;
     const from =
-      reef && variant === 'normal'
-        ? have.find((e) => e[1] === v && e[0] > size && e[0] <= size * 1.8 && lodOf(e[0]) === lodOf(size))
-        : undefined;
+      reef && variant === 'normal' && B > size && B <= size * 1.8 && lodOf(B) === lodOf(size)
+        ? this.get(p, color, B, 'normal', v, false)
+        : null;
     c = from
-      ? this.scaled(from[2], size)
+      ? this.scaled(from, size)
       : reef
         ? variant === 'lit'
           ? this.litReef(p, color, size, v)
