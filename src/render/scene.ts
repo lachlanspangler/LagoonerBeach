@@ -356,14 +356,14 @@ export class Scene {
     const one = (c: number) => {
       // a resize, theme or style change since this was queued: that one queues its own warm-up
       if (look !== sp.look || p !== this.palette || board !== Math.round(this.layout.cell)) return;
-      for (const [s, n] of [
-        [board, VARIANTS],
-        [tray, 1],
-      ] as const)
-        for (let v = 0; v < n; v++) {
-          sp.build(p, c, s, 'normal', v);
-          sp.build(p, c, s, 'lit', v);
-        }
+      // board stones in every variant, normal and lit (the ring preview), then the tray's (scaled
+      // from the board's when the detail level matches; tray stones are never lit — a held piece
+      // over the board is drawn at board size)
+      for (let v = 0; v < VARIANTS; v++) {
+        sp.build(p, c, board, 'normal', v);
+        sp.build(p, c, board, 'lit', v);
+      }
+      sp.build(p, c, tray, 'normal', 0);
     };
     for (let c = 1; c <= 6; c++) {
       if (now) one(c);

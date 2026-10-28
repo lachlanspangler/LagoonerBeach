@@ -38,17 +38,24 @@ bands. So even with colour removed, the six stay apart.
 - **Colour grade.** The texture lives in **luminance**. Each sprite takes its hue and saturation
   from the piece hex over the material's own light and dark, so the mean colour stays the piece
   colour (see "CVD" below).
-- **Variants.** Three seeded variants per colour (`cellVariant(i)` is a fixed hash of the cell
-  index), so a saved board looks the same after a reload and walls don't tile.
+- **Variants.** Two seeded variants per colour (`cellVariant(i)` is a fixed hash of the cell
+  index), so a saved board looks the same after a reload and walls don't tile. (The branch shipped
+  three; on 2026-10-28 the warm-up measured 64–74 ms against its 40 ms budget, so the third went:
+  the hash still breaks every run of a wall, and blue coral's second variant packs four lobes.)
 - **States.** *Lit* (the lagoon-ring preview and the seal) keeps the white outline, which now
   follows the material's own silhouette. The preview ghost is the same sprite faded. Pops, ring
   bursts (`render/burst.ts` takes its chips from the material colours) and every celebration are
   unchanged in timing and staging.
 - **Perf.**
-  - Warm-up: all 48 sprites a phone layout needs (6 colours × 3 board variants + tray, normal +
-    lit) are built in an idle task, one colour per task. It's measured by
-    `tests/perf/sprites.spec.ts` at dpr 3 under a 4× CPU throttle, with a budget of a median under
-    40 ms, Day and Night.
+  - Warm-up: all 30 sprites a phone layout needs (6 colours × (2 board variants × normal + lit,
+    1 tray stone)) are built in idle tasks, one colour per task. The tray stone is the board stone
+    scaled down when their detail level matches (one copy, not a second drawing), and tray stones
+    are never lit (a held piece over the board is drawn at board size). Measured by
+    `tests/perf/sprites.spec.ts` at dpr 3 under a 4× CPU throttle: budget a median under 40 ms, Day
+    and Night (unchanged); measured ~37 ms light / ~39 ms dark on a quiet machine. Where the time
+    goes: ~80 % is rasterizing the recorded drawing (software canvas), so the savings came from
+    fewer passes (Night's top-band gradient folded into the moonlit outline, sandstone partings in
+    one path, the brain coral crest line only on big tiles) and fewer sprites.
   - A drag passing through in-between sizes draws a cheap lazy stand-in, so no frame ever builds a
     material.
 - **Skins.** The old look stays selectable as **Smooth Stones** (`smooth`). Glyph (accessibility),

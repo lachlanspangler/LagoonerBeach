@@ -20,7 +20,7 @@ for (const scheme of ['light', 'dark'] as const)
     for (let i = 0; i < 7; i++) runs.push(await page.evaluate(() => (window as any).__atoll.spriteWarm(3)));
     const ms = runs.map((r) => r.ms).sort((a, b) => a - b);
     console.log('sprite warm ms', scheme, runs[0]!.sprites, 'sprites:', ms.map((x) => x.toFixed(1)).join(' '));
-    expect(runs[0]!.sprites).toBe(48);
+    expect(runs[0]!.sprites).toBe(30); // 6 colours × (2 board variants × normal + lit, 1 tray)
     // median of 7: one idle task of a few tens of ms at most, once per theme/size change
     expect(ms[3]!).toBeLessThan(40 * K);
     await ctx.close();

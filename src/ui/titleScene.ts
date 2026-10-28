@@ -8,7 +8,7 @@
  * cap, stopped when hidden or when the title closes).
  */
 import type { Palette } from '../render/theme.ts';
-import type { SpriteCache } from '../render/sprites.ts';
+import { VARIANTS, type SpriteCache } from '../render/sprites.ts';
 
 /** The ring of blocks: X = a block (the digit picks its colour), . = sea, o = lagoon water. */
 const RING = ['..1223..', '.15oo64.', '34oooo51', '6ooooo2.', '.21oo33.', '..6545..'];
@@ -276,7 +276,7 @@ export class TitleScene {
       [...row].forEach((ch, i) => {
         if (!/\d/.test(ch)) return;
         g.drawImage(
-          this.sprites.build(p, Number(ch), cell, 'normal', (i * 3 + j) % 3),
+          this.sprites.build(p, Number(ch), cell, 'normal', (i * 3 + j) % VARIANTS),
           x + i * cell,
           y + j * cell,
           cell,

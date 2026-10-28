@@ -15,8 +15,11 @@ export type Variant = 'normal' | 'lit';
 type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 type Surface = HTMLCanvasElement | OffscreenCanvas;
 
+/** Level of detail of a reef sprite by tile size (CSS px). */
+const lodOf = (size: number): number => (size < 30 ? 0 : size < 50 ? 1 : 2);
+
 /** Seeded variants per colour (reef style). */
-export const VARIANTS = 3;
+export const VARIANTS = 2;
 /** Variant of a board cell (0..2): a fixed hash of the index, so a saved board looks the same. */
 export const cellVariant = (i: number): number => (Math.imul(i + 11, 0x9e3779b1) >>> 16) % VARIANTS;
 
@@ -144,11 +147,19 @@ export class SpriteCache {
       for (const e of have) if (cost(e) < cost(best)) best = e;
       return best[2];
     }
-    c = reef
-      ? variant === 'lit'
-        ? this.litReef(p, color, size, v)
-        : this.drawReef(p, color, size, v)
-      : this.drawPebble(p, color, size, variant);
+    // a smaller stone at the same level of detail is the bigger one scaled down (one copy, not a
+    // second drawing: the tray reuses the board's stones; ADR 0014 warm-up budget)
+    const from =
+      reef && variant === 'normal'
+        ? have.find((e) => e[1] === v && e[0] > size && e[0] <= size * 1.8 && lodOf(e[0]) === lodOf(size))
+        : undefined;
+    c = from
+      ? this.scaled(from[2], size)
+      : reef
+        ? variant === 'lit'
+          ? this.litReef(p, color, size, v)
+          : this.drawReef(p, color, size, v)
+        : this.drawPebble(p, color, size, variant);
     this.cache.set(key, c);
     have.push([size, v, c]);
     this.built.set(stone, have);
@@ -180,6 +191,14 @@ export class SpriteCache {
     const c = document.createElement('canvas');
     c.width = px;
     c.height = px;
+    return c;
+  }
+
+  private scaled(src: Surface, size: number): Surface {
+    const c = this.canvas(Math.ceil(size * this.dpr));
+    const g = c.getContext('2d') as CanvasRenderingContext2D;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(src, 0, 0, c.width, c.height);
     return c;
   }
 
@@ -227,7 +246,7 @@ export class SpriteCache {
     const y0 = gut;
     const cx = size / 2;
     const ph = 1.3 + v * 2.1 + color;
-    const lod = size < 30 ? 0 : size < 50 ? 1 : 2;
+    const lod = lodOf(size);
     const rnd = rng(color * 7919 + v * 104729 + 17);
     const spec = MAT[color]![4];
     const lt = shade(base, night ? 0.42 : 0.38);
@@ -312,13 +331,17 @@ export class SpriteCache {
       g.translate(-d, -d);
       g.strokeStyle = shade(base, 0.08);
       g.stroke(ridge);
-      g.translate(-d * 0.8, -d * 0.8);
-      g.lineWidth = w * 0.36;
-      g.globalAlpha = 0.55;
-      g.strokeStyle = shade(base, 0.42);
-      g.stroke(ridge);
-      g.globalAlpha = 1;
-      g.translate(d * 0.8, d * 0.8);
+      // the crest highlight is a fine line: only big tiles resolve it (and it is one full stroke
+      // of the labyrinth, the costliest pass of the set at board size)
+      if (lod > 1) {
+        g.translate(-d * 0.8, -d * 0.8);
+        g.lineWidth = w * 0.36;
+        g.globalAlpha = 0.55;
+        g.strokeStyle = shade(base, 0.42);
+        g.stroke(ridge);
+        g.globalAlpha = 1;
+        g.translate(d * 0.8, d * 0.8);
+      }
     } else if (color === 2) {
       // golden sandstone, beach-worn: wavy bedding layers in ochre tones (each bed lit on its top
       // edge, a thin dark parting below), gritty grain, and a few weathering pits
@@ -328,11 +351,13 @@ export class SpriteCache {
       const fr = (Math.PI * 2) / (s * (0.8 + rnd() * 0.6));
       const p0 = rnd() * 6.3;
       let yb = y0 - h * 0.1;
+      // every bed's top edge in one path: one dark and one lit stroke for the whole stone
+      const edges = new Path2D();
       for (let i = 0; i < beds; i++) {
         const th = ((h * 1.25) / beds) * (0.7 + rnd() * 0.6);
         const tone = shade(base, [0.12, -0.12, 0.04, -0.2, 0.16, -0.06, 0.08][i % 7]!);
         const bed = new Path2D();
-        const edge = new Path2D();
+        const edge = edges;
         const yy = (u: number, o: number) => o + Math.sin(fr * u + p0 + i * 0.7) * amp + (u - x0 - s / 2) * ang;
         for (let k = 0; k <= 10; k++) {
           const u = x0 - 2 + ((s + 4) * k) / 10;
@@ -345,17 +370,17 @@ export class SpriteCache {
         }
         bed.closePath();
         fillPath(bed, tone);
-        g.lineWidth = Math.max(0.5, s * 0.016);
-        g.strokeStyle = shade(base, -0.4);
-        g.globalAlpha = 0.5;
-        g.stroke(edge);
-        g.translate(0, g.lineWidth);
-        g.strokeStyle = lt;
-        g.stroke(edge);
-        g.translate(0, -g.lineWidth);
-        g.globalAlpha = 1;
         yb += th;
       }
+      g.lineWidth = Math.max(0.5, s * 0.016);
+      g.strokeStyle = shade(base, -0.4);
+      g.globalAlpha = 0.5;
+      g.stroke(edges);
+      g.translate(0, g.lineWidth);
+      g.strokeStyle = lt;
+      g.stroke(edges);
+      g.translate(0, -g.lineWidth);
+      g.globalAlpha = 1;
       const grain = new Path2D();
       const grain2 = new Path2D();
       for (const [x, y, r] of dots(10 + lod * 26, s * 0.01, s * 0.022)) speck(rnd() < 0.5 ? grain : grain2, x!, y!, r!);
@@ -413,7 +438,7 @@ export class SpriteCache {
       // is a lit cylinder with a paler growing tip and, from 30 px, rows of polyp pores
       g.fillStyle = shade(base, night ? -0.5 : -0.45);
       g.fillRect(x0, y0, s, h);
-      const n = v === 2 ? 4 : 3;
+      const n = v === 1 ? 4 : 3; // the second variant packs four lobes
       const cw = s / n;
       const pores = new Path2D();
       const poreLip = new Path2D();
@@ -551,11 +576,15 @@ export class SpriteCache {
     // wet highlight: a soft bloom plus a sharp glint
     const hx = x0 + s * 0.3;
     const hy = y0 + h * 0.24;
-    const bl = g.createRadialGradient(hx, hy, 0, hx, hy, s * 0.3);
-    bl.addColorStop(0, `rgba(255,255,255,${spec * 0.45})`);
-    bl.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = bl;
-    g.fillRect(x0, y0, s, h);
+    if (spec > 0.05) {
+      // only the bloom's own square: a full-tile gradient pass costs ~10 % of a sprite at dpr 3
+      const br = s * 0.3;
+      const bl = g.createRadialGradient(hx, hy, 0, hx, hy, br);
+      bl.addColorStop(0, `rgba(255,255,255,${spec * 0.45})`);
+      bl.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = bl;
+      g.fillRect(hx - br, hy - br, br * 2, br * 2);
+    }
     if (spec > 0.35) {
       g.fillStyle = `rgba(255,255,255,${Math.min(0.95, spec * 1.05)})`;
       g.beginPath();
@@ -563,22 +592,15 @@ export class SpriteCache {
       g.fill();
     }
     const edge = reefEdge(base, night);
-    if (edge.rim) {
-      // a thin moonlit outline: the stone's edge against the navy board (≥ 3:1, see reefEdge)
-      g.strokeStyle = edge.rim;
-      g.lineWidth = Math.max(0.75, s * 0.028);
-      this.face(g, size, color, v, s * 0.012);
-      g.stroke();
-    }
-    if (night) {
-      // a cool moonlit rim along the top edge separates the stone from the navy board
-      const rl = g.createLinearGradient(0, y0, 0, y0 + h * 0.3);
-      rl.addColorStop(0, 'rgba(190,240,255,0.3)');
-      rl.addColorStop(1, 'rgba(190,240,255,0)');
-      g.fillStyle = rl;
-      g.fillRect(x0, y0, s, h * 0.3);
-    }
     g.globalCompositeOperation = 'destination-over';
+    if (edge.rim) {
+      // a thin moonlit edge: the stone's outline against the navy board (≥ 3:1, see reefEdge),
+      // drawn as the face grown by a hair *behind* the stone (a fill is far cheaper than a stroke
+      // in a software canvas; it also replaces the old top-edge gradient band)
+      g.fillStyle = edge.rim;
+      this.face(g, size, color, v, -Math.max(0.75, s * 0.026));
+      g.fill();
+    }
     // the side the light doesn't reach
     g.fillStyle = edge.lip;
     blob(g, cx, y0 + s / 2, s / 2, s / 2, color, ph);
