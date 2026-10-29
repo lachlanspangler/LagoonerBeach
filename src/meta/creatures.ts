@@ -157,7 +157,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'bands',
     size: [2, 5],
     flavor: 'Flicks backwards when surprised. Always surprised.',
-    req: {},
+    req: { maxArea: 3 },
     weight: 60,
   },
   {
@@ -170,7 +170,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [4, 10],
     flavor: 'Peeks out of holes like it owns them.',
-    req: { minArea: 3, maxArea: 5 },
+    req: { minArea: 3, maxArea: 3 },
     weight: 70,
   },
   {
@@ -183,7 +183,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'stripes',
     size: [2, 6],
     flavor: 'Hums if you hold it to your ear. Probably.',
-    req: { minArea: 3 },
+    req: { minArea: 2, maxArea: 3 },
     weight: 50,
   },
   // ── Lagoon: shape specialists (build the shape, meet the creature) ──────────────────────────
@@ -197,7 +197,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [10, 25],
     flavor: 'Dives into sand faster than you can blink.',
-    req: { minArea: 3, maxArea: 5 },
+    req: { minArea: 4, maxArea: 5 },
     weight: 260,
   },
   {
@@ -210,7 +210,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [40, 120],
     flavor: 'Grins at everyone. Means it.',
-    req: { minArea: 6, maxArea: 8, streak: 6 },
+    req: { minArea: 6, maxArea: 7, streak: 6 },
     weight: 400,
   },
   {
@@ -223,7 +223,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [20, 40],
     flavor: 'Sways with the current, one of a crowd.',
-    req: { minArea: 3, maxArea: 5, streak: 4 },
+    req: { minArea: 4, maxArea: 7, streak: 4 },
     weight: 240,
   },
   {
@@ -236,7 +236,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'bands',
     size: [6, 18],
     flavor: 'The dads carry the babies. Respect.',
-    req: { minArea: 3, maxArea: 5, streak: 20 },
+    req: { minArea: 4, maxArea: 7, streak: 20 },
     weight: 380,
   },
   {
@@ -262,7 +262,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [8, 30],
     flavor: 'Built like a brick. Swims like a bubble.',
-    req: { minArea: 9, maxArea: 9 },
+    req: { minArea: 4, maxArea: 5, streak: 12 },
     weight: 600,
   },
   {
@@ -288,7 +288,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'stripes',
     size: [10, 35],
     flavor: 'Changes colour to match its mood.',
-    req: { minArea: 3, maxArea: 5, streak: 8 },
+    req: { minArea: 4, maxArea: 7, streak: 8 },
     weight: 220,
   },
   {
@@ -301,7 +301,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [15, 45],
     flavor: 'Both eyes on one side. Sees you anyway.',
-    req: { minArea: 6, maxArea: 8 },
+    req: { minArea: 6, maxArea: 7 },
     weight: 200,
   },
   {
@@ -314,7 +314,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [40, 120],
     flavor: 'Glides like a thought you almost had.',
-    req: { minArea: 6, maxArea: 11, streak: 8 },
+    req: { minArea: 6, maxArea: 7, streak: 10 },
     weight: 240,
   },
   {
@@ -327,7 +327,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'bands',
     size: [6, 11],
     flavor: 'Never alone. Never quiet.',
-    req: { minArea: 3, maxArea: 8, streak: 6 },
+    req: { minArea: 4, maxArea: 7, streak: 6 },
     weight: 160,
   },
   {
@@ -340,7 +340,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [5, 9],
     flavor: 'Small, brave, very blue.',
-    req: { minArea: 3, maxArea: 8, streak: 16 },
+    req: { minArea: 4, maxArea: 7, streak: 16 },
     weight: 500,
   },
   {
@@ -366,7 +366,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'stripes',
     size: [20, 60],
     flavor: 'Eats coral, makes sand. You are standing on its work.',
-    req: { minArea: 6 },
+    req: { minArea: 7, maxArea: 7 },
     weight: 70,
   },
   {
@@ -379,7 +379,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [40, 150],
     flavor: 'Unbothered. Enormous. Unbothered.',
-    req: { minArea: 9, maxArea: 11 },
+    req: { minArea: 6, maxArea: 7, streak: 12 },
     weight: 40,
   },
   // ── Deep: rewards for huge pools, long games and cascades ──────────────────────────────────
@@ -406,7 +406,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [300, 700],
     flavor: 'Flies underwater. Waves back.',
-    req: { minArea: 12, streak: 3 },
+    req: { minArea: 12, streak: 4 },
     weight: 400,
   },
   {
@@ -426,13 +426,13 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     id: 'barracuda',
     name: 'Barracuda',
     habitat: 'deep',
-    rarity: 'rare',
+    rarity: 'uncommon',
     body: 'fish',
     colors: ['#9AA6B2', '#3B4652'],
     pattern: 'bands',
     size: [50, 150],
     flavor: 'All teeth, all speed, no small talk.',
-    req: { minArea: 9, maxArea: 11, streak: 6 },
+    req: { minArea: 8, maxArea: 11 },
     weight: 160,
   },
   {
@@ -458,7 +458,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'stripes',
     size: [12, 25],
     flavor: 'Older than the dinosaurs and still getting around.',
-    req: { minArea: 6, maxArea: 11, streak: 12 },
+    req: { minArea: 8, maxArea: 11, streak: 8 },
     weight: 300,
   },
   {
@@ -471,7 +471,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [150, 300],
     flavor: 'Likes you. Genuinely.',
-    req: { minArea: 6, streak: 20 },
+    req: { minArea: 8, streak: 16 },
     weight: 120,
   },
   {
@@ -484,7 +484,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [4, 10],
     flavor: 'Do not hug.',
-    req: { maxArea: 2, streak: 6 },
+    req: { maxArea: 3, streak: 6 },
     weight: 120,
   },
   // ── Night: only when the beach is dark (Night theme) ───────────────────────────────────────
@@ -498,7 +498,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [3, 8],
     flavor: 'Carries its own night light.',
-    req: { maxArea: 4, theme: 'night' },
+    req: { maxArea: 3, theme: 'night' },
     weight: 120,
   },
   {
@@ -511,7 +511,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [10, 40],
     flavor: 'No brain, no heart, no worries.',
-    req: { minArea: 3, theme: 'night' },
+    req: { minArea: 4, maxArea: 7, theme: 'night' },
     weight: 140,
   },
   {
@@ -524,7 +524,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'stripes',
     size: [3, 15],
     flavor: 'Rainbows run along its ribs.',
-    req: { minArea: 6, maxArea: 11, theme: 'night' },
+    req: { minArea: 8, theme: 'night' },
     weight: 500,
   },
   {
@@ -537,7 +537,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [5, 8],
     flavor: 'Blinks hello in blue.',
-    req: { streak: 10, theme: 'night' },
+    req: { minArea: 4, maxArea: 7, streak: 10, theme: 'night' },
     weight: 500,
   },
   {
@@ -563,7 +563,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [1, 2],
     flavor: 'A million tiny stars that came down to swim.',
-    req: { maxArea: 2, streak: 16, theme: 'night' },
+    req: { maxArea: 3, streak: 16, theme: 'night' },
     weight: 400,
   },
   // ── Reef: caught in Reef puzzles ───────────────────────────────────────────────────────────
@@ -624,13 +624,13 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     id: 'sunfish',
     name: 'Ocean Sunfish',
     habitat: 'deep',
-    rarity: 'rare',
+    rarity: 'uncommon',
     body: 'mola',
     colors: ['#B7C3CF', '#E8EEF2'],
     pattern: 'plain',
     size: [100, 300],
     flavor: 'Sunbathes on the surface. Every single day.',
-    req: { minArea: 12, maxArea: 14 },
+    req: { minArea: 8 },
     weight: 260,
   },
   {
@@ -643,7 +643,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'plain',
     size: [100, 150],
     flavor: 'Holds hands while sleeping so nobody drifts away.',
-    req: { minArea: 3, maxArea: 5, streak: 16 },
+    req: { maxArea: 3, streak: 16 },
     weight: 220,
   },
   // ── Legends: the moments you'll remember ───────────────────────────────────────────────────
@@ -657,7 +657,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [800, 1200],
     flavor: 'The biggest fish in the sea, and a gentle one.',
-    req: { minArea: 16 },
+    req: { minArea: 8, streak: 20 },
     weight: 2000,
   },
   {
@@ -683,7 +683,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [80, 140],
     flavor: 'Said to visit once a lifetime. Today was the day.',
-    req: { minArea: 12, streak: 10 },
+    req: { streak: 25 },
     weight: 1200,
   },
   {
@@ -696,7 +696,7 @@ const DEFS: readonly Omit<Species, 'when'>[] = [
     pattern: 'spots',
     size: [40, 60],
     flavor: 'Will be terrifying someday. Today it is adorable.',
-    req: { minArea: 12, streak: 5, theme: 'night' },
+    req: { streak: 20, theme: 'night' },
     weight: 2000,
   },
 ];

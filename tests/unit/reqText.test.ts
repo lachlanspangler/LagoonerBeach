@@ -44,11 +44,11 @@ group('species hints are generated from their rules', () => {
     }
   });
   it('short: only cells and combo (the habitat header says Night / Reefs)', () => {
-    expect(hint('grouper')).toBe('9–11 cells');
-    expect(hint('seahorse')).toBe('3–5 cells, ×20 combo');
-    expect(hint('lanternfish')).toBe('1–4 cells');
+    expect(hint('grouper')).toBe('6–7 cells, ×12 combo');
+    expect(hint('seahorse')).toBe('4–7 cells, ×20 combo');
+    expect(hint('lanternfish')).toBe('1–3 cells');
     expect(hint('butterfly')).toBe('Any pool');
-    expect(hint('kraken')).toBe('12+ cells, ×5 combo, at night'); // a legend: Night isn't its habitat
+    expect(hint('kraken')).toBe('×20 combo, at night'); // a legend: Night isn't its habitat
     expect(hint('seadragon')).toBe('×30 combo');
     for (const sp of SPECIES) expect(hintFor(sp), sp.id).not.toMatch(/wave|cascade|island|shape|move|reef/i);
   });

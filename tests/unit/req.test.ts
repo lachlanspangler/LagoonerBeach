@@ -42,11 +42,13 @@ describe('matches(req, ctx): pool size and combo, plus the Night / Reef gates', 
     expect(matches({ mode: ['puzzle'] }, at({ mode: 'daily' }))).toBe(false);
   });
   it('every condition must hold', () => {
-    const kraken = SPECIES.find((s) => s.id === 'kraken')!.req;
-    expect(matches(kraken, at({ area: 12, streak: 5, night: true }))).toBe(true);
-    expect(matches(kraken, at({ area: 12, streak: 5, night: false }))).toBe(false);
-    expect(matches(kraken, at({ area: 12, streak: 4, night: true }))).toBe(false);
-    expect(matches(kraken, at({ area: 11, streak: 5, night: true }))).toBe(false);
+    const shark = SPECIES.find((s) => s.id === 'whaleshark')!.req; // 8+ cells on a ×20 combo
+    expect(matches(shark, at({ area: 8, streak: 20 }))).toBe(true);
+    expect(matches(shark, at({ area: 7, streak: 20 }))).toBe(false);
+    expect(matches(shark, at({ area: 8, streak: 19 }))).toBe(false);
+    const kraken = SPECIES.find((s) => s.id === 'kraken')!.req; // ×20 at night
+    expect(matches(kraken, at({ streak: 20, night: true }))).toBe(true);
+    expect(matches(kraken, at({ streak: 20, night: false }))).toBe(false);
   });
   it('when() is derived from req (the catch roll and the journal read the same data)', () => {
     let k = 0;

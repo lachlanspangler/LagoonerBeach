@@ -65,12 +65,12 @@ describe('habitat gates', () => {
 describe('habitat lines (next to each category)', () => {
   it('are pinned (a change here is a deliberate copy or rules change)', () => {
     expect(Object.fromEntries(IDS.map((h) => [h, habitatLine(h)]))).toEqual({
-      shallows: 'Pools of 1+ cells · combos from ×6',
-      lagoon: 'Pools of 3+ cells · combos from ×4',
-      deep: 'Pools of 6+ cells · combos from ×3',
+      shallows: 'Pools of 1–3 cells · combos from ×6',
+      lagoon: 'Pools of 4–7 cells · combos from ×4',
+      deep: 'Pools of 8+ cells · combos from ×4',
       night: 'Only at night',
       reef: 'Only in Reefs',
-      legend: 'Pools of 12+ cells · combos from ×5',
+      legend: 'Combos from ×20',
     });
   });
   it('gated habitats say their gate, in describe()’s words', () => {
@@ -100,12 +100,28 @@ describe('habitat lines (next to each category)', () => {
   });
   it('the combo in a line is the smallest any member needs (ungated habitats; gated ones say their gate)', () => {
     for (const h of IDS.filter((x) => !HABITAT_REQ[x].gate)) {
-      const m = /combos from ×(\d+)/.exec(habitatLine(h));
+      const m = /combos from ×(\d+)/i.exec(habitatLine(h));
       const need = membersOf(h)
         .map((s) => s.req.streak)
         .filter((x) => x !== undefined);
       expect(m ? Number(m[1]) : undefined, h).toBe(need.length ? Math.min(...need) : undefined);
     }
+  });
+});
+
+describe('each class has one clear size band (owner, 2026-10-29)', () => {
+  const BAND: Record<string, [number, number]> = { shallows: [1, 3], lagoon: [4, 7], deep: [8, Infinity] };
+  it('Shallows 1–3 cells, Lagoon 4–7, Deep 8+, and the bands never overlap', () => {
+    for (const sp of SPECIES) {
+      const band = BAND[sp.habitat];
+      if (!band) continue;
+      const [lo, hi] = [sp.req.minArea ?? 1, sp.req.maxArea ?? Infinity];
+      expect([lo >= band[0], hi <= band[1]], sp.id).toEqual([true, true]);
+    }
+  });
+  it('Legends need a ×20+ combo', () => {
+    for (const sp of SPECIES.filter((s) => s.habitat === 'legend'))
+      expect(sp.req.streak ?? 0, sp.id).toBeGreaterThanOrEqual(20);
   });
 });
 
@@ -174,7 +190,7 @@ describe('journal progress', () => {
     expect(p.habitats.reduce((a, h) => a + h.total, 0)).toBe(SPECIES.length);
     expect(p.rarities.map((r) => r.rarity)).toEqual(RARITIES);
     expect(p.rarities.reduce((a, r) => a + r.total, 0)).toBe(SPECIES.length);
-    expect(p.rarities.map((r) => r.total)).toEqual([9, 13, 15, 6, 4]);
+    expect(p.rarities.map((r) => r.total)).toEqual([9, 15, 13, 6, 4]);
     expect(p.habitats.map((h) => [h.id, h.total])).toEqual([
       ['shallows', 10],
       ['lagoon', 15],

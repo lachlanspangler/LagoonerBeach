@@ -64,3 +64,13 @@ times a day — and big pools rare: 12+ cells ~1/day, 16+ ~0.1/day), then per-sp
 regenerated (`catchTuning.ts`). `catch-sim`: median 16 species on day 1, 40 by day 10, 46 by day 21
 (one legendary, the kraken, stays a long hunt). The dealer, scoring and RULES_VERSION are untouched —
 catches never touch the dealer RNG. Existing journals keep everything they've found.
+
+## Amendment (2026-10-29, owner): one clear size band per class
+> "make more definite ranges for the fish type classes … if u want lagoon fish u know the clear way"
+
+Shallows = pools of **1–3** cells · Lagoon = **4–7** · Deep water = **8+** · Night = the Night theme
+(by size, like the day) · Reef = Reef puzzles · Legends = a **×20+** combo. Within a class, a bigger
+combo is what makes a creature rarer. The bands never overlap (tested). Commons only exist in the
+Shallows, so in 4–7 and 8+ pools the everyday catch is that class's own uncommons (Barracuda and
+Ocean Sunfish became uncommon so Deep water has everyday fish). Chances regenerated; catch-sim:
+23 species on day 1, 43 by day 10, all 47 by day 35.

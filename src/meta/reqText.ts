@@ -86,7 +86,8 @@ export function habitatLine(h: Habitat): string {
   const reqs = membersOf(h).map((s) => s.req);
   const sized = reqs.filter((r) => r.minArea !== undefined || r.maxArea !== undefined);
   const parts: string[] = [];
-  if (sized.length) {
+  // a size range only when it's the habitat's rule (every member has one): Legends are combos
+  if (sized.length && sized.length === reqs.length) {
     const lo = Math.min(...sized.map((r) => areaRange(r)[0]));
     const hi = Math.max(...sized.map((r) => areaRange(r)[1]));
     parts.push(`pools of ${cells(lo, hi)}`);
