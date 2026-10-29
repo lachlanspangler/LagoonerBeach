@@ -424,7 +424,7 @@ export class Ui {
     journalCount = 0,
     dailyDone = false,
     /** What Resume goes back to, e.g. "Endless · 3,150" or "Reef 28". */
-    resumeWhat = '',
+    _resumeWhat = '',
     /**
      * An Endless (or Daily) run is in progress: starting that mode over asks once, inline, on its
      * card ("This one ends here").
@@ -453,12 +453,8 @@ export class Ui {
     }
     if (canResume)
       card.append(
-        this.button(
-          'menu-resume',
-          'btn primary',
-          `${icon('play', { filled: true })}Resume${resumeWhat ? ` <span class="resume-what">${resumeWhat}</span>` : ''}`,
-          resumeWhat ? `Resume ${resumeWhat.replace(' · ', ', ')}` : 'Resume',
-          () => this.h.onResume(),
+        this.button('menu-resume', 'btn primary', `${icon('play', { filled: true })}Resume`, 'Resume', () =>
+          this.h.onResume(),
         ),
       );
     if (mode === 'puzzle')
@@ -520,11 +516,12 @@ export class Ui {
     card3(
       'reef',
       'Reefs',
-      'Clear every pebble',
+      'Replay any reef you like',
       `${p.puzzle.solved.length} cleared`,
       mode === 'puzzle' ? 'All reefs' : 'Reef puzzles',
       mode === 'puzzle',
-      () => (mode === 'puzzle' ? this.h.onPuzzleList() : this.h.onPuzzles()),
+      // always the list of reefs: continue, or go back and replay any you've done
+      () => this.h.onPuzzleList(),
     );
     card.append(modes);
     const links = document.createElement('div');

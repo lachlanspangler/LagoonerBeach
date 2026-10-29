@@ -29,7 +29,8 @@ export interface ReefListModel {
 
 export type ButtonFactory = (id: string, cls: string, html: string, label: string, fn: () => void) => HTMLButtonElement;
 
-const TIER_NAME: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
+/** Difficulty, in plain words (the tile colour key and the reef of the day). */
+const TIER_NAME: Record<string, string> = { calm: 'Easy', tricky: 'Medium', deep: 'Hard', abyss: 'Expert' };
 
 /** Depth in metres: one metre per reef, so each chapter of 20 sinks 20 m (UX S3: a depth meter). */
 export const depthOf = (reef: number): number => Math.max(0, Math.floor(reef));

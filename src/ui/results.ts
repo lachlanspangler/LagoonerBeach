@@ -233,19 +233,21 @@ export function showPuzzleResult(k: Kit, o: PuzzleResultOpts): void {
     : '';
   card.innerHTML = o.solved
     ? `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word win" data-testid="puzzle-result">Cleared</h2>${reward}<div class="chapter-progress">${chapterLine || `<div class="callout">${o.progress ?? `${o.cleared} of ${o.total} reefs cleared`}</div>`}${segs}</div>`
-    : `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word" data-testid="puzzle-result">So close</h2><p class="callout">Every piece must be placed and every pebble popped.</p>`;
+    : `<div class="overline">Reef ${o.index + 1}</div><h2 class="res-word" data-testid="puzzle-result">So close</h2><p class="callout">Every piece must be placed and every block popped.</p>`;
   if (o.newIds?.length) card.append(journalStrip(o.newIds, () => k.h.onJournal()));
   if (o.solved) {
     if (o.index + 1 < o.total)
       card.append(
         k.button('next-reef', 'btn primary', `Next reef${icon('chevronRight')}`, 'Next reef', () => k.h.onPuzzleNext()),
       );
+    card.append(k.button('', 'btn ghost', 'All reefs', 'All reefs: replay any of them', () => k.h.onPuzzleList()));
     card.append(k.button('', 'btn ghost', 'Endless', 'Endless mode', () => k.h.onClassic()));
   } else {
     card.append(
       k.button('retry-reef', 'btn primary', `${icon('restart')}Try again`, 'Try again', () => k.h.onPuzzleRetry()),
     );
     card.append(k.button('', 'btn ghost', 'Skip', 'Skip to next reef', () => k.h.onPuzzleNext()));
+    card.append(k.button('', 'btn ghost', 'All reefs', 'All reefs: replay any of them', () => k.h.onPuzzleList()));
   }
   k.show(card, false, 'reef-result');
   k.announce(o.solved ? `Reef ${o.index + 1} cleared` : 'Not cleared. Try again.');

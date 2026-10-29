@@ -95,7 +95,8 @@ async function loadPack(): Promise<NonNullable<typeof PACK>> {
 }
 /** Reef at 0-based index i, if available now (shipped, or generated and cached). */
 const reefAt = (i: number) => reefs?.get(i) ?? null;
-const TIER_LABEL: Record<string, string> = { calm: 'Calm', tricky: 'Tricky', deep: 'Deep', abyss: 'Abyss' };
+/** Reef difficulty in plain words (the tiers are calm / tricky / deep / abyss inside). */
+const TIER_LABEL: Record<string, string> = { calm: 'Easy', tricky: 'Medium', deep: 'Hard', abyss: 'Expert' };
 
 const params = new URLSearchParams(location.search);
 /** Debug/test only: a frozen clock renders one exact frame of any moment (pixel baselines). */
@@ -406,7 +407,7 @@ function syncScene(): void {
     const solved = profile.puzzle.solved.includes(p.id);
     const pure = profile.puzzle.pure?.includes(p.id) ?? false;
     // the instruction only while it's news (first three reefs); afterwards the tier and your mark
-    const status = pure ? '✓ No hints' : solved ? '✓ Cleared' : i < 3 ? 'Clear every pebble' : '';
+    const status = pure ? '✓ No hints' : solved ? '✓ Cleared' : i < 3 ? 'Clear every block' : '';
     const tag = i === dailyReefIndex() ? 'Reef of the day' : (TIER_LABEL[p.tier ?? ''] ?? '');
     const c = reefMode!.chapterOf(i + 1);
     const first = c.first;
@@ -1004,6 +1005,18 @@ function newClassic(seed: number): void {
 }
 
 let wantedMode: Mode = mode;
+/** The reef list from anywhere (the menu's Reefs card, a reef's result): continue or replay any. */
+function openReefList(): void {
+  if (!PACK) return void loadPack().then(openReefList, () => switchMode('puzzle'));
+  ui.showReefs({
+    shipped: PACK,
+    solved: profile.puzzle.solved,
+    pure: profile.puzzle.pure ?? [],
+    current: mode === 'puzzle' ? state.seed : profile.puzzle.index,
+    daily: { index: dailyReefIndex(), done: (profile.puzzle.dailyDone ?? []).includes(today()) },
+    tierOf: (i) => reefAt(i)?.tier,
+  });
+}
 function switchMode(m: Mode): void {
   wantedMode = m;
   if (m === 'puzzle' && (!PACK || !reefAt(profile.puzzle.index))) {
@@ -1100,18 +1113,14 @@ const ui = new Ui({
   onPuzzles: () => switchMode('puzzle'),
   onPuzzleNext: () => mode === 'puzzle' && loadPuzzle(state.seed + 1),
   onPuzzleRetry: () => mode === 'puzzle' && loadPuzzle(state.seed),
-  onPuzzleList: () =>
-    PACK &&
-    ui.showReefs({
-      shipped: PACK,
-      solved: profile.puzzle.solved,
-      pure: profile.puzzle.pure ?? [],
-      current: mode === 'puzzle' ? state.seed : profile.puzzle.index,
-      daily: { index: dailyReefIndex(), done: (profile.puzzle.dailyDone ?? []).includes(today()) },
-      tierOf: (i) => reefAt(i)?.tier,
-    }),
+  onPuzzleList: () => openReefList(),
+
+  // any reef, cleared or not, from the list: replay it (from Endless or Daily too)
   onPuzzlePick: (i) => {
-    if (mode !== 'puzzle') return;
+    if (mode !== 'puzzle') {
+      profile.puzzle.index = i;
+      return switchMode('puzzle');
+    }
     loadPuzzle(i);
   },
 

@@ -49,3 +49,14 @@ test('Reefs keep their own hint; the per-game bulb is for Endless and Daily', as
   await expect(page.locator('#hint-btn')).toBeHidden();
   await expect(page.locator('#side-btn')).toHaveAccessibleName('Hint');
 });
+
+test('Reefs from the menu always open the reef list, and any reef can be replayed from it', async ({ page }) => {
+  await boot(page, 'seed=42');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Reef puzzles' }).click();
+  await expect(page.locator('.sheet[data-kind="reefs"]')).toBeVisible();
+  await page.getByRole('button', { name: /^Reef 3(,|$)/ }).click();
+  await page.waitForFunction(
+    () => (window as any).__atoll.mode() === 'puzzle' && (window as any).__atoll.state().seed === 2,
+  );
+});
