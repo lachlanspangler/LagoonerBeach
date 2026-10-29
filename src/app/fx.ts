@@ -497,9 +497,10 @@ export class Fx {
     }
     const g = c * FISH_GRAVITY;
     const dy = y1 - y0;
-    const r = Math.max(rise * c, -dy + c * 0.5);
+    // a high arc, but its top stays on screen (a lagoon on the top row can't rise 4 cells)
+    const r = Math.max(Math.min(rise * c, y0 - c * 0.8), -dy + c * 0.5, c * 0.8);
     const vy0 = -Math.sqrt(2 * g * r);
-    const flight = Math.min(2.4, Math.max(1.2, (-vy0 + Math.sqrt(vy0 * vy0 + 2 * g * dy)) / g));
+    const flight = Math.min(3.2, Math.max(1.6, (-vy0 + Math.sqrt(vy0 * vy0 + 2 * g * dy)) / g));
     return { vx: (x1 - x0) / flight, vy: (dy - 0.5 * g * flight * flight) / flight, flight };
   }
 
@@ -527,7 +528,7 @@ export class Fx {
       sc.fish.push({
         x: lx,
         y: ly,
-        ...this.arcTo(lx, ly, 1, 1.8),
+        ...this.arcTo(lx, ly, 1, 3),
         start: t0 + 90 + Math.min(room, MAX_FLYING) * 110,
         size: l.cell * 0.5,
         hue: '#F2C14E',
@@ -546,7 +547,7 @@ export class Fx {
       sc.fish.push({
         x: lx,
         y: ly,
-        ...this.arcTo(lx, ly, dir, isNew ? 2.6 : 1.7 + sc.rand() * 0.5),
+        ...this.arcTo(lx, ly, dir, isNew ? 4 : 2.8 + sc.rand() * 0.7),
         start: t0 + 90 + f * 110,
         size: l.cell * (isNew ? 0.62 : 0.5),
         hue: '#FF8A3D',
